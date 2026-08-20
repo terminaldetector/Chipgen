@@ -26,18 +26,21 @@ Two things it does that are worth knowing about:
 import audio as _audio
 import events as events_mod
 import opn2
+import mixer
 import samples as samples_mod
 import sn76489
 from instruments import BANK as INSTRUMENT_BANK
+from mixer import DEFAULT_PSG_GAIN
 
 DEFAULT_TICKS_PER_SECOND = 192.0
+
 
 
 class Sequencer:
     def __init__(self, ticks_per_second: float = DEFAULT_TICKS_PER_SECOND,
                  target_rate: int = 44100, fm_gain: float = 1.0,
-                 psg_gain: float = 1.0, pal: bool = False,
-                 dc_block: bool = False,
+                 psg_gain: float = DEFAULT_PSG_GAIN, pal: bool = False,
+                 dc_block: bool = True,
                  chip_type: str = opn2.DEFAULT_CHIP_TYPE):
         self.ticks_per_second = ticks_per_second
         self.target_rate = target_rate
@@ -47,10 +50,12 @@ class Sequencer:
         #: "ym2612" (discrete, Model 1, has the DAC ladder) or "ym3438"
         #: (later ASIC, clean). See opn2.CHIP_TYPES.
         self.chip_type = chip_type
-        #: The YM2612 sits on a DC offset and three PSG squares idle high,
-        #: so a mix can be pushed off-centre before it even plays a note.
-        #: Off by default because it changes the output of existing scores;
-        #: turn it on if a track normalises quieter than it should.
+        #: The YM2612's DAC ladder pushes the mix off centre — measured at
+        #: -0.027, or 4.3% of peak, on the demo — which is headroom spent
+        #: on nothing audible and a click at the start and end of a render.
+        #: On by default: it removes only the 0 Hz term, so the ladder's
+        #: actual grit (a signal-dependent square, not a constant) survives
+        #: untouched. Turn it off to compare against an unfiltered capture.
         self.dc_block = dc_block
 
     @property
@@ -192,7 +197,7 @@ class Sequencer:
         elif isinstance(ev, E.PSGVolume):
             psg.set_volume(ev.channel, ev.volume)
         elif isinstance(ev, E.PSGNoiseOn):
-            psg.noise_on(ev.white, ev.rate, ev.volume)
+            psg.noise_on(ev.white, ev.rate, ev.volume, restart=ev.restart)
         elif isinstance(ev, E.PSGNoiseOff):
             psg.noise_off()
         else:
@@ -200,23 +205,9 @@ class Sequencer:
 
     # ------------------------------------------------------------------ mix
     def _mix(self, fm_audio, psg_audio, fm_rate: float, psg_rate: float):
-        fm_rs = _audio.resample(fm_audio, fm_rate, self.target_rate)
-        psg_mono = _audio.resample(psg_audio, psg_rate, self.target_rate)
-
-        n = max(len(fm_rs), len(psg_mono))
-        out = _audio.zeros(n, 2)
-        if len(fm_rs):
-            _audio.add_stereo_into(out, fm_rs, self.fm_gain)
-        if len(psg_mono):
-            _audio.add_mono_into_stereo(out, psg_mono, self.psg_gain)
-
-        if self.dc_block:
-            out = _dc_block(out, self.target_rate)
-
-        peak = _audio.peak(out)
-        if peak > 1.0:
-            out = _audio.scale(out, 0.98 / peak)
-        return out
+        return mixer.mix(fm_audio, psg_audio, fm_rate, psg_rate,
+                         self.target_rate, fm_gain=self.fm_gain,
+                         psg_gain=self.psg_gain, dc_block=self.dc_block)
 
 
 class _RenderState:
@@ -318,34 +309,3 @@ class _RenderState:
     def _advance_writer(self, fm_samples: int):
         if self.writer is not None and fm_samples > 0:
             self.writer.advance(fm_samples / self.fm_rate)
-
-
-def _dc_block(buf, rate: int):
-    """Remove each channel's DC term.
-
-    A one-pole high-pass would be the textbook answer, but it is recursive
-    and so cannot be vectorised over time, and for this signal it would be
-    doing the same job the long way round: the offset here is static (the
-    YM2612's output bias, three PSG squares idling high), not drifting. So
-    subtract the mean, which is that offset exactly, and leave the audio
-    band untouched.
-    """
-    if not len(buf):
-        return buf
-    if _audio.HAVE_NUMPY and not _audio.is_fallback(buf):
-        import numpy as np
-        axis_mean = buf.mean(axis=0, keepdims=True) if buf.ndim == 2 else buf.mean()
-        return (buf - axis_mean).astype(np.float32)
-    data = buf.data
-    channels = buf.channels
-    for ch in range(channels):
-        column = range(ch, len(data), channels)
-        total = 0.0
-        count = 0
-        for i in column:
-            total += data[i]
-            count += 1
-        mean = total / count if count else 0.0
-        for i in column:
-            data[i] -= mean
-    return buf

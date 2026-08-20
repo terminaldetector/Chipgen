@@ -96,6 +96,19 @@ Comments: `;` anywhere, or `#` at the start of a line.
 `square_lead`, `bell_pluck`, `e_piano`, `organ`, `brass`, `strings`,
 `pluck_guitar`, `jazz_chord_pad`, `orch_hit`, `metal_stab`.
 Run `python3 python/chipgen.py --info` for what each one sounds like.
+They are levelled to within about a decibel of each other, so swapping one
+for another changes the timbre and not the balance of your arrangement.
+
+**Want more?** Any Genesis VGM is an instrument source:
+
+```bash
+python3 python/vgm_import.py song.vgm -o bank.json   # read its patches out
+python3 python/chipgen.py score.trk --bank bank.json -o out.wav
+```
+
+It replays the register stream, snapshots each channel at key-on, dedupes,
+ranks by how often the composer actually used each patch, and levels the
+result against the built-in bank.
 
 ---
 
@@ -113,6 +126,11 @@ Run `python3 python/chipgen.py --info` for what each one sounds like.
   Put lead lines on FM and let the PSG do arpeggios.
 - **Give notes somewhere to go.** `...` means *hold*, not *rest*. A note
   sounds until `===` or the next note in that column.
+- **Do not restart the noise on every hat.** Writing the PSG's noise
+  register resets its shift register, so a hat gated on and off sixteen
+  times a bar replays the identical waveform and turns into a buzz. The
+  `w1` cell does the right thing already; only reach for a restart when
+  you want a short blip to sound identical every time.
 
 ## If you want JSON instead
 
@@ -142,6 +160,20 @@ python/chipgen.py       one-call API + CLI
 python/tracker.py       the notation, with its grammar in the docstring
 python/events.py        the event vocabulary
 python/instruments.py   the FM patch bank
+python/vgm_import.py    pull instruments out of any Genesis VGM
+python/calibrate_bank.py  re-level the bank after adding a patch
 core/                   the C chip emulation (Nuked-OPN2 + Sega PSG)
 README.md               how and why the whole thing works
 ```
+
+## Two knobs worth knowing
+
+`--chip ym2612` (default) emulates the discrete Model 1 chip, whose DAC
+ladder makes silence slightly gritty and lets a hard-panned channel bleed
+into the other side. `--chip ym3438` is the later integrated ASIC: clean
+muting, clean silence. Both are real hardware.
+
+`--dc-block` is on by default and simply centres the mix. Turn it off with
+nothing — it has no off switch on the CLI because there is no musical
+reason to want the offset; use the Python API if you are comparing against
+an unfiltered capture.

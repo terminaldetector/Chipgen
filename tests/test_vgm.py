@@ -173,3 +173,154 @@ def test_gd3_survives_the_round_trip():
     length = struct.unpack_from("<I", raw, 8)[0]
     assert length == len(raw) - 12
     assert "Тест".encode("utf-16-le") in raw
+
+
+# --------------------------------------------------------------------------
+# Instrument extraction
+# --------------------------------------------------------------------------
+def _probe_vgm(directory, names):
+    """Export a VGM that plays each named patch a few times."""
+    import events as E
+    events = [E.FMInstrumentSelect(channel=i, instrument=n)
+              for i, n in enumerate(names)]
+    for _ in range(3):
+        for channel in range(len(names)):
+            events += [E.FMNoteOn(channel=channel, note="A", octave=3),
+                       E.Wait(ticks=24), E.FMNoteOff(channel=channel)]
+    events.append(E.End())
+    path = os.path.join(directory, "probe.vgm")
+    Sequencer().export_vgm(events, path)
+    return path
+
+
+def _signature(instrument):
+    return (instrument.algorithm, instrument.feedback,
+            tuple((o.detune, o.multiple, o.total_level, o.attack_rate,
+                   o.decay_rate, o.sustain_rate, o.release_rate,
+                   o.sustain_level, o.rate_scaling, o.am_enable, o.ssg_eg)
+                  for o in instrument.operators))
+
+
+def test_extracted_patches_match_the_originals_register_for_register():
+    import instruments
+    import vgm_import
+
+    names = ["bass", "brass", "e_piano", "organ", "metal_stab"]
+    with support.TempDir() as directory:
+        patches = vgm_import.extract(_probe_vgm(directory, names), prefix="probe")
+
+    assert len(patches) == len(names), f"expected {len(names)} patches, got {len(patches)}"
+
+    expected = {}
+    for name in names:
+        source = instruments.BANK[name]
+        # The chip receives total_level plus the patch's calibration trim, so
+        # that is what a VGM records and what comes back out.
+        applied = source.copy()
+        for i in source.carrier_indices():
+            applied.operators[i].total_level = max(
+                0, min(127, applied.operators[i].total_level + source.trim))
+        expected[_signature(applied)] = name
+
+    for patch in patches:
+        assert _signature(patch.instrument) in expected, \
+            f"{patch.instrument.name} does not match any source patch"
+
+
+def test_repeated_notes_collapse_into_one_patch_with_a_use_count():
+    import vgm_import
+    with support.TempDir() as directory:
+        patches = vgm_import.extract(_probe_vgm(directory, ["bass", "organ"]))
+    assert len(patches) == 2, "the same patch keyed repeatedly must dedupe"
+    assert all(p.uses == 3 for p in patches), [p.uses for p in patches]
+    assert all(len(p.channels) == 1 for p in patches)
+
+
+def test_silent_channels_are_not_imported():
+    # Drivers park unused channels with every carrier fully attenuated. A
+    # bank full of those looks like choice and delivers nothing.
+    import events as E
+    import instruments
+    import opn2
+    import vgm_import
+
+    silent = opn2.FMInstrument(
+        7, 0, [opn2.Operator(total_level=127) for _ in range(4)], "silent_probe")
+    instruments.BANK["silent_probe"] = silent
+    try:
+        with support.TempDir() as directory:
+            events = [E.FMInstrumentSelect(channel=0, instrument="silent_probe"),
+                      E.FMNoteOn(channel=0, note="A", octave=3), E.Wait(ticks=24),
+                      E.FMInstrumentSelect(channel=1, instrument="organ"),
+                      E.FMNoteOn(channel=1, note="A", octave=3), E.Wait(ticks=24),
+                      E.End()]
+            path = os.path.join(directory, "silent.vgm")
+            Sequencer().export_vgm(events, path)
+            patches = vgm_import.extract(path)
+    finally:
+        instruments.BANK.pop("silent_probe", None)
+
+    assert len(patches) == 1, "the muted channel should not have produced a patch"
+
+
+def test_imported_bank_saves_loads_and_is_playable():
+    import chipgen
+    import instruments
+    import vgm_import
+
+    with support.TempDir() as directory:
+        source = _probe_vgm(directory, ["bass", "brass", "organ"])
+        patches = vgm_import.extract(source, prefix="probe")
+        bank_path = os.path.join(directory, "bank.json")
+        vgm_import.save_bank(patches, bank_path)
+
+        before = set(instruments.BANK)
+        loaded = instruments.load_bank(bank_path)
+        try:
+            assert set(loaded) == {p.instrument.name for p in patches}
+            name = sorted(loaded)[0]
+            result = chipgen.compose(
+                f"bpm 150\nlpb 4\ninst fm0 {name}\ncols fm0\n\nA-3\n...\n===\n")
+            assert result.peak > 0.01, "an imported patch rendered silence"
+        finally:
+            for extra in set(instruments.BANK) - before:
+                instruments.BANK.pop(extra)
+
+
+def test_imported_patches_are_levelled_against_the_built_in_bank():
+    import calibrate_bank
+    import instruments
+    import vgm_import
+    from sequencer import Sequencer as Seq
+
+    with support.TempDir() as directory:
+        source = _probe_vgm(directory, ["bass", "square_lead", "orch_hit"])
+        patches = vgm_import.extract(source, prefix="probe")
+        bank = vgm_import.to_bank(patches, calibrate=True)
+
+        seq = Seq()
+        reference = calibrate_bank.measure("organ", seq)
+        before = set(instruments.BANK)
+        instruments.BANK.update(bank)
+        try:
+            for name in bank:
+                level = calibrate_bank.measure(name, seq)
+                assert support.db_between(level, reference) < 4.0, \
+                    f"{name} came in {support.db_between(level, reference):.1f} dB off"
+        finally:
+            for extra in set(instruments.BANK) - before:
+                instruments.BANK.pop(extra)
+
+
+def test_player_and_sequencer_share_one_mixer():
+    # These drifted once already: the sequencer's PSG gain and DC blocking
+    # changed and a replayed export came out 3.5 dB away from its render.
+    import inspect
+    import mixer
+    import vgm_player
+    from sequencer import Sequencer as Seq
+
+    assert Seq().psg_gain == mixer.DEFAULT_PSG_GAIN
+    defaults = inspect.signature(vgm_player.render).parameters
+    assert defaults["psg_gain"].default == mixer.DEFAULT_PSG_GAIN
+    assert defaults["dc_block"].default is True

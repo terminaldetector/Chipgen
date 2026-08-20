@@ -92,6 +92,7 @@ class SN76489:
 
         self._volume = [15, 15, 15, 15]
         self._note = [None, None, None]
+        self._noise_mode = None    # last value written to the noise register
 
     def close(self):
         if self._chip:
@@ -149,10 +150,28 @@ class SN76489:
         self.write((n >> 4) & 0x3F)
 
     # -- noise channel (3) --------------------------------------------------------
-    def noise_on(self, white: bool, rate: int, volume: int = 0):
-        mode_bit = 0x04 if white else 0x00
-        data = mode_bit | (rate & 0x03)
-        self.write(0x80 | (3 << 5) | (0 << 4) | data)
+    def noise_on(self, white: bool, rate: int, volume: int = 0,
+                 restart: bool = False):
+        """Gate the noise voice on at `volume`.
+
+        Writing the noise register RESETS THE LFSR to 0x8000 — that is real
+        hardware, documented and correct. What is not correct is doing it on
+        every hit: a hi-hat gated on and off sixteen times a bar replays the
+        identical first few hundred LFSR states each time, so the "noise"
+        becomes a periodic waveform at the step rate. It stops sounding like
+        a cymbal and starts sounding like a buzz, and it is the single
+        loudest source of grit in a busy pattern.
+
+        Real Genesis drivers set the noise mode once and gate with the
+        volume register afterwards, so that is what this does: the register
+        write happens only when the mode actually changes. Pass restart=True
+        when you genuinely want the reset — it makes short periodic-noise
+        blips repeatable, which is occasionally the point.
+        """
+        mode = (0x04 if white else 0x00) | (rate & 0x03)
+        if restart or mode != self._noise_mode:
+            self.write(0x80 | (3 << 5) | (0 << 4) | mode)
+            self._noise_mode = mode
         self.set_volume(3, volume)
 
     def noise_off(self):
@@ -161,6 +180,11 @@ class SN76489:
     def silence(self):
         for channel in range(4):
             self.set_volume(channel, 15)
+
+    @property
+    def noise_mode(self):
+        """Last value written to the noise register, or None if never set."""
+        return self._noise_mode
 
     # -- rendering ----------------------------------------------------------------
     def render(self, n_samples: int):

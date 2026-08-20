@@ -193,10 +193,20 @@ class FMInstrument:
     """A full 4-operator YM2612 patch: algorithm + feedback + 4 Operators.
 
     `operators` is in register order (op1, op3, op2, op4) — see _OP_OFFSETS.
-    """
-    __slots__ = ("algorithm", "feedback", "operators", "name")
 
-    def __init__(self, algorithm: int, feedback: int, operators, name: str = ""):
+    `trim` is a loudness calibration in Total Level steps (0.75 dB each),
+    added to the carriers when the patch is selected. Negative values make
+    a patch louder and are limited by how much room its carriers have left
+    above TL 0. Patches designed by ear land wherever they land — the bank
+    spanned 15.4 dB end to end before this existed — so swapping a lead for
+    another lead would silently rebalance the whole arrangement. See
+    python/calibrate_bank.py, which measures the bank and regenerates the
+    numbers; do not hand-edit them.
+    """
+    __slots__ = ("algorithm", "feedback", "operators", "name", "trim")
+
+    def __init__(self, algorithm: int, feedback: int, operators, name: str = "",
+                 trim: int = 0):
         assert 0 <= algorithm <= 7
         assert 0 <= feedback <= 7
         assert len(operators) == 4
@@ -204,6 +214,11 @@ class FMInstrument:
         self.feedback = feedback
         self.operators = list(operators)
         self.name = name
+        self.trim = trim
+
+    def headroom(self) -> int:
+        """How many TL steps this patch can be boosted before a carrier hits 0."""
+        return min(self.operators[i].total_level for i in self.carrier_indices())
 
     def carrier_indices(self):
         """Positions in `operators` that reach the output for this algorithm."""
@@ -211,7 +226,8 @@ class FMInstrument:
 
     def copy(self) -> "FMInstrument":
         return FMInstrument(self.algorithm, self.feedback,
-                            [op.copy() for op in self.operators], self.name)
+                            [op.copy() for op in self.operators], self.name,
+                            self.trim)
 
 
 class YM2612:
@@ -294,10 +310,10 @@ class YM2612:
     def set_instrument(self, channel: int, instrument: FMInstrument):
         addr_port, _, ch = self._port_addr_for(channel)
         carriers = instrument.carrier_indices()
-        extra = level_to_attenuation(self._channel_volume[channel])
+        extra = level_to_attenuation(self._channel_volume[channel]) + instrument.trim
         for i, (op, off) in enumerate(zip(instrument.operators, self._OP_OFFSETS)):
             base = 0x30 + off + ch
-            tl = op.total_level + (extra if i in carriers else 0)
+            tl = max(0, op.total_level + (extra if i in carriers else 0))
             self.write(addr_port, base, ((op.detune & 0x7) << 4) | (op.multiple & 0xF))
             self.write(addr_port, base + 0x10, min(127, tl) & 0x7F)
             self.write(addr_port, base + 0x20, ((op.rate_scaling & 0x3) << 6) | (op.attack_rate & 0x1F))
@@ -334,10 +350,10 @@ class YM2612:
         if instrument is None:
             return
         addr_port, _, ch = self._port_addr_for(channel)
-        extra = level_to_attenuation(volume)
+        extra = level_to_attenuation(volume) + instrument.trim
         for i in instrument.carrier_indices():
             op = instrument.operators[i]
-            tl = min(127, op.total_level + extra)
+            tl = max(0, min(127, op.total_level + extra))
             self.write(addr_port, 0x40 + self._OP_OFFSETS[i] + ch, tl & 0x7F)
 
     def set_pitch_offset(self, channel: int, cents: float):
@@ -379,10 +395,10 @@ class YM2612:
         instrument = self._channel_instrument[channel]
         if instrument is not None and velocity < 127:
             addr_port, _, ch = self._port_addr_for(channel)
-            extra = level_to_attenuation(self._channel_volume[channel]) \
-                + level_to_attenuation(velocity)
+            extra = (level_to_attenuation(self._channel_volume[channel])
+                     + level_to_attenuation(velocity) + instrument.trim)
             for i in instrument.carrier_indices():
-                tl = min(127, instrument.operators[i].total_level + extra)
+                tl = max(0, min(127, instrument.operators[i].total_level + extra))
                 self.write(addr_port, 0x40 + self._OP_OFFSETS[i] + ch, tl & 0x7F)
             self._velocity_dirty = True
 

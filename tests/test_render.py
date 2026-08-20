@@ -209,3 +209,78 @@ def test_pure_python_cores_agree_with_the_native_ones():
     difference = support.db_between(float(rms), audio.rms(native.audio))
     assert difference < 3.0, \
         f"fallback is {difference:.1f} dB away from the native cores"
+
+
+def test_mastering_is_opt_in_and_hits_its_target():
+    import mixer
+    plain = chipgen.compose(SCORE)
+    mastered = chipgen.compose(SCORE, normalize=mixer.DEFAULT_MASTER_PEAK)
+    assert abs(mastered.peak - mixer.DEFAULT_MASTER_PEAK) < 0.005
+    assert plain.peak != mastered.peak, "the library default must not master"
+    # Scaling only — the shape of the music has to survive it.
+    ratio = mastered.peak / plain.peak
+    assert support.db_between(audio.rms(mastered.audio),
+                              audio.rms(plain.audio) * ratio) < 0.05
+
+
+def test_psg_no_longer_buries_the_fm_chip():
+    # One square plus a hat used to match five FM voices in RMS. Compare a
+    # PSG-only render against an FM-only one from the same score.
+    import events as E
+    from demo_generator import generate_pattern
+
+    events = generate_pattern(bars=2)
+
+    def only(prefix):
+        return [e for e in events
+                if isinstance(e, (E.Wait, E.End))
+                or type(e).__name__.startswith(prefix)]
+
+    fm = audio.rms(Sequencer().render(only("FM")))
+    psg = audio.rms(Sequencer().render(only("PSG")))
+    assert psg < fm, f"PSG ({psg:.4f}) should sit under five FM voices ({fm:.4f})"
+
+
+def test_noise_hits_do_not_repeat_themselves():
+    # Writing the PSG noise register resets its shift register, so gating a
+    # hat with a register write makes every hit the identical waveform.
+    import sn76489
+
+    def hits(restart):
+        chip = sn76489.SN76489()
+        chip.noise_on(True, 1, 0, restart=True)
+        out = []
+        for _ in range(6):
+            out.append([float(v) for v in chip.render(3000)])
+            chip.noise_off()
+            chip.render(600)
+            chip.noise_on(True, 1, 0, restart=restart)
+        return out
+
+    def correlation(a, b):
+        n = len(a)
+        ma, mb = sum(a) / n, sum(b) / n
+        cov = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+        va = sum((x - ma) ** 2 for x in a) ** 0.5
+        vb = sum((y - mb) ** 2 for y in b) ** 0.5
+        return cov / (va * vb) if va and vb else 0.0
+
+    repeated = hits(restart=True)
+    assert max(correlation(repeated[0], repeated[i])
+               for i in range(1, len(repeated))) > 0.99, \
+        "restart=True is supposed to make hits identical; it did not"
+
+    varied = hits(restart=False)
+    assert max(abs(correlation(varied[0], varied[i]))
+               for i in range(1, len(varied))) < 0.5, \
+        "hats are still replaying the same LFSR states"
+
+
+def test_the_render_is_centred():
+    result = chipgen.compose(SCORE)
+    frames = len(result.audio)
+    total = 0.0
+    for i in range(frames):
+        frame = result.audio[i]
+        total += sum(float(v) for v in frame) / len(frame)
+    assert abs(total / frames) < 1e-4, "DC offset survived the mixer"

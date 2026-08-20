@@ -11,6 +11,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "..", "python"))
 
+import mixer
 import vgm
 import wavio
 from demo_generator import generate_pattern
@@ -28,7 +29,9 @@ def main():
     vgm_path = os.path.join(OUTPUT_DIR, "demo.vgm")
     tag = vgm.GD3(title="chipgen demo", author="chipgen rule-based generator")
 
-    audio = seq.render_to_file(events, wav_path, vgm_path=vgm_path, gd3=tag)
+    audio = seq.render(events, vgm_path=vgm_path, gd3=tag)
+    audio = mixer.normalize_peak(audio)
+    wavio.write(wav_path, audio, seq.target_rate)
     print(f"rendered {wavio.describe(audio, seq.target_rate)}")
     print(f"wrote {wav_path}")
     print(f"wrote {vgm_path}")

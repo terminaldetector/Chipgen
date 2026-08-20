@@ -23,6 +23,7 @@ import gzip
 import struct
 
 import audio as _audio
+import mixer
 import opn2
 import sn76489
 import vgm as vgm_mod
@@ -58,74 +59,61 @@ def load(path_or_bytes) -> bytes:
     return raw
 
 
-def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
-           fm_gain: float = 1.0, psg_gain: float = 1.0):
-    """Replay a VGM and return mixed stereo audio at target_rate."""
-    raw = load(path_or_bytes)
-    header = vgm_mod.read_header(raw)
+def iter_commands(raw: bytes, header: dict = None, max_samples: int = None):
+    """Walk a VGM's command stream.
 
-    ym_clock = header["ym2612_clock"] or opn2.NTSC_CHIP_CLOCK
-    psg_clock = header["psg_clock"] or sn76489.NTSC_PSG_CLOCK
-    ym = opn2.YM2612(clock=float(ym_clock))
-    psg = sn76489.SN76489(clock=float(psg_clock))
+    Yields ("ym", port, addr, data), ("psg", byte) and ("wait", samples),
+    where samples counts 44100ths. Both the player and the instrument
+    importer consume this, so there is one VGM parser in the project rather
+    than one per consumer that has to be kept in step.
 
-    fm_rate = ym.native_rate
-    psg_rate = psg.native_rate
-    fm_chunks, psg_chunks = [], []
-    fm_pending = psg_pending = 0.0
-    elapsed = 0.0
-
+    Unsupported chips are stepped over rather than fatal: a VGM whose
+    header lists a YM2151 alongside the Genesis pair still yields its
+    Genesis half.
+    """
+    header = header or vgm_mod.read_header(raw)
     pos = header["data_offset"]
     end = min(len(raw), header["eof_offset"])
     pcm_bank = bytearray()
     pcm_pos = 0
+    elapsed = 0
 
-    def wait(samples44100: int):
-        nonlocal fm_pending, psg_pending, elapsed
-        seconds = samples44100 / float(vgm_mod.DEFAULT_SAMPLE_RATE)
-        elapsed += seconds
-        fm_pending += seconds * fm_rate
-        psg_pending += seconds * psg_rate
-
-    def flush():
-        nonlocal fm_pending, psg_pending
-        n = int(fm_pending)
-        if n > 0:
-            fm_chunks.append(ym.render(n))
-            fm_pending -= n
-        n = int(psg_pending)
-        if n > 0:
-            psg_chunks.append(psg.render(n))
-            psg_pending -= n
-
-    while pos < end and elapsed < max_seconds:
+    while pos < end:
+        if max_samples is not None and elapsed >= max_samples:
+            return
         cmd = raw[pos]
         pos += 1
 
         if cmd == vgm_mod.CMD_END:
-            break
+            return
         if cmd == vgm_mod.CMD_PSG:
-            flush()
-            psg.write(raw[pos]); pos += 1
+            yield ("psg", raw[pos]); pos += 1
         elif cmd in (vgm_mod.CMD_YM2612_PORT0, vgm_mod.CMD_YM2612_PORT1):
-            flush()
             port = 0 if cmd == vgm_mod.CMD_YM2612_PORT0 else 2
-            ym.write(port, raw[pos], raw[pos + 1]); pos += 2
+            yield ("ym", port, raw[pos], raw[pos + 1]); pos += 2
         elif cmd == vgm_mod.CMD_WAIT_LONG:
-            wait(struct.unpack_from("<H", raw, pos)[0]); pos += 2
+            n = struct.unpack_from("<H", raw, pos)[0]; pos += 2
+            elapsed += n
+            yield ("wait", n)
         elif cmd == vgm_mod.CMD_WAIT_735:
-            wait(735)
+            elapsed += 735
+            yield ("wait", 735)
         elif cmd == vgm_mod.CMD_WAIT_882:
-            wait(882)
+            elapsed += 882
+            yield ("wait", 882)
         elif 0x70 <= cmd <= 0x7F:
-            wait((cmd & 0x0F) + 1)
+            n = (cmd & 0x0F) + 1
+            elapsed += n
+            yield ("wait", n)
         elif 0x80 <= cmd <= 0x8F:
             # DAC byte straight from the PCM bank, then an inline wait
-            flush()
             if pcm_pos < len(pcm_bank):
-                ym.write(0, 0x2A, pcm_bank[pcm_pos])
+                yield ("ym", 0, 0x2A, pcm_bank[pcm_pos])
                 pcm_pos += 1
-            wait(cmd & 0x0F)
+            n = cmd & 0x0F
+            elapsed += n
+            if n:
+                yield ("wait", n)
         elif cmd == 0x67:                      # data block
             pos += 1                           # 0x66 marker
             block_type = raw[pos]; pos += 1
@@ -141,22 +129,57 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
             raise UnsupportedCommand(
                 f"VGM command 0x{cmd:02X} at offset 0x{pos - 1:X} is not handled")
 
+
+def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
+           fm_gain: float = 1.0, psg_gain: float = mixer.DEFAULT_PSG_GAIN,
+           dc_block: bool = True):
+    """Replay a VGM and return mixed stereo audio at target_rate."""
+    raw = load(path_or_bytes)
+    header = vgm_mod.read_header(raw)
+
+    ym_clock = header["ym2612_clock"] or opn2.NTSC_CHIP_CLOCK
+    psg_clock = header["psg_clock"] or sn76489.NTSC_PSG_CLOCK
+    ym = opn2.YM2612(clock=float(ym_clock))
+    psg = sn76489.SN76489(clock=float(psg_clock))
+
+    fm_rate = ym.native_rate
+    psg_rate = psg.native_rate
+    fm_chunks, psg_chunks = [], []
+    fm_pending = psg_pending = 0.0
+
+    def flush():
+        nonlocal fm_pending, psg_pending
+        n = int(fm_pending)
+        if n > 0:
+            fm_chunks.append(ym.render(n))
+            fm_pending -= n
+        n = int(psg_pending)
+        if n > 0:
+            psg_chunks.append(psg.render(n))
+            psg_pending -= n
+
+    max_samples = int(max_seconds * vgm_mod.DEFAULT_SAMPLE_RATE)
+    for command in iter_commands(raw, header, max_samples):
+        if command[0] == "wait":
+            seconds = command[1] / float(vgm_mod.DEFAULT_SAMPLE_RATE)
+            fm_pending += seconds * fm_rate
+            psg_pending += seconds * psg_rate
+        elif command[0] == "psg":
+            flush()
+            psg.write(command[1])
+        else:
+            flush()
+            ym.write(command[1], command[2], command[3])
+
     flush()
     ym.close()
     psg.close()
 
-    fm_audio = _audio.resample(_audio.concat(fm_chunks, 2), fm_rate, target_rate)
-    psg_audio = _audio.resample(_audio.concat(psg_chunks, 1), psg_rate, target_rate)
-    n = max(len(fm_audio), len(psg_audio))
-    out = _audio.zeros(n, 2)
-    if len(fm_audio):
-        _audio.add_stereo_into(out, fm_audio, fm_gain)
-    if len(psg_audio):
-        _audio.add_mono_into_stereo(out, psg_audio, psg_gain)
-    peak = _audio.peak(out)
-    if peak > 1.0:
-        out = _audio.scale(out, 0.98 / peak)
-    return out
+    # Same mixer the sequencer uses, so a replayed export and the render it
+    # came from agree by construction rather than by both being maintained.
+    return mixer.mix(_audio.concat(fm_chunks, 2), _audio.concat(psg_chunks, 1),
+                     fm_rate, psg_rate, target_rate, fm_gain=fm_gain,
+                     psg_gain=psg_gain, dc_block=dc_block)
 
 
 def main(argv):

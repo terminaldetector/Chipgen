@@ -31,6 +31,11 @@
     "json": "array of event objects; see events",
     "events": "python objects from events.py"
   },
+  "instrument_import": {
+    "tool": "python/vgm_import.py",
+    "summary": "extract FM patches from any Genesis VGM into a bank JSON, loudness-levelled against the built-in bank",
+    "usage": "python3 python/vgm_import.py song.vgm -o bank.json, then render with --bank bank.json"
+  },
   "outputs": {
     "wav": "16-bit PCM, any sample rate (default 44100)",
     "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it.",
@@ -41,84 +46,98 @@
       "algorithm": 0,
       "feedback": 5,
       "carriers": 1,
+      "trim": 5,
       "character": "punchy FM bass, fast attack, short body"
     },
     "bell_pluck": {
       "algorithm": 4,
       "feedback": 2,
       "carriers": 2,
+      "trim": 1,
       "character": "bright metallic pluck/bell, good for arpeggios"
     },
     "brass": {
       "algorithm": 2,
       "feedback": 5,
       "carriers": 1,
+      "trim": -3,
       "character": "FM brass section, brightens after the attack"
     },
     "distorted_lead": {
       "algorithm": 0,
       "feedback": 7,
       "carriers": 1,
+      "trim": 8,
       "character": "gritty overdriven lead, heavy feedback, cuts through"
     },
     "e_piano": {
       "algorithm": 5,
       "feedback": 4,
       "carriers": 3,
+      "trim": -4,
       "character": "DX-style electric piano, bell-tinged, decays away"
     },
     "jazz_chord_pad": {
       "algorithm": 6,
       "feedback": 1,
       "carriers": 3,
+      "trim": 0,
       "character": "soft additive chord tone, one note per channel"
     },
     "metal_stab": {
       "algorithm": 3,
       "feedback": 7,
       "carriers": 1,
+      "trim": -4,
       "character": "clangorous industrial stab, very inharmonic"
     },
     "orch_hit": {
       "algorithm": 6,
       "feedback": 7,
       "carriers": 3,
+      "trim": -3,
       "character": "short inharmonic orchestra-hit stab"
     },
     "organ": {
       "algorithm": 7,
       "feedback": 0,
       "carriers": 4,
+      "trim": 0,
       "character": "additive drawbar organ, sustains flat until note off"
     },
     "pluck_guitar": {
       "algorithm": 0,
       "feedback": 6,
       "carriers": 1,
+      "trim": 1,
       "character": "muted guitar pluck, quick decay"
     },
     "slap_bass": {
       "algorithm": 4,
       "feedback": 6,
       "carriers": 2,
+      "trim": 6,
       "character": "snappy funk bass with a bright attack transient"
     },
     "square_lead": {
       "algorithm": 4,
       "feedback": 7,
       "carriers": 2,
+      "trim": -8,
       "character": "hard square-ish lead, chiptune-forward"
     },
     "strings": {
       "algorithm": 4,
       "feedback": 2,
       "carriers": 2,
+      "trim": 0,
       "character": "slow-attack detuned ensemble pad"
     },
     "sub_bass": {
       "algorithm": 7,
       "feedback": 0,
       "carriers": 4,
+      "trim": 7,
       "character": "pure sine sub, no harmonics, sits under everything"
     }
   },
@@ -461,9 +480,13 @@
             0,
             15
           ]
+        },
+        "restart": {
+          "type": "bool",
+          "default": false
         }
       },
-      "doc": ""
+      "doc": "Gate the shared noise voice on.\n\n    `restart` forces a write to the noise register, which resets the LFSR.\n    Leave it off for hats and cymbals: re-seeding the shift register on\n    every hit makes the noise repeat itself and turns a cymbal into a\n    buzz. Turn it on when you want a short blip to sound identical each\n    time, which is the one case the reset is good for."
     },
     "PSGNoiseOff": {
       "fields": {},

@@ -147,18 +147,30 @@ def to_events(source, ticks_per_second: float = None):
 def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
             bpm: float = None, ticks_per_second: float = None,
             target_rate: int = 44100, title: str = "", author: str = "",
-            pal: bool = False, dc_block: bool = False,
-            chip_type: str = None, quiet: bool = True):
+            pal: bool = False, dc_block: bool = True,
+            chip_type: str = None, bank: str = None,
+            normalize: float = None, quiet: bool = True):
     """Render tracker text / JSON events / Event objects to audio.
 
     Everything but `source` is optional; with no output paths it just
     returns the audio so you can inspect or post-process it.
+
+    `normalize` peak-normalises the result to that level (0.89 is a good
+    one) as a final mastering step. None, the default, leaves levels alone
+    so that two renders stay comparable — the CLI passes a value because a
+    file handed to someone should be playable without reaching for the
+    volume knob.
 
     Returns a Result. Bad-but-recoverable input (an out-of-range channel, a
     lowercase note name, a missing End) is repaired and reported in
     Result.warnings rather than raised — a model that got 95% of a pattern
     right should hear the 95%.
     """
+    if bank:
+        # Merged into the shared bank, so names from an imported set and the
+        # built-in ones are referenced the same way in a score.
+        instruments_mod.load_bank(bank)
+
     events, warnings, metadata = to_events(source, ticks_per_second)
 
     rate = ticks_per_second
@@ -182,6 +194,9 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.title = "chipgen"
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
+    if normalize:
+        import mixer
+        buf = mixer.normalize_peak(buf, normalize)
     if wav:
         wavio.write(wav, buf, target_rate)
     if tracker_out:
@@ -244,6 +259,13 @@ def info() -> dict:
             "json": "array of event objects; see events",
             "events": "python objects from events.py",
         },
+        "instrument_import": {
+            "tool": "python/vgm_import.py",
+            "summary": "extract FM patches from any Genesis VGM into a bank "
+                       "JSON, loudness-levelled against the built-in bank",
+            "usage": "python3 python/vgm_import.py song.vgm -o bank.json, "
+                     "then render with --bank bank.json",
+        },
         "outputs": {
             "wav": "16-bit PCM, any sample rate (default 44100)",
             "vgm": "VGM 1.71 register log; plays in VGM players, imports "
@@ -280,6 +302,14 @@ def _tracker_syntax() -> dict:
 # --------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------
+def _master_peak(value):
+    """CLI masters by default; --peak 0 opts out."""
+    import mixer
+    if value is None:
+        return mixer.DEFAULT_MASTER_PEAK
+    return value if value > 0 else None
+
+
 def main(argv):
     import argparse
 
@@ -297,11 +327,18 @@ def main(argv):
     parser.add_argument("--title", default="")
     parser.add_argument("--author", default="")
     parser.add_argument("--pal", action="store_true", help="PAL clocks")
+    parser.add_argument("--peak", type=float, default=None,
+                        help="master the WAV to this peak level "
+                             "(default 0.89; --peak 0 to leave levels alone)")
+    parser.add_argument("--bank", metavar="BANK.JSON",
+                        help="load extra instruments (see vgm_import.py)")
     parser.add_argument("--chip", default=None, choices=("ym2612", "ym3438"),
                         help="ym2612 = discrete Model 1 (DAC ladder, gritty); "
                              "ym3438 = later ASIC (clean). Default ym2612.")
-    parser.add_argument("--dc-block", action="store_true",
-                        help="remove the DC offset before normalising")
+    parser.add_argument("--no-dc-block", action="store_true",
+                        help="keep the DAC ladder's DC offset instead of "
+                             "centring the mix (for comparing against an "
+                             "unfiltered capture)")
     parser.add_argument("--info", action="store_true",
                         help="print capabilities as JSON and exit")
     parser.add_argument("--demo", action="store_true",
@@ -331,8 +368,10 @@ def main(argv):
     result = compose(source, wav=args.wav, vgm=args.vgm,
                      tracker_out=args.tracker, ticks_per_second=args.ticks,
                      target_rate=args.rate, title=args.title,
-                     author=args.author, pal=args.pal, dc_block=args.dc_block,
-                     chip_type=args.chip, quiet=False)
+                     author=args.author, pal=args.pal,
+                     dc_block=not args.no_dc_block,
+                     chip_type=args.chip, bank=args.bank,
+                     normalize=_master_peak(args.peak), quiet=False)
     for path in (result.wav_path, result.vgm_path, args.tracker):
         if path:
             print(f"wrote {path}")

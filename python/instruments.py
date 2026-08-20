@@ -228,15 +228,26 @@ STRINGS = patch(
 ORCH_HIT = patch(
     # Every operator at a different high multiple with a hard decay: a
     # short inharmonic blast. The 90s in one voice.
+    #
+    # Two changes from the first draft, both forced by calibration.
+    # Carriers are 6 steps hotter, and the decay is 4 steps slower with a
+    # deeper sustain level. As drafted this measured 12 dB under the bank
+    # and the trim could only give back 7.5 before its quietest carrier hit
+    # Total Level 0 — a trim lowers a patch freely but raises one only as
+    # far as its own headroom, so a patch has to be designed slightly HOT
+    # and trimmed down, never designed quiet and trimmed up. The decay was
+    # the other half: a stab that has fully decayed inside 150 ms measures
+    # quiet however loud its attack is, because there is nothing left to
+    # measure.
     "orch_hit", algorithm=6, feedback=7,
     op1=Operator(detune=3, multiple=6, total_level=20, attack_rate=31,
-                 decay_rate=22, sustain_rate=20, release_rate=14, sustain_level=14),
-    op2=Operator(detune=1, multiple=3, total_level=10, attack_rate=31,
-                 decay_rate=20, sustain_rate=18, release_rate=14, sustain_level=13),
-    op3=Operator(detune=6, multiple=9, total_level=16, attack_rate=31,
-                 decay_rate=21, sustain_rate=19, release_rate=14, sustain_level=14),
-    op4=Operator(detune=2, multiple=13, total_level=22, attack_rate=31,
-                 decay_rate=23, sustain_rate=20, release_rate=15, sustain_level=15),
+                 decay_rate=18, sustain_rate=20, release_rate=14, sustain_level=10),
+    op2=Operator(detune=1, multiple=3, total_level=4, attack_rate=31,
+                 decay_rate=16, sustain_rate=18, release_rate=14, sustain_level=9),
+    op3=Operator(detune=6, multiple=9, total_level=10, attack_rate=31,
+                 decay_rate=17, sustain_rate=19, release_rate=14, sustain_level=10),
+    op4=Operator(detune=2, multiple=13, total_level=16, attack_rate=31,
+                 decay_rate=19, sustain_rate=20, release_rate=15, sustain_level=11),
 )
 
 METAL_STAB = patch(
@@ -289,6 +300,27 @@ CHARACTER = {
 }
 
 
+def _apply_calibration():
+    """Load the generated loudness trims onto the bank.
+
+    Kept in a separate generated module rather than inline in the patch
+    definitions: the patches are hand-authored and the trims are measured,
+    and mixing the two in one file means a calibration run rewrites human
+    work. Missing file is not an error — an uncalibrated bank still plays.
+    """
+    try:
+        from bank_calibration import TRIMS
+    except ImportError:
+        return
+    for name, trim in TRIMS.items():
+        patch = BANK.get(name)
+        if patch is not None:
+            patch.trim = trim
+
+
+_apply_calibration()
+
+
 def names():
     return sorted(BANK)
 
@@ -318,6 +350,7 @@ def describe() -> dict:
             "algorithm": inst.algorithm,
             "feedback": inst.feedback,
             "carriers": len(inst.carrier_indices()),
+            "trim": inst.trim,
             "character": CHARACTER.get(name, ""),
         }
         for name, inst in sorted(BANK.items())
@@ -337,6 +370,7 @@ def instrument_to_dict(inst: FMInstrument) -> dict:
         "name": inst.name,
         "algorithm": inst.algorithm,
         "feedback": inst.feedback,
+        "trim": inst.trim,
         "operator_order": "register",   # op1, op3, op2, op4 — see module docstring
         "operators": [{f: getattr(op, f) for f in _OP_FIELDS}
                       for op in inst.operators],
@@ -358,7 +392,7 @@ def instrument_from_dict(d: dict) -> FMInstrument:
     elif order != "register":
         raise ValueError(f"unknown operator_order {order!r}")
     return FMInstrument(int(d["algorithm"]), int(d["feedback"]), ops,
-                        d.get("name", ""))
+                        d.get("name", ""), int(d.get("trim", 0)))
 
 
 def save_bank(path: str, bank: dict = None) -> str:

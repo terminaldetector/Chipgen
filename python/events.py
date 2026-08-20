@@ -219,9 +219,18 @@ class PSGVolume(Event):
 
 @dataclass
 class PSGNoiseOn(Event):
+    """Gate the shared noise voice on.
+
+    `restart` forces a write to the noise register, which resets the LFSR.
+    Leave it off for hats and cymbals: re-seeding the shift register on
+    every hit makes the noise repeat itself and turns a cymbal into a
+    buzz. Turn it on when you want a short blip to sound identical each
+    time, which is the one case the reset is good for.
+    """
     white: bool          # True = white noise, False = "periodic" noise
     rate: int            # 0,1,2 = fixed rates; 3 = synced to PSG tone channel 2
     volume: int = 0
+    restart: bool = False
 
 
 @dataclass

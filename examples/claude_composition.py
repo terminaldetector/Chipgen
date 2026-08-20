@@ -135,8 +135,9 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "out
 
 
 if __name__ == "__main__":
-    import wavio
+    import mixer
     import vgm
+    import wavio
     from sequencer import Sequencer
 
     events = compose()
@@ -148,7 +149,9 @@ if __name__ == "__main__":
     wav_path = os.path.join(OUTPUT_DIR, "claude_composition.wav")
     vgm_path = os.path.join(OUTPUT_DIR, "claude_composition.vgm")
 
-    audio = seq.render_to_file(events, wav_path, vgm_path=vgm_path, gd3=tag)
+    audio = seq.render(events, vgm_path=vgm_path, gd3=tag)
+    audio = mixer.normalize_peak(audio)
+    wavio.write(wav_path, audio, seq.target_rate)
     print(f"rendered {wavio.describe(audio, seq.target_rate)}")
     print(f"wrote {wav_path}")
     print(f"wrote {vgm_path}  (plays in any VGM player, imports into DefleMask)")
