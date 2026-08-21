@@ -86,7 +86,86 @@ def test_empty_and_trivial_input_does_not_crash():
 
 def test_compose_surfaces_sanity_warnings():
     import chipgen
+    # 100 rows @ 150 BPM / lpb 4 is ~9.5s — comfortably past MIN_TRACK_SECONDS,
+    # so the check actually runs rather than being skipped as too short.
     score = ("bpm 150\nlpb 4\ninst fm0 bass\ncols fm0 noise\n\n" +
-            "\n".join("A-2 w1" for _ in range(40)) + "\n===  ===\n")
+            "\n".join("A-2 w1" for _ in range(100)) + "\n===  ===\n")
     result = chipgen.compose(score)
     assert any("noise channel" in w for w in result.warnings), result.warnings
+
+
+def test_dac_measures_actual_sample_duration_not_event_gaps():
+    # Two short samples fired back to back, closer together than either
+    # one's own length, is what a fast drum pattern with this project's
+    # ~200ms built-in kit legitimately looks like — the first version of
+    # this check measured only explicit enable/disable events, which
+    # nobody writes by hand, so it saw "one enable, no disable" and called
+    # any drum-heavy track a continuous noise bed.
+    import samples
+
+    kick_seconds = samples.KIT["kick"].duration
+    events = [FMInstrumentSelect(channel=0, instrument="bass")]
+    gap_ticks = int(round((kick_seconds * 2.5) * 192))   # real silence each hit
+    for _ in range(30):
+        events += [DACSample(name="kick"), Wait(ticks=gap_ticks)]
+    events.append(End())
+    warnings = sanity.check(events, 192.0)
+    assert not any("DAC" in w for w in warnings), warnings
+
+
+def test_dac_still_catches_back_to_back_streaming_with_no_real_gap():
+    import samples
+
+    hat_seconds = samples.KIT["hat"].duration
+    events = [FMInstrumentSelect(channel=0, instrument="bass")]
+    tight_ticks = max(1, int(round((hat_seconds * 0.3) * 192)))  # retriggers mid-sample
+    for _ in range(400):
+        events += [DACSample(name="hat"), Wait(ticks=tight_ticks)]
+    events.append(End())
+    warnings = sanity.check(events, 192.0)
+    assert any("DAC" in w for w in warnings), \
+        "back-to-back retriggering with no real gap should still be flagged"
+
+
+def test_acceptance_prompt_scenario_produces_no_warnings():
+    # The exact shape bridge/PROMPT.md's acceptance-test prompt asks a
+    # model to build: gated noise, gapped DAC hits, some panning, more
+    # than one FM/PSG channel in use, 30+ seconds long. If this ever
+    # starts warning, the prompt's own claim ("the output will be clean")
+    # stops being true and needs rewriting alongside the fix.
+    bpm, tps = 150.0, 192.0
+
+    def ticks(beats):
+        return max(1, round(beats * 60.0 / bpm * tps))
+
+    events = [FMInstrumentSelect(channel=0, instrument="bass"),
+              FMInstrumentSelect(channel=1, instrument="distorted_lead"),
+              FMInstrumentSelect(channel=2, instrument="strings"),
+              FMPan(channel=1, left=True, right=False),
+              FMPan(channel=2, left=False, right=True)]
+    for bar in range(22):
+        events.append(FMNoteOn(channel=2, note="A", octave=3))
+        for step in range(16):
+            events.append(FMNoteOn(channel=0, note="A", octave=2))
+            if step % 4 == 0:
+                events.append(FMNoteOn(channel=1, note="E", octave=4))
+            events.append(PSGToneOn(channel=0, note="A", octave=5, volume=4))
+            events.append(PSGToneOn(channel=1, note="E", octave=5, volume=6))
+            if step % 4 == 2:
+                events.append(PSGNoiseOn(white=True, rate=1, volume=6))
+            if step % 8 == 0:
+                events.append(DACSample(name="kick"))
+            elif step % 8 == 4:
+                events.append(DACSample(name="snare"))
+            events.append(Wait(ticks=ticks(0.25)))
+            events.append(FMNoteOff(channel=0))
+            if step % 4 == 0:
+                events.append(FMNoteOff(channel=1))
+            events.append(PSGToneOff(channel=0))
+            events.append(PSGToneOff(channel=1))
+            if step % 4 == 2:
+                events.append(PSGNoiseOff())
+        events.append(FMNoteOff(channel=2))
+    events.append(End())
+
+    assert sanity.check(events, tps) == []

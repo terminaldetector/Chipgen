@@ -58,6 +58,60 @@ what it found, and `START_HERE.md` is written for a model to read.
 
 ---
 
+---
+
+## Acceptance-test prompt — use this to check a bridge session behaves
+
+The three prompts above ask for a track. This one asks for a track AND
+checks it against the exact mistakes a real session made once: gating the
+PSG noise channel on and never releasing it for 60 seconds straight,
+enabling the DAC once and streaming samples back to back with no gap for
+57 of those seconds, and never touching FMPan so the whole mix collapsed
+to mono. None of that clipped, none of it desynced — it only showed up as
+elevated spectral flatness, and it took replaying the accompanying VGM
+through this engine's own emulator to confirm the render was honest and
+the problem was in the score, not the chip. `sanity.py` now runs this
+check automatically on every `compose()` call, so a session that reads
+its own output has everything it needs to catch this itself before
+handing a file back.
+
+Use this prompt to test a fresh session (a new chipgen version, a
+different model, a different sandbox) or whenever you want a track that
+actually exercises the engine instead of leaning on one channel:
+
+> Во вложении chipgen — движок чиптюна на эмуляции YM2612+SN76489.
+> Распакуй, `python3 bridge/bootstrap.py`, прочитай `START_HERE.md`.
+>
+> Сочини трек 30–60 секунд, **<стиль/тональность/темп>**. Требования,
+> которые движок проверяет сам и напишет предупреждение, если что-то
+> нарушено:
+>
+> 1. Канал шума (`noise` / `PSGNoiseOn`) гейтится короткими всплесками,
+>    как настоящие хэты — не держи его включённым больше нескольких
+>    тактов подряд.
+> 2. Между сэмплами DAC (`kick`, `snare`, `hat`...) должны быть реальные
+>    паузы — не гони их вплотную одно за другим весь трек, дай каждому
+>    доиграть.
+> 3. Хотя бы часть FM-каналов разведи по стерео (`pan fmN L`/`R`), не
+>    держи всё по центру.
+> 4. Используй больше одного FM-канала и больше одного PSG-тон-канала —
+>    не оставляй половину чипа простаивать.
+>
+> Отрендери: `python3 python/chipgen.py song.trk -o song.wav --vgm
+> song.vgm`. Команда сама печатает предупреждения, если партитура
+> нарушает пункты 1–4 (`warning: ...` в выводе) — если что-то напечаталось,
+> перепиши партитуру и отрендери заново, пока вывод не станет чистым.
+> Пришли `song.trk`, `song.wav`, `song.vgm` и **сам вывод команды рендера
+> целиком**, чтобы было видно, что предупреждений нет.
+
+If warnings still show up in the output the model pastes back, the track
+was not actually fixed — do not accept "close enough," ask for another
+pass. If the output is clean, the score exercised the channel budget the
+engine actually has instead of leaning on one continuous channel for
+the whole runtime.
+
+---
+
 ## What you get back
 
 - **`song.wav`** — plays anywhere.

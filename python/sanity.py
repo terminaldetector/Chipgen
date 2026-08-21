@@ -30,6 +30,7 @@ discovered by staring at a spectrogram.
 from typing import Dict, List
 
 import events as events_mod
+import samples as samples_mod
 
 #: A channel considered "always on" for this fraction of the track or more
 #: gets flagged. High rather than exactly 1.0: a track that is on for
@@ -72,6 +73,18 @@ DAC_DUTY_CYCLE_THRESHOLD = 0.60
 MIN_TRACK_SECONDS = 5.0
 
 
+def _dac_sample_seconds(name: str, rate_override: int) -> float:
+    """How long one DACSample event actually plays, or None if `name` is not
+    a real kit entry — that is a render-time error, not this module's to
+    raise twice, so it is silently excluded from the DAC-busy measurement."""
+    try:
+        sample = samples_mod.KIT[name]
+    except KeyError:
+        return None
+    rate = rate_override or sample.rate
+    return (len(sample.data) / float(rate)) if rate > 0 else None
+
+
 def check(events: List[events_mod.Event],
           ticks_per_second: float = 192.0) -> List[str]:
     """Return human-readable warnings about the event list's arrangement.
@@ -92,11 +105,27 @@ def check(events: List[events_mod.Event],
     noise_on_since = None
     noise_on_time = 0.0
     noise_retriggers = 0
-    dac_enabled_since = None
+    #: The DAC's busy time is measured from each sample's OWN duration, not
+    #: from enable/disable events. Composers never write DACEnable by hand —
+    #: DACSample manages it — so tracking only explicit enable/disable calls
+    #: made every drum pattern look "100% enabled" the instant two short
+    #: samples landed closer together than either one's own length, which is
+    #: normal at a fast tempo with this project's ~200ms built-in kit. A
+    #: retrigger truncates whatever was still playing (the sequencer replaces
+    #: it outright — see sequencer.py's start_dac), so spans never overlap:
+    #: each new DACSample first closes out however much of the PREVIOUS
+    #: sample's duration actually elapsed before this one, then opens its own.
+    dac_span_start = None
+    dac_span_end = None
     dac_on_time = 0.0
-    dac_enabled = False
     any_pan = False
     any_dac_sample = False
+
+    def close_dac_span(at):
+        nonlocal dac_on_time, dac_span_start, dac_span_end
+        if dac_span_start is not None:
+            dac_on_time += max(0.0, min(dac_span_end, at) - dac_span_start)
+        dac_span_start = dac_span_end = None
 
     for event in events:
         E = events_mod
@@ -135,18 +164,13 @@ def check(events: List[events_mod.Event],
                 noise_on_since = None
         elif isinstance(event, E.DACSample):
             any_dac_sample = True
-            if not dac_enabled:
-                dac_enabled = True
-                dac_enabled_since = clock
+            close_dac_span(clock)          # retriggering cuts the previous one off
+            duration = _dac_sample_seconds(event.name, event.rate)
+            if duration is not None:
+                dac_span_start, dac_span_end = clock, clock + duration
         elif isinstance(event, E.DACEnable):
-            if event.enable and not dac_enabled:
-                dac_enabled = True
-                dac_enabled_since = clock
-            elif not event.enable and dac_enabled:
-                dac_enabled = False
-                if dac_enabled_since is not None:
-                    dac_on_time += clock - dac_enabled_since
-                dac_enabled_since = None
+            if not event.enable:
+                close_dac_span(clock)      # an explicit disable cuts it off too
         elif isinstance(event, E.FMPan):
             if not (event.left and event.right) or event.left != event.right:
                 any_pan = True
@@ -161,8 +185,7 @@ def check(events: List[events_mod.Event],
         psg_on_time[channel] += total - start
     if noise_on_since is not None:
         noise_on_time += total - noise_on_since
-    if dac_enabled_since is not None:
-        dac_on_time += total - dac_enabled_since
+    close_dac_span(total)   # count whatever was still playing at the end
 
     for channel, on_time in enumerate(fm_on_time):
         duty = on_time / total
@@ -182,13 +205,21 @@ def check(events: List[events_mod.Event],
                 f"issue as a continuous FM channel")
 
     noise_duty = noise_on_time / total
-    if noise_duty >= DUTY_CYCLE_THRESHOLD and noise_retriggers <= RETRIGGER_CEILING:
+    if noise_duty >= DUTY_CYCLE_THRESHOLD:
+        # No retrigger-ceiling exception here, unlike FM/PSG tone channels
+        # above: a retrigger there usually carries a NEW PITCH, real
+        # musical movement a listener can hear. PSGNoiseOn has no pitch —
+        # white/rate/volume repeated unchanged, row after row, is not
+        # variation, it is the same hiss re-asserted for no audible reason.
+        # High duty cycle means "this channel never rests" regardless of
+        # how many near-identical PSGNoiseOn calls produced that duty cycle.
         warnings.append(
-            f"the noise channel is one continuous {noise_duty*100:.0f}%-of-"
-            f"the-track span ({noise_retriggers} PSGNoiseOn total), not "
-            f"intermittent hats — this alone reads as a constant hiss under "
-            f"the whole mix. Gate it like real drums: brief PSGNoiseOn/Off "
-            f"pairs spread through the track, not one long span")
+            f"the noise channel is on for {noise_duty*100:.0f}% of the "
+            f"track ({noise_retriggers} PSGNoiseOn total) with no real "
+            f"rest — this alone reads as a constant hiss under the whole "
+            f"mix, not intermittent hats. Gate it like real drums: brief "
+            f"PSGNoiseOn/Off pairs spread through the track, with actual "
+            f"gaps, not a channel that is always on")
 
     dac_duty = dac_on_time / total
     if any_dac_sample and dac_duty >= DAC_DUTY_CYCLE_THRESHOLD:

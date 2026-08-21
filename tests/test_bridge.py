@@ -11,6 +11,27 @@ import support
 BRIDGE = os.path.join(support.ROOT, "bridge")
 
 
+def test_every_test_file_is_registered_with_the_bare_runner():
+    # pytest auto-discovers test_*.py; tests/run_tests.py does not — it
+    # only runs what is listed in its own MODULES constant. test_sanity.py
+    # existed for a full session, ran fine under pytest, and was silently
+    # never executed by `python3 tests/run_tests.py` because nobody added
+    # it to that list — the exact failure mode this test exists to catch,
+    # on this project's own test suite.
+    import run_tests
+
+    on_disk = {
+        os.path.splitext(name)[0]
+        for name in os.listdir(support.ROOT + "/tests")
+        if name.startswith("test_") and name.endswith(".py")
+    }
+    missing = on_disk - set(run_tests.MODULES)
+    assert not missing, (
+        f"{missing} exist(s) as test files but tests/run_tests.py's "
+        f"MODULES list does not mention them — `python3 tests/run_tests.py` "
+        f"is silently not running them, even though pytest would")
+
+
 def test_manifest_on_disk_matches_the_code():
     # bridge/manifest.json is what a model reads when it has the archive
     # but has not run anything yet. If it drifts from chipgen.info(), the
