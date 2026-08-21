@@ -234,3 +234,62 @@ def test_flat_sections_are_reported():
     assert sanity.check_sections([Stat("only", 0.2)]) == [], \
         "one section cannot have a dynamic range"
     assert sanity.check_sections([]) == []
+
+
+def test_flags_an_fm5_part_the_dac_deletes():
+    # The trap: a bassline written on FM5 with drums on the DAC column.
+    # It renders, it looks right in the score, and channel 6 is handed to
+    # the DAC for most of it — so most of those notes never reach the
+    # output pins at all. Measured, not assumed: on a YM3438 an enabled
+    # DAC takes a held FM5 note to exactly 0.0 RMS.
+    events = [FMInstrumentSelect(channel=5, instrument="bass")]
+    for _ in range(30):                     # ~15s at 192 ticks/s
+        events += [DACSample(name="kick"),  # 220ms of sample...
+                   FMNoteOn(channel=5, note="A", octave=2),
+                   Wait(ticks=96),          # ...under a 500ms note
+                   FMNoteOff(channel=5)]
+    events.append(End())
+    warnings = sanity.check(events, 192.0)
+    joined = " | ".join(warnings)
+    assert "FM5" in joined and "0x2B" in joined, warnings
+
+
+def test_fm5_and_dac_that_stay_out_of_each_other_s_way_are_fine():
+    # Same two parts, alternating instead of stacked: the FM5 note plays
+    # in the gap after the drum has finished. That is ordinary Genesis
+    # arrangement and must not warn.
+    events = [FMInstrumentSelect(channel=5, instrument="bass")]
+    for _ in range(30):
+        events += [DACSample(name="hat"),   # 45ms
+                   Wait(ticks=48),          # 250ms — sample is long done
+                   FMNoteOn(channel=5, note="A", octave=2),
+                   Wait(ticks=48),
+                   FMNoteOff(channel=5)]
+    events.append(End())
+    warnings = sanity.check(events, 192.0)
+    assert not any("0x2B" in w for w in warnings), warnings
+
+
+def test_fm5_check_needs_both_parts_present():
+    # Drums alone, or an FM5 part alone, is not a collision.
+    drums = [DACSample(name="kick")]
+    for _ in range(30):
+        drums += [DACSample(name="kick"), Wait(ticks=96)]
+    drums.append(End())
+    assert not any("0x2B" in w for w in sanity.check(drums, 192.0))
+
+    fm_only = [FMInstrumentSelect(channel=5, instrument="bass")]
+    for _ in range(30):
+        fm_only += [FMNoteOn(channel=5, note="A", octave=2), Wait(ticks=96),
+                    FMNoteOff(channel=5)]
+    fm_only.append(End())
+    assert not any("0x2B" in w for w in sanity.check(fm_only, 192.0))
+
+
+def test_overlap_sweep_handles_the_awkward_shapes():
+    # One long span covering several short ones, a span straddling a gap,
+    # empty input, and spans that only touch at an endpoint.
+    assert sanity._overlap_seconds([(0, 10)], [(2, 3), (4, 5), (20, 30)]) == 2.0
+    assert sanity._overlap_seconds([(0, 1), (2, 3)], [(0.5, 2.5)]) == 1.0
+    assert sanity._overlap_seconds([], [(0, 5)]) == 0.0
+    assert sanity._overlap_seconds([(0, 5)], [(5, 10)]) == 0.0

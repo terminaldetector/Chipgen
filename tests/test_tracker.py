@@ -185,3 +185,83 @@ def test_arp_skips_subdivision_when_the_row_is_too_short():
         "arp fm0 0 3 7\nA-4\n===\n")
     waits = [e.ticks for e in events if isinstance(e, E.Wait)]
     assert all(w > 0 for w in waits), waits
+
+
+def test_dac_cells_carry_a_volume_and_round_trip():
+    # Every other column has a `:level` suffix; the DAC column used to be
+    # the one place a score could not say "this hit is quieter", which
+    # made an intro with soft hats impossible to write in notation.
+    events, meta = tracker.loads(
+        "bpm 150\nlpb 4\ncols dac\nkick\nhat:0.4\nsnare:0.75\n...\n")
+    hits = [(e.name, e.volume) for e in events
+            if isinstance(e, E.DACSample)]
+    assert hits == [("kick", 1.0), ("hat", 0.4), ("snare", 0.75)]
+
+    again, _ = tracker.loads(tracker.dumps(events))
+    assert [(e.name, e.volume) for e in again
+            if isinstance(e, E.DACSample)] == hits
+
+
+def test_a_bad_dac_volume_is_reported_with_its_line():
+    for bad in ("hat:loud", "hat:1.5", "hat:-0.2"):
+        try:
+            tracker.loads(f"cols dac\n{bad}\n")
+        except tracker.TrackerError as exc:
+            assert "line 2" in str(exc), (bad, str(exc))
+        else:
+            raise AssertionError(f"{bad!r} should not have parsed")
+
+
+def test_dumps_subdivides_the_grid_to_keep_arpeggios():
+    # `arp` puts FMPitch events INSIDE a row. Dumping those onto the row
+    # grid they were subdividing snapped every one to a row boundary, so
+    # the text that came back played different notes at different times
+    # while every event still round-tripped by count — the failure was
+    # invisible to any check that counted events instead of listening.
+    #
+    # 120 BPM at lpb 4 and 192 ticks/s gives 24 ticks per row, so a
+    # 3-step arp needs a grid three times finer.
+    src = ("bpm 120\nlpb 4\ninst fm0 square_lead\ncols fm0\n"
+           "arp fm0 0 4 7\nA-4\nC-5\nE-5\n===\n")
+    events, meta = tracker.loads(src)
+    assert meta.ticks_per_row() == 24
+
+    text = tracker.dumps(events, meta)
+    assert "lpb 12" in text, text.split("\n")[:6]
+
+    # Every pitch change keeps the offset it was written at.
+    def pitch_times(evs):
+        tick, out = 0, []
+        for e in evs:
+            if isinstance(e, E.Wait):
+                tick += e.ticks
+            elif isinstance(e, E.FMPitch):
+                out.append((tick, round(e.cents)))
+        return out
+
+    again, _ = tracker.loads(text)
+    assert pitch_times(again) == pitch_times(events)
+
+
+def test_a_prime_row_length_cannot_be_subdivided():
+    # The honest other half: 150 BPM at lpb 4 and 192 ticks/s rounds to 19
+    # ticks per row, and 19 is prime. No integer grid holds a 3-step arp
+    # there, so dumps() leaves the rate alone rather than pretending. The
+    # fix belongs in the score (`ticks 240` gives a row of 24) and the
+    # module docstring says so.
+    src = ("bpm 150\nlpb 4\ninst fm0 square_lead\ncols fm0\n"
+           "arp fm0 0 4 7\nA-4\nC-5\n===\n")
+    events, meta = tracker.loads(src)
+    assert meta.ticks_per_row() == 19
+    assert tracker._grid_refinement(events, 19) == 1
+    assert "lpb 4" in tracker.dumps(events, meta)
+
+
+def test_refinement_leaves_an_ordinary_score_alone():
+    # No off-grid events, so no reason to touch the row rate — a plain
+    # score must dump at the lpb it was written at.
+    src = ("bpm 120\nlpb 4\ninst fm0 square_lead\ncols fm0\n"
+           "A-4\n...\nC-5\n===\n")
+    events, meta = tracker.loads(src)
+    assert tracker._grid_refinement(events, meta.ticks_per_row()) == 1
+    assert "lpb 4" in tracker.dumps(events, meta)

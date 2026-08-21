@@ -50,8 +50,20 @@ directive keyword is a directive):
 
 `chord` and `arp` are input shorthand: they expand at parse time into
 ordinary FMNoteOn / FMPitch events, so `dumps()` writes the expansion
-rather than the shorthand. The music round-trips exactly; the spelling
-does not, which is the same trade every tracker effect column makes.
+rather than the shorthand. The spelling does not survive that, which is
+the same trade every tracker effect column makes.
+
+The music survives it only if the row grid can hold the expansion. `arp`
+puts pitch changes *inside* a row, so dumping a 3-step arp needs three
+times the rows — `dumps()` subdivides the grid to fit (raising `lpb`),
+and that works whenever `ticks_per_row` divides evenly. It cannot when
+`ticks_per_row` is prime: 150 BPM at lpb 4 and 192 ticks/s gives 19.2
+ticks per row, rounded to 19, and no integer grid subdivides 19. Measured
+on such a score, the arpeggiated notes came back on the right pitch in
+33% of frames. Set `ticks` so that 60/bpm/lpb*ticks is a round number
+with the factors your arps need — `ticks 240` at 150 BPM and lpb 4 gives
+24 ticks per row, which divides by 2, 3, 4, 6, 8 and 12. That also stops
+the row length itself being rounded, which otherwise detunes the tempo.
 
 `arp` moves pitch with FMPitch instead of retriggering, because a tracker
 arpeggio is one note whose pitch flickers — re-attacking the envelope on
@@ -65,6 +77,9 @@ Row cells, by column type:
     psg0..psg2  A-4  A-4:8 (volume 0-15, 0 loudest)  ===/off  .../--
     noise       w0..w3 (white) p0..p3 (periodic)     ===/off  .../--
     dac         kick snare hat hat_open tom clap rim  .../--
+                kick:0.6 (volume 0.0-1.0 — a float, unlike the FM and PSG
+                columns, because the DAC scales PCM bytes rather than
+                stepping an attenuator)
 
 Comments run to end of line: `;` anywhere, `#` at the start of a line or
 after whitespace (so the sharp in `A#2` is safe). Blank lines are ignored,
@@ -501,7 +516,20 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
     if column == "dac":
         if lowered in OFF_TOKENS:
             return
-        events.append(DACSample(name=token))
+        name, _, level = token.partition(":")
+        volume = 1.0
+        if level:
+            try:
+                volume = float(level)
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {level!r} is not a DAC volume "
+                    f"(want 0.0-1.0, e.g. hat:0.5)\n  {raw.strip()}")
+            if not 0.0 <= volume <= 1.0:
+                raise TrackerError(
+                    f"line {lineno}: DAC volume {volume} is outside 0.0-1.0"
+                    f"\n  {raw.strip()}")
+        events.append(DACSample(name=name, volume=volume))
         return
 
 
@@ -513,15 +541,68 @@ def load(path: str):
 # --------------------------------------------------------------------------
 # Rendering back to text
 # --------------------------------------------------------------------------
-def dumps(events, meta: Metadata = None, columns=None) -> str:
+#: How far dumps() may subdivide the row grid to fit off-grid events.
+#: A triplet arp inside a 16th needs 3, a 4-step one needs 4; past 16 the
+#: notation has stopped being readable and snapping is the better answer.
+_MAX_GRID_REFINEMENT = 16
+
+
+def _grid_refinement(events, ticks_per_row: int) -> int:
+    """Smallest factor that puts every event on a row boundary.
+
+    Returns 1 when the events already fit — the common case, so an
+    ordinary score keeps the row rate it was written at.
+    """
+    if ticks_per_row <= 1:
+        return 1
+    offsets = set()
+    tick = 0
+    for ev in events:
+        if isinstance(ev, Wait):
+            tick += ev.ticks
+            continue
+        if isinstance(ev, End):
+            break
+        offsets.add(tick % ticks_per_row)
+        if len(offsets) > 64:      # too scattered to be a subdivision
+            return 1
+    offsets.discard(0)
+    if not offsets:
+        return 1
+    for factor in range(2, _MAX_GRID_REFINEMENT + 1):
+        if ticks_per_row % factor:
+            continue
+        step = ticks_per_row // factor
+        if all(offset % step == 0 for offset in offsets):
+            return factor
+    return 1
+
+
+def dumps(events, meta: Metadata = None, columns=None,
+          refine: bool = True) -> str:
     """Render an event list as tracker text.
 
     Events are snapped to the row grid, so this is lossy for anything
     written off-grid — which is the same trade every tracker makes, and
     the reason the JSON list stays the authoritative form.
+
+    With `refine` (the default) the grid is chosen to fit the events
+    rather than the other way round: `arp` deliberately places FMPitch
+    events *inside* a row, and dumping those onto the row grid they were
+    subdividing snapped every one of them to a row boundary — measured on
+    this project's own demo as a 0.55 correlation against the original and
+    a tenth of a second of drift, while every event still round-tripped by
+    count. Silently returning different music is worse than returning
+    more rows, so the row rate is multiplied until the events land on it.
+    Pass refine=False for the old fixed-grid behaviour.
     """
     meta = meta or Metadata()
     ticks_per_row = meta.ticks_per_row()
+    lpb = meta.lpb
+    if refine:
+        factor = _grid_refinement(events, ticks_per_row)
+        ticks_per_row //= factor
+        lpb *= factor
     columns = list(columns) if columns else None
 
     rows = {}        # row index -> {column: cell}
@@ -598,7 +679,8 @@ def dumps(events, meta: Metadata = None, columns=None) -> str:
             cell["noise"] = "==="
         elif isinstance(ev, DACSample):
             used.add("dac")
-            cell["dac"] = ev.name
+            cell["dac"] = ev.name + (f":{ev.volume:g}" if ev.volume != 1.0
+                                     else "")
 
     if columns is None:
         order = _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
@@ -610,20 +692,20 @@ def dumps(events, meta: Metadata = None, columns=None) -> str:
             if c in widths:
                 widths[c] = max(widths[c], len(text))
 
-    out = [f"# chipgen tracker  ({meta.bpm:g} BPM, {meta.lpb} rows/beat)"]
+    out = [f"# chipgen tracker  ({meta.bpm:g} BPM, {lpb} rows/beat)"]
     if meta.title:
         out.append(f"title {meta.title}")
     if meta.author:
         out.append(f"author {meta.author}")
     out.append(f"bpm {meta.bpm:g}")
-    out.append(f"lpb {meta.lpb}")
+    out.append(f"lpb {lpb}")
     out.extend(dict.fromkeys(header))     # de-duplicated, order preserved
     out.append("cols " + " ".join(columns))
     out.append("")
     out.append("# " + " ".join(c.ljust(widths[c]) for c in columns))
 
     for r in range(max_row + 1):
-        if r and meta.lpb and r % (meta.lpb * 4) == 0:
+        if r and lpb and r % (lpb * 4) == 0:
             out.append("")                # blank line every bar, for the eyes
         out.extend(row_directives.get(r, ()))
         cells = rows.get(r, {})

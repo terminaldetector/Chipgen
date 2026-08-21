@@ -376,3 +376,63 @@ def test_player_and_sequencer_share_one_mixer():
     defaults = inspect.signature(vgm_player.render).parameters
     assert defaults["psg_gain"].default == mixer.DEFAULT_PSG_GAIN
     assert defaults["dc_block"].default is True
+
+
+def test_replay_alignment_is_bounded_and_does_not_accumulate():
+    # The companion to the LFO-drift test above, pinning the property that
+    # makes that drift tolerable rather than fatal.
+    #
+    # Measured on a real export: the FIRST note-on lands sample-exact in
+    # the replay, and the second lands 2 samples early — the 44100 Hz wait
+    # quantisation, once there is a wait in front of a write. The question
+    # that decides whether a .vgm is usable is not whether that offset
+    # exists but whether it GROWS: 2 samples is 45us and inaudible, 2
+    # samples per event over a 60s track would be seconds of skew.
+    #
+    # It does not grow, because _flush_wait carries the sub-sample
+    # remainder instead of dropping it. This test asserts that directly:
+    # the alignment at the end of a long track must be no worse than at
+    # the beginning. It fails loudly if anyone makes wait encoding lossy.
+    import math
+
+    from events import (End, FMInstrumentSelect, FMNoteOn, FMPan, Wait)
+    from sequencer import Sequencer
+
+    events = [FMInstrumentSelect(channel=0, instrument="square_lead"),
+              FMPan(channel=0, left=True, right=True)]
+    for _ in range(160):                      # 160 note-ons over ~10s
+        events += [FMNoteOn(channel=0, note="A", octave=4), Wait(ticks=12)]
+    events.append(End())
+
+    seq = Sequencer()
+    with support.TempDir() as directory:
+        path = os.path.join(directory, "align.vgm")
+        direct = seq.render(events, vgm_path=path)
+        replayed = vgm_player.render(path)
+
+    def best_lag(start, stop):
+        x = [direct[i][0] + direct[i][1] for i in range(start, stop)]
+        dx = math.sqrt(sum(v * v for v in x))
+        best = (-2.0, 0)
+        for lag in range(-64, 65):
+            y = [replayed[i + lag][0] + replayed[i + lag][1]
+                 for i in range(start, stop)]
+            dy = math.sqrt(sum(v * v for v in y))
+            if dx == 0 or dy == 0:
+                continue
+            c = sum(x[i] * y[i] for i in range(len(x))) / (dx * dy)
+            if c > best[0]:
+                best = (c, lag)
+        return best
+
+    rate = seq.target_rate
+    early_corr, early_lag = best_lag(rate // 2, rate)          # ~0.5-1.0s
+    late_corr, late_lag = best_lag(rate * 8, rate * 8 + rate // 2)  # ~8-8.5s
+
+    assert early_corr > 0.95, f"replay diverges early: {early_corr:.3f}"
+    assert late_corr > 0.95, f"replay diverges late: {late_corr:.3f}"
+    # The whole point: eight seconds and 160 register writes later, the
+    # replay is still aligned to within a couple of samples of where it
+    # started. Accumulating error would put `late_lag` far from `early_lag`.
+    assert abs(late_lag - early_lag) <= 4, \
+        f"alignment drifted from {early_lag} to {late_lag} samples"

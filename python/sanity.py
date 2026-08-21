@@ -88,6 +88,17 @@ REGISTER_COLLISION_SEMITONES = 7
 #: structurally flat, whatever the section names claim.
 SECTION_DYNAMIC_RANGE_DB = 3.0
 
+#: Fraction of FM5's sounding time that may be swallowed by the DAC before
+#: it is worth mentioning. The YM2612 has no mixer here: register 0x2B bit 7
+#: hands channel 6 (FM5, zero-based) to the 8-bit DAC outright, and the FM
+#: voice stops reaching the output pins entirely — measured at exactly
+#: 0.00000 RMS on a YM3438 with a note held and the DAC parked at centre.
+#: So a drum on the `dac` column and a note on `fm5` at the same moment is
+#: not a balance problem to mix around, it is one part deleting the other.
+#: A few percent is ordinary overlap at the edges of hits; a third of the
+#: part's life means the part was written into a channel it cannot have.
+FM6_DAC_MASK_THRESHOLD = 0.30
+
 #: Patch names that are meant to hold down the low end. Checked against the
 #: instrument actually assigned, so a lead sitting low is not mistaken for
 #: a bass and vice versa.
@@ -155,6 +166,12 @@ def check(events: List[events_mod.Event],
     dac_span_start = None
     dac_span_end = None
     dac_on_time = 0.0
+    #: Both sides of the FM6/DAC collision, as spans rather than totals —
+    #: the question is not how long each was busy but how much of that time
+    #: they were busy TOGETHER, and two durations cannot answer that.
+    #: Channel 5 only: it is the sole channel the DAC can take over.
+    dac_spans = []
+    fm5_spans = []
     any_pan = False
     any_dac_sample = False
     fm_pitches = {}           # channel -> [midi numbers played]
@@ -163,7 +180,10 @@ def check(events: List[events_mod.Event],
     def close_dac_span(at):
         nonlocal dac_on_time, dac_span_start, dac_span_end
         if dac_span_start is not None:
-            dac_on_time += max(0.0, min(dac_span_end, at) - dac_span_start)
+            stop = min(dac_span_end, at)
+            if stop > dac_span_start:
+                dac_on_time += stop - dac_span_start
+                dac_spans.append((dac_span_start, stop))
         dac_span_start = dac_span_end = None
 
     for event in events:
@@ -190,6 +210,8 @@ def check(events: List[events_mod.Event],
             start = fm_on_since.pop(event.channel, None)
             if start is not None:
                 fm_on_time[event.channel] += clock - start
+                if event.channel == 5 and clock > start:
+                    fm5_spans.append((start, clock))
         elif isinstance(event, E.PSGToneOn):
             psg_retriggers[event.channel] += 1
             psg_on_since.setdefault(event.channel, clock)
@@ -224,6 +246,8 @@ def check(events: List[events_mod.Event],
 
     for channel, start in fm_on_since.items():
         fm_on_time[channel] += total - start
+        if channel == 5 and total > start:
+            fm5_spans.append((start, total))
     for channel, start in psg_on_since.items():
         psg_on_time[channel] += total - start
     if noise_on_since is not None:
@@ -274,6 +298,21 @@ def check(events: List[events_mod.Event],
             f"a drum channel. Space DACSample events out and let the DAC "
             f"finish between hits")
 
+    fm5_time = sum(end - start for start, end in fm5_spans)
+    if fm5_spans and dac_spans:
+        masked = _overlap_seconds(fm5_spans, dac_spans)
+        share = masked / fm5_time if fm5_time else 0.0
+        if share >= FM6_DAC_MASK_THRESHOLD:
+            warnings.append(
+                f"FM5 and the DAC are both in use, and {share*100:.0f}% of "
+                f"FM5's {fm5_time:.1f}s of note time happens while a DAC "
+                f"sample is playing — on a YM2612 those cannot coexist. "
+                f"Register 0x2B bit 7 hands channel 6 to the DAC outright, "
+                f"so for that {masked:.1f}s the FM part is not quiet, it is "
+                f"absent. Move the part to FM0-FM4 (Genesis drivers keep "
+                f"channel 6 for drums precisely for this reason), or drop "
+                f"the DAC drums and play them on the noise channel")
+
     if len(events) > 200 and not any_pan:
         warnings.append(
             "no FMPan event anywhere — every FM channel defaults to "
@@ -283,6 +322,31 @@ def check(events: List[events_mod.Event],
 
     warnings.extend(_register_warnings(fm_pitches, fm_instrument))
     return warnings
+
+
+def _overlap_seconds(a_spans, b_spans) -> float:
+    """Total time covered by both span lists at once.
+
+    A sweep rather than a nested loop: each list is already in event order,
+    so walking them together is linear, and a long track's drum column runs
+    to thousands of spans.
+    """
+    a = sorted(a_spans)
+    b = sorted(b_spans)
+    total = 0.0
+    i = j = 0
+    while i < len(a) and j < len(b):
+        start = max(a[i][0], b[j][0])
+        stop = min(a[i][1], b[j][1])
+        if stop > start:
+            total += stop - start
+        # Advance whichever span ends first; the other may still overlap
+        # the next one along.
+        if a[i][1] < b[j][1]:
+            i += 1
+        else:
+            j += 1
+    return total
 
 
 def _register_warnings(fm_pitches, fm_instrument) -> List[str]:

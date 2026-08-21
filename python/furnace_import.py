@@ -289,6 +289,28 @@ def _is_silent(instrument: FMInstrument) -> bool:
                for i in instrument.carrier_indices())
 
 
+def filter_bank(bank: dict, needles) -> dict:
+    """Keep the patches whose name contains any of `needles`.
+
+    Accepts a comma-separated string or an iterable. Order follows the
+    needles, not the bank, so `--filter bass,lead,pad` lays a working set
+    out in the order you named it instead of alphabetically — which is
+    what you want when the next step is reading the bank as a palette.
+    """
+    if isinstance(needles, str):
+        needles = needles.split(",")
+    needles = [n.strip().lower() for n in needles if n and n.strip()]
+    if not needles:
+        return dict(bank)
+
+    picked = {}
+    for needle in needles:
+        for name, instrument in bank.items():
+            if needle in name.lower():
+                picked[name] = instrument
+    return picked
+
+
 # --------------------------------------------------------------------------
 # Output
 # --------------------------------------------------------------------------
@@ -321,9 +343,12 @@ def main(argv):
     parser.add_argument("--no-calibrate", action="store_true",
                         help="skip loudness levelling against the built-in bank")
     parser.add_argument("--filter", default="",
-                        help="keep only names containing this substring — "
-                             "names carry their category, so `--filter bass` "
-                             "picks the bass folder out of a whole library")
+                        help="keep only names containing any of these "
+                             "comma-separated substrings — names carry their "
+                             "category, so `--filter bass` picks the bass "
+                             "folder out of a whole library and "
+                             "`--filter slap_bass_3,rough_square` picks two "
+                             "named patches out of six hundred")
     parser.add_argument("--limit", type=int, default=0,
                         help="keep only the first N (calibration renders each "
                              "one, so a 600-patch library takes a while)")
@@ -344,8 +369,7 @@ def main(argv):
             failures.append((args.source, str(exc)))
 
     if args.filter:
-        needle = args.filter.lower()
-        bank = {n: i for n, i in bank.items() if needle in n.lower()}
+        bank = filter_bank(bank, args.filter)
     if args.limit:
         bank = dict(list(bank.items())[:args.limit])
 
