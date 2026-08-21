@@ -32,6 +32,7 @@ import core_loader
 import events as events_mod
 import instruments as instruments_mod
 import samples as samples_mod
+import sanity as sanity_mod
 import tracker as tracker_mod
 import vgm as vgm_mod
 import wavio
@@ -192,6 +193,8 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.author = author
     if not tag.title:
         tag.title = "chipgen"
+
+    warnings = warnings + sanity_mod.check(events, rate)
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
     if normalize:

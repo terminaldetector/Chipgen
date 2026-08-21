@@ -131,6 +131,16 @@ result against the built-in bank.
   times a bar replays the identical waveform and turns into a buzz. The
   `w1` cell does the right thing already; only reach for a restart when
   you want a short blip to sound identical every time.
+- **Let the noise channel and the DAC rest.** There is one shared noise
+  voice and one 8-bit sample channel for the whole piece. Gating either
+  one on and never releasing it for the length of a track — a constant
+  hiss bed, or a sample chain with no gaps between hits — reads as a wall
+  of noise, not rhythm, however musical the rest of the arrangement is.
+  `compose()` runs a quick check on this before rendering and will warn
+  you (`python3 python/chipgen.py --info` shows nothing missing, but a
+  render's own output will say e.g. "the noise channel is one continuous
+  95%-of-the-track span") — read those warnings, they are naming a real
+  problem in what you wrote, not a formality.
 
 ## If you want JSON instead
 
