@@ -116,16 +116,25 @@ pick by how much room the rest of your mix needs, not at random. Run
 They are levelled to within about two decibels of each other, so swapping
 one for another changes the timbre and not the balance of your arrangement.
 
-**Want more?** Any Genesis VGM is an instrument source:
+**Want more?** Two ways to get hundreds more patches, both levelled
+against the built-in bank on import so they drop straight in:
 
 ```bash
-python3 python/vgm_import.py song.vgm -o bank.json   # read its patches out
+# 1. any Genesis VGM — replays the register stream, snapshots each channel
+#    at key-on, dedupes, ranks by how often the composer used each patch
+python3 python/vgm_import.py song.vgm -o bank.json
+
+# 2. Furnace / DefleMask / TFM instrument files (.dmp .tfi .vgi).
+#    Furnace ships a library of ~600 YM2612 patches sorted by category.
+python3 python/furnace_import.py path/to/instruments/OPN --filter bass -o bank.json
+
 python3 python/chipgen.py score.trk --bank bank.json -o out.wav
 ```
 
-It replays the register stream, snapshots each channel at key-on, dedupes,
-ranks by how often the composer actually used each patch, and levels the
-result against the built-in bank.
+Names carry their category (`bass_fat_bass_1`, `keys_e_piano`), so
+`--filter bass` picks one folder out of a whole library. Calibration
+renders every patch, so use `--filter` or `--limit` rather than importing
+six hundred at once.
 
 ---
 

@@ -29,7 +29,7 @@ import opn2
 import mixer
 import samples as samples_mod
 import sn76489
-from instruments import BANK as INSTRUMENT_BANK
+import instruments as instruments_mod
 from mixer import DEFAULT_PSG_GAIN
 
 DEFAULT_TICKS_PER_SECOND = 192.0
@@ -173,7 +173,11 @@ class Sequencer:
         ym, psg = state.ym, state.psg
         E = events_mod
         if isinstance(ev, E.FMInstrumentSelect):
-            ym.set_instrument(ev.channel, INSTRUMENT_BANK[ev.instrument])
+            # instruments.get() rather than BANK[...]: a typo'd or
+            # not-yet-loaded patch name should say which names exist,
+            # not surface as a bare KeyError from inside the renderer.
+            ym.set_instrument(ev.channel,
+                              instruments_mod.get(ev.instrument))
         elif isinstance(ev, E.FMNoteOn):
             ym.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
         elif isinstance(ev, E.FMNoteOff):
