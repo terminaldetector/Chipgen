@@ -31,6 +31,7 @@ import audio as _audio
 import core_loader
 import events as events_mod
 import instruments as instruments_mod
+import profile as profile_mod
 import samples as samples_mod
 import sanity as sanity_mod
 import tracker as tracker_mod
@@ -103,6 +104,28 @@ class Result:
 
     def __repr__(self):
         return f"<chipgen.Result {self.summary()}>"
+
+    def profile(self, bpm: float = None, beats_per_bar: int = 4):
+        """RMS/peak per section — by Marker if the score used them,
+        otherwise by fixed bar length if a bpm is known.
+
+        sanity.check() (already run, its findings are in .warnings) only
+        ever sees whole-track aggregates: a channel busy ANYWHERE in the
+        piece clears its retrigger ceiling even if one specific section
+        has a note that leaked in from the section before — a pattern
+        generator's "inactive" branch writing hold instead of off is
+        invisible to an event-count check but immediately obvious as a
+        section that measures loud when the arrangement says it should
+        have dropped to near-silence. This is the check for that: it
+        looks at the rendered AUDIO, not the event list, because that bug
+        class is only visible in what actually reached the speaker.
+        """
+        ticks_per_second = (self.metadata.ticks_per_second
+                            if self.metadata else tracker_mod.DEFAULT_TICKS_PER_SECOND)
+        resolved_bpm = bpm or (self.metadata.bpm if self.metadata else None)
+        return profile_mod.auto_profile(self.audio, self.sample_rate, self.events,
+                                        ticks_per_second, bpm=resolved_bpm,
+                                        beats_per_bar=beats_per_bar)
 
 
 def detect_format(source) -> str:
@@ -342,6 +365,16 @@ def main(argv):
                         help="keep the DAC ladder's DC offset instead of "
                              "centring the mix (for comparing against an "
                              "unfiltered capture)")
+    parser.add_argument("--profile", action="store_true",
+                        help="print RMS/peak per section after rendering — "
+                             "by Marker if the score has them, else by bar "
+                             "(needs a known bpm either way). Catches a "
+                             "section that measures loud when the "
+                             "arrangement says it should be quiet, which "
+                             "sanity.py's whole-track view cannot see")
+    parser.add_argument("--beats-per-bar", type=int, default=4,
+                        help="for --profile's bar fallback when the score "
+                             "has no Marker events (default 4)")
     parser.add_argument("--info", action="store_true",
                         help="print capabilities as JSON and exit")
     parser.add_argument("--demo", action="store_true",
@@ -378,6 +411,15 @@ def main(argv):
     for path in (result.wav_path, result.vgm_path, args.tracker):
         if path:
             print(f"wrote {path}")
+
+    if args.profile:
+        stats = result.profile(beats_per_bar=args.beats_per_bar)
+        if stats:
+            print()
+            print(profile_mod.format_table(stats))
+        else:
+            print("\n--profile: no Marker pairs and no bpm known — "
+                 "nothing to segment by")
     return 0
 
 

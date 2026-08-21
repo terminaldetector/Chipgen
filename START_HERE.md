@@ -78,6 +78,7 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `pitch fm1 -12` | detune the channel in cents |
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
+| `mark <label>` | name a section boundary — costs one line, makes `--profile` (below) report by name |
 | `title` / `author` / `game` / `notes` | metadata written into the .vgm |
 | `end` | stop here |
 
@@ -131,6 +132,18 @@ result against the built-in bank.
   times a bar replays the identical waveform and turns into a buzz. The
   `w1` cell does the right thing already; only reach for a restart when
   you want a short blip to sound identical every time.
+- **Name your sections with `mark` and check `--profile` after rendering.**
+  A section that should drop to near-silence and doesn't (a pattern
+  generator's "inactive" branch holding instead of releasing, so a note
+  rings on from the section before) is invisible to the automatic warnings
+  above — they only ever see whole-track totals, and a channel busy
+  elsewhere in the piece clears them easily even while one specific
+  section is stuck. `chipgen.py score.trk -o out.wav --profile` prints
+  RMS/peak per `mark`-delimited section by name (or per bar if you skip
+  `mark` and pass `--beats-per-bar`); a breakdown that reads 0.26 next to
+  a drop's 0.27 is not a breakdown. This is the single most useful check
+  for anything with real dynamic structure — run it, don't just trust
+  that zero warnings means the arrangement is right.
 - **Let the noise channel and the DAC rest.** There is one shared noise
   voice and one 8-bit sample channel for the whole piece. Gating either
   one on and never releasing it for the length of a track — a constant

@@ -158,6 +158,58 @@ def test_replaying_the_export_reproduces_the_performance():
         f"replay is {difference:.2f} dB away from the direct render"
 
 
+def test_fast_lfo_drifts_between_direct_render_and_vgm_replay():
+    # Documents a real, understood limitation rather than hiding it: VGM
+    # waits are quantised to 44100 Hz samples (the format spec fixes that
+    # rate), but the engine's own event clock runs at ticks_per_second
+    # against a native chip rate near 53267 Hz — neither commensurate with
+    # 44100. Round-tripping a Wait through 44100 Hz and back can land the
+    # replay one native sample off from the direct render's own count for
+    # that gap, even though the SUM of all gaps still adds up to the same
+    # total duration. LFO is clocked from native chip samples, not from
+    # elapsed wall-clock time, so it has no way to "catch up" — a handful
+    # of these one-sample offsets permanently shifts its phase, and each
+    # one that lands during the LFO-active portion compounds. A found
+    # track (fast LFO enabled for the second half) showed this as a
+    # difference that grew steadily worse from the moment the LFO turned
+    # on. This test pins that shape of behaviour so it reads as "known and
+    # understood" rather than "regression" if it is ever encountered again
+    # — and so a future fix has a concrete case to check itself against.
+    import numpy as np
+
+    import audio
+    from events import (End, FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn,
+                        FMPan, Wait)
+    from sequencer import Sequencer
+
+    events = [FMInstrumentSelect(channel=0, instrument="strings"),
+              FMPan(channel=0, left=True, right=True, ams=3, pms=7),
+              FMLFO(enable=True, freq=7),      # the fastest rate
+              FMNoteOn(channel=0, note="A", octave=3),
+              Wait(ticks=192 * 3),
+              FMNoteOff(channel=0),
+              End()]
+    seq = Sequencer()
+
+    with support.TempDir() as directory:
+        path = os.path.join(directory, "lfo.vgm")
+        direct = np.asarray(seq.render(events, vgm_path=path))
+        replayed = np.asarray(vgm_player.render(path))
+
+    n = min(len(direct), len(replayed))
+    diff = np.abs(direct[:n] - replayed[:n])
+
+    early = diff[:int(n * 0.2)]
+    late = diff[int(n * 0.6):int(n * 0.9)]   # before the note-off transient
+    assert late.mean() > early.mean(), \
+        "drift should grow over the note's duration, not stay flat"
+    # A ceiling, not a target: if this ever drops near zero, the timing
+    # round-trip got fixed and this test (and its docstring) should be
+    # revisited rather than quietly loosened.
+    assert diff.mean() < 0.05, \
+        f"drift grew to {diff.mean():.4f} average — much worse than observed"
+
+
 def test_player_rejects_a_non_vgm():
     try:
         vgm_player.render(b"this is not a vgm file at all")

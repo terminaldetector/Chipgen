@@ -23,7 +23,7 @@ for path in (os.path.join(ROOT, "python"), HERE):
         sys.path.insert(0, path)
 
 MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
-           "test_render", "test_bridge", "test_sanity"]
+           "test_render", "test_bridge", "test_sanity", "test_profile"]
 
 
 def _collect(pattern=""):

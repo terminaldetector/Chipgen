@@ -59,7 +59,7 @@ import re
 
 import events as events_mod
 from events import (DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
-                    FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint,
+                    FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
                     PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
                     PSGVolume, Tempo, Wait)
 
@@ -84,8 +84,8 @@ _COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
 DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
-              "cols", "columns", "loop", "title", "author", "game", "notes",
-              "end"}
+              "cols", "columns", "loop", "mark", "title", "author", "game",
+              "notes", "end"}
 
 _NOTE_CELL = re.compile(r"^([A-Ga-g])([#b\-]?)(-?\d)(?::(\d+))?$")
 #: `;` always starts a comment; `#` only at line start or after whitespace,
@@ -270,6 +270,12 @@ def _directive(head, args, meta, columns, events, lineno) -> bool:
                               cents=float(args[1])))
     elif head == "loop":
         events.append(LoopPoint())
+    elif head == "mark":
+        # Costs one line, names a section, and is the only thing that lets
+        # profile.py (or a human) ask "how loud was the breakdown" by name
+        # instead of by bar number. Bare `mark` (no label) still marks a
+        # boundary — profile.py numbers unlabelled ones itself.
+        events.append(Marker(label=" ".join(args)))
     elif head in ("title", "author", "game", "notes"):
         setattr(meta, head, " ".join(args))
     elif head == "end":
@@ -420,6 +426,8 @@ def dumps(events, meta: Metadata = None, columns=None) -> str:
             directive(r, f"ticks {ev.ticks_per_second:g}")
         elif isinstance(ev, LoopPoint):
             directive(r, "loop")
+        elif isinstance(ev, Marker):
+            directive(r, f"mark {ev.label}".rstrip())
         elif isinstance(ev, FMNoteOn):
             used.add(f"fm{ev.channel}")
             suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
