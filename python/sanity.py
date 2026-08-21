@@ -72,6 +72,43 @@ DAC_DUTY_CYCLE_THRESHOLD = 0.60
 #: floor there usually has not been time for that problem to exist yet.
 MIN_TRACK_SECONDS = 5.0
 
+#: A channel whose instrument is a bass patch but which never plays below
+#: this note is not doing a bass's job — it is a mid-range part with a bass
+#: timbre, and the mix will have a hole underneath it. C3 rather than
+#: something lower because plenty of real basslines live in the C2-C3
+#: octave; the complaint is only about never going down there at all.
+BASS_REGISTER_CEILING = ("C", 3)
+
+#: Two parts whose median pitch is within this many semitones are competing
+#: for the same space. A fifth is the usual point where separate lines stop
+#: reading as separate.
+REGISTER_COLLISION_SEMITONES = 7
+
+#: Marked sections whose loudest and quietest differ by less than this are
+#: structurally flat, whatever the section names claim.
+SECTION_DYNAMIC_RANGE_DB = 3.0
+
+#: Patch names that are meant to hold down the low end. Checked against the
+#: instrument actually assigned, so a lead sitting low is not mistaken for
+#: a bass and vice versa.
+BASS_PATCH_NAMES = frozenset({"bass", "sub_bass", "deep_bass", "slap_bass",
+                              "techno_bass", "slap", "acid_bass"})
+LEAD_PATCH_NAMES = frozenset({"distorted_lead", "square_lead", "saw_lead",
+                              "lead"})
+
+
+def _midi(note: str, octave: int) -> int:
+    """Note name + octave -> a comparable integer. Octave 4 holds A440."""
+    return octave * 12 + events_mod.NOTE_NAMES.index(note)
+
+
+def _median(values):
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2.0
+
 
 def _dac_sample_seconds(name: str, rate_override: int) -> float:
     """How long one DACSample event actually plays, or None if `name` is not
@@ -120,6 +157,8 @@ def check(events: List[events_mod.Event],
     dac_on_time = 0.0
     any_pan = False
     any_dac_sample = False
+    fm_pitches = {}           # channel -> [midi numbers played]
+    fm_instrument = {}        # channel -> instrument name last assigned
 
     def close_dac_span(at):
         nonlocal dac_on_time, dac_span_start, dac_span_end
@@ -143,6 +182,10 @@ def check(events: List[events_mod.Event],
             # sounding channel — see the RETRIGGER_CEILING note above.
             fm_retriggers[event.channel] += 1
             fm_on_since.setdefault(event.channel, clock)
+            fm_pitches.setdefault(event.channel, []).append(
+                _midi(event.note, event.octave))
+        elif isinstance(event, E.FMInstrumentSelect):
+            fm_instrument[event.channel] = event.instrument
         elif isinstance(event, E.FMNoteOff):
             start = fm_on_since.pop(event.channel, None)
             if start is not None:
@@ -238,4 +281,81 @@ def check(events: List[events_mod.Event],
             "just worth knowing: PSG is mono-summed regardless, but "
             "spreading FM channels with FMPan is free separation")
 
+    warnings.extend(_register_warnings(fm_pitches, fm_instrument))
     return warnings
+
+
+def _register_warnings(fm_pitches, fm_instrument) -> List[str]:
+    """Where each part sits, and whether two of them sit on top of each other.
+
+    Separate from the duty-cycle checks above because it asks a different
+    question: not "does this channel ever rest" but "is this channel doing
+    the job its instrument implies". A bass patch that never descends past
+    the middle of the keyboard leaves the bottom of the mix empty, and a
+    lead sharing a register with the bass makes both harder to hear — both
+    survive every timing check because neither is a timing problem.
+    """
+    warnings: List[str] = []
+    ceiling = _midi(*BASS_REGISTER_CEILING)
+
+    bass_channels = {ch: name for ch, name in fm_instrument.items()
+                     if name in BASS_PATCH_NAMES and fm_pitches.get(ch)}
+    lead_channels = {ch: name for ch, name in fm_instrument.items()
+                     if name in LEAD_PATCH_NAMES and fm_pitches.get(ch)}
+
+    for channel, name in sorted(bass_channels.items()):
+        lowest = min(fm_pitches[channel])
+        if lowest >= ceiling:
+            note = events_mod.NOTE_NAMES[lowest % 12]
+            warnings.append(
+                f"FM{channel} plays {name!r} but never goes below "
+                f"{note}{lowest // 12} — a bass patch used entirely above "
+                f"{BASS_REGISTER_CEILING[0]}{BASS_REGISTER_CEILING[1]} "
+                f"leaves the bottom of the mix empty. Either drop the part "
+                f"an octave or two, or use a lead patch and let something "
+                f"else carry the low end")
+
+    for bass_channel, bass_name in sorted(bass_channels.items()):
+        bass_centre = _median(fm_pitches[bass_channel])
+        for lead_channel, lead_name in sorted(lead_channels.items()):
+            distance = _median(fm_pitches[lead_channel]) - bass_centre
+            if abs(distance) < REGISTER_COLLISION_SEMITONES:
+                warnings.append(
+                    f"FM{lead_channel} ({lead_name!r}) and FM{bass_channel} "
+                    f"({bass_name!r}) sit {abs(distance):.0f} semitones "
+                    f"apart on average — closer than a fifth, so they mask "
+                    f"each other instead of reading as two parts. Move the "
+                    f"lead up an octave or the bass down one")
+
+    return warnings
+
+
+def check_sections(stats, minimum_range_db: float = SECTION_DYNAMIC_RANGE_DB):
+    """Warn when marked sections all measure the same loudness.
+
+    Takes profile.py's SegmentStats rather than events, because "is the
+    breakdown actually quieter than the drop" is a question about rendered
+    audio — the event list says what was written, not what came out. A
+    score can name six sections and have every one of them measure within
+    a decibel of the others, which means the structure exists on paper and
+    nowhere else.
+    """
+    import math
+
+    usable = [s for s in stats if s.rms > 0]
+    if len(usable) < 2:
+        return []
+
+    loudest = max(usable, key=lambda s: s.rms)
+    quietest = min(usable, key=lambda s: s.rms)
+    spread = 20.0 * math.log10(loudest.rms / quietest.rms)
+    if spread >= minimum_range_db:
+        return []
+    return [
+        f"all {len(usable)} marked sections measure within {spread:.1f} dB "
+        f"of each other ({quietest.label} at {quietest.rms:.4f}, "
+        f"{loudest.label} at {loudest.rms:.4f}) — the arrangement names "
+        f"sections but does not actually go anywhere. Drop parts out for a "
+        f"breakdown, or add them for a chorus; naming a section does not "
+        f"make it one"
+    ]

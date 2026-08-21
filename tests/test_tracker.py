@@ -104,3 +104,84 @@ def test_dump_keeps_mid_pattern_directives():
     assert "pan fm1 C 0 3" in text
     assert "lfo on 4" in text
     assert "inst fm0 bass" in text
+
+
+# --------------------------------------------------------------------------
+# chord / arp shorthand
+# --------------------------------------------------------------------------
+def test_chord_expands_across_the_named_channels():
+    events, _ = tracker.loads(
+        "bpm 150\nlpb 4\ncols fm0\n\nchord A-3 min fm2 fm3 fm4\nA-2\n===\n")
+    played = [(e.channel, e.note, e.octave) for e in events
+              if isinstance(e, E.FMNoteOn) and e.channel in (2, 3, 4)]
+    assert played == [(2, "A", 3), (3, "C", 4), (4, "E", 4)], played
+
+
+def test_chord_octave_wraps_correctly():
+    # B minor from B-3 must put the third and fifth in the NEXT octave.
+    events, _ = tracker.loads(
+        "cols fm0\n\nchord B-3 min fm1 fm2 fm3\nA-2\n===\n")
+    played = [(e.note, e.octave) for e in events
+              if isinstance(e, E.FMNoteOn) and e.channel in (1, 2, 3)]
+    assert played == [("B", 3), ("D", 4), ("F#", 4)], played
+
+
+def test_chord_extends_upward_when_given_extra_channels():
+    events, _ = tracker.loads(
+        "cols fm0\n\nchord C-3 maj fm1 fm2 fm3 fm4 fm5\nA-2\n===\n")
+    played = [(e.note, e.octave) for e in events
+              if isinstance(e, E.FMNoteOn) and e.channel in (1, 2, 3, 4, 5)]
+    assert played == [("C", 3), ("E", 3), ("G", 3), ("C", 4), ("E", 4)], played
+
+
+def test_chord_off_releases_every_named_channel():
+    events, _ = tracker.loads(
+        "cols fm0\n\nchord A-3 min fm2 fm3\nA-2\nchord off fm2 fm3\n===\n")
+    released = [e.channel for e in events if isinstance(e, E.FMNoteOff)]
+    assert 2 in released and 3 in released
+
+
+def test_chord_aliases_and_bad_quality():
+    events, _ = tracker.loads("cols fm0\n\nchord A-3 m7 fm1 fm2 fm3 fm4\nA-2\n===\n")
+    played = [(e.note, e.octave) for e in events
+              if isinstance(e, E.FMNoteOn) and e.channel in (1, 2, 3, 4)]
+    assert played == [("A", 3), ("C", 4), ("E", 4), ("G", 4)], played
+
+    try:
+        tracker.loads("cols fm0\n\nchord A-3 wat fm1\nA-2\n===\n")
+    except tracker.TrackerError as exc:
+        assert "unknown chord quality" in str(exc)
+    else:
+        raise AssertionError("an unknown quality should be an error")
+
+
+def test_arp_subdivides_the_row_with_pitch_not_retriggers():
+    events, meta = tracker.loads(
+        "bpm 150\nlpb 4\ninst fm0 bell_pluck\ncols fm0\n\n"
+        "arp fm0 0 3 7\nA-4\n...\narp fm0 off\n===\n")
+    cents = [e.cents for e in events if isinstance(e, E.FMPitch)]
+    assert cents[:6] == [0.0, 300.0, 700.0, 0.0, 300.0, 700.0], cents
+    # one note-on for two arpeggiated rows: the pitch moves, the note does not
+    assert len([e for e in events if isinstance(e, E.FMNoteOn)]) == 1
+    assert cents[-1] == 0.0, "arp off must return the channel to its own pitch"
+
+
+def test_arp_preserves_row_duration_exactly():
+    import events as events_mod
+    plain, meta = tracker.loads(
+        "bpm 150\nlpb 4\ninst fm0 bell_pluck\ncols fm0\n\nA-4\n...\n...\n===\n")
+    arped, _ = tracker.loads(
+        "bpm 150\nlpb 4\ninst fm0 bell_pluck\ncols fm0\n\n"
+        "arp fm0 0 3 7\nA-4\n...\n...\n===\n")
+    assert events_mod.total_ticks(plain) == events_mod.total_ticks(arped), \
+        "arpeggiating a row must not change how long it lasts"
+
+
+def test_arp_skips_subdivision_when_the_row_is_too_short():
+    # Sub-tick rows cannot be split three ways; holding is better than
+    # emitting a run of zero-length waits.
+    events, _ = tracker.loads(
+        "bpm 240\nlpb 16\ninst fm0 bell_pluck\ncols fm0\n\n"
+        "arp fm0 0 3 7\nA-4\n===\n")
+    waits = [e.ticks for e in events if isinstance(e, E.Wait)]
+    assert all(w > 0 for w in waits), waits

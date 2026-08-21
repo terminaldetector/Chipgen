@@ -53,15 +53,22 @@
       "algorithm": 4,
       "feedback": 2,
       "carriers": 2,
-      "trim": 1,
+      "trim": 0,
       "character": "bright metallic pluck/bell, good for arpeggios"
     },
     "brass": {
       "algorithm": 2,
       "feedback": 5,
       "carriers": 1,
-      "trim": -3,
+      "trim": -4,
       "character": "FM brass section, brightens after the attack"
+    },
+    "deep_bass": {
+      "algorithm": 4,
+      "feedback": 2,
+      "carriers": 2,
+      "trim": 5,
+      "character": "round mid-weight bass, harmonics fade slowly, sits under a mix"
     },
     "distorted_lead": {
       "algorithm": 0,
@@ -77,46 +84,67 @@
       "trim": -4,
       "character": "DX-style electric piano, bell-tinged, decays away"
     },
+    "fm_stab": {
+      "algorithm": 2,
+      "feedback": 6,
+      "carriers": 1,
+      "trim": -6,
+      "character": "short metallic pitched stab for off-beats"
+    },
+    "hard_pluck": {
+      "algorithm": 4,
+      "feedback": 5,
+      "carriers": 2,
+      "trim": 2,
+      "character": "hard attack, fast decay, long ringing release"
+    },
     "jazz_chord_pad": {
       "algorithm": 6,
       "feedback": 1,
       "carriers": 3,
-      "trim": 0,
+      "trim": -1,
       "character": "soft additive chord tone, one note per channel"
     },
     "metal_stab": {
       "algorithm": 3,
       "feedback": 7,
       "carriers": 1,
-      "trim": -4,
+      "trim": -5,
       "character": "clangorous industrial stab, very inharmonic"
     },
     "orch_hit": {
       "algorithm": 6,
       "feedback": 7,
       "carriers": 3,
-      "trim": -3,
+      "trim": -4,
       "character": "short inharmonic orchestra-hit stab"
     },
     "organ": {
       "algorithm": 7,
       "feedback": 0,
       "carriers": 4,
-      "trim": 0,
+      "trim": -1,
       "character": "additive drawbar organ, sustains flat until note off"
     },
     "pluck_guitar": {
       "algorithm": 0,
       "feedback": 6,
       "carriers": 1,
-      "trim": 1,
+      "trim": 0,
       "character": "muted guitar pluck, quick decay"
+    },
+    "saw_lead": {
+      "algorithm": 7,
+      "feedback": 0,
+      "carriers": 4,
+      "trim": 4,
+      "character": "additive sawtooth lead, same bright shape at every pitch"
     },
     "slap_bass": {
       "algorithm": 4,
-      "feedback": 6,
+      "feedback": 4,
       "carriers": 2,
-      "trim": 6,
+      "trim": 7,
       "character": "snappy funk bass with a bright attack transient"
     },
     "square_lead": {
@@ -130,15 +158,22 @@
       "algorithm": 4,
       "feedback": 2,
       "carriers": 2,
-      "trim": 0,
+      "trim": -1,
       "character": "slow-attack detuned ensemble pad"
     },
     "sub_bass": {
       "algorithm": 7,
       "feedback": 0,
       "carriers": 4,
-      "trim": 7,
+      "trim": 6,
       "character": "pure sine sub, no harmonics, sits under everything"
+    },
+    "techno_bass": {
+      "algorithm": 3,
+      "feedback": 6,
+      "carriers": 1,
+      "trim": 1,
+      "character": "driving buzzy bass with stacked harmonics, four-on-the-floor"
     }
   },
   "dac_samples": [
@@ -499,8 +534,10 @@
   },
   "tracker_syntax": {
     "directives": [
+      "arp",
       "author",
       "bpm",
+      "chord",
       "cols",
       "columns",
       "end",

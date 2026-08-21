@@ -79,6 +79,8 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
 | `mark <label>` | name a section boundary — costs one line, makes `--profile` (below) report by name |
+| `chord A-3 min fm2 fm3 fm4` | spread a chord over those channels in one line instead of aligning three columns by hand; `chord off fm2 fm3 fm4` releases them |
+| `arp fm1 0 3 7` | tracker arpeggio — that channel's pitch cycles through those semitone offsets inside every row; `arp fm1 off` stops |
 | `title` / `author` / `game` / `notes` | metadata written into the .vgm |
 | `end` | stop here |
 
@@ -93,12 +95,26 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 
 Comments: `;` anywhere, or `#` at the start of a line.
 
-**Instruments** — `bass`, `sub_bass`, `slap_bass`, `distorted_lead`,
-`square_lead`, `bell_pluck`, `e_piano`, `organ`, `brass`, `strings`,
-`pluck_guitar`, `jazz_chord_pad`, `orch_hit`, `metal_stab`.
-Run `python3 python/chipgen.py --info` for what each one sounds like.
-They are levelled to within about a decibel of each other, so swapping one
-for another changes the timbre and not the balance of your arrangement.
+Chord qualities: `maj` `min` `dim` `aug` `sus2` `sus4` `maj6` `min6`
+`maj7` `min7` `dom7` `m7b5` `dim7` `add9` `maj9` `min9` `dom9`, plus
+shorthands (`m`, `M7`, `7`, `9`, `o7`). Ask for more channels than the
+chord has notes and it keeps going up an octave rather than doubling in
+unison.
+
+**Instruments**
+
+| role | patches |
+|---|---|
+| bass | `sub_bass` (pure sine) · `deep_bass` (round, long body) · `slap_bass` (sharp snap, clean body) · `techno_bass` (buzzy, driving) · `bass` (bright throughout) |
+| lead | `saw_lead` · `square_lead` · `distorted_lead` |
+| pluck / stab | `hard_pluck` · `bell_pluck` · `pluck_guitar` · `fm_stab` · `metal_stab` · `orch_hit` |
+| keys / pad | `e_piano` · `organ` · `brass` · `strings` · `jazz_chord_pad` |
+
+The five basses are ordered above by how much harmonic content they carry —
+pick by how much room the rest of your mix needs, not at random. Run
+`python3 python/chipgen.py --info` for a one-line description of each.
+They are levelled to within about two decibels of each other, so swapping
+one for another changes the timbre and not the balance of your arrangement.
 
 **Want more?** Any Genesis VGM is an instrument source:
 

@@ -169,3 +169,68 @@ def test_acceptance_prompt_scenario_produces_no_warnings():
     events.append(End())
 
     assert sanity.check(events, tps) == []
+
+
+# --------------------------------------------------------------------------
+# Register and dynamics
+# --------------------------------------------------------------------------
+def _two_part(bass_octave, lead_octave, bass="deep_bass", lead="saw_lead", n=90):
+    events = [FMInstrumentSelect(channel=0, instrument=bass),
+              FMInstrumentSelect(channel=1, instrument=lead)]
+    for _ in range(n):
+        events += [FMNoteOn(channel=0, note="A", octave=bass_octave),
+                   FMNoteOn(channel=1, note="E", octave=lead_octave),
+                   Wait(ticks=24), FMNoteOff(channel=0), FMNoteOff(channel=1)]
+    events.append(End())
+    return events
+
+
+def _only(warnings, needle):
+    return [w for w in warnings if needle in w]
+
+
+def test_flags_a_bass_patch_that_never_plays_low():
+    warnings = sanity.check(_two_part(4, 5), 192.0)
+    assert _only(warnings, "never goes below"), warnings
+
+
+def test_does_not_flag_a_bass_that_uses_its_register():
+    warnings = sanity.check(_two_part(1, 5), 192.0)
+    assert not _only(warnings, "never goes below"), warnings
+
+
+def test_flags_lead_and_bass_in_the_same_register():
+    warnings = sanity.check(_two_part(2, 2), 192.0)
+    assert _only(warnings, "semitones apart"), warnings
+
+
+def test_does_not_flag_parts_that_are_properly_separated():
+    warnings = sanity.check(_two_part(1, 5), 192.0)
+    assert not _only(warnings, "semitones apart"), warnings
+
+
+def test_register_checks_respect_the_assigned_instrument():
+    # A lead patch played low is a choice, not a mistake — only patches
+    # that promise to be a bass get held to the bass register.
+    warnings = sanity.check(_two_part(4, 5, bass="saw_lead", lead="square_lead"),
+                            192.0)
+    assert not _only(warnings, "never goes below"), warnings
+
+
+def test_flat_sections_are_reported():
+    import profile as prof
+
+    class Stat:
+        def __init__(self, label, rms):
+            self.label, self.rms, self.peak = label, rms, rms * 3
+            self.start = self.end = 0.0
+
+    flat = [Stat("intro", 0.29), Stat("drop", 0.30), Stat("breakdown", 0.28)]
+    assert sanity.check_sections(flat), "sections within 0.7 dB should warn"
+
+    dynamic = [Stat("intro", 0.05), Stat("drop", 0.30), Stat("breakdown", 0.02)]
+    assert not sanity.check_sections(dynamic), "a real breakdown should not warn"
+
+    assert sanity.check_sections([Stat("only", 0.2)]) == [], \
+        "one section cannot have a dynamic range"
+    assert sanity.check_sections([]) == []

@@ -131,14 +131,68 @@ SUB_BASS = patch(
 )
 
 SLAP_BASS = patch(
-    "slap_bass", algorithm=4, feedback=6,
-    op1=Operator(detune=3, multiple=4, total_level=26, attack_rate=31,
-                 decay_rate=20, sustain_rate=12, release_rate=10, sustain_level=12),
-    op2=Operator(detune=0, multiple=1, total_level=10, attack_rate=31,
+    # A slap is a bright transient over a clean body: the modulators have to
+    # be LOUD for a few tens of milliseconds and then get out of the way.
+    #
+    # The first version of this patch did not slap at all. Its modulators sat
+    # at Total Level 26 and 30 — 19 and 22 dB of attenuation — which is too
+    # quiet to modulate a carrier meaningfully, so both carriers ran as
+    # near-pure sines. Measured against sub_bass (an intentional pure sine)
+    # it was identical to within a few tenths of a percent: 18% of energy
+    # above 200 Hz during the attack against sub_bass's 7%, and 0.1% in
+    # sustain against sub_bass's 0.1%. The name promised a character the
+    # patch could not produce.
+    #
+    # Modulators now start at TL 12/18 and decay to silence (sustain level
+    # 15/13) at rates 18/16 — that combination measures 95% of its energy
+    # above 200 Hz during the attack, against 8% before, while still being
+    # gone within about 100 ms so the body stays clean.
+    #
+    # Decay rate needed care in both directions: at rate 24 the modulator
+    # was gone so fast that the transient measured WEAKER (24%) than at 18
+    # (95%). Faster is not brighter — past a point the bright part finishes
+    # before it has been heard.
+    "slap_bass", algorithm=4, feedback=4,
+    op1=Operator(detune=3, multiple=3, total_level=12, attack_rate=31,
+                 decay_rate=18, sustain_rate=18, release_rate=12, sustain_level=15),
+    op2=Operator(detune=0, multiple=1, total_level=8, attack_rate=31,
                  decay_rate=9, sustain_rate=3, release_rate=9, sustain_level=4),
-    op3=Operator(detune=5, multiple=2, total_level=30, attack_rate=31,
-                 decay_rate=16, sustain_rate=8, release_rate=10, sustain_level=10),
-    op4=Operator(detune=0, multiple=1, total_level=14, attack_rate=31,
+    op3=Operator(detune=5, multiple=2, total_level=18, attack_rate=31,
+                 decay_rate=16, sustain_rate=15, release_rate=11, sustain_level=13),
+    op4=Operator(detune=0, multiple=1, total_level=12, attack_rate=31,
+                 decay_rate=8, sustain_rate=2, release_rate=9, sustain_level=3),
+)
+
+DEEP_BASS = patch(
+    # The middle ground the bank was missing: more body than sub_bass, less
+    # bite than bass. One modulator at a moderate level with a slow decay,
+    # so the harmonics fade over the length of a note instead of snapping
+    # away — a bass that stays audible on small speakers without fighting a
+    # lead for the 200-800 Hz range.
+    "deep_bass", algorithm=4, feedback=2,
+    op1=Operator(detune=0, multiple=1, total_level=20, attack_rate=31,
+                 decay_rate=11, sustain_rate=4, release_rate=8, sustain_level=6),
+    op2=Operator(detune=0, multiple=1, total_level=6, attack_rate=31,
+                 decay_rate=7, sustain_rate=1, release_rate=8, sustain_level=2),
+    op3=Operator(detune=3, multiple=2, total_level=26, attack_rate=31,
+                 decay_rate=13, sustain_rate=6, release_rate=9, sustain_level=8),
+    op4=Operator(detune=0, multiple=1, total_level=10, attack_rate=31,
+                 decay_rate=6, sustain_rate=1, release_rate=8, sustain_level=2),
+)
+
+TECHNO_BASS = patch(
+    # Driving and harmonically dense, for four-on-the-floor material where
+    # the bass IS the hook. Algorithm 3 feeds op4 from two directions
+    # (1>2>4 and 3>4), so the harmonics stack rather than sitting in one
+    # series, and feedback 6 keeps it buzzing under the fundamental.
+    "techno_bass", algorithm=3, feedback=6,
+    op1=Operator(detune=1, multiple=1, total_level=18, attack_rate=31,
+                 decay_rate=14, sustain_rate=6, release_rate=10, sustain_level=7),
+    op2=Operator(detune=0, multiple=2, total_level=22, attack_rate=31,
+                 decay_rate=12, sustain_rate=5, release_rate=10, sustain_level=6),
+    op3=Operator(detune=5, multiple=1, total_level=24, attack_rate=31,
+                 decay_rate=15, sustain_rate=7, release_rate=10, sustain_level=8),
+    op4=Operator(detune=0, multiple=1, total_level=8, attack_rate=31,
                  decay_rate=8, sustain_rate=2, release_rate=9, sustain_level=3),
 )
 
@@ -262,6 +316,69 @@ METAL_STAB = patch(
                  decay_rate=14, sustain_rate=8, release_rate=11, sustain_level=7),
 )
 
+SAW_LEAD = patch(
+    # A sawtooth built additively rather than by modulation.
+    #
+    # Algorithm 7 is four independent carriers, so setting their multiples to
+    # 1, 2, 3, 4 and their levels to 1/n gives the first four harmonics of a
+    # sawtooth directly — no modulation index to drift, no feedback to go
+    # noisy at the top of the range. The Total Level offsets below ARE that
+    # 1/n series: a level step is 0.75 dB, and 20*log10(n)/0.75 rounds to
+    # 0, 8, 13, 16 for n = 1, 2, 3, 4.
+    #
+    # Measured on A3: harmonics come out at 1.000, 0.471, 0.314, 0.225 of
+    # the fundamental against an ideal saw's 1.000, 0.500, 0.333, 0.250 —
+    # and nothing at all above the fourth, because four operators is four
+    # harmonics. A band-limited saw, by construction rather than by luck.
+    #
+    # Worth having because every other bright voice in this bank gets its
+    # brightness from feedback, which is unpredictable across the register.
+    # This one is the same shape at every pitch.
+    "saw_lead", algorithm=7, feedback=0,
+    op1=Operator(detune=0, multiple=1, total_level=8, attack_rate=31,
+                 decay_rate=6, sustain_rate=0, release_rate=8, sustain_level=2),
+    op2=Operator(detune=1, multiple=2, total_level=16, attack_rate=31,
+                 decay_rate=7, sustain_rate=0, release_rate=8, sustain_level=2),
+    op3=Operator(detune=0, multiple=3, total_level=21, attack_rate=31,
+                 decay_rate=7, sustain_rate=0, release_rate=8, sustain_level=2),
+    op4=Operator(detune=2, multiple=4, total_level=24, attack_rate=31,
+                 decay_rate=8, sustain_rate=0, release_rate=8, sustain_level=3),
+)
+
+HARD_PLUCK = patch(
+    # Hard attack, immediate decay, and then a LONG tail: release_rate 3
+    # against the bank's usual 8-12. On this chip release rate counts down,
+    # so a small number is a slow release — the note keeps ringing after
+    # note-off instead of stopping with it, which is what makes a pluck
+    # sound plucked rather than gated.
+    "hard_pluck", algorithm=4, feedback=5,
+    op1=Operator(detune=2, multiple=2, total_level=14, attack_rate=31,
+                 decay_rate=22, sustain_rate=14, release_rate=4, sustain_level=14),
+    op2=Operator(detune=0, multiple=1, total_level=6, attack_rate=31,
+                 decay_rate=13, sustain_rate=7, release_rate=3, sustain_level=7),
+    op3=Operator(detune=6, multiple=3, total_level=20, attack_rate=31,
+                 decay_rate=20, sustain_rate=12, release_rate=4, sustain_level=12),
+    op4=Operator(detune=0, multiple=1, total_level=10, attack_rate=31,
+                 decay_rate=15, sustain_rate=8, release_rate=3, sustain_level=8),
+)
+
+FM_STAB = patch(
+    # The short percussive hit techno leans on: pitched enough to sit in a
+    # key, transient enough to work on an off-beat. Everything decays fast
+    # from a loud start, and the modulator's non-integer-feeling multiple
+    # (5 against a carrier at 1) puts a metallic edge on the front without
+    # making it a full orchestra hit.
+    "fm_stab", algorithm=2, feedback=6,
+    op1=Operator(detune=3, multiple=5, total_level=16, attack_rate=31,
+                 decay_rate=22, sustain_rate=18, release_rate=13, sustain_level=14),
+    op2=Operator(detune=0, multiple=2, total_level=20, attack_rate=31,
+                 decay_rate=20, sustain_rate=16, release_rate=13, sustain_level=13),
+    op3=Operator(detune=5, multiple=1, total_level=18, attack_rate=31,
+                 decay_rate=19, sustain_rate=15, release_rate=12, sustain_level=12),
+    op4=Operator(detune=0, multiple=1, total_level=6, attack_rate=31,
+                 decay_rate=16, sustain_rate=12, release_rate=11, sustain_level=10),
+)
+
 #: name -> FMInstrument. This is the bank a model picks from.
 BANK = {
     "bass": BASS,
@@ -270,6 +387,8 @@ BANK = {
     "jazz_chord_pad": JAZZ_CHORD_PAD,
     "sub_bass": SUB_BASS,
     "slap_bass": SLAP_BASS,
+    "deep_bass": DEEP_BASS,
+    "techno_bass": TECHNO_BASS,
     "brass": BRASS,
     "e_piano": E_PIANO,
     "organ": ORGAN,
@@ -278,6 +397,9 @@ BANK = {
     "strings": STRINGS,
     "orch_hit": ORCH_HIT,
     "metal_stab": METAL_STAB,
+    "saw_lead": SAW_LEAD,
+    "hard_pluck": HARD_PLUCK,
+    "fm_stab": FM_STAB,
 }
 
 #: One line per voice, for prompts and `--list`. Kept next to the patches
@@ -289,6 +411,8 @@ CHARACTER = {
     "jazz_chord_pad": "soft additive chord tone, one note per channel",
     "sub_bass": "pure sine sub, no harmonics, sits under everything",
     "slap_bass": "snappy funk bass with a bright attack transient",
+    "deep_bass": "round mid-weight bass, harmonics fade slowly, sits under a mix",
+    "techno_bass": "driving buzzy bass with stacked harmonics, four-on-the-floor",
     "brass": "FM brass section, brightens after the attack",
     "e_piano": "DX-style electric piano, bell-tinged, decays away",
     "organ": "additive drawbar organ, sustains flat until note off",
@@ -297,6 +421,9 @@ CHARACTER = {
     "strings": "slow-attack detuned ensemble pad",
     "orch_hit": "short inharmonic orchestra-hit stab",
     "metal_stab": "clangorous industrial stab, very inharmonic",
+    "saw_lead": "additive sawtooth lead, same bright shape at every pitch",
+    "hard_pluck": "hard attack, fast decay, long ringing release",
+    "fm_stab": "short metallic pitched stab for off-beats",
 }
 
 

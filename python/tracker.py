@@ -40,8 +40,24 @@ directive keyword is a directive):
     pitch fm1 -12        detune the channel in cents
     cols fm0 fm1 psg0    which columns the rows below carry
     loop                 mark the VGM loop point here
+    mark <label>         name a section boundary (see profile.py)
+    chord A-3 min fm2 fm3 fm4    spread a chord across channels
+    chord off fm2 fm3 fm4        release them again
+    arp fm1 0 3 7        arpeggiate that channel within every row
+    arp fm1 off          stop arpeggiating
     title / author / game / notes    GD3 metadata for the .vgm
     end                  stop early
+
+`chord` and `arp` are input shorthand: they expand at parse time into
+ordinary FMNoteOn / FMPitch events, so `dumps()` writes the expansion
+rather than the shorthand. The music round-trips exactly; the spelling
+does not, which is the same trade every tracker effect column makes.
+
+`arp` moves pitch with FMPitch instead of retriggering, because a tracker
+arpeggio is one note whose pitch flickers — re-attacking the envelope on
+every step would turn a shimmer into a machine gun. Chord qualities:
+maj min dim aug sus2 sus4 maj6 min6 maj7 min7 dom7 m7b5 dim7 add9 maj9
+min9 dom9, plus the usual shorthands (m, M7, 7, 9, o7...).
 
 Row cells, by column type:
 
@@ -84,8 +100,29 @@ _COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
 DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
-              "cols", "columns", "loop", "mark", "title", "author", "game",
-              "notes", "end"}
+              "cols", "columns", "loop", "mark", "chord", "arp", "title",
+              "author", "game", "notes", "end"}
+
+#: Semitone offsets from the root, for the `chord` directive. Kept small and
+#: conventional on purpose: this exists so a four-note voicing is one line
+#: instead of four hand-aligned columns, not to be a theory library.
+CHORD_QUALITIES = {
+    "maj": (0, 4, 7),           "min": (0, 3, 7),
+    "dim": (0, 3, 6),           "aug": (0, 4, 8),
+    "sus2": (0, 2, 7),          "sus4": (0, 5, 7),
+    "maj6": (0, 4, 7, 9),       "min6": (0, 3, 7, 9),
+    "maj7": (0, 4, 7, 11),      "min7": (0, 3, 7, 10),
+    "dom7": (0, 4, 7, 10),      "m7b5": (0, 3, 6, 10),
+    "dim7": (0, 3, 6, 9),       "add9": (0, 4, 7, 14),
+    "maj9": (0, 4, 7, 11, 14),  "min9": (0, 3, 7, 10, 14),
+    "dom9": (0, 4, 7, 10, 14),
+}
+#: Spellings people actually type.
+CHORD_ALIASES = {"m": "min", "-": "min", "M": "maj", "": "maj",
+                 "major": "maj", "minor": "min", "7": "dom7", "9": "dom9",
+                 "m7": "min7", "M7": "maj7", "m9": "min9", "M9": "maj9",
+                 "6": "maj6", "m6": "min6", "half-dim": "m7b5",
+                 "aug7": "aug", "+": "aug", "o": "dim", "o7": "dim7"}
 
 _NOTE_CELL = re.compile(r"^([A-Ga-g])([#b\-]?)(-?\d)(?::(\d+))?$")
 #: `;` always starts a comment; `#` only at line start or after whitespace,
@@ -156,12 +193,47 @@ def loads(text: str):
     psg_sounding = [False] * 3
     noise_sounding = False
     stopped = False
+    arps = {}                 # channel -> tuple of semitone offsets
 
     def flush_rows():
         nonlocal pending_rows
         if pending_rows:
             events.append(Wait(ticks=pending_rows * meta.ticks_per_row()))
             pending_rows = 0
+
+    def emit_arpeggio_row() -> bool:
+        """Spend this row's time as a sequence of pitch steps, not one Wait.
+
+        Returns False when there is nothing arpeggiating, so the caller can
+        fall back to the normal accumulate-and-flush path — which matters,
+        because that path merges consecutive empty rows into a single Wait
+        and this one cannot.
+
+        The pitch moves via FMPitch rather than by retriggering the note:
+        a tracker arpeggio is one note whose pitch flickers, not three
+        notes, and re-attacking the envelope every step would turn a chord
+        shimmer into a machine gun.
+        """
+        active = [ch for ch, offsets in arps.items()
+                  if offsets and fm_sounding[ch]]
+        if not active:
+            return False
+        steps = max(len(arps[ch]) for ch in active)
+        total = meta.ticks_per_row()
+        if total < steps:
+            # Not enough tick resolution to subdivide this row. Sounding an
+            # arpeggio as a single held step is better than emitting a run
+            # of zero-length waits that shift nothing.
+            return False
+
+        base, remainder = divmod(total, steps)
+        for step in range(steps):
+            for ch in active:
+                offsets = arps[ch]
+                events.append(FMPitch(channel=ch,
+                                      cents=offsets[step % len(offsets)] * 100.0))
+            events.append(Wait(ticks=base + (1 if step < remainder else 0)))
+        return True
 
     for lineno, raw in enumerate(text.splitlines(), start=1):
         line = _COMMENT.split(raw, maxsplit=1)[0].strip()
@@ -173,7 +245,8 @@ def loads(text: str):
 
         if head in DIRECTIVES:
             flush_rows()
-            stopped = _directive(head, words[1:], meta, columns, events, lineno)
+            stopped = _directive(head, words[1:], meta, columns, events,
+                                 arps, lineno)
             continue
 
         cells = [c for c in line.replace("|", " ").split() if c]
@@ -188,7 +261,8 @@ def loads(text: str):
                         lineno, raw)
             if column == "noise":
                 noise_sounding = _noise_state(cell, noise_sounding)
-        pending_rows = 1
+        if not emit_arpeggio_row():
+            pending_rows = 1
 
     flush_rows()
 
@@ -214,7 +288,7 @@ def _noise_state(cell: str, current: bool) -> bool:
     return bool(_NOISE_CELL.match(token))
 
 
-def _directive(head, args, meta, columns, events, lineno) -> bool:
+def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
     """Apply one directive. Returns True if it ends the score."""
     def need(n, usage):
         if len(args) < n:
@@ -270,6 +344,46 @@ def _directive(head, args, meta, columns, events, lineno) -> bool:
                               cents=float(args[1])))
     elif head == "loop":
         events.append(LoopPoint())
+    elif head == "chord":
+        # `chord A-3 min fm2 fm3 fm4`  /  `chord off fm2 fm3 fm4`
+        need(2, "a root and channels, e.g. `chord A-3 min fm2 fm3 fm4`, "
+                "or `chord off fm2 fm3 fm4`")
+        if args[0].lower() in ("off", "===", "=="):
+            for name in args[1:]:
+                events.append(FMNoteOff(channel=_fm_channel(name, lineno)))
+            return False
+        parsed = parse_note(args[0])
+        if parsed is None:
+            raise TrackerError(
+                f"line {lineno}: {args[0]!r} is not a root note "
+                f"(want e.g. A-3, C#4)")
+        root, octave, velocity = parsed
+        quality = resolve_quality(args[1], lineno)
+        channels = [_fm_channel(name, lineno) for name in args[2:]]
+        if not channels:
+            raise TrackerError(
+                f"line {lineno}: chord needs at least one FM channel to play on")
+        for channel, (note, note_octave) in zip(
+                channels, chord_tones(root, octave, quality, len(channels))):
+            events.append(FMNoteOn(channel=channel, note=note,
+                                   octave=note_octave,
+                                   velocity=velocity if velocity else 127))
+    elif head == "arp":
+        # `arp fm1 0 3 7`  cycles the channel through those semitone
+        # offsets within every row from here on;  `arp fm1 off`  stops.
+        need(2, "a channel and offsets, e.g. `arp fm1 0 3 7`, or `arp fm1 off`")
+        channel = _fm_channel(args[0], lineno)
+        if args[1].lower() in ("off", "===", "=="):
+            arps.pop(channel, None)
+            events.append(FMPitch(channel=channel, cents=0.0))
+            return False
+        try:
+            offsets = tuple(int(a) for a in args[1:])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: arp offsets must be whole semitones, "
+                f"got {' '.join(args[1:])!r}") from None
+        arps[channel] = offsets
     elif head == "mark":
         # Costs one line, names a section, and is the only thing that lets
         # profile.py (or a human) ask "how loud was the breakdown" by name
@@ -298,6 +412,39 @@ def _fm_channel(name: str, lineno: int) -> int:
     if column not in _FM_COLUMNS:
         raise TrackerError(f"line {lineno}: {name!r} is not an FM channel")
     return int(column[2:])
+
+
+def transpose(note: str, octave: int, semitones: int):
+    """('A', 3, +3) -> ('C', 4). Octaves carry, as they must for chords."""
+    index = events_mod.NOTE_NAMES.index(note)
+    total = octave * 12 + index + semitones
+    return events_mod.NOTE_NAMES[total % 12], total // 12
+
+
+def chord_tones(root: str, octave: int, quality: str, count: int):
+    """The chord's notes, one per requested channel.
+
+    Asking for more channels than the chord has notes continues it upward
+    an octave at a time rather than doubling in unison — a five-channel
+    minor triad becomes root/third/fifth/root+8ve/third+8ve, which is how
+    anyone voicing this by hand would spread it.
+    """
+    offsets = CHORD_QUALITIES[quality]
+    tones = []
+    for i in range(count):
+        offset = offsets[i % len(offsets)] + 12 * (i // len(offsets))
+        tones.append(transpose(root, octave, offset))
+    return tones
+
+
+def resolve_quality(name: str, lineno: int) -> str:
+    key = CHORD_ALIASES.get(name, CHORD_ALIASES.get(name.lower(), name.lower()))
+    if key not in CHORD_QUALITIES:
+        raise TrackerError(
+            f"line {lineno}: unknown chord quality {name!r}. Valid: "
+            f"{', '.join(sorted(CHORD_QUALITIES))} "
+            f"(or {', '.join(sorted(CHORD_ALIASES))})")
+    return key
 
 
 def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):

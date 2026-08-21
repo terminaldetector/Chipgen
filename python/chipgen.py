@@ -417,6 +417,10 @@ def main(argv):
         if stats:
             print()
             print(profile_mod.format_table(stats))
+            # Only meaningful once the sections have actually been measured,
+            # which is why it lives here rather than in compose()'s warnings.
+            for warning in sanity_mod.check_sections(stats):
+                print(f"\nwarning: {warning}")
         else:
             print("\n--profile: no Marker pairs and no bpm known — "
                  "nothing to segment by")
