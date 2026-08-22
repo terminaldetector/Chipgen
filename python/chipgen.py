@@ -225,16 +225,7 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.title = "chipgen"
 
     warnings = warnings + sanity_mod.check(events, rate)
-    if vgm:
-        import sequencer as sequencer_mod
-        if sequencer_mod._uses_opl(events):
-            warnings.append(
-                "this score plays the OPL2, and the .vgm will NOT contain "
-                "those parts. The VGM writer logs the YM2612 and the "
-                "SN76489; chipgen's YM3812 is driven through its own API "
-                "rather than a register interface, so there is nothing to "
-                "log. The .wav and the .it are complete — the .vgm is the "
-                "Genesis half only")
+
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
     if normalize:

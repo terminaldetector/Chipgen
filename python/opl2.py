@@ -50,6 +50,31 @@ SAMPLE_DIVIDER = 72
 CHANNELS = 9
 OPERATORS = 18
 
+#: Register offset of each channel's two operators. The chip interleaves
+#: its eighteen operator slots across nine channels in threes, and the
+#: register map follows the slots, not the channels — channel 3's
+#: modulator lives at offset 8, not 6. Same shape of trap as the YM2612's
+#: op1/op3/op2/op4 ordering, and worth spelling out once here rather than
+#: rediscovering it per register.
+_CHANNEL_OFFSETS = tuple(((c // 3) * 8 + (c % 3),
+                          (c // 3) * 8 + (c % 3) + 3) for c in range(CHANNELS))
+#: The inverse: which (channel, operator) a register offset belongs to.
+_OFFSET_TO_SLOT = {}
+for _c, (_m, _car) in enumerate(_CHANNEL_OFFSETS):
+    _OFFSET_TO_SLOT[_m] = (_c, 0)
+    _OFFSET_TO_SLOT[_car] = (_c, 1)
+
+REG_TEST = 0x01
+REG_AM_VIB_EGT_KSR_MULT = 0x20
+REG_KSL_TL = 0x40
+REG_AR_DR = 0x60
+REG_SL_RR = 0x80
+REG_FNUM_LOW = 0xA0
+REG_KEYON_BLOCK_FNUM = 0xB0
+REG_DEPTH_RHYTHM = 0xBD
+REG_FEEDBACK_CONNECTION = 0xC0
+REG_WAVEFORM = 0xE0
+
 #: Multiple, doubled so that "0" can mean x0.5 without fractions. 11, 13
 #: and 14 are duplicated on hardware — the register has 16 values but the
 #: chip only implements 13 of them.
@@ -344,54 +369,164 @@ class YM3812:
         self.tremolo_depth = 0          # 0 = 1.0 dB, 1 = 4.8 dB
         self.vibrato_depth = 0          # 0 = 7 cents, 1 = 14 cents
         self._lfo = 0
+        #: -1 rather than 0, so the first write of any register is real
+        #: even when its value happens to be zero.
+        self._shadow = [-1] * 256
 
     def close(self):
         pass
+
+    # -- registers ---------------------------------------------------------
+    def write(self, address: int, value: int):
+        """One register write, exactly as a driver would issue it.
+
+        Everything else on this class goes through here. That is what makes
+        a .vgm possible: the format stores register writes, so a chip
+        driven by setting Python attributes has nothing to record. It also
+        means the emulator and the log can never disagree about what was
+        played, because they are the same writes.
+        """
+        address &= 0xFF
+        value &= 0xFF
+        # Shadow the register file and drop writes that change nothing.
+        # Every hardware driver does this; here it also keeps a .vgm from
+        # carrying a redundant Total Level write on every single note.
+        if self._shadow[address] == value:
+            return
+        self._shadow[address] = value
+        if self.logger is not None:
+            self.logger(address, value)
+        self._decode(address, value)
+
+    def _decode(self, address: int, value: int):
+        high = address & 0xF0
+        offset = address & 0x1F
+
+        if address == REG_DEPTH_RHYTHM:
+            self.tremolo_depth = (value >> 7) & 1
+            self.vibrato_depth = (value >> 6) & 1
+            return
+        if address < 0x20:
+            return                       # test/timer registers: no audio effect
+
+        if 0xA0 <= address <= 0xA8:
+            chan = self.channels[address - 0xA0]
+            chan.fnum = (chan.fnum & 0x300) | value
+            chan.refresh()
+            return
+        if 0xB0 <= address <= 0xB8:
+            chan = self.channels[address - 0xB0]
+            chan.fnum = (chan.fnum & 0xFF) | ((value & 3) << 8)
+            chan.block = (value >> 2) & 7
+            keyed = bool(value & 0x20)
+            was = chan.key_on
+            chan.key_on = keyed
+            chan.refresh()
+            if keyed and not was:
+                for slot in chan.slots:
+                    slot.key_on()
+            elif was and not keyed:
+                for slot in chan.slots:
+                    slot.key_off()
+            return
+        if 0xC0 <= address <= 0xC8:
+            chan = self.channels[address - 0xC0]
+            chan.feedback = (value >> 1) & 7
+            chan.connection = value & 1
+            chan.refresh()
+            return
+
+        located = _OFFSET_TO_SLOT.get(offset)
+        if located is None:
+            return                       # a gap in the slot map; the chip
+        channel, index = located         # ignores these too
+        slot = self.channels[channel].slots[index]
+        op = slot.op
+
+        if high == REG_AM_VIB_EGT_KSR_MULT:
+            op.tremolo = (value >> 7) & 1
+            op.vibrato = (value >> 6) & 1
+            op.sustaining = bool((value >> 5) & 1)
+            op.key_scale_rate = (value >> 4) & 1
+            op.multiple = value & 15
+        elif high == REG_KSL_TL:
+            op.key_scale_level = (value >> 6) & 3
+            op.total_level = value & 63
+        elif high == REG_AR_DR:
+            op.attack = (value >> 4) & 15
+            op.decay = value & 15
+        elif high == REG_SL_RR:
+            op.sustain_level = (value >> 4) & 15
+            op.release = value & 15
+        elif high in (0xE0, 0xF0):
+            op.waveform = value & 3
+        else:
+            return
+        slot.refresh()
 
     # -- voice control -----------------------------------------------------
     def set_instrument(self, channel: int, instrument: OPLInstrument):
         chan = self.channels[channel]
         chan.instrument = instrument
-        chan.feedback = instrument.feedback
-        chan.connection = instrument.connection
-        chan.slots[0].op = instrument.modulator.copy()
-        chan.slots[1].op = instrument.carrier.copy()
-        if instrument.trim:
-            # Same convention as the OPN2 bank: a loudness calibration in
-            # 0.75 dB steps, applied to whatever actually reaches the
-            # output — both operators in additive mode, the carrier alone
-            # in FM mode, because raising a modulator changes the timbre
-            # rather than the volume.
-            targets = chan.slots if instrument.connection else chan.slots[1:]
-            for slot in targets:
-                slot.op.total_level = max(0, min(63, slot.op.total_level
-                                                 + instrument.trim))
-        chan.refresh()
+        modulator_offset, carrier_offset = _CHANNEL_OFFSETS[channel]
+        for offset, op in ((modulator_offset, instrument.modulator),
+                           (carrier_offset, instrument.carrier)):
+            self.write(REG_AM_VIB_EGT_KSR_MULT + offset,
+                       (op.tremolo << 7) | (op.vibrato << 6)
+                       | ((1 if op.sustaining else 0) << 5)
+                       | (op.key_scale_rate << 4) | (op.multiple & 15))
+            self.write(REG_KSL_TL + offset,
+                       ((op.key_scale_level & 3) << 6) | (op.total_level & 63))
+            self.write(REG_AR_DR + offset,
+                       ((op.attack & 15) << 4) | (op.decay & 15))
+            self.write(REG_SL_RR + offset,
+                       ((op.sustain_level & 15) << 4) | (op.release & 15))
+            self.write(REG_WAVEFORM + offset, op.waveform & 3)
+        self.write(REG_FEEDBACK_CONNECTION + channel,
+                   ((instrument.feedback & 7) << 1) | (instrument.connection & 1))
+        self._write_levels(channel, chan.volume, 127)
+
+    def _write_levels(self, channel: int, volume: int, velocity: int):
+        """Push Total Level for whatever reaches the output on this channel.
+
+        Velocity, channel volume and the patch's calibration trim all
+        compose here, and all of them land on the carrier only when the
+        operators are in FM: attenuating a modulator changes how bright the
+        voice is, not how loud, so a fader that touched it would not be a
+        fader. In additive mode both operators are heard, so both move.
+        """
+        chan = self.channels[channel]
+        instrument = chan.instrument
+        if instrument is None:
+            return
+        extra = (_velocity_steps(velocity) + _velocity_steps(volume)
+                 + instrument.trim)
+        modulator_offset, carrier_offset = _CHANNEL_OFFSETS[channel]
+        targets = ((modulator_offset, instrument.modulator),
+                   (carrier_offset, instrument.carrier)) if chan.connection \
+            else ((carrier_offset, instrument.carrier),)
+        for offset, op in targets:
+            level = max(0, min(63, op.total_level + extra))
+            self.write(REG_KSL_TL + offset,
+                       ((op.key_scale_level & 3) << 6) | level)
 
     def note_on(self, channel: int, note: str, octave: int, velocity: int = 127):
         chan = self.channels[channel]
         fnum, block = freq_to_fnum_block(note_to_freq(note, octave), self.clock)
-        chan.fnum, chan.block, chan.key_on = fnum, block, True
-        instrument = chan.instrument
-        if instrument is not None:
-            # Velocity and channel volume both attenuate the carrier, and
-            # they compose: a soft note on a quiet channel is quieter than
-            # either alone, which is what a tracker's volume column and its
-            # channel fader do.
-            extra = (_velocity_steps(velocity) + _velocity_steps(chan.volume)
-                     + instrument.trim)
-            for index in ((0, 1) if chan.connection else (1,)):
-                original = instrument.modulator if index == 0 else instrument.carrier
-                chan.slots[index].op.total_level = max(
-                    0, min(63, original.total_level + extra))
-        for slot in chan.slots:
-            slot.key_on()
+        self._write_levels(channel, chan.volume, velocity)
+        self.write(REG_FNUM_LOW + channel, fnum & 0xFF)
+        # Key-off before key-on, so a retrigger restarts the envelope the
+        # way the hardware does rather than sliding the pitch of a note
+        # that is already sounding.
+        self.write(REG_KEYON_BLOCK_FNUM + channel,
+                   ((block & 7) << 2) | ((fnum >> 8) & 3))
+        self.write(REG_KEYON_BLOCK_FNUM + channel,
+                   0x20 | ((block & 7) << 2) | ((fnum >> 8) & 3))
 
     def note_off(self, channel: int):
         chan = self.channels[channel]
-        chan.key_on = False
-        for slot in chan.slots:
-            slot.key_off()
+        self.write(REG_KEYON_BLOCK_FNUM + channel,
+                   ((chan.block & 7) << 2) | ((chan.fnum >> 8) & 3))
 
     def set_volume(self, channel: int, volume: int):
         """Channel volume, 0-127, on the FM bank's linear-in-amplitude scale.
@@ -405,20 +540,16 @@ class YM3812:
         """
         chan = self.channels[channel]
         chan.volume = max(0, min(127, volume))
-        instrument = chan.instrument
-        if instrument is None:
-            return
-        extra = _velocity_steps(chan.volume) + instrument.trim
-        for index in ((0, 1) if chan.connection else (1,)):
-            original = instrument.modulator if index == 0 else instrument.carrier
-            chan.slots[index].op.total_level = max(
-                0, min(63, original.total_level + extra))
-        chan.refresh()
+        self._write_levels(channel, chan.volume, 127)
 
     def set_pitch(self, channel: int, frequency: float):
+        """Retune without retriggering — the OPL's own portamento."""
         chan = self.channels[channel]
-        chan.fnum, chan.block = freq_to_fnum_block(frequency, self.clock)
-        chan.refresh()
+        fnum, block = freq_to_fnum_block(frequency, self.clock)
+        self.write(REG_FNUM_LOW + channel, fnum & 0xFF)
+        self.write(REG_KEYON_BLOCK_FNUM + channel,
+                   (0x20 if chan.key_on else 0) | ((block & 7) << 2)
+                   | ((fnum >> 8) & 3))
 
     def silence(self):
         for index in range(CHANNELS):

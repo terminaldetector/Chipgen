@@ -32,6 +32,7 @@ DEFAULT_SAMPLE_RATE = 44100   # VGM waits are always counted in 44100 Hz samples
 CMD_PSG = 0x50            # 0x50 dd
 CMD_YM2612_PORT0 = 0x52   # 0x52 aa dd
 CMD_YM2612_PORT1 = 0x53   # 0x53 aa dd
+CMD_YM3812 = 0x5A         # 0x5A aa dd — the OPL2/AdLib chip
 CMD_WAIT_LONG = 0x61      # 0x61 nn nn  (16-bit sample count)
 CMD_WAIT_735 = 0x62       # one NTSC frame
 CMD_WAIT_882 = 0x63       # one PAL frame
@@ -97,10 +98,15 @@ class VGMWriter:
     """
 
     def __init__(self, ym_clock: float = 7_670_453.57,
-                 psg_clock: float = 3_579_545, gd3: GD3 = None,
+                 psg_clock: float = 3_579_545, opl_clock: float = 0,
+                 gd3: GD3 = None,
                  pcm_blocks: bool = True):
         self.ym_clock = int(round(ym_clock))
         self.psg_clock = int(round(psg_clock))
+        #: Zero means "no OPL2 in this file", which is how a VGM player
+        #: knows not to instantiate one. Set it only when the score
+        #: actually plays the chip.
+        self.opl_clock = int(round(opl_clock))
         self.gd3 = gd3 or GD3()
         #: Route DAC bytes into a PCM data block (0x67) played back with
         #: 0x8n commands, the way ripped Genesis VGMs do it. One byte per
@@ -128,6 +134,11 @@ class VGMWriter:
         cmd = CMD_YM2612_PORT1 if port >= 2 else CMD_YM2612_PORT0
         self._data += bytes((cmd, addr & 0xFF, data & 0xFF))
         self._writes += 1
+
+    def opl_logger(self, addr: int, data: int):
+        """Log one YM3812 register write (VGM command 0x5A)."""
+        self._flush_wait()
+        self._data += bytes((CMD_YM3812, addr & 0xFF, data & 0xFF))
 
     def psg_logger(self, byte: int):
         """Attach as SN76489(logger=...)."""
@@ -241,6 +252,9 @@ class VGMWriter:
         header[0x2A] = SEGA_PSG_SHIFT_WIDTH
         header[0x2B] = 0x00                       # SN76489 flags
         struct.pack_into("<I", header, 0x2C, self.ym_clock)
+        # YM3812's clock lives at 0x50 in the VGM header. It is only
+        # meaningful from version 1.51, which 1.71 is comfortably past.
+        struct.pack_into("<I", header, 0x50, self.opl_clock)
         struct.pack_into("<I", header, 0x34, HEADER_SIZE - 0x34)
         return bytes(header) + data + gd3
 
@@ -305,6 +319,8 @@ def read_header(path_or_bytes) -> dict:
         "eof_offset": struct.unpack_from("<I", raw, 0x04)[0] + 0x04,
         "file_size": len(raw),
         "psg_clock": struct.unpack_from("<I", raw, 0x0C)[0],
+        "opl_clock": (struct.unpack_from("<I", raw, 0x50)[0]
+                      if len(raw) >= 0x54 else 0),
         "ym2612_clock": struct.unpack_from("<I", raw, 0x2C)[0],
         "total_samples": struct.unpack_from("<I", raw, 0x18)[0],
         "duration": struct.unpack_from("<I", raw, 0x18)[0] / DEFAULT_SAMPLE_RATE,

@@ -119,7 +119,10 @@ class Sequencer:
         opl = None
         if _uses_opl(event_list):
             import opl2 as opl2_mod
-            opl = opl2_mod.YM3812()
+            opl = opl2_mod.YM3812(
+                logger=writer.opl_logger if writer else None)
+            if writer is not None:
+                writer.opl_clock = int(round(opl.clock))
 
         state = _RenderState(ym, psg, fm_rate, writer, want_audio, opl)
         rate = float(self.ticks_per_second)

@@ -292,3 +292,118 @@ def test_a_score_without_opl_does_not_build_the_chip():
                                     Wait(ticks=10), End()])
     from events import OPLNoteOn
     assert sequencer._uses_opl([OPLNoteOn(channel=0, note="A", octave=3), End()])
+
+
+# -- VGM ---------------------------------------------------------------------
+def test_every_api_call_becomes_register_writes():
+    # The whole reason the chip has a register interface: a .vgm stores
+    # register writes, so a chip driven by setting Python attributes has
+    # nothing to record.
+    log = []
+    chip = opl2.YM3812(logger=lambda a, d: log.append((a, d)))
+    chip.set_instrument(0, opl_instruments.get("opl_bass"))
+    chip.note_on(0, "A", 2)
+    chip.note_off(0)
+    chip.close()
+
+    addresses = [a for a, _ in log]
+    for base in (opl2.REG_AM_VIB_EGT_KSR_MULT, opl2.REG_KSL_TL,
+                 opl2.REG_AR_DR, opl2.REG_SL_RR, opl2.REG_WAVEFORM):
+        assert base + 0 in addresses, f"no modulator write at 0x{base:02X}"
+        assert base + 3 in addresses, f"no carrier write at 0x{base + 3:02X}"
+    assert opl2.REG_FEEDBACK_CONNECTION in addresses
+    assert opl2.REG_FNUM_LOW in addresses
+
+    keyed = [d for a, d in log if a == opl2.REG_KEYON_BLOCK_FNUM]
+    assert any(d & 0x20 for d in keyed), "nothing ever keyed on"
+    assert keyed[-1] & 0x20 == 0, "the note was never keyed off"
+
+
+def test_the_note_register_pair_carries_the_published_f_number():
+    log = []
+    chip = opl2.YM3812(logger=lambda a, d: log.append((a, d)))
+    chip.set_instrument(0, opl_instruments.get("opl_bass"))
+    chip.note_on(0, "A", 4)
+    chip.close()
+    low = [d for a, d in log if a == opl2.REG_FNUM_LOW][-1]
+    high = [d for a, d in log if a == opl2.REG_KEYON_BLOCK_FNUM][-1]
+    fnum = low | ((high & 3) << 8)
+    block = (high >> 2) & 7
+    assert (fnum, block) == (580, 4), (fnum, block)
+
+
+def test_redundant_writes_are_dropped():
+    # Without a shadow register file, every note re-sends the same Total
+    # Level and the .vgm carries it forever.
+    log = []
+    chip = opl2.YM3812(logger=lambda a, d: log.append((a, d)))
+    chip.write(0x40, 0x10)
+    first = len(log)
+    chip.write(0x40, 0x10)
+    chip.write(0x40, 0x10)
+    assert len(log) == first, "an unchanged write still reached the log"
+    chip.write(0x40, 0x11)
+    assert len(log) == first + 1
+    chip.close()
+
+
+def test_writing_registers_reproduces_what_the_api_produced():
+    # Replay the log into a second chip and compare the audio. If the
+    # decoder and the encoder disagree anywhere, this is where it shows.
+    log = []
+    source = opl2.YM3812(logger=lambda a, d: log.append((a, d)))
+    source.set_instrument(0, opl_instruments.get("opl_saw_lead"))
+    source.note_on(0, "C", 5)
+    direct = [float(v) for v in source.render(int(source.native_rate * 0.25))]
+    source.close()
+
+    replay = opl2.YM3812()
+    for address, data in log:
+        replay.write(address, data)
+    again = [float(v) for v in replay.render(int(replay.native_rate * 0.25))]
+    replay.close()
+
+    assert len(direct) == len(again)
+    worst = max(abs(a - b) for a, b in zip(direct, again))
+    assert worst < 1e-9, f"register replay diverged by {worst}"
+
+
+def test_a_score_with_opl_exports_and_replays_as_vgm():
+    import os
+
+    import chipgen
+    import vgm as vgm_mod
+    import vgm_player
+
+    score = ("ticks 240\nbpm 150\nlpb 4\n"
+             "inst opl0 opl_square_lead\ninst opl1 opl_organ\n"
+             "cols opl0 opl1\n"
+             "A-4  A-3\n...  ...\nC-5  C-4\n...  ...\n"
+             "E-5  E-4\n...  ...\n===  ===\n...  ...\n")
+    with support.TempDir() as directory:
+        path = os.path.join(directory, "opl.vgm")
+        result = chipgen.compose(score, vgm=path)
+        header = vgm_mod.read_header(path)
+        assert header["opl_clock"] == int(round(opl2.NTSC_CLOCK)), header
+        replayed = vgm_player.render(path)
+
+    import audio
+    assert audio.rms(replayed) > 1e-3, "the replayed VGM is silent"
+    # Same performance, so the same length and a comparable level.
+    assert abs(len(replayed) - len(result.audio)) <= 4
+    difference = abs(20 * math.log10(max(1e-9, audio.rms(replayed))
+                                     / max(1e-9, audio.rms(result.audio))))
+    assert difference < 1.5, f"replay is {difference:.2f} dB away"
+
+
+def test_a_score_without_opl_leaves_the_vgm_header_clock_at_zero():
+    # Zero is how a player knows there is no OPL2 in the file at all.
+    import os
+
+    import chipgen
+    import vgm as vgm_mod
+
+    with support.TempDir() as directory:
+        path = os.path.join(directory, "plain.vgm")
+        chipgen.compose("inst fm0 bass\ncols fm0\nA-2\n...\n===\n", vgm=path)
+        assert vgm_mod.read_header(path)["opl_clock"] == 0

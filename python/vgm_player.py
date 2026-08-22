@@ -62,7 +62,8 @@ def load(path_or_bytes) -> bytes:
 def iter_commands(raw: bytes, header: dict = None, max_samples: int = None):
     """Walk a VGM's command stream.
 
-    Yields ("ym", port, addr, data), ("psg", byte) and ("wait", samples),
+    Yields ("ym", port, addr, data), ("opl", addr, data), ("psg", byte)
+    and ("wait", samples),
     where samples counts 44100ths. Both the player and the instrument
     importer consume this, so there is one VGM parser in the project rather
     than one per consumer that has to be kept in step.
@@ -91,6 +92,8 @@ def iter_commands(raw: bytes, header: dict = None, max_samples: int = None):
         elif cmd in (vgm_mod.CMD_YM2612_PORT0, vgm_mod.CMD_YM2612_PORT1):
             port = 0 if cmd == vgm_mod.CMD_YM2612_PORT0 else 2
             yield ("ym", port, raw[pos], raw[pos + 1]); pos += 2
+        elif cmd == vgm_mod.CMD_YM3812:
+            yield ("opl", raw[pos], raw[pos + 1]); pos += 2
         elif cmd == vgm_mod.CMD_WAIT_LONG:
             n = struct.unpack_from("<H", raw, pos)[0]; pos += 2
             elapsed += n
@@ -142,13 +145,22 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
     ym = opn2.YM2612(clock=float(ym_clock))
     psg = sn76489.SN76489(clock=float(psg_clock))
 
+    # Built only when the header says the file has one. A VGM without an
+    # OPL2 must not pay for a pure-Python chip rendering silence.
+    opl = None
+    opl_rate = 0.0
+    if header.get("opl_clock"):
+        import opl2
+        opl = opl2.YM3812(clock=float(header["opl_clock"]))
+        opl_rate = opl.native_rate
+
     fm_rate = ym.native_rate
     psg_rate = psg.native_rate
-    fm_chunks, psg_chunks = [], []
-    fm_pending = psg_pending = 0.0
+    fm_chunks, psg_chunks, opl_chunks = [], [], []
+    fm_pending = psg_pending = opl_pending = 0.0
 
     def flush():
-        nonlocal fm_pending, psg_pending
+        nonlocal fm_pending, psg_pending, opl_pending
         n = int(fm_pending)
         if n > 0:
             fm_chunks.append(ym.render(n))
@@ -157,6 +169,10 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
         if n > 0:
             psg_chunks.append(psg.render(n))
             psg_pending -= n
+        n = int(opl_pending)
+        if n > 0 and opl is not None:
+            opl_chunks.append(opl.render(n))
+            opl_pending -= n
 
     max_samples = int(max_seconds * vgm_mod.DEFAULT_SAMPLE_RATE)
     for command in iter_commands(raw, header, max_samples):
@@ -164,9 +180,14 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
             seconds = command[1] / float(vgm_mod.DEFAULT_SAMPLE_RATE)
             fm_pending += seconds * fm_rate
             psg_pending += seconds * psg_rate
+            opl_pending += seconds * opl_rate
         elif command[0] == "psg":
             flush()
             psg.write(command[1])
+        elif command[0] == "opl":
+            flush()
+            if opl is not None:
+                opl.write(command[1], command[2])
         else:
             flush()
             ym.write(command[1], command[2], command[3])
@@ -174,12 +195,17 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
     flush()
     ym.close()
     psg.close()
+    if opl is not None:
+        opl.close()
 
     # Same mixer the sequencer uses, so a replayed export and the render it
     # came from agree by construction rather than by both being maintained.
     return mixer.mix(_audio.concat(fm_chunks, 2), _audio.concat(psg_chunks, 1),
                      fm_rate, psg_rate, target_rate, fm_gain=fm_gain,
-                     psg_gain=psg_gain, dc_block=dc_block)
+                     psg_gain=psg_gain, dc_block=dc_block,
+                     opl_audio=_audio.concat(opl_chunks, 1) if opl_chunks
+                     else None,
+                     opl_rate=opl_rate)
 
 
 def main(argv):
