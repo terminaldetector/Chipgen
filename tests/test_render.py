@@ -1,5 +1,6 @@
 """The whole path: events in, audio out, on whichever cores are available."""
 
+import math
 import os
 import subprocess
 import sys
@@ -284,3 +285,129 @@ def test_the_render_is_centred():
         frame = result.audio[i]
         total += sum(float(v) for v in frame) / len(frame)
     assert abs(total / frames) < 1e-4, "DC offset survived the mixer"
+
+
+# -- the acceptance checks a handoff spec asked for --------------------------
+# Four properties that a YM2612 renderer can get wrong while still producing
+# plausible audio. Written after reviewing an external renderer contract that
+# had three of the four backwards; they are as much a guard on this engine as
+# they were a correction to that one.
+
+def test_the_same_score_renders_to_the_same_bytes():
+    # Determinism is the cheapest acceptance criterion there is, and the
+    # only one that catches an emulator carrying state between runs.
+    import hashlib
+    import os
+
+    import chipgen
+
+    score = ("ticks 240\nbpm 150\nlpb 4\ninst fm0 bass\n"
+             "inst fm1 square_lead\ncols fm0 fm1 psg0 noise dac\n"
+             "A-2  A-4  E-5  w1:8  kick\n...  ...  ...  ===   ...\n"
+             "C-3  C-5  ...  w1:8  snare\n===  ===  ===  ===   ...\n")
+    with support.TempDir() as directory:
+        digests = []
+        for index in range(3):
+            wav = os.path.join(directory, f"r{index}.wav")
+            vgm = os.path.join(directory, f"r{index}.vgm")
+            chipgen.compose(score, wav=wav, vgm=vgm)
+            with open(wav, "rb") as handle:
+                audio_digest = hashlib.sha256(handle.read()).hexdigest()
+            with open(vgm, "rb") as handle:
+                vgm_digest = hashlib.sha256(handle.read()).hexdigest()
+            digests.append((audio_digest, vgm_digest))
+    assert len(set(digests)) == 1, "the same score rendered differently"
+
+
+def test_sustain_level_zero_holds_and_fifteen_dies():
+    # SL is the level at which the envelope hands over from decay to
+    # sustain, so SL=0 sustains at full and SL=15 decays to nothing. It
+    # reads backwards to anyone expecting "sustain level 15 = sustain
+    # loudest", and getting it backwards makes every pad die mid-note and
+    # every drum ring until key-off.
+    import audio
+    import opn2
+
+    def held(sustain_level):
+        carrier = opn2.Operator(multiple=1, total_level=0, attack_rate=31,
+                                decay_rate=12, sustain_rate=0,
+                                release_rate=7, sustain_level=sustain_level)
+        mute = opn2.Operator(multiple=1, total_level=127, attack_rate=31)
+        chip = opn2.YM2612()
+        chip.set_instrument(0, opn2.FMInstrument(
+            algorithm=7, feedback=0, operators=[carrier, mute, mute, mute]))
+        chip.set_pan(0, True, True)
+        chip.note_on(0, "A", 4)
+        peak = audio.rms(chip.render(int(chip.native_rate * 0.05)))
+        chip.render(int(chip.native_rate * 1.9))
+        tail = audio.rms(chip.render(int(chip.native_rate * 0.05)))
+        chip.close()
+        return 20 * math.log10(max(1e-9, tail / max(1e-9, peak)))
+
+    assert held(0) > -3.0, f"SL=0 should hold; measured {held(0):.1f} dB"
+    assert held(15) < -12.0, f"SL=15 should die; measured {held(15):.1f} dB"
+
+
+def test_detune_registers_bend_the_way_the_hardware_says():
+    # DT1's low two bits are magnitude and bit 2 is sign: 0 and 4 are
+    # neutral, 1-3 sharpen, 5-7 flatten. A map that sends "one step down"
+    # to register 3 detunes upward.
+    import opn2
+
+    def frequency(detune, note="A", octave=6):
+        operator = opn2.Operator(multiple=1, total_level=0, attack_rate=31,
+                                 decay_rate=0, sustain_rate=0,
+                                 release_rate=7, sustain_level=0,
+                                 detune=detune)
+        mute = opn2.Operator(multiple=1, total_level=127, attack_rate=31)
+        chip = opn2.YM2612()
+        chip.set_instrument(0, opn2.FMInstrument(
+            algorithm=7, feedback=0, operators=[operator, mute, mute, mute]))
+        chip.set_pan(0, True, True)
+        chip.note_on(0, note, octave)
+        buffer = chip.render(int(chip.native_rate * 2.0))
+        chip.close()
+        values = [left + right for left, right in buffer][5000:]
+        crossings = sum(1 for i in range(1, len(values))
+                        if values[i - 1] <= 0 < values[i])
+        return crossings / (len(values) / chip.native_rate)
+
+    neutral = frequency(0)
+    assert abs(frequency(4) - neutral) < 0.4, "register 4 should be neutral too"
+    assert frequency(3) > neutral + 0.4, "register 3 must sharpen"
+    assert frequency(7) < neutral - 0.4, "register 7 must flatten"
+    # ...and symmetrically, which is what makes 5/1 a usable +/-1 pair.
+    assert abs((frequency(3) - neutral) + (frequency(7) - neutral)) < 0.6
+
+
+def test_swapping_operators_two_and_three_changes_the_sound():
+    # The register offsets ascend op1, op3, op2, op4. A renderer that
+    # writes a musically-ordered operator list straight to base+i*4 swaps
+    # two of them, and the result is a plausible timbre that is not the
+    # one that was written. This asserts the two orderings are audibly
+    # different, so the mistake cannot hide.
+    import audio
+    import opn2
+
+    def voice(multiples):
+        operators = [opn2.Operator(multiple=m, total_level=tl, attack_rate=31,
+                                   decay_rate=8, sustain_rate=0,
+                                   release_rate=7, sustain_level=0)
+                     for m, tl in zip(multiples, (0, 24, 24, 0))]
+        chip = opn2.YM2612()
+        chip.set_instrument(0, opn2.FMInstrument(
+            algorithm=4, feedback=0, operators=operators))
+        chip.set_pan(0, True, True)
+        chip.note_on(0, "A", 3)
+        buffer = chip.render(int(chip.native_rate * 0.4))
+        chip.close()
+        return buffer
+
+    straight = voice((1, 2, 7, 1))
+    swapped = voice((1, 7, 2, 1))       # operators 2 and 3 exchanged
+    n = min(len(straight), len(swapped))
+    difference = audio.rms([(a[0] - b[0], a[1] - b[1])
+                            for a, b in zip(straight[:n], swapped[:n])])
+    reference = audio.rms(straight[:n])
+    assert difference > reference * 0.1, \
+        "swapping two operators changed nothing — the ordering is not applied"
