@@ -138,6 +138,29 @@ six hundred at once.
 
 ---
 
+## Before you compose: what this music actually does
+
+`corpus/STUDY.md` is 79 real Mega Drive tracks — Gunstar Heroes, Streets
+of Rage, Thunder Force IV and seven more — transcribed into this exact
+notation and then measured. Read it before writing, not after: it is the
+idiom, not a review checklist. About 700 tokens for the statistics, 8,500
+with the excerpts attached.
+
+The headlines, all counted rather than asserted:
+
+- FM0 is the bass on every track in the set. FM5 appears on 37% of them,
+  because the DAC takes channel 6 for drums.
+- A third of note-to-note moves repeat the pitch; most of the rest step by
+  a tone or less. Leaps are 19%, and they are mostly octaves.
+- One to three FM voices sound at a time. Five or six is 7% of rows.
+- Median FM velocity is 21 of 127 — notes are not all struck at full.
+- Vibrato runs about 34 cents at 6 Hz. It colours a note, it does not
+  bend it.
+
+`bridge/LEARNING.md` explains why the digest exists rather than the
+archive: the full corpus is ~1.5 million tokens, and thirty-one arbitrary
+tracks is a worse sample than all 235 summarised.
+
 ## Things that will bite you if nobody says them
 
 - **PSG volume is backwards.** `0` is loudest, `15` is silent. It is an

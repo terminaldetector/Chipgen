@@ -35,6 +35,8 @@ INCLUDE_FILES = [
     "bridge/make_zip.py",
     "bridge/manifest.json",
     "bridge/PROMPT.md",
+    "bridge/LEARNING.md",
+    "corpus/STUDY.md",
     "core/README.md",
     "core/NUKED_OPN2_LICENSE",
 ]

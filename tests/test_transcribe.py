@@ -332,3 +332,86 @@ def test_a_recovered_wobble_becomes_a_vibrato_event():
     assert abs(vibratos[0].depth_cents - 55.0) < 0.1
     assert abs(vibratos[0].speed_hz - 6.0) < 0.1
     assert vibratos[1].depth_cents == 0.0, "the vibrato is never turned off"
+
+
+# -- the study digest --------------------------------------------------------
+def test_the_digest_measures_what_it_reports():
+    import os
+
+    import corpus_digest
+    import support as support_module
+
+    # Two tracks whose parts are deliberately in different registers, so
+    # the role assignment has something to get right or wrong.
+    def score(bass_octave, lead_octave):
+        rows = ["ticks 240", "bpm 150", "lpb 4", "inst fm0 bass",
+                "inst fm1 square_lead", "cols fm0 fm1 dac", ""]
+        for bar in range(8):
+            for row in range(8):
+                drum = "kick" if row % 4 == 0 else "..."
+                rows.append(f"A-{bass_octave} C-{lead_octave} {drum}")
+        return "\n".join(rows) + "\n"
+
+    with support_module.TempDir() as directory:
+        paths = []
+        for index, (low, high) in enumerate(((2, 5), (2, 5))):
+            path = os.path.join(directory, f"t{index}.trk")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(score(low, high))
+            paths.append(path)
+        stats = corpus_digest.scan(paths)
+
+    assert stats["tracks"] == 2
+    assert stats["notes"] > 100
+    # fm0 must come out below fm1: that is the whole role claim.
+    import statistics as stats_module
+    assert (stats_module.median(stats["registers"]["fm0"])
+            < stats_module.median(stats["registers"]["fm1"]))
+    text = corpus_digest.render(stats)
+    assert "bass" in text and "fm0" in text
+    assert str(stats["notes"]) in text, "the note count is not reported"
+
+
+def test_the_digest_is_small_enough_to_read():
+    # The whole point: the statistics have to cost a fraction of the
+    # corpus they describe. Guarding the size because a digest that grows
+    # to corpus scale has stopped being a digest.
+    import corpus_digest
+
+    import collections
+
+    stats = {
+        "tracks": 79, "notes": 62019,
+        "registers": {"fm0": list(range(30, 50)) * 10,
+                      "fm1": list(range(50, 70)) * 10},
+        "voice_tracks": {"fm0": 79, "fm1": 78},
+        "intervals": collections.Counter({0: 100, 1: 40, -1: 40, 12: 10}),
+        "polyphony": {1: 50, 2: 30, 3: 20},
+        "tempos": [120.0] * 79,
+        "velocities": {"fm0": [21] * 100},
+        "vibrato": [(34.0, 6.0)] * 50,
+        "rhythm": {0: 40, 4: 20, 8: 30, 12: 20},
+        "rhythm_tracks": 21, "drum_tracks": 33,
+        "drum_rows": {},
+    }
+    text = corpus_digest.render(stats)
+    assert len(text) < 8000, f"the statistics alone are {len(text)} chars"
+
+
+def test_bar_phase_finds_the_downbeat():
+    import corpus_digest
+
+    # Drums on rows 2, 6, 10, 14 of a 16-row bar: the pattern is regular
+    # but the bar does not start where the grid does. Without recovering
+    # that offset, pooled rhythm across tracks came out uniform — 5.3% to
+    # 7.2% per row, which is the shape of no information at all.
+    rows = [bar * 16 + offset for bar in range(8) for offset in (2, 6, 10, 14)]
+    phase, confidence = corpus_digest._bar_phase(rows, 16)
+    assert phase in (2, 6, 10, 14), phase
+    assert confidence > corpus_digest.PHASE_CONFIDENCE, confidence
+
+    import random
+    generator = random.Random(11)
+    scattered = [generator.randrange(0, 128) for _ in range(60)]
+    _phase, weak = corpus_digest._bar_phase(scattered, 16)
+    assert weak < corpus_digest.PHASE_CONFIDENCE, weak
