@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 2290 notes over 63.8s; the grid fits 33% of the
-# onsets at 187.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 2290 notes and 0 vibrato spans over 63.8s; the grid fits 33% of the
+# onsets at 187.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (80.21 BPM, 4 rows/beat)
 title 46 - Omake 8
 bpm 80.21

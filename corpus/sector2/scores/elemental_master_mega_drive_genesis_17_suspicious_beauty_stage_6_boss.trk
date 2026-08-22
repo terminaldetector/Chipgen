@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1091 notes over 41.8s; the grid fits 52% of the
-# onsets at 249.5 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1091 notes and 0 vibrato spans over 41.8s; the grid fits 52% of the
+# onsets at 249.5 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (120.24 BPM, 2 rows/beat)
 title 17 - Suspicious Beauty (Stage 6 Boss)
 bpm 120.24

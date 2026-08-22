@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1766 notes over 53.4s; the grid fits 34% of the
-# onsets at 350.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1766 notes and 8 vibrato spans over 53.4s; the grid fits 34% of the
+# onsets at 350.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (85.71 BPM, 2 rows/beat)
 title 09 - Violent Breathing
 bpm 85.71
@@ -87,52 +89,68 @@ G#3:45 G#4:29 A#3:29 D#5:29 ===    ...   C-4:3 w1:4  kick
 A-3:45 ===    F-3:29 G#4:29 ===    ...   D#4:3 w1:3  kick
 
 F-2:45 ...    ===    F-3:29 G-4:38 G-6:5 ===   w1:4  ...
+vib fm4 28.9 5.17
 D#3:45 D#4:29 F-3:29 G-4:29 ...    ...   ===   w1:3  kick
 F-2:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 F-3:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:3  kick
 D#2:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:4  ...
+vib fm4 0 0
 A#2:45 A#1:23 ===    ===    A#4:38 A#6:5 ===   w1:3  kick
+vib fm4 24.3 5.55
 G#3:45 G#4:29 A#3:29 C-5:29 ...    ...   C-4:3 w1:4  kick
+vib fm4 0 0
 F-3:45 ===    ===    ===    ...    ...   ===   w1:3  ...
 
 A#2:45 ===    ===    ===    D#4:38 D#6:5 ===   w1:4  kick
 G#2:45 G#4:29 A#3:29 D#5:29 F-4:38 F-6:5 ===   w1:3  kick
 A-3:45 ===    F-3:29 G#4:29 ===    G#6:5 ===   w1:4  ...
+vib fm4 28.9 5.17
 F-3:45 D#4:29 F-3:29 G-4:29 G-4:38 G-6:5 C-4:3 w1:3  kick
 D#3:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:4  ...
 F-2:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:3  kick
 D#3:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 E-3:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:3  ...
 
+vib fm4 0 0
 A#2:45 A#1:23 ===    ===    C-4:38 C-6:5 ===   w1:4  kick
+vib fm4 43.6 5.2
 G#3:45 G#4:29 A#3:29 C-5:29 ...    ...   ===   w1:3  kick
 D#3:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 A#3:45 ===    ===    ===    ...    ...   ===   w1:3  kick
+vib fm4 0 0
 G#2:45 G#4:29 F-3:29 G#4:29 ...    ...   D#4:3 w1:4  ...
 F-2:45 ===    ===    F-3:29 G-4:38 G-6:5 ===   w1:3  kick
+vib fm4 28.9 5.17
 D#3:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:4  kick
 C-3:45 ===    ===    ===    ...    ...   ===   w1:3  ...
 
 F-2:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 D#2:45 ===    ===    ===    ...    ...   ===   w1:3  kick
+vib fm4 0 0
 E-3:45 D#4:29 F-3:29 G-4:29 ===    ...   ===   w1:4  ...
+vib fm4 24.3 5.55
 A#3:45 G#4:29 A#3:29 C-5:29 A#4:38 A#6:5 C-4:3 w1:3  kick
 G#3:45 G#4:29 A#3:29 C-5:29 ...    ...   C-4:3 w1:4  ...
+vib fm4 0 0
 A#2:45 G#4:29 A#3:29 C-5:29 D#4:38 D#6:5 C-4:3 w1:3  kick
 G#3:45 G#4:29 A#3:29 D#5:29 F-4:38 F-6:5 C-4:3 w1:4  kick
 A-3:45 ===    F-3:29 G#4:29 D#4:38 D#6:5 D#4:3 w1:3  ...
 
 F-2:45 ...    ===    F-3:29 G-4:38 G-6:5 ===   w1:4  kick
+vib fm4 28.9 5.17
 D#3:45 D#4:29 F-3:29 G-4:29 ...    ...   ===   w1:3  kick
 F-2:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 F-3:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:3  kick
 D#2:45 D#4:29 F-3:29 G-4:29 ...    ...   C-4:3 w1:4  ...
+vib fm4 0 0
 A#2:45 A#1:23 ===    ===    C-5:38 C-7:5 ===   w1:3  kick
+vib fm4 43.6 5.17
 G#3:45 G#4:29 A#3:29 C-5:29 ...    ...   C-4:3 w1:4  ...
 F-3:45 ===    ===    ===    ...    ...   ===   w1:3  kick
 
 A#2:45 ===    ===    ===    ...    ...   ===   w1:4  kick
 G#2:45 G#4:29 A#3:29 D#5:29 ...    ...   ===   w1:3  kick
+vib fm4 0 0
 A-3:45 ===    F-3:29 G#4:29 ===    ...   ===   w1:4  ...
 F-3:45 D#4:29 F-3:29 G-4:29 ===    C-6:4 C-4:3 w1:3  kick
 D#3:45 D#4:29 F-3:29 G-4:29 ===    ...   C-4:3 w1:4  ...

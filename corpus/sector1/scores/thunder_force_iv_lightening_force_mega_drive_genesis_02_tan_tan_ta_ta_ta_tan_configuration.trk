@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 508 notes over 22.2s; the grid fits 53% of the
-# onsets at 341.5 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 508 notes and 0 vibrato spans over 22.2s; the grid fits 53% of the
+# onsets at 341.5 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (87.85 BPM, 2 rows/beat)
 title 02 - Tan Tan Ta Ta Ta Tan (Configuration)
 bpm 87.85

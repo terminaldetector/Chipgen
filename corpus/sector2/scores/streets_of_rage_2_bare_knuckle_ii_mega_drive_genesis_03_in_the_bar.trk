@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 885 notes over 36.0s; the grid fits 53% of the
-# onsets at 250.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 885 notes and 2 vibrato spans over 36.0s; the grid fits 53% of the
+# onsets at 250.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (120 BPM, 2 rows/beat)
 title 03 - In the Bar
 bpm 120
@@ -11,18 +13,22 @@ inst fm1 03___in_the_bar_01
 inst fm2 03___in_the_bar_02
 inst fm3 03___in_the_bar_01
 inst fm4 03___in_the_bar_01
+vib psg0 80.3 9.01
 cols fm0 fm1 fm2 fm3 fm4 psg0 psg1 psg2 dac
 
 # fm0    fm1    fm2    fm3    fm4    psg0   psg1   psg2  dac 
 C-1:64 D-4:21 ===    A#3:21 A-3:21 D-4:5  ...    ...   kick
+vib psg1 71.6 8.7
 ===    ...    ===    ...    ...    ...    D-4:6  ...   ...
 D#1:64 ...    ===    ...    ...    ...    ...    ...   ...
 ===    ...    ===    ...    ...    ...    ...    ...   ...
 F-1:64 ...    ===    ...    ...    ...    ...    ...   ...
 ...    ...    F#7:21 ...    ...    ...    ...    ...   ...
 G-1:64 ...    ===    ...    ...    ...    ...    ...   ...
+vib psg0 0 0
 G-1:64 ...    ===    ...    ...    D-4:10 ...    ...   ...
 
+vib psg1 0 0
 C-2:64 A#3:10 ===    A-3:10 ...    D-4:5  D-4:11 ...   kick
 ...    G-4:32 ===    D#4:32 D-4:32 ...    D-4:6  ...   ...
 A#1:64 G-4:8  ===    D#4:8  D-4:8  C-4:3  ...    ...   ...

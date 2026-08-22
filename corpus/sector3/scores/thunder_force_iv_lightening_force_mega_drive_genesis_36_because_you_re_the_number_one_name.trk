@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1040 notes over 35.5s; the grid fits 39% of the
-# onsets at 257.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1040 notes and 0 vibrato spans over 35.5s; the grid fits 39% of the
+# onsets at 257.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (116.73 BPM, 2 rows/beat)
 title 36 - Because You're the Number One (Name Entry Ace Ranking)
 bpm 116.73

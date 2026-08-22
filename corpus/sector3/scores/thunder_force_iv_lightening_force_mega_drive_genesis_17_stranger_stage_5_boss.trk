@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1517 notes over 34.5s; the grid fits 35% of the
-# onsets at 176.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1517 notes and 0 vibrato spans over 34.5s; the grid fits 35% of the
+# onsets at 176.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (85.23 BPM, 4 rows/beat)
 title 17 - Stranger (Stage 5 Boss)
 bpm 85.23

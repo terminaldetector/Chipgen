@@ -17,9 +17,9 @@ sector.
 
 | sector | tracks | notes | size | median grid fit |
 |---|---|---|---|---|
-| **1 (priority)** | 79 | 90,502 | 2.3 MB | **0.68** |
-| 2 | 79 | 140,499 | 2.9 MB | 0.39 |
-| 3 | 77 | 148,454 | 3.3 MB | 0.32 |
+| **1 (priority)** | 79 | 90,502 | 2.4 MB | **0.68** |
+| 2 | 79 | 140,499 | 3.0 MB | 0.39 |
+| 3 | 77 | 148,454 | 3.4 MB | 0.32 |
 
 `grid_fit` is the fraction of note onsets that land on the inferred tempo
 grid — the transcription's own confidence. Sector 1 ships with the engine;
@@ -38,11 +38,16 @@ Recovered from the register log:
 - Velocity, estimated from carrier Total Level at key-on.
 - The tempo grid, inferred — `grid_fit` says how well it fit.
 - FM patches, deduplicated by timbre into a per-track bank.
+- **Vibrato**, with its measured depth and speed — 4,839 spans across 163
+  of the 235 tracks, a median of 11 per track. At register level it is a
+  pitch deviation that keeps crossing back through zero, which is what
+  separates it from a bend.
 
 Not recovered:
 
-- Effects. Portamento, vibrato and volume ramps are, at register level, a
-  stream of small writes between notes; they are dropped.
+- Portamento and volume ramps. Both are, at register level, the same
+  stream of small writes between notes, and unlike vibrato they have no
+  signature that tells them apart from ordinary retuning.
 - Which drum a DAC hit was — all read as `kick`. Two hits closer together
   than the first sample's length leave no gap in the byte stream and read
   as one.

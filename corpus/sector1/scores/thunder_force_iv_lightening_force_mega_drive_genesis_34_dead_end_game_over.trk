@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 194 notes over 5.1s; the grid fits 68% of the
-# onsets at 280.5 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 194 notes and 0 vibrato spans over 5.1s; the grid fits 68% of the
+# onsets at 280.5 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (106.95 BPM, 2 rows/beat)
 title 34 - Dead End (Game Over)
 bpm 106.95

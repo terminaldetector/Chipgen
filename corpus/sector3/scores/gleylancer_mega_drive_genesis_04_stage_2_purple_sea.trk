@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1876 notes over 52.2s; the grid fits 31% of the
-# onsets at 303.5 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1876 notes and 18 vibrato spans over 52.2s; the grid fits 31% of the
+# onsets at 303.5 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (98.85 BPM, 2 rows/beat)
 title 04 - Stage 2 (Purple Sea)
 bpm 98.85
@@ -16,11 +18,17 @@ cols fm0 fm1 fm2 fm3 fm4 psg0 dac
 # fm0    fm1    fm2    fm3    fm4   psg0  dac 
 G-2:23 ...    ...    ===    ...   ...   kick
 C-2:32 D#4:23 C-4:8  C-6:16 ...   ...   ...
+vib fm4 37.9 4.64
 G-1:32 ...    ...    C-7:16 D#4:8 ...   kick
+vib fm1 27.1 6.03
+vib fm2 32.3 6.03
 C-2:32 ...    ...    C-6:16 ...   ...   ...
 C-3:32 ...    ...    G-6:16 ...   ...   kick
 G-1:32 ...    ...    C-6:16 ...   ...   kick
+vib fm1 0 0
+vib fm2 0 0
 C-2:32 D#4:23 C-4:8  C-7:16 ...   ...   ...
+vib fm4 0 0
 ===    F-4:23 D-4:8  C-6:16 D-4:8 ...   kick
 
 F-1:32 ...    ...    G-6:16 D#4:8 ...   kick
@@ -41,9 +49,13 @@ F-1:32 G#4:23 F-4:8  C-6:16 ...   ...   kick
 A#1:32 ...    ...    C-7:16 A#4:8 ...   ...
 ===    G-4:23 D#4:8  C-6:16 ...   ...   kick
 
+vib fm1 21.5 6.03
+vib fm2 27.1 6.03
 G-1:32 ...    ...    G-6:16 G#4:8 ...   kick
 C-2:32 ...    ...    C-6:16 ...   ...   kick
 G-1:32 ...    ...    C-7:16 ...   ...   kick
+vib fm1 0 0
+vib fm2 0 0
 C-2:32 F-4:23 D-4:8  C-6:16 ...   ...   ...
 A#1:32 G#4:23 F-4:8  G-6:16 G-4:8 ...   kick
 F-1:32 ...    ...    C-6:16 G-4:8 ...   kick
@@ -53,9 +65,13 @@ A#1:32 G-4:23 D#4:8  C-7:16 ...   ...   ...
 F-1:32 F-4:23 D-4:8  G-6:16 ...   ...   kick
 G#1:32 G-4:23 D#4:8  C-6:16 G-4:8 ...   kick
 D#1:32 ...    ...    C-7:16 F-4:8 ...   kick
+vib fm1 21.5 6.04
+vib fm2 27.1 6.04
 G#1:32 ...    ...    C-6:16 ...   ...   ...
 G#2:32 ...    ...    G-6:16 ...   ...   kick
 D#1:32 ...    ...    C-6:16 ...   ...   kick
+vib fm1 0 0
+vib fm2 0 0
 G#1:32 D#4:23 C-4:8  C-7:16 ...   ...   ...
 ===    F-4:23 D-4:8  C-6:16 F-4:8 ...   kick
 
@@ -64,11 +80,15 @@ A#1:32 A#3:23 G-3:8  C-6:16 D#4:8 ...   kick
 F-1:32 C-4:23 G#3:8  C-7:16 D-4:8 ...   kick
 A#1:32 G-3:23 D-3:8  C-6:16 B-3:8 ...   ...
 C-2:32 D#4:23 C-4:8  G-6:16 D-4:8 ...   ...
+vib fm1 27.1 6.03
+vib fm2 32.3 6.03
 G-1:32 ...    ...    C-6:16 G-3:8 ...   kick
 C-2:32 ...    ...    C-7:16 ...   ...   ...
 ===    ...    ...    C-6:16 ...   ...   kick
 
 G-1:32 ...    ...    G-6:16 ...   ...   kick
+vib fm1 0 0
+vib fm2 0 0
 A#1:32 F-4:23 D-4:8  C-6:16 ...   ...   kick
 F-1:32 ...    ...    C-7:16 D#4:8 ...   kick
 A#1:32 D#4:23 C-4:8  C-6:16 ...   ...   ...
@@ -89,9 +109,13 @@ A#1:32 A#4:23 G-4:8  C-7:16 ...   ...   ...
 F-1:32 G#4:23 F-4:8  G-6:16 ...   ...   kick
 C-2:32 G-4:23 D#4:8  C-6:16 A#4:8 ...   kick
 G-1:32 ...    ...    C-7:16 G#4:8 ...   kick
+vib fm1 21.5 6.03
+vib fm2 27.1 6.03
 C-2:32 ...    ...    C-6:16 ...   ...   ...
 C-3:32 ...    ...    G-6:16 ...   ...   kick
 G-1:32 ...    ...    C-6:16 ...   ...   kick
+vib fm1 0 0
+vib fm2 0 0
 C-2:32 G-4:23 D#4:8  C-7:16 ...   ...   ...
 ===    G#4:23 F-4:8  C-6:16 F-4:8 ...   kick
 
@@ -113,21 +137,27 @@ F-1:32 D#5:23 C-5:8  C-6:16 ...   ...   kick
 A#1:32 F-5:23 D-5:8  C-7:16 D-5:8 ...   ...
 ===    G-5:23 C-4:11 C-6:16 D#5:8 C-7:4 ...
 
+vib fm2 32.3 6.02
 D#1:32 D-5:23 ...    G-6:16 C-6:8 C-6:4 kick
 G#1:32 G-4:23 ...    C-6:16 D#5:8 G-6:4 kick
 D#1:32 F-4:23 ...    C-7:16 C-5:8 C-6:4 kick
 G#1:32 D#4:23 ...    C-6:16 G-4:8 C-7:4 ...
+vib fm2 0 0
 A#1:32 C-6:23 D-4:11 G-6:16 D-4:8 C-6:4 kick
+vib fm2 28.7 6.02
 F-1:32 D#5:23 ...    C-6:16 G-5:8 G-6:4 kick
 A#1:32 C-5:23 ...    C-7:16 F-5:8 C-6:4 ...
 ===    G-4:23 ...    C-6:16 D#5:8 C-7:4 kick
 
 F-1:32 D-4:23 ...    G-6:16 C-5:8 C-6:4 kick
+vib fm2 0 0
 G#1:32 G-5:23 D#4:11 C-6:16 D#4:8 G-6:4 kick
 D#1:32 F-5:23 ...    C-7:16 C-4:8 C-6:4 kick
+vib fm2 27.1 6.02
 G#1:32 D#5:23 ...    C-6:16 G-5:8 C-7:4 ...
 G#2:32 C-5:23 ...    G-6:16 D-5:8 C-6:4 kick
 D#1:32 D#4:23 ...    C-6:16 G-4:8 G-6:4 kick
+vib fm2 0 0
 G#1:32 C-4:23 ...    C-7:16 F-4:8 C-6:4 ...
 ===    D-5:23 F-4:11 C-6:16 D#4:8 C-7:4 kick
 
@@ -136,29 +166,37 @@ A#1:32 D-6:23 A#5:11 C-6:16 F-5:8 G-6:4 kick
 F-1:32 ...    ...    C-7:16 D-5:8 C-6:4 kick
 A#1:32 A#5:23 F-5:11 C-6:16 ...   C-7:4 ...
 G#1:32 C-6:23 C-4:11 G-6:16 D-6:8 C-6:4 kick
+vib fm2 32.3 6.02
 D#1:32 D#5:23 ...    C-6:16 G-5:8 G-6:4 kick
 G#1:32 C-5:23 ...    C-7:16 F-5:8 C-6:4 ...
 ===    G-4:23 ...    C-6:16 D#5:8 C-7:4 kick
 
 D#1:32 D-4:23 ...    G-6:16 C-5:8 C-6:4 kick
+vib fm2 0 0
 A#1:32 G-5:23 D-4:11 C-6:16 D#4:8 G-6:4 kick
 F-1:32 F-5:23 ...    C-7:16 C-4:8 C-6:4 kick
+vib fm2 28.7 6.02
 A#1:32 D#5:23 ...    C-6:16 G-5:8 C-7:4 ...
 A#2:32 C-5:23 ...    G-6:16 D-5:8 C-6:4 kick
 F-1:32 D#4:23 ...    C-6:16 G-4:8 G-6:4 kick
+vib fm2 0 0
 A#1:32 C-4:23 ...    C-7:16 F-4:8 C-6:4 ...
 ===    G-5:23 D#4:11 C-6:16 D#4:8 C-7:4 kick
 
+vib fm2 27.1 6.01
 D#1:32 D-5:23 ...    G-6:16 C-6:8 C-6:4 kick
 G#1:32 G-4:23 ...    C-6:16 D#5:8 G-6:4 kick
 D#1:32 F-4:23 ...    C-7:16 C-5:8 C-6:4 kick
 G#1:32 D#4:23 ...    C-6:16 G-4:8 C-7:4 ...
+vib fm2 0 0
 A#1:32 C-5:23 F-4:11 G-6:16 D-4:8 C-6:4 kick
+vib fm2 24.1 6.02
 F-1:32 F-5:23 ...    C-6:16 A#4:8 G-6:4 kick
 A#1:32 C-6:23 ...    C-7:16 D#5:8 C-6:4 ...
 ===    D-6:23 ...    C-6:16 A#5:8 C-7:4 ...
 
 F-1:32 G#5:23 ...    G-6:16 D#6:8 C-6:4 ...
+vib fm2 0 0
 C-2:32 C-6:16 C-3:23 C-6:16 A#5:8 G-6:4 ...
 C-2:32 ...    C-3:23 C-7:16 F-5:8 C-6:4 ...
 C-2:32 ...    C-3:23 C-6:16 ...   C-7:4 kick

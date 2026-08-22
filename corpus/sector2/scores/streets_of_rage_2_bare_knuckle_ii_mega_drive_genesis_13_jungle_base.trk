@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 3963 notes over 104.6s; the grid fits 33% of the
-# onsets at 350.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 3963 notes and 12 vibrato spans over 104.6s; the grid fits 33% of the
+# onsets at 350.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (85.71 BPM, 2 rows/beat)
 title 13 - Jungle Base
 bpm 85.71
@@ -134,22 +136,28 @@ A-5:10 ...    C-4:21 ...    F#7:27 ...    ...    ...    ...
 D-6:10 ...    C-5:41 ...    F#7:27 ...    ...    ...    ...
 A-6:10 ...    C-6:41 D#3:54 F#7:27 ...    ...    ...    ...
 D-7:10 ...    A#5:41 ...    F#7:27 ...    ...    ...    ...
+vib fm1 54.7 7.61
 C#5:10 G-3:13 ===    C-3:54 F#7:21 G-3:9  G-3:7  C-8:9  kick
 F#5:10 ...    ...    ...    ===    A-3:9  A-3:7  C-7:9  kick
 C#6:10 ...    ...    ...    ===    C#4:9  C#4:7  A#7:9  kick
 F#6:10 ...    ...    ...    F#7:21 D#4:9  E-4:7  C-7:9  ...
+vib fm1 0 0
 C#7:10 A#3:13 ...    D#3:54 F#7:21 G-4:9  G-4:7  A#7:9  kick
 
 C-5:10 G-3:13 ...    C-3:54 ===    G-3:9  G-3:7  C-7:9  kick
+vib fm1 54.7 7.61
 D#5:10 ...    ...    ...    ===    ...    ...    A#7:9  kick
 C-6:10 ...    ...    ...    F#7:21 B-3:9  C-4:7  C-7:9  ...
 F-6:10 ...    ...    ...    F#7:21 D#4:9  E-4:7  C-8:9  kick
+vib fm1 0 0
 C-7:10 C#4:13 ...    F#3:41 ===    G-4:9  G-4:7  C-7:9  kick
 B-4:10 G-3:13 A#2:5  C-3:54 ===    G-3:9  G-3:7  A#7:9  kick
+vib fm1 54.7 7.61
 D-5:10 ...    A#2:7  ...    F#7:21 ...    ...    C-7:9  ...
 A-5:10 ...    A#2:8  ...    F#7:21 A#3:9  A#3:7  C-8:9  kick
 
 D-6:10 ...    A#2:10 ...    ===    D#4:9  E-4:7  C-7:9  kick
+vib fm1 0 0
 A-6:10 A#3:13 A#2:13 D#3:54 ===    G-4:9  G-4:7  C#8:9  kick
 D-7:10 ...    A#2:16 ...    F#7:21 ...    ...    C-7:9  ...
 C#5:10 ===    A#2:21 C-3:41 F#7:21 G-3:9  G-3:7  C-8:9  kick
@@ -230,29 +238,47 @@ C#6:10 A-5:3  C-5:27 ...    F#7:27 ...    ...    ...    kick
 F#6:10 D-6:3  C-7:54 ...    F#7:27 ...    ...    ...    ...
 C#7:10 A-6:3  A#6:54 A#2:54 F#7:27 B-2:10 B-2:7  ...    kick
 
+vib psg0 100.2 12.19
 C-4:7  C-3:5  C-3:21 C-3:54 ===    C-3:10 C-3:7  ...    kick
+vib fm1 82.6 7.61
+vib fm2 82.6 7.62
 D#4:7  ...    ...    ...    ===    ...    ...    ...    kick
 C-5:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
 C#4:7  ...    ...    ...    F#7:21 ...    ...    ...    kick
+vib fm2 0 0
+vib psg0 0 0
+vib fm1 0 0
 F#4:7  D#3:5  D#3:21 D#3:54 ===    D#3:10 E-3:7  ...    kick
 B-3:7  C-3:5  C-3:21 C-3:54 ===    C-3:10 C-3:7  ...    kick
+vib fm1 82.6 7.61
+vib fm2 82.6 7.62
 D-4:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
 A-4:7  ...    ...    ...    F#7:21 ...    ...    ...    kick
 
 D-5:7  ...    ...    ...    ===    ...    ...    ...    kick
+vib fm2 0 0
+vib fm1 0 0
 A-5:7  F#3:5  F#3:21 F#3:41 ===    F#3:10 F#3:7  ...    kick
 D-6:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
+vib fm1 82.6 7.61
+vib fm2 82.6 7.62
 C#4:7  C-3:5  C-3:21 C-3:54 F#7:21 C-3:10 C-3:7  ...    kick
 F#4:7  ...    ...    ...    ===    ...    ...    ...    kick
 B-3:7  ...    ...    ...    ===    ...    ...    ...    kick
+vib fm2 0 0
 D-4:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
+vib fm1 0 0
 A-4:7  D#3:5  D#3:21 D#3:54 F#7:21 E-3:10 E-3:7  ...    kick
 
 C-4:7  C-3:5  C-3:21 C-3:41 F#7:27 C-3:10 C-3:7  ...    kick
+vib fm1 82.6 7.58
+vib fm2 82.6 7.58
 D#4:7  ...    ...    ...    F#7:27 ...    ...    ...    ...
 C-5:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
 F-5:7  ...    ...    ...    F#7:21 ...    ...    ...    ...
 C-6:7  ...    ...    ...    F#7:27 D#3:10 E-3:7  ...    ...
+vib fm2 0 0
+vib fm1 0 0
 G#3:21 F-3:21 C-3:54 C#3:41 F#7:27 ===    E-3:8  D#4:3  ...
 G#3:21 F-3:21 D#3:54 C#3:41 F#7:21 ...    ===    D#4:3  ...
 A-3:21 F#3:21 ===    D-3:41 F#7:21 ...    ...    E-4:3  ...

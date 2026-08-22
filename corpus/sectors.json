@@ -7,7 +7,7 @@
       "tracks": 79,
       "total_notes": 90502,
       "total_seconds": 3450.5,
-      "bytes": 2459847,
+      "bytes": 2507373,
       "grid_fit": {
         "min": 0.366,
         "median": 0.678,
@@ -30,7 +30,7 @@
         "Notes and their timing are recovered from the register log.",
         "Velocity is estimated from carrier Total Level at key-on.",
         "The tempo grid is inferred; `grid_fit` is the confidence.",
-        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Vibrato is recovered, with its measured depth and speed. Portamento and volume ramps are not.",
         "Which drum a DAC hit was is not recovered; all read as `kick`.",
         "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
         "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."
@@ -43,7 +43,7 @@
       "tracks": 79,
       "total_notes": 140499,
       "total_seconds": 4896.3,
-      "bytes": 3033879,
+      "bytes": 3096913,
       "grid_fit": {
         "min": 0.274,
         "median": 0.392,
@@ -66,7 +66,7 @@
         "Notes and their timing are recovered from the register log.",
         "Velocity is estimated from carrier Total Level at key-on.",
         "The tempo grid is inferred; `grid_fit` is the confidence.",
-        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Vibrato is recovered, with its measured depth and speed. Portamento and volume ramps are not.",
         "Which drum a DAC hit was is not recovered; all read as `kick`.",
         "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
         "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."
@@ -79,7 +79,7 @@
       "tracks": 77,
       "total_notes": 148454,
       "total_seconds": 5159.5,
-      "bytes": 3503917,
+      "bytes": 3565868,
       "grid_fit": {
         "min": 0.253,
         "median": 0.324,
@@ -101,7 +101,7 @@
         "Notes and their timing are recovered from the register log.",
         "Velocity is estimated from carrier Total Level at key-on.",
         "The tempo grid is inferred; `grid_fit` is the confidence.",
-        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Vibrato is recovered, with its measured depth and speed. Portamento and volume ramps are not.",
         "Which drum a DAC hit was is not recovered; all read as `kick`.",
         "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
         "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."

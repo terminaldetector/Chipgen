@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1994 notes over 66.0s; the grid fits 26% of the
-# onsets at 129.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 1994 notes and 0 vibrato spans over 66.0s; the grid fits 26% of the
+# onsets at 129.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (116.28 BPM, 4 rows/beat)
 title 19 - Great Sea Power (Stage 6)
 bpm 116.28

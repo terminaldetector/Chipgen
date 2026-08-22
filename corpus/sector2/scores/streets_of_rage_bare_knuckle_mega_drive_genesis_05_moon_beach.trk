@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 4849 notes over 158.2s; the grid fits 34% of the
-# onsets at 350.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 4849 notes and 2 vibrato spans over 158.2s; the grid fits 34% of the
+# onsets at 350.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (85.71 BPM, 2 rows/beat)
 title 05 - Moon Beach
 bpm 85.71
@@ -519,7 +521,11 @@ D#3:38 F#4:82  D#3:19 F-5:38 C-5:29 ...   ...   ...   ...
 D#3:38 F#4:82  D#3:45 ===    F-5:29 ...   ...   ...   kick
 
 F-3:38 D-8:41  G-3:45 ===    ===    F-4:7 G#4:7 w1    kick
+vib psg1 109.9 12.24
+vib psg0 90.5 12.24
 C-3:29 C-5:82  D#3:19 ===    ===    ...   ...   ...   kick
 D#3:29 C-5:82  D#3:45 ===    ===    ...   ...   ...   ...
 D#3:38 D-8:54  ===    ===    ===    ...   ...   ...   kick
+vib psg1 0 0
+vib psg0 0 0
 F-3:29 C-5:82  D#3:19 ===    ===    ...   ...   ...   ...

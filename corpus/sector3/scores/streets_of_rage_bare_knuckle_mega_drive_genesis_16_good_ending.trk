@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 910 notes over 120.6s; the grid fits 32% of the
-# onsets at 325.0 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 910 notes and 6 vibrato spans over 120.6s; the grid fits 32% of the
+# onsets at 325.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (92.31 BPM, 2 rows/beat)
 title 16 - Good Ending
 bpm 92.31
@@ -71,12 +73,16 @@ F-2:38 A-3:23 C-4:19 E-4:19 F-3:23 ...    E-5:6  ===   kick
 ...    ...    ...    ...    ...    ...    E-5:6  ===   ...
 ...    ...    ...    ...    ...    E-5:8  C-5:6  ===   kick
 ...    ...    ...    ...    ...    ===    ...    ===   kick
+vib psg1 25.9 5
 ...    ...    ...    ...    ...    C-5:8  ...    w1:3  ...
+vib psg0 22.7 5.14
 F-2:38 ...    ...    ...    ...    ...    ...    ===   ...
 F-2:38 ...    ...    ...    ...    ...    ...    ===   ...
 ...    ...    ...    ...    ...    ...    ...    ===   kick
+vib psg1 0 0
 F-2:38 ...    ...    ...    ...    ...    D-5:6  w1:7  ...
 
+vib psg0 0 0
 C-2:38 ...    ...    ...    ...    ===    C-5:6  ===   kick
 F-2:38 G#3:23 C-4:19 D#4:19 F-3:23 C-5:8  D#5:6  ===   kick
 ...    ...    ...    ...    ...    D#5:8  D-5:6  ===   ...
@@ -132,11 +138,15 @@ E-2:38 ...    ...    ...    ...    F-6:8  C-6:6  ===   ...
 E-2:38 ...    ...    ...    ...    D-6:8  E-6:6  w1:7  kick
 
 ...    ...    ...    ...    ...    C-6:8  ...    ===   ...
+vib psg1 63.3 5
 ...    ...    ...    ...    ...    E-6:8  ...    ===   ...
+vib psg0 58.9 5.12
 ...    G-3:15 D-3:11 D-4:11 ...    ...    ...    ===   ...
 ...    ...    ...    ...    ...    ...    ...    w1:3  kick
 E-2:38 G-3:23 B-3:19 D-4:19 ...    ...    ...    ===   ...
+vib psg1 0 0
 ...    ...    ...    ...    ...    ...    ===    ===   kick
+vib psg0 0 0
 D-2:38 F-3:23 A-3:19 C-4:19 D-4:23 ...    F-6:6  ===   kick
 ...    ...    ...    ...    ...    F-6:8  ...    w1:7  ...
 
@@ -199,8 +209,12 @@ A#2:38 ...    A#3:11 D-4:15 D#3:19 ...    ...    ===   kick
 D#2:38 ...    ...    ...    ...    ...    ===    ===   ...
 D-2:38 F-3:23 A-3:19 C-4:19 D-3:23 ===    D-5:7  w1:1  kick
 ...    ...    ...    ...    ...    ...    ...    ===   ...
+vib psg1 144.2 11.42
 ...    ...    ...    ...    ...    D-5:9  ...    ===   ...
+vib psg1 0 0
+vib psg0 144.2 11.42
 ...    ...    ...    ...    ...    ...    A-5:6  ===   ...
+vib psg0 0 0
 ...    ...    ...    ...    ...    A-5:8  ...    w1:7  kick
 
 ...    ...    ...    ...    ...    ...    ...    ===   ...

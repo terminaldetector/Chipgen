@@ -1,7 +1,9 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 56 notes over 4.6s; the grid fits 96% of the
-# onsets at 119.5 ms per row. Effects (portamento,
-# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# 56 notes and 5 vibrato spans over 4.6s; the grid fits 96% of the
+# onsets at 119.5 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
 # chipgen tracker  (125.52 BPM, 4 rows/beat)
 title 22 - Miniboss Defeated!
 bpm 125.52
@@ -26,13 +28,18 @@ C#3:23 B-4:25 F#4:29 D#5:25 B-4:27 ...   kick
 ...    ...    ...    ...    ...    ===   kick
 C#3:23 B-4:25 F#4:29 D#5:25 B-4:27 ...   kick
 C#3:23 B-4:25 F#4:29 D#5:25 B-4:27 ...   ...
+vib fm0 22.7 10
 D#3:23 C#5:25 G#4:29 F-5:25 C#5:27 w1:1  kick
 ...    ...    ...    ...    ...    ===   ...
+vib fm3 16.2 3.02
 ...    ...    ...    ...    ...    ...   kick
+vib fm2 13.6 6
 ...    ...    ...    ...    ...    ...   ...
 
 ...    ...    ...    ...    ...    w1:1  kick
 ...    ...    ...    ...    ...    ...   ...
+vib fm1 20.4 6
+vib fm4 20.4 6
 ...    ...    ...    ...    ...    ...   ...
 ...    ...    ...    ...    ...    ...   ...
 ...    ...    ...    ...    ...    ...   kick
@@ -52,4 +59,9 @@ D#3:23 C#5:25 G#4:29 F-5:25 C#5:27 w1:1  kick
 ...    ...    ...    ...    ...    ...   ...
 ...    ...    ...    ...    ...    ...   ...
 ...    ...    ...    ...    ...    ...   ...
+vib fm2 0 0
+vib fm1 0 0
+vib fm4 0 0
+vib fm0 0 0
+vib fm3 0 0
 ===    ===    ===    ===    ===    ...   ...
