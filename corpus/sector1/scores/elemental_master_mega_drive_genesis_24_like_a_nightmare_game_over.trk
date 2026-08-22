@@ -1,0 +1,43 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 83 notes over 4.9s; the grid fits 60% of the
+# onsets at 198.5 ms per row. Effects (portamento,
+# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# chipgen tracker  (75.57 BPM, 4 rows/beat)
+title 24 - Like a Nightmare (Game Over)
+bpm 75.57
+lpb 4
+inst fm0 24___like_a_nightmare__game_over_02
+inst fm1 24___like_a_nightmare__game_over_03
+inst fm2 24___like_a_nightmare__game_over_01
+inst fm3 24___like_a_nightmare__game_over_01
+inst fm4 24___like_a_nightmare__game_over_01
+inst fm5 24___like_a_nightmare__game_over_02
+cols fm0 fm1 fm2 fm3 fm4 fm5 psg0 psg1
+
+# fm0    fm1    fm2    fm3    fm4    fm5    psg0  psg1 
+F-4:35 F-2:49 F-3:16 G#3:19 C-4:19 F-4:21 F-5:4 ...
+C-5:35 ...    F-3:16 G#3:19 C-4:19 C-5:21 C-6:4 C-6:6
+A#4:35 ...    F-3:16 G#3:19 C-4:19 A#4:21 A#5:4 A#5:6
+C-5:35 ...    F-3:16 G#3:19 C-4:19 C-5:21 C-6:4 C-6:6
+G#4:35 ...    F-3:16 G#3:19 C-4:19 G#4:21 G#5:4 G#5:6
+C-5:35 ...    F-3:16 G#3:19 C-4:19 C-5:21 C-6:4 C-6:6
+G-4:35 ...    F-3:16 G#3:19 C-4:19 ===    G-5:4 ===
+C-5:35 ...    F-3:16 G#3:19 C-4:19 G-4:21 C-6:4 G-5:6
+F-4:35 ...    F-3:16 A#3:19 C-4:19 C-5:21 F-5:4 C-6:6
+...    ...    ...    ...    ...    F-4:21 ...   F-5:6
+...    ...    ...    ...    ...    ...    ...   ...
+E-4:35 ...    E-3:16 G-3:19 C-4:19 ===    E-5:4 ...
+...    ...    ...    ...    ...    E-4:21 ...   E-5:6
+...    ...    ...    ...    ...    ...    ...   ...
+F-4:35 ...    F-3:16 G#3:19 C-4:19 ...    F-5:4 ...
+...    ...    ...    ...    ...    F-4:21 ...   F-5:6
+
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ===   ...
+...    ...    ...    ...    ...    ...    ...   ===
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+===    ===    ===    ===    ===    ...    ...   ...

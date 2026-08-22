@@ -1,0 +1,673 @@
+[
+  {
+    "name": "18___last_party_on_the_moon_01",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 24,
+        "decay_rate": 28,
+        "sustain_rate": 15,
+        "release_rate": 8,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 31,
+        "attack_rate": 31,
+        "decay_rate": 14,
+        "sustain_rate": 4,
+        "release_rate": 12,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 19,
+        "attack_rate": 21,
+        "decay_rate": 30,
+        "sustain_rate": 9,
+        "release_rate": 12,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 12,
+        "release_rate": 12,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_02",
+    "algorithm": 5,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 4,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 7,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_03",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 12,
+        "release_rate": 1,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 5,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 14,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_04",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 15,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 15,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 2,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_05",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 4,
+        "total_level": 26,
+        "attack_rate": 25,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 18,
+        "attack_rate": 16,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 21,
+        "attack_rate": 15,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 21,
+        "attack_rate": 18,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_06",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 4,
+        "total_level": 27,
+        "attack_rate": 25,
+        "decay_rate": 11,
+        "sustain_rate": 1,
+        "release_rate": 8,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 0,
+        "attack_rate": 16,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 21,
+        "attack_rate": 15,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 21,
+        "attack_rate": 18,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_07",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 12,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_08",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 19,
+        "attack_rate": 23,
+        "decay_rate": 11,
+        "sustain_rate": 11,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_09",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 0,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 1,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 21,
+        "attack_rate": 17,
+        "decay_rate": 6,
+        "sustain_rate": 1,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_10",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 3,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 3,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___last_party_on_the_moon_11",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 16,
+        "attack_rate": 24,
+        "decay_rate": 12,
+        "sustain_rate": 15,
+        "release_rate": 8,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 14,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 10,
+        "total_level": 10,
+        "attack_rate": 21,
+        "decay_rate": 14,
+        "sustain_rate": 9,
+        "release_rate": 7,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 7,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 12,
+        "release_rate": 12,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

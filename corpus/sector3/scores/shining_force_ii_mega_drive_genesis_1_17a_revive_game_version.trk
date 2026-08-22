@@ -1,0 +1,48 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 98 notes over 4.4s; the grid fits 39% of the
+# onsets at 150.5 ms per row. Effects (portamento,
+# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# chipgen tracker  (99.67 BPM, 4 rows/beat)
+title 17a - Revive (Game Version)
+bpm 99.67
+lpb 4
+inst fm0 17a___revive__game_version_02
+inst fm1 17a___revive__game_version_01
+inst fm2 17a___revive__game_version_01
+inst fm3 17a___revive__game_version_01
+inst fm4 17a___revive__game_version_01
+inst fm5 17a___revive__game_version_01
+cols fm0 fm1 fm2 fm3 fm4 fm5 psg0 psg1
+
+# fm0    fm1    fm2    fm3    fm4    fm5    psg0  psg1 
+A-1:64 G-4:32 B-3:23 A-4:23 ...    ...    ...   ...
+...    F#4:32 ...    ...    ...    G-4:23 ...   ...
+...    G-4:32 ...    ...    G-4:16 F#4:23 ...   ...
+...    B-4:32 ...    ...    G-4:16 G-4:23 ...   ...
+...    D-5:32 ...    ...    F#4:16 B-4:23 ...   ...
+...    ...    ...    ...    G-4:16 D-5:23 ...   ...
+...    E-5:32 ...    ...    B-4:16 ...    ...   ...
+...    ...    ...    ...    ...    E-5:23 ...   ...
+G-1:64 F#5:32 C#5:23 G-3:23 D-5:16 ...    D-5:2 C#5:6
+...    ...    ...    ...    ...    F#5:23 E-5:2 E-5:4
+...    ...    ...    ...    E-5:16 ...    G-5:2 F#5:4
+...    ...    ...    ...    ...    ...    B-5:2 A-5:4
+...    G-5:32 ...    ...    ...    ...    E-6:2 D-6:4
+F-1:64 A-5:32 C-5:23 E-4:23 ...    G-5:23 F-6:2 F-6:4
+...    ...    ...    ...    F#5:16 A-5:23 G-6:2 G-6:4
+...    ...    ...    ...    G-5:16 ...    G-6:2 F-6:4
+
+...    ...    ...    ...    ...    ...    G-6:2 F-6:4
+...    ...    ...    ...    ...    ...    G-6:2 F-6:4
+...    ...    ...    ...    ...    ...    F-6:2 G-6:4
+...    ...    ...    ...    ...    ...    F-6:2 G-6:4
+...    ...    ...    ...    ...    ...    F-6:2 G-6:4
+...    ...    ...    ...    ...    ...    F-6:2 G-6:4
+...    ...    ...    ...    ...    ...    G-6:2 F-6:4
+...    ...    ...    ...    ...    ...    F-6:2 F-6:4
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...    ...   ...
+===    ===    ===    ===    ===    ===    ...   ...
+...    ...    ...    ...    ...    ...    ===   ...
+...    ...    ...    ...    ...    ...    ...   ===

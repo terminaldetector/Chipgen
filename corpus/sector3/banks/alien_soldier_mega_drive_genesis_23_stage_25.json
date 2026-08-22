@@ -1,0 +1,307 @@
+[
+  {
+    "name": "23___stage_25_01",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 42,
+        "attack_rate": 29,
+        "decay_rate": 31,
+        "sustain_rate": 4,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 16,
+        "attack_rate": 28,
+        "decay_rate": 25,
+        "sustain_rate": 29,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 27,
+        "attack_rate": 22,
+        "decay_rate": 28,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 15,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "23___stage_25_02",
+    "algorithm": 4,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 19,
+        "attack_rate": 13,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 14,
+        "total_level": 28,
+        "attack_rate": 13,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 15,
+        "total_level": 18,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 15,
+        "total_level": 20,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "23___stage_25_03",
+    "algorithm": 7,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 7,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 13,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 10,
+        "total_level": 7,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 13,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 11,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 13,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 8,
+        "total_level": 13,
+        "attack_rate": 13,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 13,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "23___stage_25_04",
+    "algorithm": 4,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 33,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 47,
+        "attack_rate": 23,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 5,
+        "total_level": 29,
+        "attack_rate": 23,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 29,
+        "attack_rate": 23,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "23___stage_25_05",
+    "algorithm": 1,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 32,
+        "attack_rate": 19,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 64,
+        "attack_rate": 23,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 10,
+        "attack_rate": 23,
+        "decay_rate": 5,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 37,
+        "attack_rate": 23,
+        "decay_rate": 21,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

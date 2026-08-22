@@ -1,0 +1,57 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 97 notes over 8.2s; the grid fits 53% of the
+# onsets at 228.0 ms per row. Effects (portamento,
+# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# chipgen tracker  (131.58 BPM, 2 rows/beat)
+title 18 - Broken Oath (Game Over)
+bpm 131.58
+lpb 2
+inst fm0 18___broken_oath__game_over_01
+inst fm1 18___broken_oath__game_over_01
+inst fm2 18___broken_oath__game_over_02
+inst fm3 18___broken_oath__game_over_01
+inst fm4 18___broken_oath__game_over_01
+cols fm0 fm1 fm2 fm3 fm4
+
+# fm0    fm1   fm2    fm3    fm4  
+A-4:16 ...   F#1:49 A-4:16 ...
+G#4:16 A-4:8 ...    F#2:16 G#4:8
+F#4:16 G#4:8 ...    C#3:16 F#2:8
+C#4:16 F#4:8 ...    F#3:16 C#3:8
+F#4:16 C#4:8 ...    G#3:16 F#3:8
+G#4:16 F#4:8 ...    A-3:16 G#3:8
+B-4:16 G#4:8 D-2:49 B-3:16 A-3:8
+...    B-4:8 ...    D-2:16 B-3:8
+
+A-4:16 ...   ...    A-2:16 D-2:8
+...    A-4:8 ...    D-3:16 A-2:8
+B-4:16 ...   ...    F#3:16 D-3:8
+...    B-4:8 ...    G#3:16 F#3:8
+C#5:16 ...   C#2:49 A-3:16 G#3:8
+D-5:16 C#5:8 ...    C#2:16 A-3:8
+C#5:16 D-5:8 ...    G#2:16 C#2:8
+B-4:16 C#5:8 ...    C#3:16 G#2:8
+
+A-4:16 B-4:8 ...    F-3:16 C#3:8
+G#4:16 A-4:8 ...    F#3:16 F-3:8
+F#4:16 G#4:8 F-1:49 G#3:16 F#3:8
+F-4:16 F#4:8 ...    F-2:16 G#3:8
+F#4:16 F-4:8 ...    C#3:16 F-2:8
+G#4:16 F#4:8 ...    F-3:16 C#3:8
+A-4:16 G#4:8 ...    ...    F-3:8
+G#4:16 A-4:8 ...    G#3:16 ...
+
+F#4:16 G#4:8 F#1:49 C#4:16 G#3:8
+...    F#4:8 ...    ...    C#4:8
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+...    ...   ...    ...    ...
+===    ===   ===    ===    ===

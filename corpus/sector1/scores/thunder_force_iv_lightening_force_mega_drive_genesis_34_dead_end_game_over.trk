@@ -1,0 +1,38 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 194 notes over 5.1s; the grid fits 68% of the
+# onsets at 280.5 ms per row. Effects (portamento,
+# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# chipgen tracker  (106.95 BPM, 2 rows/beat)
+title 34 - Dead End (Game Over)
+bpm 106.95
+lpb 2
+inst fm0 34___dead_end__game_over_02
+inst fm1 34___dead_end__game_over_03
+inst fm2 34___dead_end__game_over_04
+inst fm3 34___dead_end__game_over_01
+inst fm4 34___dead_end__game_over_01
+inst fm5 34___dead_end__game_over_01
+cols fm0 fm1 fm2 fm3 fm4 fm5 psg0 psg1 psg2 noise
+
+# fm0    fm1    fm2    fm3    fm4    fm5    psg0   psg1   psg2  noise
+===    B-2:54 ===    B-3:19 F#3:13 D-3:19 F#3:7  ...    ...   w1:4
+===    ...    ===    D-4:19 A-3:13 F#3:19 ...    F#3:7  B-8:6 w1:6
+===    ===    ===    ===    ===    ===    ===    ...    B-8:6 w1:6
+===    ===    ===    A-3:19 E-3:13 C#3:19 ===    B-4:7  B-8:6 w1:6
+===    B-3:54 ===    B-3:19 F#3:13 D-3:19 F#4:7  E-4:7  B-8:6 w1:6
+===    ===    ===    E-4:19 B-3:13 G#3:19 ===    F#4:7  B-8:6 w1:6
+===    A-3:54 ===    ===    ===    ===    E-4:7  E-4:7  B-8:6 w1:6
+A-2:45 ...    ===    A-3:19 E-3:13 C#3:19 ...    ...    B-8:6 w1:6
+
+B-2:45 B-3:54 ===    B-3:19 F#3:13 D-3:19 F#4:7  ...    ===   w1:4
+D-3:45 ...    ===    D-4:19 A-3:13 F#3:19 ...    F#4:7  B-8:6 w1:6
+A-2:45 D-4:54 E-3:17 A-3:19 E-3:13 C#3:19 B-4:7  ...    B-8:6 w1:6
+A-2:45 E-4:54 ===    ...    ...    ...    C#5:7  B-4:7  B-8:6 w1:6
+B-2:45 F#4:54 D-4:49 B-3:19 F#3:13 D-3:19 D-5:7  C#5:7  B-8:6 w1:6
+A-2:45 A-4:54 E-3:58 A-3:19 E-3:13 C#3:19 E-5:7  D-5:7  B-8:6 w1:6
+B-2:45 B-4:54 ===    B-3:19 F#3:13 D-3:19 F#5:7  E-5:7  ===   w1:2
+B-2:19 B-4:23 ===    B-3:8  F#3:6  D-3:8  F#5:9  F#5:7  ...   w1:4
+
+B-2:8  B-4:10 ===    B-3:3  F#3:2  D-3:3  F#5:12 F#5:10 ...   w1:7
+B-2:3  B-4:4  ===    B-3:1  F#3:1  D-3:1  F#5:14 F#5:12 ...   w1:9
+===    ===    ...    ===    ===    ===    ===    ===    ...   ===
