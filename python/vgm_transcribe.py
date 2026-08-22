@@ -33,9 +33,12 @@ some things are inferred and this says which:
     with rubato, or one driven at an odd rate, will land on a grid that is
     musically wrong even though every note is in the right place in time.
 
-  * Effects are not recovered at all. Portamento, vibrato and volume
-    ramps arrive as what they are at register level: a stream of small
-    pitch or level writes between notes. Those are dropped.
+  * Vibrato IS recovered, and only vibrato. At register level it is a
+    pitch deviation that keeps crossing back through zero, which is what
+    separates it from a bend — a bend goes one way and stays. Depth and
+    speed are measured from the log and written as a `vib` directive.
+    Portamento and volume ramps are not recovered; they arrive as the
+    same stream of small writes and are dropped.
 """
 
 import json
@@ -109,9 +112,11 @@ def frequency_to_note(frequency: float):
 # Walking the log
 # --------------------------------------------------------------------------
 class _FMChannel:
-    __slots__ = ("fnum", "block", "latch", "on", "total_level", "algorithm")
+    __slots__ = ("fnum", "block", "latch", "on", "total_level", "algorithm",
+                 "keyed_frequency")
 
     def __init__(self):
+        self.keyed_frequency = 0.0
         self.fnum = 0
         self.block = 0
         self.latch = 0          # 0xA4 is written first and latched
@@ -145,8 +150,13 @@ def transcribe(path_or_bytes, max_seconds: float = 600.0):
     dac_enabled = False
 
     notes = []
-    for voice in psg_voices:
+    #: Per-voice pitch deviation from the sounding note, in cents. Kept so
+    #: the wobble the hold rule discards can be recovered as what it is.
+    traces = {f"psg{i}": [] for i in range(3)}
+    traces.update({f"fm{i}": [] for i in range(6)})
+    for index, voice in enumerate(psg_voices):
         voice.notes = notes
+        voice.trace = traces[f"psg{index}"]
     elapsed = 0.0
     dac_writes = 0
     max_samples = int(max_seconds * vgm_mod.DEFAULT_SAMPLE_RATE)
@@ -231,12 +241,14 @@ def transcribe(path_or_bytes, max_seconds: float = 600.0):
             state = fm[channel]
             if data & 0xF0:
                 state.on = True
-                name, octave, cents = frequency_to_note(state.frequency(ym_clock))
+                state.keyed_frequency = state.frequency(ym_clock)
+                name, octave, cents = frequency_to_note(state.keyed_frequency)
                 if name:
                     notes.append(Note(elapsed, f"fm{channel}", "on", name,
                                       octave, _fm_velocity(state), cents))
             elif state.on:
                 state.on = False
+                traces[f"fm{channel}"].append((elapsed, None))
                 notes.append(Note(elapsed, f"fm{channel}", "off"))
             continue
 
@@ -249,12 +261,26 @@ def transcribe(path_or_bytes, max_seconds: float = 600.0):
         elif 0xA0 <= addr <= 0xA2:
             state.fnum = ((state.latch & 7) << 8) | data
             state.block = (state.latch >> 3) & 7
+            # A pitch write while the note is held is expression, not a
+            # new note. Recorded as cents from where the note started.
+            if state.on and state.keyed_frequency > 0:
+                now = state.frequency(ym_clock)
+                if now > 0:
+                    traces[f"fm{bank * 3 + index}"].append(
+                        (elapsed, 1200.0 * math.log2(now / state.keyed_frequency)))
         elif 0x40 <= addr < 0x50:
             state.total_level[(addr >> 2) & 3] = data & 0x7F
         elif 0xB0 <= addr <= 0xB2:
             state.algorithm = data & 7
 
+    detected = []
+    for channel, trace in traces.items():
+        if len(trace) > 8:
+            detected.extend(detect_vibrato(trace, channel))
+    detected.sort(key=lambda d: d.time)
+
     info = {
+        "vibrato": detected,
         "duration": elapsed,
         "ym_clock": ym_clock,
         "psg_clock": psg_clock,
@@ -263,6 +289,106 @@ def transcribe(path_or_bytes, max_seconds: float = 600.0):
         "gd3": _gd3_of(raw, header),
     }
     return notes, info
+
+
+class Detected:
+    """An effect found in the log, alongside the notes."""
+    __slots__ = ("time", "channel", "kind", "depth_cents", "speed_hz",
+                 "duration")
+
+    def __init__(self, time, channel, kind, depth_cents=0.0, speed_hz=0.0,
+                 duration=0.0):
+        self.time = time
+        self.channel = channel
+        self.kind = kind             # "vibrato" | "vibrato_off"
+        self.depth_cents = depth_cents
+        self.speed_hz = speed_hz
+        self.duration = duration
+
+    def __repr__(self):
+        if self.kind == "vibrato_off":
+            return f"<{self.channel} vib off @{self.time:.2f}>"
+        return (f"<{self.channel} vib {self.depth_cents:.0f}c "
+                f"{self.speed_hz:.1f}Hz @{self.time:.2f} "
+                f"for {self.duration:.2f}s>")
+
+
+#: A wobble has to swing at least this far to be worth calling vibrato.
+#: Below it the driver is doing fine tuning, not expression.
+VIBRATO_MIN_DEPTH = 8.0
+#: ...and oscillate at least this many times, so a single pitch correction
+#: is not mistaken for one.
+VIBRATO_MIN_CYCLES = 2.5
+#: Vibrato lives in this band. Slower reads as a slide, faster is beyond
+#: what a 60 Hz driver can articulate.
+VIBRATO_MIN_HZ, VIBRATO_MAX_HZ = 2.0, 16.0
+#: And it stays inside about a semitone. A "wobble" swinging two octaves
+#: is a channel alternating between two notes — an arpeggio, which is a
+#: different thing with its own notation — and calling it vibrato would
+#: put a two-octave warble into the score where a chord shimmer belongs.
+VIBRATO_MAX_DEPTH = 150.0
+
+
+def detect_vibrato(trace, channel):
+    """Find vibrato spans in one channel's pitch trace.
+
+    `trace` is [(time, cents_from_the_sounding_note)]. Vibrato is a
+    deviation that keeps crossing back through zero: the sign changes are
+    what separate it from a bend, which goes one way and stays.
+
+    This is the other half of the hold rule in _PSGVoice. That rule knows
+    a wobble is not a run of notes and throws it away; this keeps what it
+    threw, because a Genesis lead without its vibrato is not the same
+    lead.
+    """
+    found = []
+    run_start = None
+    crossings = []
+    peak = 0.0
+    # The peak as of the last time the deviation crossed zero. Measuring
+    # the running peak instead lets whatever follows the wobble — usually
+    # a bend, going one way and not coming back — inflate the depth: a
+    # 60-cent vibrato followed by a 250-cent slide reported 255.
+    peak_at_crossing = 0.0
+    previous = 0.0
+
+    def close(end_time):
+        nonlocal run_start, crossings, peak, peak_at_crossing
+        if run_start is not None and len(crossings) >= 2:
+            span = crossings[-1] - run_start
+            cycles = len(crossings) / 2.0
+            speed = cycles / span if span > 0 else 0.0
+            if (VIBRATO_MIN_DEPTH <= peak_at_crossing <= VIBRATO_MAX_DEPTH
+                    and cycles >= VIBRATO_MIN_CYCLES
+                    and VIBRATO_MIN_HZ <= speed <= VIBRATO_MAX_HZ):
+                found.append(Detected(run_start, channel, "vibrato",
+                                      round(peak_at_crossing, 1),
+                                      round(speed, 2), round(span, 3)))
+                found.append(Detected(crossings[-1], channel, "vibrato_off"))
+        run_start = None
+        crossings = []
+        peak = peak_at_crossing = 0.0
+
+    for time, cents in trace:
+        if cents is None:
+            close(time)
+            previous = 0.0
+            continue
+        if abs(cents) < 1e-9 and abs(previous) < 1e-9:
+            continue
+        if run_start is None:
+            run_start = time
+        if (previous < 0 <= cents) or (previous > 0 >= cents):
+            crossings.append(time)
+            peak_at_crossing = peak
+        peak = max(peak, abs(cents))
+        # A deviation that stops coming back has become a bend, not a
+        # wobble: close the run and let it start again if it resumes.
+        if crossings and time - crossings[-1] > 0.5:
+            close(crossings[-1])
+        previous = cents
+    close(trace[-1][0] if trace else 0.0)
+    return found
 
 
 class _PSGVoice:
@@ -277,11 +403,12 @@ class _PSGVoice:
     is discarded as the vibrato it is.
     """
     __slots__ = ("index", "notes", "current", "pending", "pending_since",
-                 "pending_note", "level", "sounding")
+                 "pending_note", "level", "sounding", "trace")
 
-    def __init__(self, index, notes):
+    def __init__(self, index, notes, trace=None):
         self.index = index
         self.notes = notes
+        self.trace = trace
         self.current = None          # semitone currently counted as sounding
         self.pending = None          # semitone waiting to prove itself
         self.pending_since = 0.0
@@ -303,6 +430,8 @@ class _PSGVoice:
             self._emit(when, semitone, spelling)
 
     def key_off(self, when):
+        if self.trace is not None:
+            self.trace.append((when, None))     # a gap ends any wobble
         if self.sounding:
             self.notes.append(Note(when, f"psg{self.index}", "off"))
         self.sounding = False
@@ -312,6 +441,13 @@ class _PSGVoice:
     def pitch(self, when, semitone, spelling):
         if not self.sounding or semitone is None:
             return
+        if self.trace is not None and self.current is not None:
+            # The TRUE deviation, not the rounded one. Tracing whole
+            # semitones quantised every vibrato depth to a multiple of
+            # 100 cents, which is not a measurement, it is the rounding
+            # showing through.
+            self.trace.append((when, (semitone - self.current) * 100.0
+                               + spelling[2]))
         if semitone == self.current:
             self.pending = None            # came home: that was vibrato
             return
@@ -453,7 +589,7 @@ MIN_BPM, MAX_BPM = 70.0, 210.0
 # Emitting a score
 # --------------------------------------------------------------------------
 def to_events(notes, row_seconds: float, ticks_per_row: int = 24,
-              patch_names=None):
+              patch_names=None, detected=None):
     """Quantise transcribed notes onto the row grid as chipgen events.
 
     `patch_names` maps "fm0".."fm5" to an instrument name, so the score
@@ -464,6 +600,8 @@ def to_events(notes, row_seconds: float, ticks_per_row: int = 24,
     for note in notes:
         row = int(round(note.time / row_seconds))
         rows.setdefault(row, []).append(note)
+    for effect in detected or ():
+        rows.setdefault(int(round(effect.time / row_seconds)), []).append(effect)
 
     out = []
     for channel, name in sorted((patch_names or {}).items()):
@@ -486,6 +624,12 @@ def to_events(notes, row_seconds: float, ticks_per_row: int = 24,
 
 def _note_to_events(note):
     E = events_mod
+    if isinstance(note, Detected):
+        if note.kind == "vibrato_off":
+            return [E.Vibrato(target=note.channel, depth_cents=0.0,
+                              speed_hz=0.0)]
+        return [E.Vibrato(target=note.channel, depth_cents=note.depth_cents,
+                          speed_hz=note.speed_hz)]
     channel = note.channel
     if channel.startswith("fm"):
         index = int(channel[2:])
@@ -521,7 +665,8 @@ def to_tracker(notes, info, grid, patch_names=None, title: str = "",
     if not row_seconds:
         raise ValueError("no grid could be inferred; too few notes")
 
-    events = to_events(notes, row_seconds, ticks_per_row, patch_names)
+    events = to_events(notes, row_seconds, ticks_per_row, patch_names,
+                       detected=info.get("vibrato"))
     meta = tracker_mod.Metadata()
     meta.bpm = round(bpm, 2)
     meta.lpb = lpb
@@ -533,10 +678,14 @@ def to_tracker(notes, info, grid, patch_names=None, title: str = "",
 
     header = [
         f"# Transcribed from a VGM register log by python/vgm_transcribe.py.",
-        f"# {len(([n for n in notes if n.kind == 'on']))} notes over "
+        f"# {len(([n for n in notes if n.kind == 'on']))} notes and "
+        f"{len([d for d in info.get('vibrato', ()) if d.kind == 'vibrato'])} "
+        f"vibrato spans over "
         f"{info['duration']:.1f}s; the grid fits {coverage*100:.0f}% of the",
-        f"# onsets at {row_seconds*1000:.1f} ms per row. Effects (portamento,",
-        f"# vibrato, volume ramps) are NOT recovered — see the module docstring.",
+        f"# onsets at {row_seconds*1000:.1f} ms per row.",
+        f"# Vibrato is recovered with its measured depth and speed.",
+        f"# Portamento and volume ramps are not recovered, and which drum",
+        f"# a DAC hit was is not recoverable from a register log at all.",
         "",
     ]
     return "\n".join(header) + tracker_mod.dumps(events, meta)
@@ -591,6 +740,8 @@ def transcribe_file(path: str, max_seconds: float = 600.0, lpb: int = None,
         "bpm": round(grid[1], 2) if grid[1] else None,
         "lpb": grid[2],
         "grid_fit": round(grid[3], 3),
+        "vibrato_spans": len([d for d in info.get("vibrato", ())
+                              if d.kind == "vibrato"]),
         "bent_notes": bent,
         "bent_fraction": round(bent / max(1, len(on)), 3),
         "tuning_cents": round(tuning, 1),
@@ -669,7 +820,8 @@ def build_corpus(paths, out_dir: str, max_seconds: float = 600.0,
             "Notes and their timing are recovered from the register log.",
             "Velocity is estimated from carrier Total Level at key-on.",
             "The tempo grid is inferred; `grid_fit` is the confidence.",
-            "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+            "Vibrato is recovered, with its measured depth and speed. "
+            "Portamento and volume ramps are not.",
             "Which drum a DAC hit was is not recovered; all read as `kick`.",
             "Two DAC hits closer together than the first sample's length "
             "leave no gap in the byte stream and read as one hit.",

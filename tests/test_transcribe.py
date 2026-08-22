@@ -232,7 +232,7 @@ def test_a_transcription_parses_back_as_tracker_text():
     assert meta.bpm > 0
     # The caveats belong in the file, not only in the manifest: whoever
     # opens one of these should see what was and was not recovered.
-    assert "NOT recovered" in record["tracker"]
+    assert "not recovered" in record["tracker"].lower()
 
 
 def test_a_corpus_records_what_it_rejected_and_why():
@@ -271,3 +271,64 @@ def test_a_track_tuned_off_a440_is_reported_as_tuning_not_as_bending():
                        cents_off=generator.uniform(-45, 45)) for i in range(60)]
     _tuning_value, wide = vt._tuning(bending)
     assert wide > 15, wide
+
+
+# -- recovering vibrato ------------------------------------------------------
+def _wobble(depth, hz, seconds, rate=60.0):
+    return [(i / rate, depth * math.sin(2 * math.pi * hz * i / rate))
+            for i in range(int(seconds * rate))]
+
+
+def test_a_wobble_is_recovered_with_its_depth_and_speed():
+    found = vt.detect_vibrato(_wobble(60.0, 6.0, 2.0), "psg0")
+    spans = [d for d in found if d.kind == "vibrato"]
+    assert len(spans) == 1, found
+    assert abs(spans[0].speed_hz - 6.0) < 0.3, spans[0].speed_hz
+    # 57 rather than 60: a 60-cent sine sampled at 60 Hz rarely lands on
+    # its own peak, and reporting the peak actually seen is the honest
+    # reading of a log that only has those samples in it.
+    assert 50 < spans[0].depth_cents <= 61, spans[0].depth_cents
+    assert any(d.kind == "vibrato_off" for d in found)
+
+
+def test_a_bend_is_not_mistaken_for_a_wobble():
+    # A deviation that goes one way and stays is a slide. The sign changes
+    # are the whole difference.
+    one_way = [(i / 60.0, i * 4.0) for i in range(120)]
+    assert not vt.detect_vibrato(one_way, "fm0")
+
+
+def test_a_wobble_followed_by_a_bend_reports_only_the_wobble():
+    # The bend used to inflate the depth: a 60-cent vibrato followed by a
+    # 250-cent slide came back as 255 cents of vibrato.
+    trace = _wobble(60.0, 6.0, 2.0)
+    trace += [(2.0 + i / 60.0, 100.0 + i * 5.0) for i in range(60)]
+    spans = [d for d in vt.detect_vibrato(trace, "psg0") if d.kind == "vibrato"]
+    assert len(spans) == 1
+    assert spans[0].depth_cents < 70, spans[0].depth_cents
+
+
+def test_fine_tuning_is_not_called_vibrato():
+    assert not vt.detect_vibrato(_wobble(3.0, 6.0, 2.0), "fm0")
+
+
+def test_an_arpeggio_is_not_called_vibrato():
+    # Two notes an octave apart, alternating, oscillate exactly like a
+    # wobble does. It is an arpeggio, it has its own notation, and a
+    # two-octave "vibrato" in a score would be nonsense.
+    assert not vt.detect_vibrato(_wobble(1200.0, 6.0, 2.0), "psg0")
+
+
+def test_a_recovered_wobble_becomes_a_vibrato_event():
+    import events as events_module
+
+    detected = [vt.Detected(0.5, "fm1", "vibrato", 55.0, 6.0, 1.0),
+                vt.Detected(1.5, "fm1", "vibrato_off")]
+    notes = [vt.Note(i * 0.1, "fm1", "on", "A", 4) for i in range(24)]
+    events = vt.to_events(notes, 0.1, 24, detected=detected)
+    vibratos = [e for e in events if isinstance(e, events_module.Vibrato)]
+    assert len(vibratos) == 2, vibratos
+    assert vibratos[0].target == "fm1"
+    assert abs(vibratos[0].depth_cents - 55.0) < 0.1
+    assert abs(vibratos[0].speed_hz - 6.0) < 0.1
+    assert vibratos[1].depth_cents == 0.0, "the vibrato is never turned off"
