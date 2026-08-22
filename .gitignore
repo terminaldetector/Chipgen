@@ -1,0 +1,13 @@
+# Built chip cores — regenerate with `python3 python/build_cores.py`
+core/*.so
+core/*.dylib
+core/*.dll
+core/*.o
+
+# Rendered audio / exported tracks
+output/
+*.pyc
+__pycache__/
+
+# Bridge archives built by bridge/make_zip.py
+dist/

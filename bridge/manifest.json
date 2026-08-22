@@ -1,0 +1,587 @@
+{
+  "name": "chipgen",
+  "version": "0.2.0",
+  "summary": "Generative chiptune on real YM2612 + SN76489 emulation, driven by a flat event vocabulary any model can emit.",
+  "chips": {
+    "YM2612": {
+      "channels": 6,
+      "role": "4-operator FM; channel 6 doubles as an 8-bit PCM DAC",
+      "backend": "native",
+      "revisions": {
+        "ym2612": "discrete (Model 1 / Model 2 VA2) — has the DAC ladder, so muting bleeds and silence is gritty",
+        "ym3438": "integrated ASIC (later models) — clean muting"
+      }
+    },
+    "SN76489": {
+      "channels": "3 tone + 1 noise",
+      "role": "Sega PSG, register-level model",
+      "backend": "native"
+    }
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "platform": "linux",
+    "numpy": true,
+    "scipy": true,
+    "dsp_backend": "scipy",
+    "notes": []
+  },
+  "inputs": {
+    "tracker": "compact text grid; see python/tracker.py docstring",
+    "json": "array of event objects; see events",
+    "events": "python objects from events.py"
+  },
+  "instrument_import": {
+    "tool": "python/vgm_import.py",
+    "summary": "extract FM patches from any Genesis VGM into a bank JSON, loudness-levelled against the built-in bank",
+    "usage": "python3 python/vgm_import.py song.vgm -o bank.json, then render with --bank bank.json"
+  },
+  "outputs": {
+    "wav": "16-bit PCM, any sample rate (default 44100)",
+    "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it.",
+    "tracker": "the score written back out as text"
+  },
+  "instruments": {
+    "bass": {
+      "algorithm": 0,
+      "feedback": 5,
+      "carriers": 1,
+      "trim": 5,
+      "character": "punchy FM bass, fast attack, short body"
+    },
+    "bell_pluck": {
+      "algorithm": 4,
+      "feedback": 2,
+      "carriers": 2,
+      "trim": 0,
+      "character": "bright metallic pluck/bell, good for arpeggios"
+    },
+    "brass": {
+      "algorithm": 2,
+      "feedback": 5,
+      "carriers": 1,
+      "trim": -4,
+      "character": "FM brass section, brightens after the attack"
+    },
+    "deep_bass": {
+      "algorithm": 4,
+      "feedback": 2,
+      "carriers": 2,
+      "trim": 5,
+      "character": "round mid-weight bass, harmonics fade slowly, sits under a mix"
+    },
+    "distorted_lead": {
+      "algorithm": 0,
+      "feedback": 7,
+      "carriers": 1,
+      "trim": 8,
+      "character": "gritty overdriven lead, heavy feedback, cuts through"
+    },
+    "e_piano": {
+      "algorithm": 5,
+      "feedback": 4,
+      "carriers": 3,
+      "trim": -4,
+      "character": "DX-style electric piano, bell-tinged, decays away"
+    },
+    "fm_stab": {
+      "algorithm": 2,
+      "feedback": 6,
+      "carriers": 1,
+      "trim": -6,
+      "character": "short metallic pitched stab for off-beats"
+    },
+    "hard_pluck": {
+      "algorithm": 4,
+      "feedback": 5,
+      "carriers": 2,
+      "trim": 2,
+      "character": "hard attack, fast decay, long ringing release"
+    },
+    "jazz_chord_pad": {
+      "algorithm": 6,
+      "feedback": 1,
+      "carriers": 3,
+      "trim": -1,
+      "character": "soft additive chord tone, one note per channel"
+    },
+    "metal_stab": {
+      "algorithm": 3,
+      "feedback": 7,
+      "carriers": 1,
+      "trim": -5,
+      "character": "clangorous industrial stab, very inharmonic"
+    },
+    "orch_hit": {
+      "algorithm": 6,
+      "feedback": 7,
+      "carriers": 3,
+      "trim": -4,
+      "character": "short inharmonic orchestra-hit stab"
+    },
+    "organ": {
+      "algorithm": 7,
+      "feedback": 0,
+      "carriers": 4,
+      "trim": -1,
+      "character": "additive drawbar organ, sustains flat until note off"
+    },
+    "pluck_guitar": {
+      "algorithm": 0,
+      "feedback": 6,
+      "carriers": 1,
+      "trim": 0,
+      "character": "muted guitar pluck, quick decay"
+    },
+    "saw_lead": {
+      "algorithm": 7,
+      "feedback": 0,
+      "carriers": 4,
+      "trim": 4,
+      "character": "additive sawtooth lead, same bright shape at every pitch"
+    },
+    "slap_bass": {
+      "algorithm": 4,
+      "feedback": 4,
+      "carriers": 2,
+      "trim": 7,
+      "character": "snappy funk bass with a bright attack transient"
+    },
+    "square_lead": {
+      "algorithm": 4,
+      "feedback": 7,
+      "carriers": 2,
+      "trim": -8,
+      "character": "hard square-ish lead, chiptune-forward"
+    },
+    "strings": {
+      "algorithm": 4,
+      "feedback": 2,
+      "carriers": 2,
+      "trim": -1,
+      "character": "slow-attack detuned ensemble pad"
+    },
+    "sub_bass": {
+      "algorithm": 7,
+      "feedback": 0,
+      "carriers": 4,
+      "trim": 6,
+      "character": "pure sine sub, no harmonics, sits under everything"
+    },
+    "techno_bass": {
+      "algorithm": 3,
+      "feedback": 6,
+      "carriers": 1,
+      "trim": 1,
+      "character": "driving buzzy bass with stacked harmonics, four-on-the-floor"
+    }
+  },
+  "dac_samples": [
+    "clap",
+    "hat",
+    "hat_open",
+    "kick",
+    "rim",
+    "snare",
+    "tom"
+  ],
+  "events": {
+    "Wait": {
+      "fields": {
+        "ticks": {
+          "type": "int",
+          "range": [
+            0,
+            1000000
+          ]
+        }
+      },
+      "doc": "Advance the sequence clock by `ticks` ticks."
+    },
+    "Tempo": {
+      "fields": {
+        "ticks_per_second": {
+          "type": "float",
+          "range": [
+            1,
+            100000
+          ]
+        }
+      },
+      "doc": "Change how long a tick lasts, from this point on.\n\n    Lets one event stream carry tempo changes without the caller having to\n    re-time everything: a ritardando is a few Tempo events, not a rewrite."
+    },
+    "LoopPoint": {
+      "fields": {},
+      "doc": "Mark where a VGM player should jump back to when the track ends.\n\n    Ignored by the audio renderer (a WAV has no loop), consumed by vgm.py."
+    },
+    "Marker": {
+      "fields": {
+        "label": {
+          "type": "str",
+          "default": ""
+        }
+      },
+      "doc": "Free-text annotation: section names, comments, model reasoning.\n\n    Renders to nothing. Useful for keeping a model's own structure notes\n    inside the event stream instead of alongside it."
+    },
+    "FMInstrumentSelect": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        },
+        "instrument": {
+          "type": "str"
+        }
+      },
+      "doc": "Assign a preset instrument (see instruments.BANK) to an FM channel (0-5)."
+    },
+    "FMNoteOn": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        },
+        "note": {
+          "type": "str",
+          "values": [
+            "C",
+            "C#",
+            "D",
+            "D#",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "G#",
+            "A",
+            "A#",
+            "B"
+          ]
+        },
+        "octave": {
+          "type": "int",
+          "range": [
+            0,
+            9
+          ]
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            1,
+            127
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "FMNoteOff": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "FMPan": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        },
+        "left": {
+          "type": "bool",
+          "default": true
+        },
+        "right": {
+          "type": "bool",
+          "default": true
+        },
+        "ams": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            3
+          ]
+        },
+        "pms": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            7
+          ]
+        }
+      },
+      "doc": "Stereo placement plus LFO sensitivity for one FM channel (register 0xB4).\n\n    The chip pans per channel by hard-muting an output, not by a\n    continuous law: left/right are on/off flags, and \"centre\" means both\n    are on. ams/pms are how strongly the global LFO (see FMLFO) modulates\n    this channel's amplitude and pitch."
+    },
+    "FMLFO": {
+      "fields": {
+        "enable": {
+          "type": "bool",
+          "default": true
+        },
+        "freq": {
+          "type": "int",
+          "default": 4,
+          "range": [
+            0,
+            7
+          ]
+        }
+      },
+      "doc": "Global LFO on/off and rate (register 0x22). Shared by all 6 channels.\n\n    A channel only hears it if its FMPan sets ams/pms above zero — that\n    split (one global rate, per-channel depth) is the chip's, not ours."
+    },
+    "FMVolume": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Channel volume 0-127 (127 = loudest), applied to the patch's carriers.\n\n    Attenuating a modulator would change the timbre, not the level, so this\n    walks the algorithm's carrier set and adds attenuation only there."
+    },
+    "FMPitch": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ]
+        },
+        "cents": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -4800,
+            4800
+          ]
+        }
+      },
+      "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed — vibrato, pitch envelopes and slides are\n    a series of these."
+    },
+    "DACEnable": {
+      "fields": {
+        "enable": {
+          "type": "bool",
+          "default": true
+        }
+      },
+      "doc": "Switch FM channel 6 between normal FM and the 8-bit PCM DAC (register 0x2B)."
+    },
+    "DACSample": {
+      "fields": {
+        "name": {
+          "type": "str"
+        },
+        "rate": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            96000
+          ]
+        },
+        "volume": {
+          "type": "float",
+          "default": 1.0,
+          "range": [
+            0.0,
+            1.0
+          ]
+        }
+      },
+      "doc": "Play a PCM sample through the DAC. `name` indexes samples.KIT.\n\n    This is the Genesis drum trick: FM channel 6 gives up its voice and\n    becomes an 8-bit sample player, which is how Streets of Rage and\n    Contra: Hard Corps get real drums out of the chip."
+    },
+    "PSGToneOn": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            2
+          ]
+        },
+        "note": {
+          "type": "str",
+          "values": [
+            "C",
+            "C#",
+            "D",
+            "D#",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "G#",
+            "A",
+            "A#",
+            "B"
+          ]
+        },
+        "octave": {
+          "type": "int",
+          "range": [
+            0,
+            9
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            15
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "PSGToneOff": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            2
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "PSGVolume": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            3
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            15
+          ]
+        }
+      },
+      "doc": "Set a PSG channel's attenuation without retriggering its note.\n\n    Channel 3 is the noise voice. PSG has no envelope generator at all, so\n    a volume ramp — every PSG decay you have ever heard — is literally a\n    run of these events."
+    },
+    "PSGNoiseOn": {
+      "fields": {
+        "white": {
+          "type": "bool"
+        },
+        "rate": {
+          "type": "int",
+          "range": [
+            0,
+            3
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            15
+          ]
+        },
+        "restart": {
+          "type": "bool",
+          "default": false
+        }
+      },
+      "doc": "Gate the shared noise voice on.\n\n    `restart` forces a write to the noise register, which resets the LFSR.\n    Leave it off for hats and cymbals: re-seeding the shift register on\n    every hit makes the noise repeat itself and turns a cymbal into a\n    buzz. Turn it on when you want a short blip to sound identical each\n    time, which is the one case the reset is good for."
+    },
+    "PSGNoiseOff": {
+      "fields": {},
+      "doc": ""
+    },
+    "End": {
+      "fields": {},
+      "doc": ""
+    }
+  },
+  "tracker_syntax": {
+    "directives": [
+      "arp",
+      "author",
+      "bpm",
+      "chord",
+      "cols",
+      "columns",
+      "end",
+      "game",
+      "inst",
+      "lfo",
+      "loop",
+      "lpb",
+      "mark",
+      "notes",
+      "pan",
+      "pitch",
+      "ticks",
+      "title",
+      "vol"
+    ],
+    "columns": [
+      "fm0",
+      "fm1",
+      "fm2",
+      "fm3",
+      "fm4",
+      "fm5",
+      "psg0",
+      "psg1",
+      "psg2",
+      "noise",
+      "dac"
+    ],
+    "default_columns": [
+      "fm0",
+      "fm1",
+      "fm2",
+      "psg0",
+      "noise",
+      "dac"
+    ],
+    "cells": {
+      "fm": "A-2 | A#3 | A-2:100 (velocity) | === (note off) | ... (hold)",
+      "psg": "A-4 | A-4:8 (volume 0-15, 0 = loudest) | === | ...",
+      "noise": "w0-w3 white | p0-p3 periodic | === | ...",
+      "dac": "clap, hat, hat_open, kick, rim, snare, tom | ..."
+    },
+    "comments": "; anywhere, or # at line start / after whitespace"
+  },
+  "example": "title chipgen example\nbpm 150\nlpb 4\ninst fm0 bass\ninst fm1 square_lead\ninst fm2 strings\npan fm2 C 0 2\ncols fm0 fm1 fm2 psg0 noise dac\n\nD-2  ...  D-4  D-5   ...  kick\n...  ...  ...  A-5:6 ...  hat\nA-2  A-4  ...  F-5   w1   snare\n...  ...  ...  A-5:6 ...  hat\nA#2  ...  A#3  D-5   ...  kick\n...  C-5  ...  A-5:6 ...  hat\nF-2  ...  ...  C-5   w1   snare\n...  A-4  ===  ===   ===  hat\n"
+}

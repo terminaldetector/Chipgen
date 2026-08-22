@@ -1,0 +1,725 @@
+r"""
+tracker.py — a compact text notation that parses to and from events.
+
+The JSON event list is the machine contract, and it is verbose: a 4-bar
+pattern runs to several hundred objects and a few thousand tokens. A model
+paying by the token spends most of its budget on punctuation, and a human
+reading it cannot see the music. Trackers solved this in 1987 — a grid,
+one row per step, one column per voice — and the shape has not been
+improved on since.
+
+So the same pattern in tracker notation:
+
+    bpm 172
+    lpb 4
+    inst fm0 bass
+    inst fm1 distorted_lead
+    cols fm0 fm1 psg0 noise dac
+
+    A-2  ...  A-4  w1   kick
+    ...  ...  C-5  ...  hat
+    C-3  E-4  E-5  w1   snare
+    ...  ...  A-5  ...  hat
+
+Same music, a fifth of the tokens, and you can see the groove. It is a
+view of the event list, not a replacement: `loads()` gives you events,
+`dumps()` gives you text, and both directions run in the tests.
+
+## Grammar
+
+Directives (anywhere, one per line; a line whose first word is a
+directive keyword is a directive):
+
+    bpm 172              tempo
+    lpb 4                rows per beat (4 = sixteenth notes)
+    ticks 192            sequencer tick rate, if you need to change it
+    inst fm0 bass        assign a patch to an FM channel
+    vol fm0 100          channel volume (FM 0-127, PSG 0-15)
+    pan fm1 L            L | R | C | off, optionally: pan fm1 C 2 3 (ams pms)
+    lfo on 4             global LFO on at rate 0-7 / `lfo off`
+    pitch fm1 -12        detune the channel in cents
+    cols fm0 fm1 psg0    which columns the rows below carry
+    loop                 mark the VGM loop point here
+    mark <label>         name a section boundary (see profile.py)
+    chord A-3 min fm2 fm3 fm4    spread a chord across channels
+    chord off fm2 fm3 fm4        release them again
+    arp fm1 0 3 7        arpeggiate that channel within every row
+    arp fm1 off          stop arpeggiating
+    title / author / game / notes    GD3 metadata for the .vgm
+    end                  stop early
+
+`chord` and `arp` are input shorthand: they expand at parse time into
+ordinary FMNoteOn / FMPitch events, so `dumps()` writes the expansion
+rather than the shorthand. The spelling does not survive that, which is
+the same trade every tracker effect column makes.
+
+The music survives it only if the row grid can hold the expansion. `arp`
+puts pitch changes *inside* a row, so dumping a 3-step arp needs three
+times the rows — `dumps()` subdivides the grid to fit (raising `lpb`),
+and that works whenever `ticks_per_row` divides evenly. It cannot when
+`ticks_per_row` is prime: 150 BPM at lpb 4 and 192 ticks/s gives 19.2
+ticks per row, rounded to 19, and no integer grid subdivides 19. Measured
+on such a score, the arpeggiated notes came back on the right pitch in
+33% of frames. Set `ticks` so that 60/bpm/lpb*ticks is a round number
+with the factors your arps need — `ticks 240` at 150 BPM and lpb 4 gives
+24 ticks per row, which divides by 2, 3, 4, 6, 8 and 12. That also stops
+the row length itself being rounded, which otherwise detunes the tempo.
+
+`arp` moves pitch with FMPitch instead of retriggering, because a tracker
+arpeggio is one note whose pitch flickers — re-attacking the envelope on
+every step would turn a shimmer into a machine gun. Chord qualities:
+maj min dim aug sus2 sus4 maj6 min6 maj7 min7 dom7 m7b5 dim7 add9 maj9
+min9 dom9, plus the usual shorthands (m, M7, 7, 9, o7...).
+
+Row cells, by column type:
+
+    fm0..fm5    A-2  A#3  A-2:100 (velocity 1-127)  ===/off (note off)  .../-- (hold)
+    psg0..psg2  A-4  A-4:8 (volume 0-15, 0 loudest)  ===/off  .../--
+    noise       w0..w3 (white) p0..p3 (periodic)     ===/off  .../--
+    dac         kick snare hat hat_open tom clap rim  .../--
+                kick:0.6 (volume 0.0-1.0 — a float, unlike the FM and PSG
+                columns, because the DAC scales PCM bytes rather than
+                stepping an attenuator)
+
+Comments run to end of line: `;` anywhere, `#` at the start of a line or
+after whitespace (so the sharp in `A#2` is safe). Blank lines are ignored,
+so group rows into bars however you like.
+"""
+
+import re
+
+import events as events_mod
+from events import (DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
+                    FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
+                    PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
+                    PSGVolume, Tempo, Wait)
+
+DEFAULT_BPM = 150.0
+DEFAULT_LPB = 4
+DEFAULT_TICKS_PER_SECOND = 192.0
+
+HOLD_TOKENS = {"...", "..", ".", "--", "---", "-", "~", ""}
+OFF_TOKENS = {"===", "==", "off", "^^^", "^"}
+
+_FM_COLUMNS = tuple(f"fm{i}" for i in range(6))
+_PSG_COLUMNS = tuple(f"psg{i}" for i in range(3))
+_COLUMN_ALIASES = {}
+for _i in range(6):
+    _COLUMN_ALIASES[f"f{_i}"] = f"fm{_i}"
+for _i in range(3):
+    _COLUMN_ALIASES[f"p{_i}"] = f"psg{_i}"
+    _COLUMN_ALIASES[f"psg{_i}"] = f"psg{_i}"
+_COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
+                        "d": "dac", "pcm": "dac", "dac": "dac"})
+
+DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
+
+DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
+              "cols", "columns", "loop", "mark", "chord", "arp", "title",
+              "author", "game", "notes", "end"}
+
+#: Semitone offsets from the root, for the `chord` directive. Kept small and
+#: conventional on purpose: this exists so a four-note voicing is one line
+#: instead of four hand-aligned columns, not to be a theory library.
+CHORD_QUALITIES = {
+    "maj": (0, 4, 7),           "min": (0, 3, 7),
+    "dim": (0, 3, 6),           "aug": (0, 4, 8),
+    "sus2": (0, 2, 7),          "sus4": (0, 5, 7),
+    "maj6": (0, 4, 7, 9),       "min6": (0, 3, 7, 9),
+    "maj7": (0, 4, 7, 11),      "min7": (0, 3, 7, 10),
+    "dom7": (0, 4, 7, 10),      "m7b5": (0, 3, 6, 10),
+    "dim7": (0, 3, 6, 9),       "add9": (0, 4, 7, 14),
+    "maj9": (0, 4, 7, 11, 14),  "min9": (0, 3, 7, 10, 14),
+    "dom9": (0, 4, 7, 10, 14),
+}
+#: Spellings people actually type.
+CHORD_ALIASES = {"m": "min", "-": "min", "M": "maj", "": "maj",
+                 "major": "maj", "minor": "min", "7": "dom7", "9": "dom9",
+                 "m7": "min7", "M7": "maj7", "m9": "min9", "M9": "maj9",
+                 "6": "maj6", "m6": "min6", "half-dim": "m7b5",
+                 "aug7": "aug", "+": "aug", "o": "dim", "o7": "dim7"}
+
+_NOTE_CELL = re.compile(r"^([A-Ga-g])([#b\-]?)(-?\d)(?::(\d+))?$")
+#: `;` always starts a comment; `#` only at line start or after whitespace,
+#: so that the sharp in `A#2` survives.
+_COMMENT = re.compile(r"(?:(?:^|(?<=\s))#|;)")
+_NOISE_CELL = re.compile(r"^([wpWP])([0-3])(?::(\d+))?$")
+
+
+class TrackerError(ValueError):
+    """Raised with a line number, because a grid without one is unsearchable."""
+
+
+class Metadata:
+    __slots__ = ("title", "author", "game", "notes", "bpm", "lpb",
+                 "ticks_per_second")
+
+    def __init__(self):
+        self.title = ""
+        self.author = ""
+        self.game = ""
+        self.notes = ""
+        self.bpm = DEFAULT_BPM
+        self.lpb = DEFAULT_LPB
+        self.ticks_per_second = DEFAULT_TICKS_PER_SECOND
+
+    def ticks_per_row(self) -> int:
+        seconds = 60.0 / self.bpm / self.lpb
+        return max(1, round(seconds * self.ticks_per_second))
+
+    def to_gd3(self):
+        import vgm
+        return vgm.GD3(title=self.title, author=self.author, game=self.game,
+                       notes=self.notes)
+
+    def __repr__(self):
+        return (f"Metadata(bpm={self.bpm}, lpb={self.lpb}, "
+                f"ticks_per_row={self.ticks_per_row()})")
+
+
+# --------------------------------------------------------------------------
+# Parsing
+# --------------------------------------------------------------------------
+def parse_note(cell: str):
+    """'A-2' / 'A#3' / 'Bb4' -> (note, octave, param or None)."""
+    m = _NOTE_CELL.match(cell)
+    if not m:
+        return None
+    letter, accidental, octave, param = m.groups()
+    name = letter.upper()
+    if accidental == "#":
+        name += "#"
+    elif accidental == "b":
+        name += "b"
+    canonical = events_mod.normalize_note(name)
+    if canonical is None:
+        return None
+    return canonical, int(octave), (int(param) if param is not None else None)
+
+
+def loads(text: str):
+    """Parse tracker text. Returns (events, metadata)."""
+    meta = Metadata()
+    columns = list(DEFAULT_COLUMNS)
+    events = []
+
+    pending_rows = 0          # rows of silence not yet emitted as a Wait
+    fm_sounding = [False] * 6
+    psg_sounding = [False] * 3
+    noise_sounding = False
+    stopped = False
+    arps = {}                 # channel -> tuple of semitone offsets
+
+    def flush_rows():
+        nonlocal pending_rows
+        if pending_rows:
+            events.append(Wait(ticks=pending_rows * meta.ticks_per_row()))
+            pending_rows = 0
+
+    def emit_arpeggio_row() -> bool:
+        """Spend this row's time as a sequence of pitch steps, not one Wait.
+
+        Returns False when there is nothing arpeggiating, so the caller can
+        fall back to the normal accumulate-and-flush path — which matters,
+        because that path merges consecutive empty rows into a single Wait
+        and this one cannot.
+
+        The pitch moves via FMPitch rather than by retriggering the note:
+        a tracker arpeggio is one note whose pitch flickers, not three
+        notes, and re-attacking the envelope every step would turn a chord
+        shimmer into a machine gun.
+        """
+        active = [ch for ch, offsets in arps.items()
+                  if offsets and fm_sounding[ch]]
+        if not active:
+            return False
+        steps = max(len(arps[ch]) for ch in active)
+        total = meta.ticks_per_row()
+        if total < steps:
+            # Not enough tick resolution to subdivide this row. Sounding an
+            # arpeggio as a single held step is better than emitting a run
+            # of zero-length waits that shift nothing.
+            return False
+
+        base, remainder = divmod(total, steps)
+        for step in range(steps):
+            for ch in active:
+                offsets = arps[ch]
+                events.append(FMPitch(channel=ch,
+                                      cents=offsets[step % len(offsets)] * 100.0))
+            events.append(Wait(ticks=base + (1 if step < remainder else 0)))
+        return True
+
+    for lineno, raw in enumerate(text.splitlines(), start=1):
+        line = _COMMENT.split(raw, maxsplit=1)[0].strip()
+        if not line or stopped:
+            continue
+
+        words = line.split()
+        head = words[0].lower()
+
+        if head in DIRECTIVES:
+            flush_rows()
+            stopped = _directive(head, words[1:], meta, columns, events,
+                                 arps, lineno)
+            continue
+
+        cells = [c for c in line.replace("|", " ").split() if c]
+        if len(cells) != len(columns):
+            raise TrackerError(
+                f"line {lineno}: {len(cells)} cells but {len(columns)} columns "
+                f"({' '.join(columns)}). Use ... for an empty cell.\n  {raw.strip()}")
+
+        flush_rows()
+        for column, cell in zip(columns, cells):
+            _apply_cell(column, cell, events, fm_sounding, psg_sounding,
+                        lineno, raw)
+            if column == "noise":
+                noise_sounding = _noise_state(cell, noise_sounding)
+        if not emit_arpeggio_row():
+            pending_rows = 1
+
+    flush_rows()
+
+    # Release anything still held, so a pattern never ends on a stuck note.
+    for ch in range(6):
+        if fm_sounding[ch]:
+            events.append(FMNoteOff(channel=ch))
+    for ch in range(3):
+        if psg_sounding[ch]:
+            events.append(PSGToneOff(channel=ch))
+    if noise_sounding:
+        events.append(PSGNoiseOff())
+    events.append(End())
+    return events, meta
+
+
+def _noise_state(cell: str, current: bool) -> bool:
+    token = cell.strip()
+    if token in HOLD_TOKENS:
+        return current
+    if token.lower() in OFF_TOKENS:
+        return False
+    return bool(_NOISE_CELL.match(token))
+
+
+def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
+    """Apply one directive. Returns True if it ends the score."""
+    def need(n, usage):
+        if len(args) < n:
+            raise TrackerError(f"line {lineno}: {head} needs {usage}")
+
+    if head == "bpm":
+        need(1, "a tempo, e.g. `bpm 172`")
+        meta.bpm = float(args[0])
+    elif head == "lpb":
+        need(1, "rows per beat, e.g. `lpb 4`")
+        meta.lpb = max(1, int(args[0]))
+    elif head == "ticks":
+        need(1, "a tick rate, e.g. `ticks 192`")
+        meta.ticks_per_second = float(args[0])
+        events.append(Tempo(ticks_per_second=meta.ticks_per_second))
+    elif head in ("cols", "columns"):
+        need(1, "at least one column name")
+        columns[:] = [_column(a, lineno) for a in args]
+    elif head == "inst":
+        need(2, "a channel and an instrument, e.g. `inst fm0 bass`")
+        events.append(FMInstrumentSelect(channel=_fm_channel(args[0], lineno),
+                                         instrument=args[1]))
+    elif head == "vol":
+        need(2, "a channel and a level, e.g. `vol fm0 100`")
+        target = _column(args[0], lineno)
+        if target in _FM_COLUMNS:
+            events.append(FMVolume(channel=int(target[2:]), volume=int(args[1])))
+        elif target in _PSG_COLUMNS:
+            events.append(PSGVolume(channel=int(target[3:]), volume=int(args[1])))
+        elif target == "noise":
+            events.append(PSGVolume(channel=3, volume=int(args[1])))
+        else:
+            raise TrackerError(f"line {lineno}: cannot set volume on {args[0]}")
+    elif head == "pan":
+        need(2, "a channel and L/R/C/off, e.g. `pan fm1 L`")
+        side = args[1].upper()
+        left = side in ("L", "C", "LR", "BOTH")
+        right = side in ("R", "C", "LR", "BOTH")
+        if side == "OFF":
+            left = right = False
+        ams = int(args[2]) if len(args) > 2 else 0
+        pms = int(args[3]) if len(args) > 3 else 0
+        events.append(FMPan(channel=_fm_channel(args[0], lineno), left=left,
+                            right=right, ams=ams, pms=pms))
+    elif head == "lfo":
+        need(1, "on/off, e.g. `lfo on 4`")
+        enable = args[0].lower() in ("on", "1", "true", "yes")
+        freq = int(args[1]) if len(args) > 1 else 4
+        events.append(FMLFO(enable=enable, freq=freq))
+    elif head == "pitch":
+        need(2, "a channel and cents, e.g. `pitch fm1 -12`")
+        events.append(FMPitch(channel=_fm_channel(args[0], lineno),
+                              cents=float(args[1])))
+    elif head == "loop":
+        events.append(LoopPoint())
+    elif head == "chord":
+        # `chord A-3 min fm2 fm3 fm4`  /  `chord off fm2 fm3 fm4`
+        need(2, "a root and channels, e.g. `chord A-3 min fm2 fm3 fm4`, "
+                "or `chord off fm2 fm3 fm4`")
+        if args[0].lower() in ("off", "===", "=="):
+            for name in args[1:]:
+                events.append(FMNoteOff(channel=_fm_channel(name, lineno)))
+            return False
+        parsed = parse_note(args[0])
+        if parsed is None:
+            raise TrackerError(
+                f"line {lineno}: {args[0]!r} is not a root note "
+                f"(want e.g. A-3, C#4)")
+        root, octave, velocity = parsed
+        quality = resolve_quality(args[1], lineno)
+        channels = [_fm_channel(name, lineno) for name in args[2:]]
+        if not channels:
+            raise TrackerError(
+                f"line {lineno}: chord needs at least one FM channel to play on")
+        for channel, (note, note_octave) in zip(
+                channels, chord_tones(root, octave, quality, len(channels))):
+            events.append(FMNoteOn(channel=channel, note=note,
+                                   octave=note_octave,
+                                   velocity=velocity if velocity else 127))
+    elif head == "arp":
+        # `arp fm1 0 3 7`  cycles the channel through those semitone
+        # offsets within every row from here on;  `arp fm1 off`  stops.
+        need(2, "a channel and offsets, e.g. `arp fm1 0 3 7`, or `arp fm1 off`")
+        channel = _fm_channel(args[0], lineno)
+        if args[1].lower() in ("off", "===", "=="):
+            arps.pop(channel, None)
+            events.append(FMPitch(channel=channel, cents=0.0))
+            return False
+        try:
+            offsets = tuple(int(a) for a in args[1:])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: arp offsets must be whole semitones, "
+                f"got {' '.join(args[1:])!r}") from None
+        arps[channel] = offsets
+    elif head == "mark":
+        # Costs one line, names a section, and is the only thing that lets
+        # profile.py (or a human) ask "how loud was the breakdown" by name
+        # instead of by bar number. Bare `mark` (no label) still marks a
+        # boundary — profile.py numbers unlabelled ones itself.
+        events.append(Marker(label=" ".join(args)))
+    elif head in ("title", "author", "game", "notes"):
+        setattr(meta, head, " ".join(args))
+    elif head == "end":
+        return True
+    return False
+
+
+def _column(name: str, lineno: int) -> str:
+    key = name.lower()
+    resolved = _COLUMN_ALIASES.get(key, key)
+    if resolved not in _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac"):
+        raise TrackerError(
+            f"line {lineno}: unknown column {name!r}. Valid: "
+            f"{', '.join(_FM_COLUMNS + _PSG_COLUMNS + ('noise', 'dac'))}")
+    return resolved
+
+
+def _fm_channel(name: str, lineno: int) -> int:
+    column = _column(name, lineno)
+    if column not in _FM_COLUMNS:
+        raise TrackerError(f"line {lineno}: {name!r} is not an FM channel")
+    return int(column[2:])
+
+
+def transpose(note: str, octave: int, semitones: int):
+    """('A', 3, +3) -> ('C', 4). Octaves carry, as they must for chords."""
+    index = events_mod.NOTE_NAMES.index(note)
+    total = octave * 12 + index + semitones
+    return events_mod.NOTE_NAMES[total % 12], total // 12
+
+
+def chord_tones(root: str, octave: int, quality: str, count: int):
+    """The chord's notes, one per requested channel.
+
+    Asking for more channels than the chord has notes continues it upward
+    an octave at a time rather than doubling in unison — a five-channel
+    minor triad becomes root/third/fifth/root+8ve/third+8ve, which is how
+    anyone voicing this by hand would spread it.
+    """
+    offsets = CHORD_QUALITIES[quality]
+    tones = []
+    for i in range(count):
+        offset = offsets[i % len(offsets)] + 12 * (i // len(offsets))
+        tones.append(transpose(root, octave, offset))
+    return tones
+
+
+def resolve_quality(name: str, lineno: int) -> str:
+    key = CHORD_ALIASES.get(name, CHORD_ALIASES.get(name.lower(), name.lower()))
+    if key not in CHORD_QUALITIES:
+        raise TrackerError(
+            f"line {lineno}: unknown chord quality {name!r}. Valid: "
+            f"{', '.join(sorted(CHORD_QUALITIES))} "
+            f"(or {', '.join(sorted(CHORD_ALIASES))})")
+    return key
+
+
+def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
+    token = cell.strip()
+    if token in HOLD_TOKENS:
+        return
+    lowered = token.lower()
+
+    if column in _FM_COLUMNS:
+        ch = int(column[2:])
+        if lowered in OFF_TOKENS:
+            events.append(FMNoteOff(channel=ch))
+            fm_sounding[ch] = False
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-2, A#3, ===)\n  {raw.strip()}")
+        note, octave, velocity = parsed
+        events.append(FMNoteOn(channel=ch, note=note, octave=octave,
+                               velocity=velocity if velocity else 127))
+        fm_sounding[ch] = True
+        return
+
+    if column in _PSG_COLUMNS:
+        ch = int(column[3:])
+        if lowered in OFF_TOKENS:
+            events.append(PSGToneOff(channel=ch))
+            psg_sounding[ch] = False
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-4, A-4:8, ===)\n  {raw.strip()}")
+        note, octave, volume = parsed
+        events.append(PSGToneOn(channel=ch, note=note, octave=octave,
+                                volume=volume if volume is not None else 0))
+        psg_sounding[ch] = True
+        return
+
+    if column == "noise":
+        if lowered in OFF_TOKENS:
+            events.append(PSGNoiseOff())
+            return
+        m = _NOISE_CELL.match(token)
+        if not m:
+            raise TrackerError(f"line {lineno}: {token!r} is not a noise cell "
+                               f"(want w0-w3, p0-p3, ===)\n  {raw.strip()}")
+        kind, rate, volume = m.groups()
+        events.append(PSGNoiseOn(white=kind.lower() == "w", rate=int(rate),
+                                 volume=int(volume) if volume else 0))
+        return
+
+    if column == "dac":
+        if lowered in OFF_TOKENS:
+            return
+        name, _, level = token.partition(":")
+        volume = 1.0
+        if level:
+            try:
+                volume = float(level)
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {level!r} is not a DAC volume "
+                    f"(want 0.0-1.0, e.g. hat:0.5)\n  {raw.strip()}")
+            if not 0.0 <= volume <= 1.0:
+                raise TrackerError(
+                    f"line {lineno}: DAC volume {volume} is outside 0.0-1.0"
+                    f"\n  {raw.strip()}")
+        events.append(DACSample(name=name, volume=volume))
+        return
+
+
+def load(path: str):
+    with open(path, encoding="utf-8") as fh:
+        return loads(fh.read())
+
+
+# --------------------------------------------------------------------------
+# Rendering back to text
+# --------------------------------------------------------------------------
+#: How far dumps() may subdivide the row grid to fit off-grid events.
+#: A triplet arp inside a 16th needs 3, a 4-step one needs 4; past 16 the
+#: notation has stopped being readable and snapping is the better answer.
+_MAX_GRID_REFINEMENT = 16
+
+
+def _grid_refinement(events, ticks_per_row: int) -> int:
+    """Smallest factor that puts every event on a row boundary.
+
+    Returns 1 when the events already fit — the common case, so an
+    ordinary score keeps the row rate it was written at.
+    """
+    if ticks_per_row <= 1:
+        return 1
+    offsets = set()
+    tick = 0
+    for ev in events:
+        if isinstance(ev, Wait):
+            tick += ev.ticks
+            continue
+        if isinstance(ev, End):
+            break
+        offsets.add(tick % ticks_per_row)
+        if len(offsets) > 64:      # too scattered to be a subdivision
+            return 1
+    offsets.discard(0)
+    if not offsets:
+        return 1
+    for factor in range(2, _MAX_GRID_REFINEMENT + 1):
+        if ticks_per_row % factor:
+            continue
+        step = ticks_per_row // factor
+        if all(offset % step == 0 for offset in offsets):
+            return factor
+    return 1
+
+
+def dumps(events, meta: Metadata = None, columns=None,
+          refine: bool = True) -> str:
+    """Render an event list as tracker text.
+
+    Events are snapped to the row grid, so this is lossy for anything
+    written off-grid — which is the same trade every tracker makes, and
+    the reason the JSON list stays the authoritative form.
+
+    With `refine` (the default) the grid is chosen to fit the events
+    rather than the other way round: `arp` deliberately places FMPitch
+    events *inside* a row, and dumping those onto the row grid they were
+    subdividing snapped every one of them to a row boundary — measured on
+    this project's own demo as a 0.55 correlation against the original and
+    a tenth of a second of drift, while every event still round-tripped by
+    count. Silently returning different music is worse than returning
+    more rows, so the row rate is multiplied until the events land on it.
+    Pass refine=False for the old fixed-grid behaviour.
+    """
+    meta = meta or Metadata()
+    ticks_per_row = meta.ticks_per_row()
+    lpb = meta.lpb
+    if refine:
+        factor = _grid_refinement(events, ticks_per_row)
+        ticks_per_row //= factor
+        lpb *= factor
+    columns = list(columns) if columns else None
+
+    rows = {}        # row index -> {column: cell}
+    row_directives = {}   # row index -> [directive lines to print before it]
+    header = []
+    used = set()
+    tick = 0
+    max_row = 0
+
+    def directive(row, text):
+        """Row 0 directives are setup and belong in the header; later ones
+        are performance and have to stay where they happened."""
+        (header if row == 0 else row_directives.setdefault(row, [])).append(text)
+
+    def row_for(t):
+        return int(round(t / ticks_per_row))
+
+    for ev in events:
+        if isinstance(ev, Wait):
+            tick += ev.ticks
+            continue
+        if isinstance(ev, End):
+            break
+        # max_row counts CONTENT rows, not elapsed time. A trailing Wait
+        # with nothing after it is the last row's own duration, not an
+        # extra empty row -- counting it would make every dump/parse cycle
+        # grow the pattern by one line and never reach a fixed point.
+        r = row_for(tick)
+        max_row = max(max_row, r)
+        cell = rows.setdefault(r, {})
+
+        if isinstance(ev, FMInstrumentSelect):
+            directive(r, f"inst fm{ev.channel} {ev.instrument}")
+        elif isinstance(ev, FMPan):
+            side = ("C" if ev.left and ev.right else
+                    "L" if ev.left else "R" if ev.right else "off")
+            extra = f" {ev.ams} {ev.pms}" if (ev.ams or ev.pms) else ""
+            directive(r, f"pan fm{ev.channel} {side}{extra}")
+        elif isinstance(ev, FMLFO):
+            directive(r, f"lfo {'on' if ev.enable else 'off'} {ev.freq}")
+        elif isinstance(ev, FMVolume):
+            directive(r, f"vol fm{ev.channel} {ev.volume}")
+        elif isinstance(ev, PSGVolume):
+            target = "noise" if ev.channel == 3 else f"psg{ev.channel}"
+            directive(r, f"vol {target} {ev.volume}")
+        elif isinstance(ev, FMPitch):
+            directive(r, f"pitch fm{ev.channel} {ev.cents:g}")
+        elif isinstance(ev, Tempo):
+            directive(r, f"ticks {ev.ticks_per_second:g}")
+        elif isinstance(ev, LoopPoint):
+            directive(r, "loop")
+        elif isinstance(ev, Marker):
+            directive(r, f"mark {ev.label}".rstrip())
+        elif isinstance(ev, FMNoteOn):
+            used.add(f"fm{ev.channel}")
+            suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
+            cell[f"fm{ev.channel}"] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, FMNoteOff):
+            used.add(f"fm{ev.channel}")
+            cell[f"fm{ev.channel}"] = "==="
+        elif isinstance(ev, PSGToneOn):
+            used.add(f"psg{ev.channel}")
+            suffix = f":{ev.volume}" if ev.volume else ""
+            cell[f"psg{ev.channel}"] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, PSGToneOff):
+            used.add(f"psg{ev.channel}")
+            cell[f"psg{ev.channel}"] = "==="
+        elif isinstance(ev, PSGNoiseOn):
+            used.add("noise")
+            cell["noise"] = ("w" if ev.white else "p") + str(ev.rate) + \
+                            (f":{ev.volume}" if ev.volume else "")
+        elif isinstance(ev, PSGNoiseOff):
+            used.add("noise")
+            cell["noise"] = "==="
+        elif isinstance(ev, DACSample):
+            used.add("dac")
+            cell["dac"] = ev.name + (f":{ev.volume:g}" if ev.volume != 1.0
+                                     else "")
+
+    if columns is None:
+        order = _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+        columns = [c for c in order if c in used] or list(DEFAULT_COLUMNS)
+
+    widths = {c: max(len(c), 3) for c in columns}
+    for cells in rows.values():
+        for c, text in cells.items():
+            if c in widths:
+                widths[c] = max(widths[c], len(text))
+
+    out = [f"# chipgen tracker  ({meta.bpm:g} BPM, {lpb} rows/beat)"]
+    if meta.title:
+        out.append(f"title {meta.title}")
+    if meta.author:
+        out.append(f"author {meta.author}")
+    out.append(f"bpm {meta.bpm:g}")
+    out.append(f"lpb {lpb}")
+    out.extend(dict.fromkeys(header))     # de-duplicated, order preserved
+    out.append("cols " + " ".join(columns))
+    out.append("")
+    out.append("# " + " ".join(c.ljust(widths[c]) for c in columns))
+
+    for r in range(max_row + 1):
+        if r and lpb and r % (lpb * 4) == 0:
+            out.append("")                # blank line every bar, for the eyes
+        out.extend(row_directives.get(r, ()))
+        cells = rows.get(r, {})
+        line = " ".join(cells.get(c, "...").ljust(widths[c]) for c in columns)
+        out.append(line.rstrip())
+    return "\n".join(out) + "\n"
+
+
+def _note_cell(note: str, octave: int) -> str:
+    return f"{note[0]}{note[1] if len(note) > 1 else '-'}{octave}"
+
+
+def dump(events, path: str, meta: Metadata = None, columns=None) -> str:
+    text = dumps(events, meta, columns)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    return path
