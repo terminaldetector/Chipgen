@@ -171,6 +171,50 @@ class FMPitch(Event):
 # YM2612 DAC — channel 6 in PCM mode
 # --------------------------------------------------------------------------
 @dataclass
+class OPLInstrumentSelect(Event):
+    """Assign a patch to one of the OPL2's nine channels (0-8).
+
+    A separate family from FMInstrumentSelect on purpose: the YM3812 is a
+    different chip sitting alongside the YM2612, not a mode of it, and a
+    score can drive both at once.
+    """
+    channel: int
+    instrument: str
+
+
+@dataclass
+class OPLNoteOn(Event):
+    channel: int
+    note: str
+    octave: int
+    velocity: int = 127
+
+
+@dataclass
+class OPLNoteOff(Event):
+    channel: int
+
+
+@dataclass
+class OPLVolume(Event):
+    """Channel volume, 0-127, on the same linear-in-amplitude scale as FM."""
+    channel: int
+    volume: int = 127
+
+
+@dataclass
+class OPLDepth(Event):
+    """The chip's two global LFO depths (register 0xBD).
+
+    They are global, not per channel — one tremolo depth and one vibrato
+    depth for all nine voices — and only operators with their AM or VIB
+    bit set are affected at all.
+    """
+    tremolo: int = 0     # 0 = 1.0 dB, 1 = 4.8 dB
+    vibrato: int = 0     # 0 = 7 cents, 1 = 14 cents
+
+
+@dataclass
 class DACEnable(Event):
     """Switch FM channel 6 between normal FM and the 8-bit PCM DAC (register 0x2B)."""
     enable: bool = True
@@ -255,6 +299,11 @@ _EVENT_TYPES = {
     "FMLFO": FMLFO,
     "FMVolume": FMVolume,
     "FMPitch": FMPitch,
+    "OPLInstrumentSelect": OPLInstrumentSelect,
+    "OPLNoteOn": OPLNoteOn,
+    "OPLNoteOff": OPLNoteOff,
+    "OPLVolume": OPLVolume,
+    "OPLDepth": OPLDepth,
     "DACEnable": DACEnable,
     "DACSample": DACSample,
     "PSGToneOn": PSGToneOn,
@@ -279,6 +328,11 @@ SPEC: Dict[str, Dict[str, Any]] = {
     "FMLFO":              {"freq": (0, 7)},
     "FMVolume":           {"channel": (0, 5), "volume": (0, 127)},
     "FMPitch":            {"channel": (0, 5), "cents": (-4800, 4800)},
+    "OPLInstrumentSelect": {"channel": (0, 8)},
+    "OPLNoteOn":          {"channel": (0, 8), "octave": (0, 9), "velocity": (1, 127)},
+    "OPLNoteOff":         {"channel": (0, 8)},
+    "OPLVolume":          {"channel": (0, 8), "volume": (0, 127)},
+    "OPLDepth":           {"tremolo": (0, 1), "vibrato": (0, 1)},
     "DACEnable":          {},
     "DACSample":          {"rate": (0, 96_000), "volume": (0.0, 1.0)},
     "PSGToneOn":          {"channel": (0, 2), "octave": (0, 9), "volume": (0, 15)},
@@ -299,6 +353,8 @@ TYPE_ALIASES = {
     "noiseon": "PSGNoiseOn", "noiseoff": "PSGNoiseOff",
     "pan": "FMPan", "lfo": "FMLFO", "volume": "FMVolume", "pitch": "FMPitch",
     "dac": "DACSample", "sample": "DACSample",
+    "oplnote": "OPLNoteOn", "oplon": "OPLNoteOn", "oploff": "OPLNoteOff",
+    "oplinstrument": "OPLInstrumentSelect", "adlib": "OPLNoteOn",
     "loop": "LoopPoint", "comment": "Marker", "stop": "End", "finish": "End",
 }
 

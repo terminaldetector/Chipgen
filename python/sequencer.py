@@ -30,22 +30,31 @@ import mixer
 import samples as samples_mod
 import sn76489
 import instruments as instruments_mod
-from mixer import DEFAULT_PSG_GAIN
+from mixer import DEFAULT_OPL_GAIN, DEFAULT_PSG_GAIN
 
 DEFAULT_TICKS_PER_SECOND = 192.0
+
+#: Which events mean "this score plays the OPL2".
+_OPL_EVENTS = ("OPLNoteOn", "OPLInstrumentSelect", "OPLVolume", "OPLDepth")
+
+
+def _uses_opl(event_list) -> bool:
+    return any(type(e).__name__ in _OPL_EVENTS for e in event_list)
 
 
 
 class Sequencer:
     def __init__(self, ticks_per_second: float = DEFAULT_TICKS_PER_SECOND,
                  target_rate: int = 44100, fm_gain: float = 1.0,
-                 psg_gain: float = DEFAULT_PSG_GAIN, pal: bool = False,
+                 psg_gain: float = DEFAULT_PSG_GAIN,
+                 opl_gain: float = DEFAULT_OPL_GAIN, pal: bool = False,
                  dc_block: bool = True,
                  chip_type: str = opn2.DEFAULT_CHIP_TYPE):
         self.ticks_per_second = ticks_per_second
         self.target_rate = target_rate
         self.fm_gain = fm_gain
         self.psg_gain = psg_gain
+        self.opl_gain = opl_gain
         self.pal = pal
         #: "ym2612" (discrete, Model 1, has the DAC ladder) or "ym3438"
         #: (later ASIC, clean). See opn2.CHIP_TYPES.
@@ -104,16 +113,26 @@ class Sequencer:
         fm_rate = ym.native_rate
         psg_rate = psg.native_rate
 
-        state = _RenderState(ym, psg, fm_rate, writer, want_audio)
+        # The OPL2 is built only if the score plays it. It is a pure-Python
+        # core, so an unused chip that still renders silence would be the
+        # most expensive thing in the run.
+        opl = None
+        if _uses_opl(event_list):
+            import opl2 as opl2_mod
+            opl = opl2_mod.YM3812()
+
+        state = _RenderState(ym, psg, fm_rate, writer, want_audio, opl)
         rate = float(self.ticks_per_second)
-        fm_pending = psg_pending = 0.0
-        fm_chunks, psg_chunks = [], []
+        fm_pending = psg_pending = opl_pending = 0.0
+        fm_chunks, psg_chunks, opl_chunks = [], [], []
+        opl_rate = opl.native_rate if opl is not None else 0.0
 
         for ev in event_list:
             if isinstance(ev, events_mod.Wait):
                 dt = ev.ticks / rate
                 fm_pending += dt * fm_rate
                 psg_pending += dt * psg_rate
+                opl_pending += dt * opl_rate
                 continue
             if isinstance(ev, events_mod.Tempo):
                 rate = max(1.0, float(ev.ticks_per_second))
@@ -121,8 +140,9 @@ class Sequencer:
             if isinstance(ev, events_mod.End):
                 break
 
-            fm_pending, psg_pending = self._catch_up(
-                state, fm_chunks, psg_chunks, fm_pending, psg_pending)
+            fm_pending, psg_pending, opl_pending = self._catch_up(
+                state, fm_chunks, psg_chunks, opl_chunks,
+                fm_pending, psg_pending, opl_pending)
 
             if isinstance(ev, events_mod.LoopPoint):
                 if writer is not None:
@@ -138,20 +158,25 @@ class Sequencer:
         if tail > 0:
             fm_pending += tail * fm_rate
             psg_pending += tail * psg_rate
+            opl_pending += tail * opl_rate
 
-        self._catch_up(state, fm_chunks, psg_chunks, fm_pending, psg_pending,
-                       final=True)
+        self._catch_up(state, fm_chunks, psg_chunks, opl_chunks,
+                       fm_pending, psg_pending, opl_pending, final=True)
 
         ym.close()
         psg.close()
+        if opl is not None:
+            opl.close()
 
         if not want_audio:
             return None
         return self._mix(_audio.concat(fm_chunks, 2), _audio.concat(psg_chunks, 1),
-                         fm_rate, psg_rate)
+                         fm_rate, psg_rate,
+                         _audio.concat(opl_chunks, 1) if opl_chunks else None,
+                         opl_rate)
 
-    def _catch_up(self, state, fm_chunks, psg_chunks, fm_pending, psg_pending,
-                  final: bool = False):
+    def _catch_up(self, state, fm_chunks, psg_chunks, opl_chunks,
+                  fm_pending, psg_pending, opl_pending, final: bool = False):
         """Render the time owed since the last event, then return the
         sub-sample remainders so timing never drifts."""
         n_fm = int(round(fm_pending)) if final else int(fm_pending)
@@ -166,11 +191,17 @@ class Sequencer:
             if chunk is not None:
                 psg_chunks.append(chunk)
             psg_pending -= n_psg
-        return fm_pending, psg_pending
+        n_opl = int(round(opl_pending)) if final else int(opl_pending)
+        if n_opl > 0:
+            chunk = state.render_opl(n_opl)
+            if chunk is not None:
+                opl_chunks.append(chunk)
+            opl_pending -= n_opl
+        return fm_pending, psg_pending, opl_pending
 
     @staticmethod
     def _apply(ev, state):
-        ym, psg = state.ym, state.psg
+        ym, psg, opl = state.ym, state.psg, state.opl
         E = events_mod
         if isinstance(ev, E.FMInstrumentSelect):
             # instruments.get() rather than BANK[...]: a typo'd or
@@ -190,6 +221,23 @@ class Sequencer:
             ym.set_volume(ev.channel, ev.volume)
         elif isinstance(ev, E.FMPitch):
             ym.set_pitch_offset(ev.channel, ev.cents)
+        elif isinstance(ev, E.OPLInstrumentSelect):
+            if opl is not None:
+                import opl_instruments
+                opl.set_instrument(ev.channel, opl_instruments.get(ev.instrument))
+        elif isinstance(ev, E.OPLNoteOn):
+            if opl is not None:
+                opl.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
+        elif isinstance(ev, E.OPLNoteOff):
+            if opl is not None:
+                opl.note_off(ev.channel)
+        elif isinstance(ev, E.OPLVolume):
+            if opl is not None:
+                opl.set_volume(ev.channel, ev.volume)
+        elif isinstance(ev, E.OPLDepth):
+            if opl is not None:
+                opl.tremolo_depth = ev.tremolo
+                opl.vibrato_depth = ev.vibrato
         elif isinstance(ev, E.DACEnable):
             ym.set_dac_enable(ev.enable)
         elif isinstance(ev, E.DACSample):
@@ -208,18 +256,23 @@ class Sequencer:
             raise ValueError(f"unknown event: {ev!r}")
 
     # ------------------------------------------------------------------ mix
-    def _mix(self, fm_audio, psg_audio, fm_rate: float, psg_rate: float):
+    def _mix(self, fm_audio, psg_audio, fm_rate: float, psg_rate: float,
+             opl_audio=None, opl_rate: float = 0.0):
         return mixer.mix(fm_audio, psg_audio, fm_rate, psg_rate,
                          self.target_rate, fm_gain=self.fm_gain,
-                         psg_gain=self.psg_gain, dc_block=self.dc_block)
+                         psg_gain=self.psg_gain, dc_block=self.dc_block,
+                         opl_audio=opl_audio, opl_rate=opl_rate,
+                         opl_gain=self.opl_gain)
 
 
 class _RenderState:
     """Everything the render loop mutates: the chips plus the DAC stream."""
 
-    def __init__(self, ym, psg, fm_rate: float, writer, want_audio: bool):
+    def __init__(self, ym, psg, fm_rate: float, writer, want_audio: bool,
+                 opl=None):
         self.ym = ym
         self.psg = psg
+        self.opl = opl
         self.fm_rate = fm_rate
         self.writer = writer
         self.want_audio = want_audio
@@ -304,6 +357,11 @@ class _RenderState:
         if not self.want_audio:
             return None
         return _audio.concat(chunks, 2)
+
+    def render_opl(self, n_samples: int):
+        if self.opl is None or not self.want_audio:
+            return None
+        return self.opl.render(n_samples)
 
     def render_psg(self, n_samples: int):
         # The PSG has no equivalent of the DAC stream and the VGM clock is

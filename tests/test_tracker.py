@@ -265,3 +265,20 @@ def test_refinement_leaves_an_ordinary_score_alone():
     events, meta = tracker.loads(src)
     assert tracker._grid_refinement(events, meta.ticks_per_row()) == 1
     assert "lpb 4" in tracker.dumps(events, meta)
+
+
+def test_a_flat_with_the_ordinary_separator_stays_in_its_octave():
+    # `Bb-3` used to parse as B-flat in octave MINUS three: the `-` fell
+    # into the accidental group and the octave group happily took the sign.
+    # Nothing complained, and the note came out three octaves low.
+    assert tracker.parse_note("Bb-3") == ("A#", 3, None)
+    assert tracker.parse_note("Eb-2") == ("D#", 2, None)
+    assert tracker.parse_note("A#-3") == ("A#", 3, None)
+    # Every other spelling of the same note has to agree with it.
+    assert (tracker.parse_note("Bb3") == tracker.parse_note("Bb-3")
+            == tracker.parse_note("A#3") == tracker.parse_note("A#-3"))
+
+
+def test_notes_that_are_not_notes_still_reject():
+    for bad in ("H-4", "A-", "A-12", "", "A#b3", "-3"):
+        assert tracker.parse_note(bad) is None, bad

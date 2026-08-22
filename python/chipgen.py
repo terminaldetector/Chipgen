@@ -176,7 +176,7 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
             bpm: float = None, ticks_per_second: float = None,
             target_rate: int = 44100, title: str = "", author: str = "",
             pal: bool = False, dc_block: bool = True,
-            chip_type: str = None, bank: str = None,
+            chip_type: str = None, bank: str = None, opl_bank: str = None,
             normalize: float = None, quiet: bool = True):
     """Render tracker text / JSON events / Event objects to audio.
 
@@ -198,6 +198,9 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         # Merged into the shared bank, so names from an imported set and the
         # built-in ones are referenced the same way in a score.
         instruments_mod.load_bank(bank)
+    if opl_bank:
+        import opl_instruments
+        opl_instruments.load_bank(opl_bank)
 
     events, warnings, metadata = to_events(source, ticks_per_second)
 
@@ -222,6 +225,16 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.title = "chipgen"
 
     warnings = warnings + sanity_mod.check(events, rate)
+    if vgm:
+        import sequencer as sequencer_mod
+        if sequencer_mod._uses_opl(events):
+            warnings.append(
+                "this score plays the OPL2, and the .vgm will NOT contain "
+                "those parts. The VGM writer logs the YM2612 and the "
+                "SN76489; chipgen's YM3812 is driven through its own API "
+                "rather than a register interface, so there is nothing to "
+                "log. The .wav and the .it are complete — the .vgm is the "
+                "Genesis half only")
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
     if normalize:
@@ -387,6 +400,8 @@ def main(argv):
                              "(default 0.89; --peak 0 to leave levels alone)")
     parser.add_argument("--bank", metavar="BANK.JSON",
                         help="load extra instruments (see vgm_import.py)")
+    parser.add_argument("--opl-bank", metavar="BANK.JSON",
+                        help="load extra OPL2 patches (see opl_import.py)")
     parser.add_argument("--chip", default=None, choices=("ym2612", "ym3438"),
                         help="ym2612 = discrete Model 1 (DAC ladder, gritty); "
                              "ym3438 = later ASIC (clean). Default ym2612.")
@@ -431,6 +446,7 @@ def main(argv):
         args.wav = "output/chipgen.wav"
 
     result = compose(source, wav=args.wav, vgm=args.vgm, it=args.it,
+                     opl_bank=args.opl_bank,
                      tracker_out=args.tracker, ticks_per_second=args.ticks,
                      target_rate=args.rate, title=args.title,
                      author=args.author, pal=args.pal,

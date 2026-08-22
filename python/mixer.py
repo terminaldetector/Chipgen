@@ -29,6 +29,12 @@ import audio as _audio
 #: board revision. Override it if you are matching a specific console.
 DEFAULT_PSG_GAIN = 0.65
 
+#: The OPL2 is mono and its nine voices already share one output stage, so
+#: it arrives hotter than the PSG per note. Set by the same reasoning as
+#: the PSG gain: loud enough to sit in the mix, quiet enough that nine
+#: voices at once do not swamp the FM.
+DEFAULT_OPL_GAIN = 0.75
+
 #: Ceiling for the safety limiter, leaving a little room below clipping.
 #: This only ever attenuates, and only when a mix would otherwise clip.
 NORMALISE_TARGET = 0.98
@@ -45,17 +51,28 @@ DEFAULT_MASTER_PEAK = 0.89
 
 def mix(fm_audio, psg_audio, fm_rate: float, psg_rate: float,
         target_rate: int, fm_gain: float = 1.0,
-        psg_gain: float = DEFAULT_PSG_GAIN, dc_block: bool = True):
-    """Resample both chips to target_rate, balance, centre and normalise."""
+        psg_gain: float = DEFAULT_PSG_GAIN, dc_block: bool = True,
+        opl_audio=None, opl_rate: float = 0.0,
+        opl_gain: float = DEFAULT_OPL_GAIN):
+    """Resample every chip to target_rate, balance, centre and normalise.
+
+    The OPL2 is optional and mono, and is skipped entirely when a score
+    does not use it — resampling an empty buffer is cheap, but building
+    one is not.
+    """
     fm = _audio.resample(fm_audio, fm_rate, target_rate)
     psg = _audio.resample(psg_audio, psg_rate, target_rate)
+    opl = (_audio.resample(opl_audio, opl_rate, target_rate)
+           if opl_audio is not None and len(opl_audio) and opl_rate else None)
 
-    frames = max(len(fm), len(psg))
+    frames = max(len(fm), len(psg), len(opl) if opl is not None else 0)
     out = _audio.zeros(frames, 2)
     if len(fm):
         _audio.add_stereo_into(out, fm, fm_gain)
     if len(psg):
         _audio.add_mono_into_stereo(out, psg, psg_gain)
+    if opl is not None and len(opl):
+        _audio.add_mono_into_stereo(out, opl, opl_gain)
 
     if dc_block:
         out = remove_dc(out)

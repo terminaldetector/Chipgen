@@ -91,7 +91,8 @@ import re
 import events as events_mod
 from events import (DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
                     FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
-                    PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
+                    OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
+                    OPLVolume, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
                     PSGVolume, Tempo, Wait)
 
 DEFAULT_BPM = 150.0
@@ -102,6 +103,9 @@ HOLD_TOKENS = {"...", "..", ".", "--", "---", "-", "~", ""}
 OFF_TOKENS = {"===", "==", "off", "^^^", "^"}
 
 _FM_COLUMNS = tuple(f"fm{i}" for i in range(6))
+#: The OPL2's nine two-operator voices, addressed separately from the
+#: YM2612's six because they are a different chip, not a mode of it.
+_OPL_COLUMNS = tuple(f"opl{i}" for i in range(9))
 _PSG_COLUMNS = tuple(f"psg{i}" for i in range(3))
 _COLUMN_ALIASES = {}
 for _i in range(6):
@@ -109,6 +113,9 @@ for _i in range(6):
 for _i in range(3):
     _COLUMN_ALIASES[f"p{_i}"] = f"psg{_i}"
     _COLUMN_ALIASES[f"psg{_i}"] = f"psg{_i}"
+for _i in range(9):
+    _COLUMN_ALIASES[f"o{_i}"] = f"opl{_i}"
+    _COLUMN_ALIASES[f"opl{_i}"] = f"opl{_i}"
 _COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
                         "d": "dac", "pcm": "dac", "dac": "dac"})
 
@@ -116,7 +123,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
-              "author", "game", "notes", "end"}
+              "author", "game", "notes", "end", "opldepth"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
 #: conventional on purpose: this exists so a four-note voicing is one line
@@ -139,7 +146,12 @@ CHORD_ALIASES = {"m": "min", "-": "min", "M": "maj", "": "maj",
                  "6": "maj6", "m6": "min6", "half-dim": "m7b5",
                  "aug7": "aug", "+": "aug", "o": "dim", "o7": "dim7"}
 
-_NOTE_CELL = re.compile(r"^([A-Ga-g])([#b\-]?)(-?\d)(?::(\d+))?$")
+#: letter, optional accidental, optional `-` separator, octave, optional
+#: `:param`. The separator is its own group on purpose: folding it into
+#: the accidental made `Bb-3` read as B-flat in octave MINUS three, so a
+#: flat written with the ordinary separator landed three octaves low and
+#: nothing complained. Octaves are unsigned — the chips have none below 0.
+_NOTE_CELL = re.compile(r"^([A-Ga-g])([#b]?)-?(\d)(?::(\d+))?$")
 #: `;` always starts a comment; `#` only at line start or after whitespace,
 #: so that the sharp in `A#2` survives.
 _COMMENT = re.compile(r"(?:(?:^|(?<=\s))#|;)")
@@ -324,13 +336,23 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
         columns[:] = [_column(a, lineno) for a in args]
     elif head == "inst":
         need(2, "a channel and an instrument, e.g. `inst fm0 bass`")
-        events.append(FMInstrumentSelect(channel=_fm_channel(args[0], lineno),
-                                         instrument=args[1]))
+        target = _column(args[0], lineno)
+        if target in _OPL_COLUMNS:
+            events.append(OPLInstrumentSelect(channel=int(target[3:]),
+                                              instrument=args[1]))
+        else:
+            events.append(FMInstrumentSelect(
+                channel=_fm_channel(args[0], lineno), instrument=args[1]))
+    elif head == "opldepth":
+        need(2, "a tremolo and a vibrato depth, e.g. `opldepth 0 1`")
+        events.append(OPLDepth(tremolo=int(args[0]), vibrato=int(args[1])))
     elif head == "vol":
         need(2, "a channel and a level, e.g. `vol fm0 100`")
         target = _column(args[0], lineno)
         if target in _FM_COLUMNS:
             events.append(FMVolume(channel=int(target[2:]), volume=int(args[1])))
+        elif target in _OPL_COLUMNS:
+            events.append(OPLVolume(channel=int(target[3:]), volume=int(args[1])))
         elif target in _PSG_COLUMNS:
             events.append(PSGVolume(channel=int(target[3:]), volume=int(args[1])))
         elif target == "noise":
@@ -415,10 +437,11 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
 def _column(name: str, lineno: int) -> str:
     key = name.lower()
     resolved = _COLUMN_ALIASES.get(key, key)
-    if resolved not in _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac"):
+    valid = _FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+    if resolved not in valid:
         raise TrackerError(
             f"line {lineno}: unknown column {name!r}. Valid: "
-            f"{', '.join(_FM_COLUMNS + _PSG_COLUMNS + ('noise', 'dac'))}")
+            f"{', '.join(valid)}")
     return resolved
 
 
@@ -482,6 +505,20 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(FMNoteOn(channel=ch, note=note, octave=octave,
                                velocity=velocity if velocity else 127))
         fm_sounding[ch] = True
+        return
+
+    if column in _OPL_COLUMNS:
+        ch = int(column[3:])
+        if lowered in OFF_TOKENS:
+            events.append(OPLNoteOff(channel=ch))
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-4, A#3, ===)\n  {raw.strip()}")
+        note, octave, velocity = parsed
+        events.append(OPLNoteOn(channel=ch, note=note, octave=octave,
+                                velocity=velocity if velocity else 127))
         return
 
     if column in _PSG_COLUMNS:
@@ -645,6 +682,19 @@ def dumps(events, meta: Metadata = None, columns=None,
             directive(r, f"lfo {'on' if ev.enable else 'off'} {ev.freq}")
         elif isinstance(ev, FMVolume):
             directive(r, f"vol fm{ev.channel} {ev.volume}")
+        elif isinstance(ev, OPLInstrumentSelect):
+            directive(r, f"inst opl{ev.channel} {ev.instrument}")
+        elif isinstance(ev, OPLVolume):
+            directive(r, f"vol opl{ev.channel} {ev.volume}")
+        elif isinstance(ev, OPLDepth):
+            directive(r, f"opldepth {ev.tremolo} {ev.vibrato}")
+        elif isinstance(ev, OPLNoteOn):
+            used.add(f"opl{ev.channel}")
+            suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
+            cell[f"opl{ev.channel}"] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, OPLNoteOff):
+            used.add(f"opl{ev.channel}")
+            cell[f"opl{ev.channel}"] = "==="
         elif isinstance(ev, PSGVolume):
             target = "noise" if ev.channel == 3 else f"psg{ev.channel}"
             directive(r, f"vol {target} {ev.volume}")
@@ -683,7 +733,7 @@ def dumps(events, meta: Metadata = None, columns=None,
                                      else "")
 
     if columns is None:
-        order = _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+        order = _FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
         columns = [c for c in order if c in used] or list(DEFAULT_COLUMNS)
 
     widths = {c: max(len(c), 3) for c in columns}

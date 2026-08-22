@@ -387,6 +387,118 @@
       },
       "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed — vibrato, pitch envelopes and slides are\n    a series of these."
     },
+    "OPLInstrumentSelect": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "instrument": {
+          "type": "str"
+        }
+      },
+      "doc": "Assign a patch to one of the OPL2's nine channels (0-8).\n\n    A separate family from FMInstrumentSelect on purpose: the YM3812 is a\n    different chip sitting alongside the YM2612, not a mode of it, and a\n    score can drive both at once."
+    },
+    "OPLNoteOn": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "note": {
+          "type": "str",
+          "values": [
+            "C",
+            "C#",
+            "D",
+            "D#",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "G#",
+            "A",
+            "A#",
+            "B"
+          ]
+        },
+        "octave": {
+          "type": "int",
+          "range": [
+            0,
+            9
+          ]
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            1,
+            127
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "OPLNoteOff": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "OPLVolume": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Channel volume, 0-127, on the same linear-in-amplitude scale as FM."
+    },
+    "OPLDepth": {
+      "fields": {
+        "tremolo": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "vibrato": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            1
+          ]
+        }
+      },
+      "doc": "The chip's two global LFO depths (register 0xBD).\n\n    They are global, not per channel — one tremolo depth and one vibrato\n    depth for all nine voices — and only operators with their AM or VIB\n    bit set are affected at all."
+    },
     "DACEnable": {
       "fields": {
         "enable": {
@@ -548,6 +660,7 @@
       "lpb",
       "mark",
       "notes",
+      "opldepth",
       "pan",
       "pitch",
       "ticks",
