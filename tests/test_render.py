@@ -411,3 +411,74 @@ def test_swapping_operators_two_and_three_changes_the_sound():
     reference = audio.rms(straight[:n])
     assert difference > reference * 0.1, \
         "swapping two operators changed nothing — the ordering is not applied"
+
+
+def test_no_patch_in_the_bank_is_silent():
+    # Every patch has to actually reach the output. The way this goes wrong
+    # is not subtle in the code and completely invisible in a render: a
+    # carrier left at Total Level 127 is -95 dB, so the patch is present,
+    # correctly programmed, and inaudible. Which operator is a carrier
+    # depends on the algorithm, so a bank authored as if operator 1 were
+    # the output produces exactly this on algorithms 0-6.
+    #
+    # Measured on the YM3438 core on purpose. The discrete YM2612's
+    # resistor ladder puts out 0.01538 RMS with no note playing at all, so
+    # on that revision a dead patch and a live one both read "about
+    # 0.0154" and any threshold you pick is measuring the ladder.
+    import audio
+    import instruments
+    import opn2
+
+    silence = opn2.YM2612(chip_type="ym3438")
+    floor = audio.rms(silence.render(int(silence.native_rate * 0.1)))
+    silence.close()
+    assert floor == 0.0, f"ym3438 should be silent when idle, got {floor}"
+
+    quiet = []
+    for name in instruments.names():
+        chip = opn2.YM2612(chip_type="ym3438")
+        chip.set_instrument(0, instruments.get(name))
+        chip.set_pan(0, True, True)
+        chip.note_on(0, "C", 4)
+        buffer = chip.render(int(chip.native_rate * 0.4))
+        chip.close()
+        # Peak rather than RMS: a kick is a short transient followed by
+        # silence, and averaging the silence reports it 15 dB down for
+        # being short rather than for being quiet.
+        peak = max(max(abs(left), abs(right)) for left, right in buffer)
+        if peak < 0.01:                       # -40 dBFS, generous
+            quiet.append((name, peak))
+    assert not quiet, "patches that never reach the output: " + ", ".join(
+        f"{name} (peak {peak:.6f})" for name, peak in quiet)
+
+
+def test_carrier_indices_follow_the_algorithm_not_the_list_position():
+    # Algorithm 4 is 1->2, 3->4: the carriers are operators 2 and 4. Read
+    # off a block diagram that is list positions 1 and 3, but the operator
+    # list is in register order (op1, op3, op2, op4), where operator 2 sits
+    # at position 2. Getting this backwards points a volume control at a
+    # modulator, which changes the timbre instead of the level.
+    import instruments
+    import opn2
+
+    mute = opn2.Operator(multiple=1, total_level=127, attack_rate=31)
+    loud = opn2.Operator(multiple=1, total_level=0, attack_rate=31,
+                         decay_rate=0, sustain_rate=0, release_rate=7,
+                         sustain_level=0)
+
+    # op2 and op4 loud, op1 and op3 muted: on algorithm 4 both carriers are
+    # open, so this must sound. Position-based reasoning would call op3 a
+    # carrier and expect this to be half-dead.
+    voice = instruments.patch("probe", 4, 0, mute, loud, mute, loud)
+    assert voice.carrier_indices() == (2, 3), \
+        f"algorithm 4 carriers are op2/op4 at list positions 2 and 3, " \
+        f"got {voice.carrier_indices()}"
+
+    chip = opn2.YM2612(chip_type="ym3438")
+    chip.set_instrument(0, voice)
+    chip.set_pan(0, True, True)
+    chip.note_on(0, "C", 4)
+    buffer = chip.render(int(chip.native_rate * 0.3))
+    chip.close()
+    peak = max(max(abs(left), abs(right)) for left, right in buffer)
+    assert peak > 0.05, f"both carriers open on algorithm 4 but peak is {peak}"
