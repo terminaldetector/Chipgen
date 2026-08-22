@@ -7,7 +7,15 @@ score into audio through them. Not a synthesiser imitating that sound: the
 same registers, the same protocol, the same timings.
 
 If you are a language model that has just been handed this archive: this
-page is everything you need. Read it, run the two commands, write a score.
+page is everything you need to *write a score*. Read it, run the two
+commands, compose.
+
+If you are going to touch the chip below the score layer — designing
+instrument patches, writing register values, building a bank — read
+`bridge/CORE.md` first. It is the hardware, measured, including about a
+dozen places where the YM2612 contradicts what is generally true of FM
+synthesis. Every one of them fails silently: the render succeeds and the
+output is wrong.
 
 ---
 

@@ -5,6 +5,12 @@ Upload `chipgen-bridge.zip` to any chat model that can run Python
 model with a tool runner) and paste one of these alongside it. Nothing is
 deployed, nothing is installed — the archive carries its own engine.
 
+**Installing chipgen as a plugin instead of a zip?** The prompt to give
+the model is `bridge/CORE.md`, not this file. This file is the *task*;
+`CORE.md` is what the model needs to know about the hardware before any
+task makes sense. A session that has read only the notation writes scores
+that render successfully and sound wrong.
+
 ---
 
 ## Short version
@@ -57,6 +63,109 @@ what it found, and `START_HERE.md` is written for a model to read.
 > сочиняешь напрямую в регистры чипа.
 
 ---
+
+---
+
+## The demo request
+
+This is the one to use when you want to *show someone what chipgen is*.
+It is not the shortest prompt — it is the one whose output proves the
+model understood the machine rather than pattern-matched "chiptune".
+
+Two rules make it a demo rather than a generation: it asks for structure
+the engine can measure, and it asks the model to hand back the
+measurements. A track with real dynamic structure is the one thing you
+cannot fake past `--profile`.
+
+> Во вложении chipgen — движок чиптюна поверх настоящей эмуляции YM2612 +
+> SN76489 (Sega Mega Drive). Не «звук под чиптюн», а те же регистры и тот
+> же протокол записи; `.vgm` на выходе открывается в DefleMask и Furnace.
+>
+> 1. Распакуй, выполни `python3 bridge/bootstrap.py`, дождись `READY`.
+> 2. Прочитай `bridge/CORE.md` — это про сам чип, и там есть вещи,
+>    которые противоречат общим знаниям об FM-синтезе. Потом
+>    `START_HERE.md` — это нотация.
+> 3. Прочитай `corpus/STUDY.md`. Это 79 реальных треков с Mega Drive,
+>    измеренных. Пиши в этой идиоме, а не в «чиптюн вообще».
+>
+> Сочини **60–90 секунд** оригинальной музыки: **<стиль, тональность,
+> темп, ориентиры>**. Требования:
+>
+> - Настоящая структура, минимум четыре секции, размеченные `mark`
+>   (например intro / main / breakdown / outro). Брейкдаун должен
+>   реально проваливаться по плотности, а не просто менять ноты.
+> - Задействуй чип целиком: несколько FM-каналов, больше одного
+>   PSG-тона, шум и DAC. Помни, что DAC забирает шестой FM-канал —
+>   планируй аранжировку с этим, а не вопреки.
+> - Динамика: не все ноты на 127. В корпусе медианная velocity — 21 из
+>   127. Вибрато порядка 30–40 центов, а не полтона.
+> - Стерео: разведи FM-каналы, не держи всё по центру.
+>
+> Отрендери и измерь:
+>
+> ```
+> python3 python/chipgen.py demo.trk -o demo.wav --vgm demo.vgm --profile
+> ```
+>
+> Пришли: `demo.trk`, `demo.wav`, `demo.vgm`, **полный вывод команды** —
+> и предупреждения, и таблицу `--profile` по секциям.
+>
+> Приёмка, проверь сам до того, как отдашь:
+> - в выводе нет ни одной строки `warning:`;
+> - в таблице `--profile` брейкдаун заметно тише main-секции. Если
+>   разница в пределах пары процентов — это не брейкдаун, перепиши
+>   аранжировку и отрендери заново;
+> - `demo.vgm` существует и весит килобайты, а не байты.
+>
+> Если что-то не сошлось — скажи, что именно, и покажи вывод. Не отдавай
+> «примерно нормально».
+
+### English
+
+> Attached is chipgen, a chiptune engine driving real YM2612 + SN76489
+> emulation (Sega Mega Drive). Not chiptune-flavoured synthesis: the same
+> registers, the same write protocol; the `.vgm` it emits opens in
+> DefleMask and Furnace.
+>
+> 1. Unzip, run `python3 bridge/bootstrap.py`, wait for `READY`.
+> 2. Read `bridge/CORE.md` — it is about the chip itself, and several
+>    items in it contradict general knowledge about FM synthesis. Then
+>    `START_HERE.md` for the notation.
+> 3. Read `corpus/STUDY.md`: 79 real Mega Drive tracks, measured. Write
+>    in that idiom rather than in "chiptune" generally.
+>
+> Compose **60–90 seconds** of original music: **<style, key, tempo,
+> references>**. Requirements:
+>
+> - Real structure, at least four sections delimited with `mark`
+>   (intro / main / breakdown / outro). The breakdown must actually drop
+>   in density, not just change notes.
+> - Use the whole chip: several FM channels, more than one PSG tone,
+>   noise and DAC. Remember the DAC takes FM channel 6 — arrange around
+>   that rather than against it.
+> - Dynamics: not every note at 127. Median velocity in the corpus is 21
+>   of 127. Vibrato around 30–40 cents, not a semitone.
+> - Stereo: spread the FM channels, do not leave everything centred.
+>
+> Render and measure:
+>
+> ```
+> python3 python/chipgen.py demo.trk -o demo.wav --vgm demo.vgm --profile
+> ```
+>
+> Send back `demo.trk`, `demo.wav`, `demo.vgm` and **the complete command
+> output** — both the warnings and the per-section `--profile` table.
+>
+> Acceptance, check it yourself before handing it over:
+> - no `warning:` line in the output;
+> - in the `--profile` table the breakdown is clearly quieter than the
+>   main section. A couple of percent apart is not a breakdown — rewrite
+>   the arrangement and render again;
+> - `demo.vgm` exists and is kilobytes, not bytes.
+>
+> If something does not line up, say what and show the output. Do not
+> hand over "close enough".
+
 
 ---
 

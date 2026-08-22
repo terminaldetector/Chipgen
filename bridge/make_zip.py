@@ -34,6 +34,7 @@ INCLUDE_FILES = [
     "bridge/bootstrap.py",
     "bridge/make_zip.py",
     "bridge/manifest.json",
+    "bridge/CORE.md",
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
     "corpus/STUDY.md",
