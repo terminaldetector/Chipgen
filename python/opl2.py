@@ -334,7 +334,7 @@ class _Slot:
 
 class _Channel:
     __slots__ = ("fnum", "block", "key_on", "feedback", "connection", "slots",
-                 "instrument", "shift", "volume")
+                 "instrument", "shift", "volume", "note")
 
     def __init__(self):
         self.fnum = 0
@@ -345,6 +345,7 @@ class _Channel:
         self.instrument = None
         self.shift = 0
         self.volume = 127
+        self.note = None            # (name, octave), for relative retuning
         self.slots = (_Slot(self), _Slot(self))
 
     def refresh(self):
@@ -512,6 +513,7 @@ class YM3812:
 
     def note_on(self, channel: int, note: str, octave: int, velocity: int = 127):
         chan = self.channels[channel]
+        chan.note = (note, octave)
         fnum, block = freq_to_fnum_block(note_to_freq(note, octave), self.clock)
         self._write_levels(channel, chan.volume, velocity)
         self.write(REG_FNUM_LOW + channel, fnum & 0xFF)
@@ -541,6 +543,20 @@ class YM3812:
         chan = self.channels[channel]
         chan.volume = max(0, min(127, volume))
         self._write_levels(channel, chan.volume, 127)
+
+    def set_pitch_offset(self, channel: int, cents: float):
+        """Retune a sounding channel without retriggering it.
+
+        Relative to the note that was keyed on, so calls do not compound.
+        The OPL2's ten-bit F-Number quantises this: at the top of a block
+        a cent of intent can be several cents of result, which is the
+        hardware and not a rounding choice made here.
+        """
+        held = self.channels[channel].note
+        if held is None:
+            return
+        self.set_pitch(channel, note_to_freq(*held)
+                       * (2.0 ** (cents / 1200.0)))
 
     def set_pitch(self, channel: int, frequency: float):
         """Retune without retriggering — the OPL's own portamento."""

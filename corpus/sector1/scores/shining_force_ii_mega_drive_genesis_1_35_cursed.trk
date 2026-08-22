@@ -1,0 +1,29 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 54 notes over 1.4s; the grid fits 98% of the
+# onsets at 110.5 ms per row. Effects (portamento,
+# vibrato, volume ramps) are NOT recovered — see the module docstring.
+# chipgen tracker  (135.75 BPM, 4 rows/beat)
+title 35 - Cursed!!
+bpm 135.75
+lpb 4
+inst fm0 35___cursed_01
+inst fm1 35___cursed_02
+inst fm2 35___cursed_01
+inst fm3 35___cursed_02
+inst fm4 35___cursed_01
+inst fm5 35___cursed_01
+cols fm0 fm1 fm2 fm3 fm4 fm5
+
+# fm0    fm1    fm2    fm3    fm4    fm5   
+D#4:23 F-4:23 E-4:23 ...    ...    ...
+D#4:8  F#4:23 E-4:8  A-4:11 G-4:16 D#4:16
+A-3:23 F#4:23 ===    F-4:11 E-4:5  D#4:5
+A-3:8  F#4:23 ...    F#4:11 ===    A-3:16
+A-3:2  F#4:23 ...    F#4:11 ...    A-3:5
+C#4:23 A-4:23 D#4:23 F#4:11 ...    A-3:1
+C#4:8  A#4:23 D#4:8  F#4:11 E-4:16 C#4:16
+C#4:2  A#4:8  D#4:2  A-4:11 D#4:5  C#4:5
+G#3:23 E-5:23 F-4:23 A#4:3  D#4:1  C#4:1
+G#3:8  E-5:8  F-4:8  A#4:11 D#4:16 G#3:16
+===    ===    ===    E-5:3  F-4:5  G#3:5
+...    ...    ...    ===    ===    ===

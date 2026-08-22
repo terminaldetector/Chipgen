@@ -45,6 +45,13 @@ directive keyword is a directive):
     chord off fm2 fm3 fm4        release them again
     arp fm1 0 3 7        arpeggiate that channel within every row
     arp fm1 off          stop arpeggiating
+    porta fm0 600 200    slide pitch at 600 cents/s until +200 cents
+    porta fm0 off        stop the slide where it is
+    vib fm1 60 6         vibrato +/-60 cents at 6 Hz  (`vib fm1 60 6 0.1`
+                         holds it off for 0.1s after each note-on)
+    fade fm2 -40         ramp level by -40 units/s (the FMVolume scale)
+    trem fm3 30 5        tremolo +/-30 units at 5 Hz
+                         — any of the four take `off`
     title / author / game / notes    GD3 metadata for the .vgm
     end                  stop early
 
@@ -89,7 +96,8 @@ so group rows into bars however you like.
 import re
 
 import events as events_mod
-from events import (DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
+from events import (Portamento, Tremolo, Vibrato, VolumeSlide,
+                    DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
                     FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
                     OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
                     OPLVolume, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
@@ -123,7 +131,8 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
-              "author", "game", "notes", "end", "opldepth"}
+              "author", "game", "notes", "end", "opldepth",
+              "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
 #: conventional on purpose: this exists so a four-note voicing is one line
@@ -343,6 +352,38 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
         else:
             events.append(FMInstrumentSelect(
                 channel=_fm_channel(args[0], lineno), instrument=args[1]))
+    elif head in ("porta", "vib", "fade", "trem"):
+        need(2, f"a voice and its settings, e.g. `{head} fm0 ...`")
+        voice = _column(args[0], lineno)
+        rest = args[1:]
+        off = rest[0].lower() in ("off", "0", "stop")
+        try:
+            if head == "porta":
+                events.append(Portamento(
+                    target=voice,
+                    cents_per_second=0.0 if off else float(rest[0]),
+                    to_cents=float(rest[1]) if len(rest) > 1 and not off else 0.0))
+            elif head == "vib":
+                events.append(Vibrato(
+                    target=voice,
+                    depth_cents=0.0 if off else float(rest[0]),
+                    speed_hz=float(rest[1]) if len(rest) > 1 and not off else 0.0,
+                    delay=float(rest[2]) if len(rest) > 2 and not off else 0.0))
+            elif head == "fade":
+                events.append(VolumeSlide(
+                    target=voice,
+                    per_second=0.0 if off else float(rest[0]),
+                    floor=int(rest[1]) if len(rest) > 1 and not off else 0,
+                    ceiling=int(rest[2]) if len(rest) > 2 and not off else 127))
+            else:
+                events.append(Tremolo(
+                    target=voice,
+                    depth=0.0 if off else float(rest[0]),
+                    speed_hz=float(rest[1]) if len(rest) > 1 and not off else 0.0))
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {head} wants numbers or `off`, got "
+                f"{' '.join(rest)!r}") from None
     elif head == "opldepth":
         need(2, "a tremolo and a vibrato depth, e.g. `opldepth 0 1`")
         events.append(OPLDepth(tremolo=int(args[0]), vibrato=int(args[1])))
@@ -688,6 +729,19 @@ def dumps(events, meta: Metadata = None, columns=None,
             directive(r, f"vol opl{ev.channel} {ev.volume}")
         elif isinstance(ev, OPLDepth):
             directive(r, f"opldepth {ev.tremolo} {ev.vibrato}")
+        elif isinstance(ev, Portamento):
+            directive(r, f"porta {ev.target} {ev.cents_per_second:g} "
+                         f"{ev.to_cents:g}")
+        elif isinstance(ev, Vibrato):
+            directive(r, f"vib {ev.target} {ev.depth_cents:g} "
+                         f"{ev.speed_hz:g}"
+                         + (f" {ev.delay:g}" if ev.delay else ""))
+        elif isinstance(ev, VolumeSlide):
+            directive(r, f"fade {ev.target} {ev.per_second:g}"
+                         + (f" {ev.floor} {ev.ceiling}"
+                            if (ev.floor, ev.ceiling) != (0, 127) else ""))
+        elif isinstance(ev, Tremolo):
+            directive(r, f"trem {ev.target} {ev.depth:g} {ev.speed_hz:g}")
         elif isinstance(ev, OPLNoteOn):
             used.add(f"opl{ev.channel}")
             suffix = f":{ev.velocity}" if ev.velocity != 127 else ""

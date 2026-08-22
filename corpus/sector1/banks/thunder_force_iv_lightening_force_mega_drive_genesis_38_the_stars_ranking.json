@@ -1,0 +1,490 @@
+[
+  {
+    "name": "38___the_stars__ranking_01",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 5,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 3,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_02",
+    "algorithm": 3,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 36,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_03",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 12,
+        "release_rate": 11,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_04",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 24,
+        "decay_rate": 26,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 26,
+        "decay_rate": 23,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 25,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_05",
+    "algorithm": 6,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 3,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 23,
+        "sustain_rate": 8,
+        "release_rate": 6,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 3,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_06",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 23,
+        "decay_rate": 22,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 23,
+        "decay_rate": 28,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_07",
+    "algorithm": 0,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 15,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 52,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "38___the_stars__ranking_08",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 24,
+        "decay_rate": 26,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 22,
+        "decay_rate": 23,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 14,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 23,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

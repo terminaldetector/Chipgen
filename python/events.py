@@ -215,6 +215,54 @@ class OPLDepth(Event):
 
 
 @dataclass
+class Portamento(Event):
+    """Slide a voice's pitch toward `to_cents` at `cents_per_second`.
+
+    `target` names the voice the way a tracker column does — "fm0",
+    "psg1", "opl3" — because chipgen drives three chips now and an int
+    channel cannot say which one it means.
+
+    The slide stops on arrival and stays there, so `to_cents=0` is how a
+    bend returns to the written pitch. A rate of 0 stops it where it is.
+    """
+    target: str
+    cents_per_second: float = 0.0
+    to_cents: float = 0.0
+
+
+@dataclass
+class Vibrato(Event):
+    """Swing a voice's pitch by +/- depth_cents at speed_hz.
+
+    `delay` holds it off for that many seconds after each note-on, which
+    is what makes a vibrato sound played rather than switched on.
+    Depth or speed of 0 turns it off.
+    """
+    target: str
+    depth_cents: float = 0.0
+    speed_hz: float = 0.0
+    delay: float = 0.0
+
+
+@dataclass
+class VolumeSlide(Event):
+    """Ramp a voice's level by `per_second`, in the same 0-127 units as
+    FMVolume, bounded by floor and ceiling. Negative fades out."""
+    target: str
+    per_second: float = 0.0
+    floor: int = 0
+    ceiling: int = 127
+
+
+@dataclass
+class Tremolo(Event):
+    """Swing a voice's level by +/- depth (0-127 units) at speed_hz."""
+    target: str
+    depth: float = 0.0
+    speed_hz: float = 0.0
+
+
+@dataclass
 class DACEnable(Event):
     """Switch FM channel 6 between normal FM and the 8-bit PCM DAC (register 0x2B)."""
     enable: bool = True
@@ -299,6 +347,10 @@ _EVENT_TYPES = {
     "FMLFO": FMLFO,
     "FMVolume": FMVolume,
     "FMPitch": FMPitch,
+    "Portamento": Portamento,
+    "Vibrato": Vibrato,
+    "VolumeSlide": VolumeSlide,
+    "Tremolo": Tremolo,
     "OPLInstrumentSelect": OPLInstrumentSelect,
     "OPLNoteOn": OPLNoteOn,
     "OPLNoteOff": OPLNoteOff,
@@ -328,6 +380,13 @@ SPEC: Dict[str, Dict[str, Any]] = {
     "FMLFO":              {"freq": (0, 7)},
     "FMVolume":           {"channel": (0, 5), "volume": (0, 127)},
     "FMPitch":            {"channel": (0, 5), "cents": (-4800, 4800)},
+    "Portamento":         {"cents_per_second": (-48000, 48000),
+                           "to_cents": (-4800, 4800)},
+    "Vibrato":            {"depth_cents": (0, 2400), "speed_hz": (0, 40),
+                           "delay": (0.0, 10.0)},
+    "VolumeSlide":        {"per_second": (-1000, 1000), "floor": (0, 127),
+                           "ceiling": (0, 127)},
+    "Tremolo":            {"depth": (0, 127), "speed_hz": (0, 40)},
     "OPLInstrumentSelect": {"channel": (0, 8)},
     "OPLNoteOn":          {"channel": (0, 8), "octave": (0, 9), "velocity": (1, 127)},
     "OPLNoteOff":         {"channel": (0, 8)},
@@ -353,6 +412,9 @@ TYPE_ALIASES = {
     "noiseon": "PSGNoiseOn", "noiseoff": "PSGNoiseOff",
     "pan": "FMPan", "lfo": "FMLFO", "volume": "FMVolume", "pitch": "FMPitch",
     "dac": "DACSample", "sample": "DACSample",
+    "porta": "Portamento", "slide": "Portamento", "bend": "Portamento",
+    "vib": "Vibrato", "volslide": "VolumeSlide", "fade": "VolumeSlide",
+    "trem": "Tremolo",
     "oplnote": "OPLNoteOn", "oplon": "OPLNoteOn", "oploff": "OPLNoteOff",
     "oplinstrument": "OPLInstrumentSelect", "adlib": "OPLNoteOn",
     "loop": "LoopPoint", "comment": "Marker", "stop": "End", "finish": "End",

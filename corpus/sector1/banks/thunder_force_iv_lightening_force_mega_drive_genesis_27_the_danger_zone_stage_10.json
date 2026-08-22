@@ -1,0 +1,429 @@
+[
+  {
+    "name": "27___the_danger_zone__stage_10_01",
+    "algorithm": 0,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 15,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 54,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_02",
+    "algorithm": 4,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 4,
+        "attack_rate": 19,
+        "decay_rate": 5,
+        "sustain_rate": 6,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 3,
+        "total_level": 4,
+        "attack_rate": 19,
+        "decay_rate": 5,
+        "sustain_rate": 6,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 23,
+        "attack_rate": 19,
+        "decay_rate": 4,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 3,
+        "total_level": 23,
+        "attack_rate": 19,
+        "decay_rate": 4,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_03",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 29,
+        "attack_rate": 15,
+        "decay_rate": 3,
+        "sustain_rate": 12,
+        "release_rate": 3,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 19,
+        "decay_rate": 7,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 19,
+        "decay_rate": 6,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 21,
+        "attack_rate": 19,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_04",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 24,
+        "decay_rate": 26,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 26,
+        "decay_rate": 23,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 26,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_05",
+    "algorithm": 6,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 24,
+        "decay_rate": 10,
+        "sustain_rate": 12,
+        "release_rate": 5,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 27,
+        "decay_rate": 23,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 23,
+        "decay_rate": 10,
+        "sustain_rate": 12,
+        "release_rate": 5,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_06",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 23,
+        "decay_rate": 22,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 23,
+        "decay_rate": 28,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 26,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "27___the_danger_zone__stage_10_07",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 10,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 16,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 12,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 17,
+        "sustain_rate": 12,
+        "release_rate": 11,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 21,
+        "sustain_rate": 14,
+        "release_rate": 15,
+        "sustain_level": 6,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

@@ -1,0 +1,113 @@
+{
+  "sectors": [
+    {
+      "sector": 1,
+      "priority": true,
+      "of": 3,
+      "tracks": 79,
+      "total_notes": 90502,
+      "total_seconds": 3450.5,
+      "bytes": 2459847,
+      "grid_fit": {
+        "min": 0.366,
+        "median": 0.678,
+        "max": 1.0
+      },
+      "games": {
+        "thunder_force_iv_lightening_force": 8,
+        "shining_force_ii": 8,
+        "gunstar_heroes": 8,
+        "streets_of_rage_2_bare_knuckle_ii": 8,
+        "alien_soldier": 8,
+        "elemental_master": 8,
+        "gleylancer": 8,
+        "dragon_s_fury": 8,
+        "streets_of_rage_bare_knuckle": 8,
+        "granada": 7
+      },
+      "produced_by": "python/corpus_split.py",
+      "caveats": [
+        "Notes and their timing are recovered from the register log.",
+        "Velocity is estimated from carrier Total Level at key-on.",
+        "The tempo grid is inferred; `grid_fit` is the confidence.",
+        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Which drum a DAC hit was is not recovered; all read as `kick`.",
+        "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
+        "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."
+      ]
+    },
+    {
+      "sector": 2,
+      "priority": false,
+      "of": 3,
+      "tracks": 79,
+      "total_notes": 140499,
+      "total_seconds": 4896.3,
+      "bytes": 3033879,
+      "grid_fit": {
+        "min": 0.274,
+        "median": 0.392,
+        "max": 0.804
+      },
+      "games": {
+        "granada": 8,
+        "thunder_force_iv_lightening_force": 8,
+        "shining_force_ii": 8,
+        "gunstar_heroes": 8,
+        "streets_of_rage_2_bare_knuckle_ii": 8,
+        "alien_soldier": 8,
+        "elemental_master": 8,
+        "gleylancer": 8,
+        "dragon_s_fury": 8,
+        "streets_of_rage_bare_knuckle": 7
+      },
+      "produced_by": "python/corpus_split.py",
+      "caveats": [
+        "Notes and their timing are recovered from the register log.",
+        "Velocity is estimated from carrier Total Level at key-on.",
+        "The tempo grid is inferred; `grid_fit` is the confidence.",
+        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Which drum a DAC hit was is not recovered; all read as `kick`.",
+        "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
+        "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."
+      ]
+    },
+    {
+      "sector": 3,
+      "priority": false,
+      "of": 3,
+      "tracks": 77,
+      "total_notes": 148454,
+      "total_seconds": 5159.5,
+      "bytes": 3503917,
+      "grid_fit": {
+        "min": 0.253,
+        "median": 0.324,
+        "max": 0.491
+      },
+      "games": {
+        "thunder_force_iv_lightening_force": 24,
+        "shining_force_ii": 16,
+        "gunstar_heroes": 9,
+        "streets_of_rage_2_bare_knuckle_ii": 8,
+        "alien_soldier": 7,
+        "elemental_master": 5,
+        "gleylancer": 4,
+        "dragon_s_fury": 3,
+        "streets_of_rage_bare_knuckle": 1
+      },
+      "produced_by": "python/corpus_split.py",
+      "caveats": [
+        "Notes and their timing are recovered from the register log.",
+        "Velocity is estimated from carrier Total Level at key-on.",
+        "The tempo grid is inferred; `grid_fit` is the confidence.",
+        "Effects (portamento, vibrato, volume ramps) are NOT recovered.",
+        "Which drum a DAC hit was is not recovered; all read as `kick`.",
+        "Two DAC hits closer together than the first sample's length leave no gap in the byte stream and read as one hit.",
+        "`tuning_cents` is the track's own pitch reference against A440; several of these games are not tuned to it."
+      ]
+    }
+  ],
+  "rejected": 25,
+  "note": "Sector 1 is the priority set: highest-confidence transcriptions, balanced across soundtracks so no one composer dominates. Later sectors descend in confidence by the same rule."
+}

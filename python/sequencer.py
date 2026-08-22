@@ -38,6 +38,11 @@ DEFAULT_TICKS_PER_SECOND = 192.0
 _OPL_EVENTS = ("OPLNoteOn", "OPLInstrumentSelect", "OPLVolume", "OPLDepth")
 
 
+def _effects_default_rate() -> float:
+    import effects
+    return effects.DEFAULT_RATE
+
+
 def _uses_opl(event_list) -> bool:
     return any(type(e).__name__ in _OPL_EVENTS for e in event_list)
 
@@ -48,6 +53,7 @@ class Sequencer:
                  target_rate: int = 44100, fm_gain: float = 1.0,
                  psg_gain: float = DEFAULT_PSG_GAIN,
                  opl_gain: float = DEFAULT_OPL_GAIN, pal: bool = False,
+                 effect_rate: float = None,
                  dc_block: bool = True,
                  chip_type: str = opn2.DEFAULT_CHIP_TYPE):
         self.ticks_per_second = ticks_per_second
@@ -55,6 +61,10 @@ class Sequencer:
         self.fm_gain = fm_gain
         self.psg_gain = psg_gain
         self.opl_gain = opl_gain
+        #: How often effects.py recomputes. Defaults to a real driver's
+        #: vertical blank, because a vibrato stepping at 60 Hz is part of
+        #: what the hardware sounds like.
+        self.effect_rate = effect_rate or _effects_default_rate()
         self.pal = pal
         #: "ym2612" (discrete, Model 1, has the DAC ladder) or "ym3438"
         #: (later ASIC, clean). See opn2.CHIP_TYPES.
@@ -124,7 +134,11 @@ class Sequencer:
             if writer is not None:
                 writer.opl_clock = int(round(opl.clock))
 
+        import effects as effects_mod
+        engine = effects_mod.EffectEngine(rate=self.effect_rate)
+
         state = _RenderState(ym, psg, fm_rate, writer, want_audio, opl)
+        state.effects = engine
         rate = float(self.ticks_per_second)
         fm_pending = psg_pending = opl_pending = 0.0
         fm_chunks, psg_chunks, opl_chunks = [], [], []
@@ -133,6 +147,26 @@ class Sequencer:
         for ev in event_list:
             if isinstance(ev, events_mod.Wait):
                 dt = ev.ticks / rate
+                if engine.any_active():
+                    # Effects only exist in the time BETWEEN events, so
+                    # that time has to actually be walked rather than
+                    # jumped over. Chopped into effect ticks, each one
+                    # rendering its own audio before the next update — a
+                    # vibrato applied once at the end of a two-second wait
+                    # is not a vibrato.
+                    remaining = dt
+                    step = engine.tick_seconds
+                    while remaining > 1e-9:
+                        piece = min(step, remaining)
+                        fm_pending += piece * fm_rate
+                        psg_pending += piece * psg_rate
+                        opl_pending += piece * opl_rate
+                        fm_pending, psg_pending, opl_pending = self._catch_up(
+                            state, fm_chunks, psg_chunks, opl_chunks,
+                            fm_pending, psg_pending, opl_pending)
+                        state.apply_effects(engine.advance(piece))
+                        remaining -= piece
+                    continue
                 fm_pending += dt * fm_rate
                 psg_pending += dt * psg_rate
                 opl_pending += dt * opl_rate
@@ -213,9 +247,13 @@ class Sequencer:
             ym.set_instrument(ev.channel,
                               instruments_mod.get(ev.instrument))
         elif isinstance(ev, E.FMNoteOn):
+            state.note_velocity[f"fm{ev.channel}"] = ev.velocity
             ym.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
+            state.effects.note_on(f"fm{ev.channel}")
+            state.reapply(f"fm{ev.channel}")
         elif isinstance(ev, E.FMNoteOff):
             ym.note_off(ev.channel)
+            state.effects.note_off(f"fm{ev.channel}")
         elif isinstance(ev, E.FMPan):
             ym.set_pan(ev.channel, ev.left, ev.right, ev.ams, ev.pms)
         elif isinstance(ev, E.FMLFO):
@@ -231,9 +269,13 @@ class Sequencer:
         elif isinstance(ev, E.OPLNoteOn):
             if opl is not None:
                 opl.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
+                state.note_velocity[f"opl{ev.channel}"] = ev.velocity
+                state.effects.note_on(f"opl{ev.channel}")
+                state.reapply(f"opl{ev.channel}")
         elif isinstance(ev, E.OPLNoteOff):
             if opl is not None:
                 opl.note_off(ev.channel)
+                state.effects.note_off(f"opl{ev.channel}")
         elif isinstance(ev, E.OPLVolume):
             if opl is not None:
                 opl.set_volume(ev.channel, ev.volume)
@@ -241,14 +283,29 @@ class Sequencer:
             if opl is not None:
                 opl.tremolo_depth = ev.tremolo
                 opl.vibrato_depth = ev.vibrato
+        elif isinstance(ev, E.Portamento):
+            state.effects.portamento(ev.target, ev.cents_per_second,
+                                     ev.to_cents)
+        elif isinstance(ev, E.Vibrato):
+            state.effects.vibrato(ev.target, ev.depth_cents, ev.speed_hz,
+                                  ev.delay)
+        elif isinstance(ev, E.VolumeSlide):
+            state.effects.volume_slide(ev.target, ev.per_second, ev.floor,
+                                       ev.ceiling)
+        elif isinstance(ev, E.Tremolo):
+            state.effects.tremolo(ev.target, ev.depth, ev.speed_hz)
         elif isinstance(ev, E.DACEnable):
             ym.set_dac_enable(ev.enable)
         elif isinstance(ev, E.DACSample):
             state.start_dac(ev)
         elif isinstance(ev, E.PSGToneOn):
             psg.tone_on(ev.channel, ev.note, ev.octave, ev.volume)
+            state.note_velocity[f"psg{ev.channel}"] = ev.volume
+            state.effects.note_on(f"psg{ev.channel}")
+            state.reapply(f"psg{ev.channel}")
         elif isinstance(ev, E.PSGToneOff):
             psg.tone_off(ev.channel)
+            state.effects.note_off(f"psg{ev.channel}")
         elif isinstance(ev, E.PSGVolume):
             psg.set_volume(ev.channel, ev.volume)
         elif isinstance(ev, E.PSGNoiseOn):
@@ -279,6 +336,11 @@ class _RenderState:
         self.fm_rate = fm_rate
         self.writer = writer
         self.want_audio = want_audio
+        self.effects = None
+        #: The velocity each voice was struck at. Effects scale this
+        #: rather than replacing it, so a tremolo on a quiet note stays
+        #: quiet.
+        self.note_velocity = {}
         self._dac = None
 
     # -- DAC ---------------------------------------------------------------
@@ -299,6 +361,40 @@ class _RenderState:
             "countdown": 0.0,          # FM samples until the next byte
             "auto_enabled": auto_enabled,
         }
+
+    # -- effects -----------------------------------------------------------
+    def apply_effects(self, changed):
+        """Push this tick's pitch and volume onto whichever chip owns them."""
+        for target, (cents, scale) in changed.items():
+            self._write_effect(target, cents, scale)
+
+    def reapply(self, target: str):
+        """Re-assert a voice's effect state after a note-on reset it."""
+        if self.effects is None:
+            return
+        cents, scale = self.effects.state(target)
+        if cents or scale < 1.0:
+            self._write_effect(target, cents, scale)
+
+    def _write_effect(self, target: str, cents: float, scale: float):
+        index = int(target[3:]) if target.startswith("psg") or \
+            target.startswith("opl") else int(target[2:])
+        base = self.note_velocity.get(target)
+        if target.startswith("fm"):
+            self.ym.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                self.ym.set_volume(index, max(1, int(round(base * scale))))
+        elif target.startswith("psg"):
+            self.psg.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                # The PSG attenuator runs backwards: 0 is loudest, 15 is
+                # silence, so a scale of 0.5 has to move UP the register.
+                quiet = 15 - (15 - base) * scale
+                self.psg.set_volume(index, max(0, min(15, int(round(quiet)))))
+        elif target.startswith("opl") and self.opl is not None:
+            self.opl.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                self.opl.set_volume(index, max(1, int(round(base * scale))))
 
     def dac_remaining_seconds(self) -> float:
         if not self._dac:

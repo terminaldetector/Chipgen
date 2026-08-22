@@ -387,6 +387,118 @@
       },
       "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed — vibrato, pitch envelopes and slides are\n    a series of these."
     },
+    "Portamento": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "cents_per_second": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -48000,
+            48000
+          ]
+        },
+        "to_cents": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -4800,
+            4800
+          ]
+        }
+      },
+      "doc": "Slide a voice's pitch toward `to_cents` at `cents_per_second`.\n\n    `target` names the voice the way a tracker column does — \"fm0\",\n    \"psg1\", \"opl3\" — because chipgen drives three chips now and an int\n    channel cannot say which one it means.\n\n    The slide stops on arrival and stays there, so `to_cents=0` is how a\n    bend returns to the written pitch. A rate of 0 stops it where it is."
+    },
+    "Vibrato": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "depth_cents": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            2400
+          ]
+        },
+        "speed_hz": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            40
+          ]
+        },
+        "delay": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0.0,
+            10.0
+          ]
+        }
+      },
+      "doc": "Swing a voice's pitch by +/- depth_cents at speed_hz.\n\n    `delay` holds it off for that many seconds after each note-on, which\n    is what makes a vibrato sound played rather than switched on.\n    Depth or speed of 0 turns it off."
+    },
+    "VolumeSlide": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "per_second": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -1000,
+            1000
+          ]
+        },
+        "floor": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            127
+          ]
+        },
+        "ceiling": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Ramp a voice's level by `per_second`, in the same 0-127 units as\n    FMVolume, bounded by floor and ceiling. Negative fades out."
+    },
+    "Tremolo": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "depth": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            127
+          ]
+        },
+        "speed_hz": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            40
+          ]
+        }
+      },
+      "doc": "Swing a voice's level by +/- depth (0-127 units) at speed_hz."
+    },
     "OPLInstrumentSelect": {
       "fields": {
         "channel": {
@@ -653,6 +765,7 @@
       "cols",
       "columns",
       "end",
+      "fade",
       "game",
       "inst",
       "lfo",
@@ -663,8 +776,11 @@
       "opldepth",
       "pan",
       "pitch",
+      "porta",
       "ticks",
       "title",
+      "trem",
+      "vib",
       "vol"
     ],
     "columns": [

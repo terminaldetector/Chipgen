@@ -57,13 +57,15 @@ _OPERATOR_GROUPS = (0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90)
 class ExtractedPatch:
     """One distinct patch, plus where it came from."""
 
-    __slots__ = ("instrument", "uses", "channels", "first_seconds")
+    __slots__ = ("instrument", "uses", "channels", "first_seconds",
+                 "carrier_level")
 
     def __init__(self, instrument, first_seconds):
         self.instrument = instrument
         self.uses = 0
         self.channels = set()
         self.first_seconds = first_seconds
+        self.carrier_level = 127
 
     def __repr__(self):
         return (f"<ExtractedPatch {self.instrument.name!r} alg="
@@ -80,11 +82,39 @@ class _ChannelState:
         self.algorithm = 0
         self.feedback = 0
 
+    #: Which operators reach the output, per algorithm.
+    CARRIERS = ((3,), (3,), (3,), (3,), (2, 3), (1, 2, 3), (1, 2, 3),
+                (0, 1, 2, 3))
+
     def key(self):
-        """Hashable identity: every register that defines the timbre."""
-        return (self.algorithm, self.feedback,
-                tuple(self.regs.get((group, op), 0)
-                      for op in range(4) for group in _OPERATOR_GROUPS))
+        """Hashable identity: the registers that define the TIMBRE.
+
+        A carrier's Total Level is deliberately left out. Genesis drivers
+        do volume by writing it, so a channel playing one instrument
+        through a fade snapshots as a new patch on every step — measured
+        across 235 transcribed tracks, 6548 extracted "patches" collapse
+        to 1321 distinct timbres once carrier level is ignored, and
+        Thunder Force IV alone goes from 1451 to 224. Keeping them apart
+        wastes four fifths of a bank and tells whoever reads it that these
+        games had a thousand instruments when they had a couple of hundred.
+
+        The volume is not lost: it is what it always was, a velocity, and
+        vgm_transcribe.py reads it as one.
+        """
+        carriers = self.CARRIERS[self.algorithm & 7]
+        registers = []
+        for op in range(4):
+            for group in _OPERATOR_GROUPS:
+                value = self.regs.get((group, op), 0)
+                if group == 0x40 and op in carriers:
+                    continue
+                registers.append(value)
+        return (self.algorithm, self.feedback, tuple(registers))
+
+    def carrier_level(self) -> int:
+        """The loudest carrier's Total Level — lower is louder."""
+        carriers = self.CARRIERS[self.algorithm & 7]
+        return min(self.regs.get((0x40, op), 127) & 0x7F for op in carriers)
 
     def to_instrument(self, name: str) -> FMInstrument:
         operators = []
@@ -181,7 +211,16 @@ def _snapshot(state, found, prefix, elapsed, channel):
         if _is_silent(instrument):
             return
         patch = ExtractedPatch(instrument, elapsed)
+        patch.carrier_level = state.carrier_level()
         found[key] = patch
+    elif state.carrier_level() < patch.carrier_level:
+        # Same timbre, heard louder than before. Keep the patch at the
+        # level the driver played it loudest, which is the closest thing
+        # to "the instrument as designed" a register log offers — every
+        # quieter reading of it is that instrument with a fader down.
+        patch.carrier_level = state.carrier_level()
+        louder = state.to_instrument(patch.instrument.name)
+        patch.instrument.operators = louder.operators
     patch.uses += 1
     patch.channels.add(channel)
 

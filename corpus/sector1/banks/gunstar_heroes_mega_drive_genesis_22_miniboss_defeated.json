@@ -1,0 +1,185 @@
+[
+  {
+    "name": "22___miniboss_defeated_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 21,
+        "attack_rate": 15,
+        "decay_rate": 17,
+        "sustain_rate": 8,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 17,
+        "attack_rate": 23,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 17,
+        "attack_rate": 20,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 17,
+        "attack_rate": 28,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "22___miniboss_defeated_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 1,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 17,
+        "decay_rate": 6,
+        "sustain_rate": 1,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "22___miniboss_defeated_03",
+    "algorithm": 5,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 1,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 10,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 14,
+        "attack_rate": 14,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 10,
+        "attack_rate": 30,
+        "decay_rate": 16,
+        "sustain_rate": 22,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 20,
+        "attack_rate": 14,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]
