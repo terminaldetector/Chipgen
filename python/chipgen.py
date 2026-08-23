@@ -279,8 +279,20 @@ def info() -> dict:
     looking at the same thing.
     """
     backend = core_loader.status()
+    import selection
     return {
         "name": "chipgen",
+        "instrument_selection": {
+            "how": "patches are measured, not tagged; roles and genres are "
+                   "target positions on measured axes, and every pick comes "
+                   "back with the numbers that chose it",
+            "roles": sorted(selection.ROLES),
+            "genres": sorted(selection.GENRES),
+            "axes": {name: phrase for name, (_, phrase)
+                     in selection.AXES.items()},
+            "cli": "chipgen.py --cast lead --genre hardcore | --palette "
+                   "--genre ambient | --audition PATCH",
+        },
         "version": VERSION,
         "summary": "Generative chiptune on real YM2612 + SN76489 emulation, "
                    "driven by a flat event vocabulary any model can emit.",
@@ -393,6 +405,15 @@ def main(argv):
                         help="load extra instruments (see vgm_import.py)")
     parser.add_argument("--opl-bank", metavar="BANK.JSON",
                         help="load extra OPL2 patches (see opl_import.py)")
+    parser.add_argument("--cast", metavar="ROLE",
+                        help="rank the bank for a musical role and exit "
+                             "(bass, lead, pad, pluck, harmony, bell, stab)")
+    parser.add_argument("--palette", action="store_true",
+                        help="cast a whole arrangement and exit")
+    parser.add_argument("--genre", metavar="GENRE",
+                        help="bias --cast/--palette toward a style")
+    parser.add_argument("--audition", metavar="PATCH",
+                        help="measure one patch and exit; 'all' for the bank")
     parser.add_argument("--chip", default=None, choices=("ym2612", "ym3438"),
                         help="ym2612 = discrete Model 1 (DAC ladder, gritty); "
                              "ym3438 = later ASIC (clean). Default ym2612.")
@@ -415,6 +436,36 @@ def main(argv):
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
+
+    if args.audition:
+
+        import audition as audition_mod
+
+        if args.audition == "all":
+
+            print(audition_mod.format_bank(audition_mod.audition_bank()))
+
+        else:
+
+            print(audition_mod.format_one(audition_mod.audition(args.audition)))
+
+        return 0
+
+
+    if args.cast or args.palette:
+
+        import selection
+
+        if args.cast:
+
+            print(selection.format_cast(selection.cast(args.cast, args.genre)))
+
+        else:
+
+            print(selection.format_palette(selection.palette(args.genre)))
+
+        return 0
+
 
     if args.info:
         print(json.dumps(info(), indent=2))

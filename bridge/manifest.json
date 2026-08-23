@@ -1,5 +1,38 @@
 {
   "name": "chipgen",
+  "instrument_selection": {
+    "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
+    "roles": [
+      "bass",
+      "bell",
+      "harmony",
+      "lead",
+      "pad",
+      "pluck",
+      "stab"
+    ],
+    "genres": [
+      "ambient",
+      "boss",
+      "dark_action",
+      "funk",
+      "hardcore",
+      "industrial",
+      "jrpg",
+      "melodic",
+      "retro_arcade"
+    ],
+    "axes": {
+      "low": "more low end at C2",
+      "presence": "more midrange at C4",
+      "brightness": "brighter",
+      "attack": "slower to start",
+      "release": "longer ring",
+      "harmonics": "denser harmonically",
+      "dynamics": "more velocity range"
+    },
+    "cli": "chipgen.py --cast lead --genre hardcore | --palette --genre ambient | --audition PATCH"
+  },
   "version": "0.2.0",
   "summary": "Generative chiptune on real YM2612 + SN76489 emulation, driven by a flat event vocabulary any model can emit.",
   "chips": {
