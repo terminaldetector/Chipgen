@@ -1,35 +1,35 @@
 {
- "tracks": 159,
+ "tracks": 257,
  "tempo": {
-  "min": 71.63,
-  "median": 100.16694490818023,
-  "max": 194.8
+  "min": 70.39,
+  "median": 112.35955056179768,
+  "max": 200.0
  },
  "modes": {
-  "minor": 105,
-  "major": 54
+  "minor": 162,
+  "major": 95
  },
  "roles": {
-  "harmony": 328,
-  "counter": 161,
-  "bass": 141,
-  "lead": 118,
-  "pad": 30,
-  "arp": 28
+  "harmony": 573,
+  "counter": 272,
+  "bass": 258,
+  "lead": 192,
+  "pad": 66,
+  "arp": 41
  },
  "chord_qualities": {
-  "unison": 0.2085,
-  "5": 0.1316,
-  "maj": 0.1038,
-  "min": 0.1036,
-  "sus2": 0.0821,
-  "maj7": 0.0696,
-  "sus4": 0.0519,
-  "dom7": 0.0472,
-  "add9": 0.0469,
-  "maj6": 0.043
+  "unison": 0.2026,
+  "5": 0.134,
+  "maj": 0.1092,
+  "min": 0.1051,
+  "sus2": 0.081,
+  "maj7": 0.0686,
+  "sus4": 0.0514,
+  "dom7": 0.0487,
+  "add9": 0.0483,
+  "maj6": 0.0409
  },
- "played_as_chords": 0.9099,
+ "played_as_chords": 0.9111,
  "progressions": [
   {
    "chords": [
@@ -37,6 +37,15 @@
     "VII",
     "i",
     "VII"
+   ],
+   "count": 10
+  },
+  {
+   "chords": [
+    "i",
+    "i",
+    "VIIsus2",
+    "VIIsus2"
    ],
    "count": 10
   },
@@ -57,6 +66,15 @@
     "i"
    ],
    "count": 8
+  },
+  {
+   "chords": [
+    "iv5",
+    "iv5",
+    "i",
+    "i"
+   ],
+   "count": 7
   },
   {
    "chords": [
@@ -84,107 +102,89 @@
     "IVadd9"
    ],
    "count": 6
-  },
-  {
-   "chords": [
-    "I",
-    "#IV",
-    "I",
-    "#IV"
-   ],
-   "count": 6
-  },
-  {
-   "chords": [
-    "i",
-    "i",
-    "i",
-    "VII"
-   ],
-   "count": 5
   }
  ],
  "pattern_coverage": {
-  "fused_intervals_and_rhythm": 0.0479,
-  "rhythm_alone": 0.2956,
-  "contour_alone": 0.4559
+  "fused_intervals_and_rhythm": 0.0354,
+  "rhythm_alone": 0.3251,
+  "contour_alone": 0.5015
  },
  "vocabularies": {
   "bass": {
    "rhythm_cells": [
     {
+     "cell": "xxxxxxxx",
+     "rows": 8,
+     "count": 1450,
+     "tracks": 50,
+     "syncopation": 0.5
+    },
+    {
      "cell": "xxxxxxxxxxxxxxxx",
      "rows": 16,
-     "count": 323,
-     "tracks": 29,
+     "count": 564,
+     "tracks": 42,
      "syncopation": 0.75
     },
     {
-     "cell": "xxxxxxxx--------",
+     "cell": "xx-xxxxx--------",
      "rows": 16,
-     "count": 760,
-     "tracks": 25,
-     "syncopation": 0.75
-    },
-    {
-     "cell": "x-x-x-x-",
-     "rows": 8,
-     "count": 94,
-     "tracks": 7,
-     "syncopation": 0.0
-    },
-    {
-     "cell": "x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-",
-     "rows": 32,
-     "count": 25,
-     "tracks": 7,
-     "syncopation": 0.75
-    },
-    {
-     "cell": "xxxxxxx---------",
-     "rows": 16,
-     "count": 8,
-     "tracks": 7,
+     "count": 37,
+     "tracks": 19,
      "syncopation": 0.714
     },
     {
-     "cell": "xxxx----",
+     "cell": "xxxx-xxx",
      "rows": 8,
-     "count": 8,
-     "tracks": 7,
-     "syncopation": 0.5
+     "count": 58,
+     "tracks": 15,
+     "syncopation": 0.571
+    },
+    {
+     "cell": "xxxxxx-x",
+     "rows": 8,
+     "count": 45,
+     "tracks": 15,
+     "syncopation": 0.571
+    },
+    {
+     "cell": "xxxxxxx-",
+     "rows": 8,
+     "count": 27,
+     "tracks": 15,
+     "syncopation": 0.429
     }
    ],
    "contours": [
     {
      "contour": "+-+-+-+-+-+-+-+",
-     "count": 79,
-     "tracks": 14
+     "count": 102,
+     "tracks": 15
     },
     {
      "contour": "+-+-+-+",
-     "count": 58,
-     "tracks": 9
+     "count": 99,
+     "tracks": 14
     },
     {
      "contour": "+-+-",
-     "count": 23,
-     "tracks": 8
+     "count": 26,
+     "tracks": 12
     },
     {
-     "contour": "-+-+-+",
-     "count": 9,
-     "tracks": 8
+     "contour": "==+=",
+     "count": 21,
+     "tracks": 11
+    },
+    {
+     "contour": "==+-",
+     "count": 21,
+     "tracks": 10
     },
     {
      "contour": "-+-+-+-",
-     "count": 17,
-     "tracks": 6
-    },
-    {
-     "contour": "-+--+",
-     "count": 8,
-     "tracks": 6
+     "count": 38,
+     "tracks": 9
     }
    ]
   },
@@ -193,154 +193,154 @@
     {
      "cell": "xxxxxxxx",
      "rows": 8,
-     "count": 432,
-     "tracks": 21,
+     "count": 454,
+     "tracks": 27,
      "syncopation": 0.5
     },
     {
      "cell": "xxxxxxxxxxxxxxxx",
      "rows": 16,
-     "count": 75,
-     "tracks": 16,
+     "count": 126,
+     "tracks": 25,
      "syncopation": 0.75
     },
     {
      "cell": "-xxxxxxx",
      "rows": 8,
-     "count": 20,
-     "tracks": 8,
+     "count": 18,
+     "tracks": 9,
      "syncopation": 0.571
     },
     {
-     "cell": "xxxx------------",
-     "rows": 16,
-     "count": 10,
-     "tracks": 8,
-     "syncopation": 0.75
-    },
-    {
-     "cell": "xxxxxx----------",
-     "rows": 16,
-     "count": 9,
-     "tracks": 8,
-     "syncopation": 0.667
-    },
-    {
-     "cell": "x-xxx-xx",
+     "cell": "xxxx----",
      "rows": 8,
      "count": 10,
-     "tracks": 4,
+     "tracks": 9,
+     "syncopation": 0.5
+    },
+    {
+     "cell": "xxx-----",
+     "rows": 8,
+     "count": 12,
+     "tracks": 8,
      "syncopation": 0.333
+    },
+    {
+     "cell": "xxxxxx--",
+     "rows": 8,
+     "count": 8,
+     "tracks": 8,
+     "syncopation": 0.5
     }
    ],
    "contours": [
     {
      "contour": "+-+-",
-     "count": 10,
-     "tracks": 9
+     "count": 21,
+     "tracks": 13
     },
     {
      "contour": "-++-",
-     "count": 10,
-     "tracks": 9
-    },
-    {
-     "contour": "++-++",
-     "count": 11,
-     "tracks": 8
+     "count": 13,
+     "tracks": 12
     },
     {
      "contour": "+-+-+-+",
-     "count": 29,
-     "tracks": 6
+     "count": 46,
+     "tracks": 11
     },
     {
-     "contour": "-+-+",
-     "count": 11,
-     "tracks": 5
+     "contour": "--++",
+     "count": 13,
+     "tracks": 10
     },
     {
-     "contour": "++--",
-     "count": 9,
-     "tracks": 5
+     "contour": "-+--",
+     "count": 12,
+     "tracks": 10
+    },
+    {
+     "contour": "--+--",
+     "count": 19,
+     "tracks": 9
     }
    ]
   },
   "harmony": {
    "rhythm_cells": [
     {
-     "cell": "xxxxxxxxxxxxxxxx",
-     "rows": 16,
-     "count": 228,
-     "tracks": 32,
-     "syncopation": 0.75
-    },
-    {
      "cell": "xxxxxxxx--------",
      "rows": 16,
-     "count": 1189,
-     "tracks": 30,
+     "count": 1670,
+     "tracks": 58,
      "syncopation": 0.75
     },
     {
-     "cell": "xxxxxxx---------",
+     "cell": "xxxxxxxxxxxxxxxx",
      "rows": 16,
-     "count": 86,
-     "tracks": 12,
-     "syncopation": 0.714
-    },
-    {
-     "cell": "x-x-x-x-------------------------",
-     "rows": 32,
-     "count": 112,
-     "tracks": 11,
+     "count": 503,
+     "tracks": 50,
      "syncopation": 0.75
     },
     {
      "cell": "-xxxxxxx--------",
      "rows": 16,
-     "count": 27,
-     "tracks": 11,
+     "count": 58,
+     "tracks": 26,
      "syncopation": 0.857
     },
     {
-     "cell": "x-x-x-x-x-x-x-x-",
+     "cell": "xxxxxxx-",
+     "rows": 8,
+     "count": 106,
+     "tracks": 23,
+     "syncopation": 0.429
+    },
+    {
+     "cell": "xxx-----",
+     "rows": 8,
+     "count": 58,
+     "tracks": 23,
+     "syncopation": 0.333
+    },
+    {
+     "cell": "xxxxxx----------",
      "rows": 16,
-     "count": 85,
-     "tracks": 10,
-     "syncopation": 0.5
+     "count": 38,
+     "tracks": 23,
+     "syncopation": 0.667
     }
    ],
    "contours": [
     {
-     "contour": "-++-",
-     "count": 20,
-     "tracks": 15
+     "contour": "+-+-",
+     "count": 67,
+     "tracks": 32
     },
     {
      "contour": "--+-",
-     "count": 26,
-     "tracks": 14
-    },
-    {
-     "contour": "+---",
-     "count": 26,
-     "tracks": 14
+     "count": 53,
+     "tracks": 32
     },
     {
      "contour": "++--",
-     "count": 24,
-     "tracks": 14
+     "count": 63,
+     "tracks": 31
     },
     {
      "contour": "-+-+",
-     "count": 41,
-     "tracks": 13
+     "count": 77,
+     "tracks": 30
     },
     {
-     "contour": "+-+-",
-     "count": 26,
-     "tracks": 12
+     "contour": "+--+",
+     "count": 42,
+     "tracks": 27
+    },
+    {
+     "contour": "-++-",
+     "count": 43,
+     "tracks": 26
     }
    ]
   },
@@ -349,109 +349,119 @@
     {
      "cell": "xxxxxxxxxxxxxxxx",
      "rows": 16,
-     "count": 163,
-     "tracks": 9,
+     "count": 202,
+     "tracks": 10,
      "syncopation": 0.75
     }
    ],
    "contours": [
     {
      "contour": "+-+-+-+-+-+-+-+",
-     "count": 87,
-     "tracks": 8
+     "count": 124,
+     "tracks": 9
     },
     {
      "contour": "+-+-+-+",
-     "count": 27,
-     "tracks": 5
+     "count": 28,
+     "tracks": 6
     },
     {
      "contour": "+-+-+-+-",
-     "count": 9,
-     "tracks": 4
+     "count": 14,
+     "tracks": 6
+    },
+    {
+     "contour": "+-+-+",
+     "count": 10,
+     "tracks": 6
     },
     {
      "contour": "-+-+-+-+-",
-     "count": 7,
-     "tracks": 4
+     "count": 9,
+     "tracks": 6
+    },
+    {
+     "contour": "+-+-",
+     "count": 18,
+     "tracks": 5
     }
    ]
   },
   "counter": {
    "rhythm_cells": [
     {
-     "cell": "xxxxxxxx--------",
-     "rows": 16,
-     "count": 691,
-     "tracks": 18,
-     "syncopation": 0.75
+     "cell": "xxxxxxxx",
+     "rows": 8,
+     "count": 819,
+     "tracks": 37,
+     "syncopation": 0.5
     },
     {
      "cell": "xxxxxxxxxxxxxxxx",
      "rows": 16,
-     "count": 81,
-     "tracks": 18,
+     "count": 182,
+     "tracks": 27,
      "syncopation": 0.75
     },
     {
-     "cell": "xxxxxxx-------------------------",
-     "rows": 32,
-     "count": 19,
-     "tracks": 9,
-     "syncopation": 0.857
+     "cell": "xxxxxxx-",
+     "rows": 8,
+     "count": 51,
+     "tracks": 21,
+     "syncopation": 0.429
+    },
+    {
+     "cell": "-xxxxxxx",
+     "rows": 8,
+     "count": 32,
+     "tracks": 14,
+     "syncopation": 0.571
+    },
+    {
+     "cell": "xxxx------------",
+     "rows": 16,
+     "count": 22,
+     "tracks": 13,
+     "syncopation": 0.75
     },
     {
      "cell": "x-x-x-x-------------------------",
      "rows": 32,
-     "count": 34,
-     "tracks": 8,
+     "count": 45,
+     "tracks": 11,
      "syncopation": 0.75
-    },
-    {
-     "cell": "xxxx-xxx--------",
-     "rows": 16,
-     "count": 13,
-     "tracks": 7,
-     "syncopation": 0.857
-    },
-    {
-     "cell": "--xxxxxx",
-     "rows": 8,
-     "count": 10,
-     "tracks": 7,
-     "syncopation": 0.5
     }
    ],
    "contours": [
     {
      "contour": "+-+-",
-     "count": 36,
-     "tracks": 20
+     "count": 54,
+     "tracks": 30
     },
     {
      "contour": "-+-+",
-     "count": 26,
-     "tracks": 15
+     "count": 33,
+     "tracks": 22
     },
     {
-     "contour": "-+++",
-     "count": 22,
-     "tracks": 14
-    },
-    {
-     "contour": "+++-",
-     "count": 23,
-     "tracks": 12
+     "contour": "--+-",
+     "count": 31,
+     "tracks": 21
     },
     {
      "contour": "+---",
-     "count": 17,
-     "tracks": 11
+     "count": 30,
+     "tracks": 20
     },
     {
      "contour": "+--+",
-     "count": 19,
-     "tracks": 10
+     "count": 30,
+     "tracks": 19
+    },
+    {
+     "contour": "-+++",
+     "count": 26,
+     "tracks": 18
     }
    ]
   },
@@ -459,14 +469,19 @@
    "rhythm_cells": [],
    "contours": [
     {
-     "contour": "++-+",
-     "count": 9,
-     "tracks": 4
+     "contour": "-++-",
+     "count": 18,
+     "tracks": 7
     },
     {
-     "contour": "-++-",
-     "count": 4,
-     "tracks": 4
+     "contour": "++-+",
+     "count": 32,
+     "tracks": 6
+    },
+    {
+     "contour": "+-+-",
+     "count": 15,
+     "tracks": 5
     }
    ]
   }
