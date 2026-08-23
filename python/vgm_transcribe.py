@@ -564,9 +564,18 @@ def infer_grid(notes, lpb: int = None):
     # short-to-long, so taking the first-best returns the SHORTEST — on
     # exact onsets that is the 20 ms floor, which is not a row anyone
     # wrote. Take the longest period that still explains the onsets.
+    # Every divisor of a true row scores just as well, and the search runs
+    # short-to-long, so taking the first-best returns the SHORTEST — on
+    # exact onsets that is the 20 ms floor, which is not a row anyone
+    # wrote. Take the longest period that still explains the onsets, and
+    # only then polish it: refining before this choice picks the shortest
+    # divisor and never recovers, which is the same mistake wearing a
+    # different hat.
     margin = best_score - GRID_EQUIVALENCE
     best_period = max(period for period, score in scored if score >= margin)
     best_score = next(score for period, score in scored if period == best_period)
+
+    best_period, best_score = _refine_period(onsets, best_period, best_score)
 
     if lpb is not None:
         return best_period, 60.0 / (best_period * lpb), lpb, best_score
@@ -577,6 +586,73 @@ def infer_grid(notes, lpb: int = None):
         if MIN_BPM <= bpm <= MAX_BPM:
             return best_period, bpm, candidate, best_score
     return best_period, 60.0 / (best_period * 4), 4, best_score
+
+
+def _refine_period(onsets, period: float, score: float):
+    """Polish the row length until it holds across the WHOLE track.
+
+    The coarse search steps by 0.5 ms, which is fine for a 30-second cue
+    and hopeless for a long one: the row length is multiplied by the row
+    NUMBER, so an error invisible in bar one is several rows wide by the
+    end. Measured on Red Zone's title theme — 505 seconds, 3330 rows — a
+    row of 151.700 ms explains 29.8% of the onsets and 151.685 ms explains
+    99.1%. A difference of 0.01% was the entire gap.
+
+    The symptom does not look like a precision problem. Coverage per
+    60-second window at the same row, anchored at zero: 0.99, 0.98, 0.34,
+    0.02, 0.00, 0.00. Anchored locally, every window reads 0.99 to 1.00.
+    The music is perfectly gridded; the grid was sliding off it.
+
+    Solved by least squares rather than by searching. Every onset near the
+    grid gives a row number k, and the period that best explains them all
+    is sum(k*t) / sum(k*k) — one pass over the onsets instead of a scan
+    over candidate periods. That matters: a scan fine enough to resolve
+    0.01% needs hundreds of passes and turned a corpus rebuild into an
+    hour's work. Repeated three times so onsets rescued by a better period
+    join the fit.
+    """
+    best_period, best_score = period, score
+    for _ in range(3):
+        weight = 0.0
+        moment = 0.0
+        for time in onsets:
+            position = time / best_period
+            index = round(position)
+            if index and abs(position - index) <= GRID_TOLERANCE:
+                weight += index * index
+                moment += index * time
+        if weight <= 0.0:
+            break
+        candidate = moment / weight
+        if candidate <= 0.0:
+            break
+        hit = sum(1 for time in onsets
+                  if abs(time / candidate - round(time / candidate))
+                  <= GRID_TOLERANCE)
+        found = hit / len(onsets)
+        if found <= best_score:
+            break
+        best_period, best_score = candidate, found
+
+    # Least squares proposes; coverage decides. The fit minimises squared
+    # error, which is not the same objective — measured over the Zyrinx
+    # tracks, the fit alone passed 15 of 34 where a scan passed 22. So
+    # finish with a short scan around the fitted value, which is cheap
+    # because the fit has already landed within a hair of the answer.
+    span = best_period * 3e-3
+    step = span / 45.0
+    candidate = best_period - span
+    settled, settled_score = best_period, best_score
+    while candidate <= best_period + span:
+        if candidate > 0:
+            hit = sum(1 for time in onsets
+                      if abs(time / candidate - round(time / candidate))
+                      <= GRID_TOLERANCE)
+            found = hit / len(onsets)
+            if found > settled_score:
+                settled, settled_score = candidate, found
+        candidate += step
+    return settled, settled_score
 
 
 #: The tempo range `infer_grid` will accept when choosing a subdivision.
