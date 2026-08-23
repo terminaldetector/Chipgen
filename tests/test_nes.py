@@ -190,3 +190,62 @@ def test_an_old_header_does_not_report_chips_it_cannot_hold():
     struct.pack_into("<I", header, 0x2C, 7670454)        # YM2612 only
     found = vgm.detect_chips(bytes(header))
     assert found == {"YM2612": 7670454}, found
+
+
+def _nes_corpus():
+    import score_model
+    import os
+    root = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "corpus", "nes")
+    return score_model.load_all(score_model.corpus_paths(root))
+
+
+def test_the_nes_corpus_loads_and_holds_only_nes_voices():
+    scores = _nes_corpus()
+    assert len(scores) > 100, f"only {len(scores)} NES scores"
+    names = {name for score in scores for name in score.voices}
+    assert names <= {"pulse1", "pulse2", "triangle", "noise"}, \
+        f"a non-NES voice got into the NES corpus: {names}"
+    notes = sum(len(v) for s in scores for v in s.voices.values())
+    assert notes > 40000, notes   # 48,626 at the time of writing
+
+
+def test_one_nes_voice_never_plays_two_notes_at_once():
+    # The transcriber pairs register writes into notes, and a note takes
+    # several writes. Reading the channel between them produced two
+    # different notes at the same instant, which one channel cannot do.
+    for score in _nes_corpus():
+        for name, notes in score.voices.items():
+            rows = [n.row for n in notes]
+            assert len(rows) == len(set(rows)), \
+                f"{score.title}/{name} has two notes on one row"
+            for a, b in zip(notes, notes[1:]):
+                assert a.end <= b.row, f"{score.title}/{name}: {a} overlaps {b}"
+
+
+def test_the_transcriber_walks_a_log_to_its_declared_end():
+    # A jingle whose closing chord rings out writes nothing for the last
+    # second. Reporting the last register write as the duration made 24 of
+    # 214 tracks come back about a second short.
+    import glob
+    import os
+    import nes_transcribe
+    import vgm
+
+    root = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "corpus", "nes", "scores")
+    if not glob.glob(os.path.join(root, "*.json")):
+        return                                  # corpus not installed
+    # Build a tiny log by hand: one write, then a long wait, then end.
+    header = bytearray(0x100)
+    header[0:4] = b"Vgm "
+    struct.pack_into("<I", header, 0x08, 0x161)
+    struct.pack_into("<I", header, 0x34, 0x100 - 0x34)
+    struct.pack_into("<I", header, 0x84, 1789773)
+    struct.pack_into("<I", header, 0x04, 0x100 + 8 - 4)
+    body = bytes((vgm.CMD_NES_APU, 0x15, 0x0F)) \
+        + bytes((vgm.CMD_WAIT_LONG,)) + struct.pack("<H", 44100) \
+        + bytes((vgm.CMD_END,))
+    _, info = nes_transcribe.transcribe(bytes(header) + body)
+    assert info["duration"] >= 0.99, \
+        f"walked {info['duration']:.3f}s, the log is 1.0s long"

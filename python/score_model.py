@@ -136,7 +136,35 @@ def from_events(events, meta, title: str = "", path: str = "") -> Score:
                  path=path)
 
 
+def to_json(score: Score) -> dict:
+    """A Score as plain data. Used for chips whose notation the tracker
+    does not carry — the NES corpus is stored this way rather than as
+    .trk, because a .trk is a thing this project can render and an NES
+    score is not one yet."""
+    return {
+        "title": score.title, "bpm": score.bpm, "lpb": score.lpb,
+        "bar": score.bar, "rows": score.rows,
+        "voices": {name: [[n.row, n.length, n.pitch, n.velocity] for n in v]
+                   for name, v in score.voices.items()},
+        "drums": score.drums,
+    }
+
+
+def from_json(data: dict, path: str = "") -> Score:
+    return Score(
+        voices={name: [Note(*row) for row in rows]
+                for name, rows in data["voices"].items()},
+        drums=data.get("drums", []), bar=data["bar"], lpb=data["lpb"],
+        bpm=data["bpm"], rows=data["rows"], title=data.get("title", ""),
+        path=path)
+
+
 def load(path: str) -> Score:
+    """Read a score. `.trk` is parsed as tracker text, `.json` as data."""
+    if path.endswith(".json"):
+        import json
+        with open(path, encoding="utf-8") as handle:
+            return from_json(json.load(handle), path=path)
     with open(path, encoding="utf-8") as handle:
         events, meta = tracker_mod.loads(handle.read())
     return from_events(events, meta, path=path,
@@ -154,12 +182,12 @@ def load_all(paths, limit: int = None):
     return out
 
 
-def corpus_paths(root: str = None):
-    """Every .trk in the embedded corpus sector, sorted."""
+def corpus_paths(root: str = None, suffixes=(".trk", ".json")):
+    """Every score in a corpus directory, sorted."""
     root = root or os.path.join(os.path.dirname(_HERE), "corpus")
     found = []
     for directory, _, files in os.walk(root):
         for name in sorted(files):
-            if name.endswith(".trk"):
+            if name.endswith(tuple(suffixes)):
                 found.append(os.path.join(directory, name))
     return sorted(found)
