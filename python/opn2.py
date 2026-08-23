@@ -272,6 +272,8 @@ class YM2612:
         self._channel_cents = [0.0] * 6
         self._channel_note = [None] * 6      # (note, octave) currently keyed on
         self._keyed_on = [False] * 6
+        #: Per channel: did the last note_on write attenuated carriers?
+        self._velocity_dirty = [False] * 6
         self._dac_enabled = False
 
     def close(self):
@@ -393,14 +395,19 @@ class YM2612:
             self.write(0, 0x28, 0x00 | self._key_code(channel))
 
         instrument = self._channel_instrument[channel]
-        if instrument is not None and velocity < 127:
+        # Write carrier levels whenever this note needs attenuating OR the
+        # previous note left them attenuated. The second half matters: a
+        # velocity-127 note after a quiet one would otherwise skip the write
+        # entirely and inherit the quiet note's levels.
+        if instrument is not None and (velocity < 127
+                                       or self._velocity_dirty[channel]):
             addr_port, _, ch = self._port_addr_for(channel)
             extra = (level_to_attenuation(self._channel_volume[channel])
                      + level_to_attenuation(velocity) + instrument.trim)
             for i in instrument.carrier_indices():
                 tl = max(0, min(127, instrument.operators[i].total_level + extra))
                 self.write(addr_port, 0x40 + self._OP_OFFSETS[i] + ch, tl & 0x7F)
-            self._velocity_dirty = True
+            self._velocity_dirty[channel] = velocity < 127
 
         self._write_frequency(channel, note, octave)
         self.write(0, 0x28, 0xF0 | self._key_code(channel))
@@ -411,11 +418,13 @@ class YM2612:
         self.write(0, 0x28, 0x00 | self._key_code(channel))
         self._keyed_on[channel] = False
         self._channel_note[channel] = None
-        if getattr(self, "_velocity_dirty", False):
-            # Restore the patch's own carrier levels so the next note is not
-            # stuck at the last note's velocity.
-            self._velocity_dirty = False
-            self.set_volume(channel, self._channel_volume[channel])
+        # Carrier levels are deliberately NOT restored here. Key-off starts
+        # the release phase; the note is still sounding. Writing the patch's
+        # full Total Level back at this moment makes the tail of a quiet note
+        # jump to full volume — measured at velocity 16, the note itself
+        # peaked at -37.0 dBFS and its own release burst at -22.8 dBFS, a
+        # 14 dB click on the way out of every soft note. The restore belongs
+        # at the next note_on, which is where it now happens.
 
     # -- DAC / PCM (channel 6) --------------------------------------------------
     def set_dac_enable(self, enable: bool):

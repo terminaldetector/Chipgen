@@ -1,0 +1,556 @@
+{
+ "bass": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.6595515292246903,
+  "brightness_label": "medium",
+  "harmonics": 20.5,
+  "high_at_c4": 0.03757153334784266,
+  "low_at_c2": 0.8533395606199307,
+  "mid_at_c4": 0.4279531214588606,
+  "name": "bass",
+  "peak_dbfs": -23.951908912564974,
+  "release": 0.057427633959064625,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.633836845814265,
+  "worst_cents_error": 0.6507482284917596
+ },
+ "bell_pluck": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.3143498118785315,
+  "brightness_label": "medium",
+  "harmonics": 20.75,
+  "high_at_c4": 0.02913062173840588,
+  "low_at_c2": 0.6095516774487515,
+  "mid_at_c4": 0.7305832484986454,
+  "name": "bell_pluck",
+  "peak_dbfs": -17.215843606203865,
+  "release": 0.031210670629926426,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.97084718482446,
+  "worst_cents_error": 0.5661218409849953
+ },
+ "brass": {
+  "algorithm": 2,
+  "attack": 0.002736213680789039,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.808596165262528,
+  "brightness_label": "medium",
+  "harmonics": 13.0,
+  "high_at_c4": 0.001927904877331485,
+  "low_at_c2": 0.846082914490665,
+  "mid_at_c4": 0.5212247109832288,
+  "name": "brass",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.05368235348347345,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.06179973983887,
+  "worst_cents_error": 1.2271865277801364
+ },
+ "deep_bass": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.453741646461644,
+  "brightness_label": "dark",
+  "harmonics": 5.0,
+  "high_at_c4": 5.17369915718743e-05,
+  "low_at_c2": 0.999886288679215,
+  "mid_at_c4": 0.3655260499416066,
+  "name": "deep_bass",
+  "peak_dbfs": -19.306878712242504,
+  "release": 0.11735212156852337,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.670647841476164,
+  "worst_cents_error": 1.1320843349087697
+ },
+ "distorted_lead": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4331736482080424,
+  "brightness_label": "dark",
+  "harmonics": 37.25,
+  "high_at_c4": 0.012758558731853987,
+  "low_at_c2": 0.9426170983537978,
+  "mid_at_c4": 0.24755035892252333,
+  "name": "distorted_lead",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.4544273643717288,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 3.9163331543719684
+ },
+ "e_piano": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.3069218296709042,
+  "brightness_label": "dark",
+  "harmonics": 5.0,
+  "high_at_c4": 5.756633573672602e-05,
+  "low_at_c2": 0.9998862396548888,
+  "mid_at_c4": 0.2779511280702972,
+  "name": "e_piano",
+  "peak_dbfs": -18.33537672105109,
+  "release": 0.05617920713386757,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.54207265750238,
+  "worst_cents_error": 0.6191857591970209
+ },
+ "fm_stab": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.065882806315268,
+  "brightness_label": "dark",
+  "harmonics": 5.25,
+  "high_at_c4": 0.0007588895593148268,
+  "low_at_c2": 0.9971676476223592,
+  "mid_at_c4": 0.045235598144899566,
+  "name": "fm_stab",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.02122325602834997,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.942228082695483,
+  "worst_cents_error": 50.870884254696584
+ },
+ "hard_pluck": {
+  "algorithm": 4,
+  "attack": 0.001243733491267745,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.0016985034561445,
+  "brightness_label": "dark",
+  "harmonics": 3.5,
+  "high_at_c4": 4.779921534579502e-05,
+  "low_at_c2": 0.9999048496966251,
+  "mid_at_c4": 0.0007281824922533532,
+  "name": "hard_pluck",
+  "peak_dbfs": -17.33789558594094,
+  "release": null,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "unknown",
+  "usable": true,
+  "velocity_range_db": 17.754845903015784,
+  "worst_cents_error": 2.297632430882669
+ },
+ "jazz_chord_pad": {
+  "algorithm": 6,
+  "attack": 0.06989782220924727,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.293284942913006,
+  "brightness_label": "medium",
+  "harmonics": 12.0,
+  "high_at_c4": 0.000576640211115161,
+  "low_at_c2": 0.722475589839313,
+  "mid_at_c4": 0.8817768268389762,
+  "name": "jazz_chord_pad",
+  "peak_dbfs": -19.204690596672897,
+  "release": 0.38576388898589065,
+  "roles": [
+   "bass",
+   "pad",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.541531092540513,
+  "worst_cents_error": 1.43149883101673
+ },
+ "metal_stab": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.0153310926236674,
+  "brightness_label": "dark",
+  "harmonics": 4.25,
+  "high_at_c4": 4.008207244189553e-05,
+  "low_at_c2": 0.9994607752874367,
+  "mid_at_c4": 0.006428799005354971,
+  "name": "metal_stab",
+  "peak_dbfs": -17.975288281284115,
+  "release": 0.014981121902364686,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.99574702883716,
+  "worst_cents_error": 0.7356113027502319
+ },
+ "orch_hit": {
+  "algorithm": 6,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2882102832444895,
+  "brightness_label": "dark",
+  "harmonics": 5.0,
+  "high_at_c4": 0.00845041250676769,
+  "low_at_c2": 0.8399781905890307,
+  "mid_at_c4": 0.9892036950617258,
+  "name": "orch_hit",
+  "peak_dbfs": -15.699813498278981,
+  "release": null,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "unknown",
+  "usable": true,
+  "velocity_range_db": 13.162348770568993,
+  "worst_cents_error": 1907.56815736005
+ },
+ "organ": {
+  "algorithm": 7,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.6805345087842745,
+  "brightness_label": "dark",
+  "harmonics": 4.0,
+  "high_at_c4": 5.7534861143713814e-05,
+  "low_at_c2": 0.9708838333615774,
+  "mid_at_c4": 0.34310866661703204,
+  "name": "organ",
+  "peak_dbfs": -22.280987883563476,
+  "release": 0.009987414601576457,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 16.70185815793665,
+  "worst_cents_error": 0.7058282542356844
+ },
+ "pluck_guitar": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.9192850617004718,
+  "brightness_label": "dark",
+  "harmonics": 15.75,
+  "high_at_c4": 0.003181942388623149,
+  "low_at_c2": 0.9201237900032088,
+  "mid_at_c4": 0.36290657025803075,
+  "name": "pluck_guitar",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.029962243804729373,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.033180637709897,
+  "worst_cents_error": 1.3252228226935077
+ },
+ "saw_lead": {
+  "algorithm": 7,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4278853822386424,
+  "brightness_label": "dark",
+  "harmonics": 4.0,
+  "high_at_c4": 6.238982927751248e-05,
+  "low_at_c2": 0.9999321830676479,
+  "mid_at_c4": 0.27987308938753314,
+  "name": "saw_lead",
+  "peak_dbfs": -20.637252759816477,
+  "release": 0.10736470696694692,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 16.810689666546047,
+  "worst_cents_error": 1.4896540974183314
+ },
+ "slap_bass": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.0332018199191952,
+  "brightness_label": "dark",
+  "harmonics": 4.75,
+  "high_at_c4": 0.0001548404453349427,
+  "low_at_c2": 0.9999482520359834,
+  "mid_at_c4": 0.02946592641777668,
+  "name": "slap_bass",
+  "peak_dbfs": -22.353673576665358,
+  "release": 0.059924487609458746,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.373623335078488,
+  "worst_cents_error": 2.4239914614711235
+ },
+ "square_lead": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 9.960010906682506,
+  "brightness_label": "bright",
+  "harmonics": 60.5,
+  "high_at_c4": 0.24067183581863827,
+  "low_at_c2": 0.7819031416591186,
+  "mid_at_c4": 0.6779393612552251,
+  "name": "square_lead",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.03370752428032054,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 15.361018469586359,
+  "worst_cents_error": 0.6552750791365817
+ },
+ "strings": {
+  "algorithm": 4,
+  "attack": 0.17486892887224492,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4677230236664993,
+  "brightness_label": "dark",
+  "harmonics": 6.0,
+  "high_at_c4": 3.2043416073445464e-05,
+  "low_at_c2": 0.9994665029495762,
+  "mid_at_c4": 0.43569747009977705,
+  "name": "strings",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.8551723752599841,
+  "roles": [
+   "bass",
+   "pad",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.775110691355092,
+  "worst_cents_error": 1.224321062830899
+ },
+ "sub_bass": {
+  "algorithm": 7,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.0000652209597272,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 1.5781358282591417e-05,
+  "low_at_c2": 0.9999798366247022,
+  "mid_at_c4": 5.214681733419116e-06,
+  "name": "sub_bass",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.11235841426773514,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 0.6815741709538659
+ },
+ "techno_bass": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4939649535192223,
+  "brightness_label": "dark",
+  "harmonics": 13.75,
+  "high_at_c4": 0.00010560372053575125,
+  "low_at_c2": 0.9918131744157193,
+  "mid_at_c4": 0.11506641986728819,
+  "name": "techno_bass",
+  "peak_dbfs": -22.426972658393467,
+  "release": 0.05617920713386757,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.915814965008884,
+  "worst_cents_error": 1.8952223357935896
+ }
+}
