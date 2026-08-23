@@ -181,7 +181,11 @@ One noise voice. One sample channel, shared, monophonic.
 notation and measured. Read it before composing, not after — it is the
 idiom, not a review checklist. Counted, not asserted:
 
-- FM0 is the bass on every track in the set.
+- FM0 carries a part on every track in the set and has the lowest median
+  register of the six. That is an aggregate, not a rule: measured per
+  track, FM0 is the lowest-pitched FM voice only 41% of the time, and
+  FM1 or FM2 takes the bass on half the corpus. Do not assume channel
+  number tells you the role — infer it from the part.
 - A third of note-to-note moves repeat the pitch; most of the rest step
   by a tone or less. Leaps are 19%, mostly octaves.
 - One to three FM voices sound at a time. Five or six is 7% of rows.

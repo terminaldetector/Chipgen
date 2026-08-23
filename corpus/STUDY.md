@@ -4,7 +4,7 @@ From 79 transcribed tracks, 62019 notes. Every number below is counted from the 
 
 ## Channel roles
 
-Median register and how often each channel is used at all. The roles are not a convention someone chose — they fall out of the chip: FM0 sits lowest on nearly every track, and FM5 is missing from most because the DAC takes channel 6 for drums.
+Median register and how often each channel is used at all. The roles are not a convention someone chose — they fall out of the chip: FM0 has the lowest median register of the six, and FM5 is missing from most because the DAC takes channel 6 for drums.
 
 | voice | tracks | p10 | median | p90 | typical role |
 |---|---|---|---|---|---|
