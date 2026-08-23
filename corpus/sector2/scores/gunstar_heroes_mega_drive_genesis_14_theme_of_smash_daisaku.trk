@@ -1,12 +1,12 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 2238 notes and 48 vibrato spans over 64.8s; the grid fits 39% of the
+# 2238 notes and 48 vibrato spans over 64.8s; the grid fits 55% of the
 # onsets at 120.0 ms per row.
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum
 # a DAC hit was is not recoverable from a register log at all.
-# chipgen tracker  (125 BPM, 4 rows/beat)
+# chipgen tracker  (125.02 BPM, 4 rows/beat)
 title 14 - Theme of Smash Daisaku
-bpm 125
+bpm 125.02
 lpb 4
 inst fm0 14___theme_of_smash_daisaku_01
 inst fm1 14___theme_of_smash_daisaku_05
@@ -316,8 +316,8 @@ D-2:64 F-5:17 A-4:35 D-6:17 D-3:27 F-5:4 C#6:5 w1:1  ...
 D-3:64 ...    ...    E-6:17 ===    ...   ...   w1:1  kick
 D-2:64 ...    ...    F-6:17 D-3:27 ...   ...   ===   ...
 ===    ...    ...    D-6:17 ===    ...   ...   w1:1  kick
-vib fm1 65.6 7.86
 D-3:64 ...    ...    F-6:17 D-3:27 ...   ...   ===   ...
+vib fm1 65.6 7.86
 vib fm2 78.2 7.85
 ===    ...    ...    D-6:17 ===    ...   ...   w1:1  ...
 D-3:64 ...    ...    F-6:17 ...    ...   ...   ===   kick
@@ -398,8 +398,8 @@ D#2:64 ...    C#5:35 F-6:17 D#3:27 ...   F-6:5 ===   kick
 D#3:64 ...    ...    E-6:17 ===    ...   ...   w1:1  kick
 D#2:64 ...    ...    F-6:17 D#3:27 ...   ...   ===   kick
 ===    ...    ...    C#6:17 ===    ...   ...   w1:1  ...
-vib fm1 65.6 7.62
 D#3:64 ...    ...    F-6:17 D#3:27 ...   ...   ===   kick
+vib fm1 65.6 7.62
 vib fm2 82.8 7.61
 ===    ...    ...    C#6:17 ===    ...   ...   w1:1  ...
 D#3:64 ...    ...    F-6:17 ...    ...   ...   ===   ...
@@ -440,8 +440,8 @@ G-2:64 D-5:9  ===    A#5:17 G-4:19 A#4:4 ===   w1:1  ...
 G-3:64 ...    ...    A#5:17 G-4:19 ...   ...   w1:1  kick
 G-2:64 ...    ...    A#5:17 G-4:19 ...   ...   ===   ...
 ===    ...    ...    ===    ===    ...   ...   w1:1  kick
-vib fm1 78.4 7.86
 G-3:64 ...    ...    A#5:17 G-4:19 ...   ...   ===   ...
+vib fm1 78.4 7.86
 vib fm2 48.9 7.85
 ===    ...    ...    D-4:45 ===    ...   ...   w1:1  ...
 G-2:64 ...    ...    F-4:45 ...    ...   ...   ===   kick
@@ -473,9 +473,9 @@ G-2:64 F-5:9  ...    A#5:17 G-4:19 D-5:4 ...   w1:1  kick
 G-3:64 ...    ...    A#5:17 G-4:19 ...   ...   w1:1  ...
 G-2:64 ...    ...    A#5:17 G-4:19 ...   ...   ===   kick
 ===    ...    ...    ===    ===    ...   ...   w1:1  ...
-vib fm1 65.6 7.86
 G-3:64 ...    ...    A#5:17 G-4:19 ...   ...   ===   ...
 
+vib fm1 65.6 7.86
 vib fm2 78.2 7.86
 ===    ...    ...    D-4:45 ===    ...   ...   w1:1  ...
 G-2:64 ...    ...    F-4:45 ...    ...   ...   ===   kick
@@ -520,8 +520,8 @@ F#2:64 B-5:9  ...    G#5:17 F-4:19 G#5:4 ...   w1:1  ...
 F#3:64 ...    ...    G#5:17 F-4:19 ...   ...   w1:1  kick
 F#2:64 ...    ...    G#5:17 F-4:19 ...   ...   ===   kick
 ===    ...    ...    ===    ===    ...   ...   w1:1  ...
-vib fm1 93.9 7.86
 F#3:64 ...    ...    G#5:17 F-4:19 ...   ...   ===   kick
+vib fm1 93.9 7.86
 vib fm2 54.9 7.85
 ===    ...    ...    C-4:45 ===    ...   ...   w1:1  ...
 F#2:64 ...    ...    D#4:45 ...    ...   ...   ===   kick
@@ -599,9 +599,9 @@ A#2:64 G-5:9  ...    E-6:17 C-6:19 E-5:4 ...   w1:1  kick
 A#3:64 ...    ...    E-6:17 C-6:19 ...   ...   w1:1  kick
 A#2:64 ...    ...    E-6:17 C-6:19 ...   ...   ===   kick
 ===    ...    ...    ===    ===    ...   ...   w1:1  ...
-vib fm1 58.4 7.86
 A#3:64 ...    ...    E-6:17 C-6:19 ...   ...   ===   kick
 
+vib fm1 58.4 7.86
 vib fm2 69.3 7.85
 ===    ...    ...    C#4:41 C#4:45 ...   ...   w1:1  ...
 A#2:64 ...    ...    F-4:41 F-4:45 ...   ...   ===   kick

@@ -1,12 +1,12 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 1590 notes and 16 vibrato spans over 67.9s; the grid fits 75% of the
+# 1590 notes and 16 vibrato spans over 67.9s; the grid fits 76% of the
 # onsets at 128.5 ms per row.
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum
 # a DAC hit was is not recoverable from a register log at all.
-# chipgen tracker  (116.73 BPM, 4 rows/beat)
+# chipgen tracker  (116.72 BPM, 4 rows/beat)
 title 11 - Stage 8 (Flying Rocks)
-bpm 116.73
+bpm 116.72
 lpb 4
 inst fm0 11___stage_8__flying_rocks_02
 inst fm1 11___stage_8__flying_rocks_01

@@ -1,5 +1,5 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 782 notes and 0 vibrato spans over 33.5s; the grid fits 84% of the
+# 782 notes and 0 vibrato spans over 33.5s; the grid fits 85% of the
 # onsets at 94.0 ms per row.
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum

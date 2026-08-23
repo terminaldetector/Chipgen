@@ -24,14 +24,41 @@ import os
 import shutil
 
 
+#: Suffixes that are platform labels rather than part of a game's name.
+_PLATFORM_MARKERS = ("_mega_drive", "_genesis", "_family_computer", "_nes",
+                     "_zyrinx")
+
+
 def game_of(entry: dict) -> str:
-    """Which soundtrack a track came from, from its score path."""
-    score = entry.get("score", "")
-    stem = os.path.basename(score)
-    for marker in ("_mega_drive", "_genesis"):
-        if marker in stem:
-            return stem.split(marker)[0]
-    return stem.split("_")[0] or "unknown"
+    """Which soundtrack a track came from.
+
+    Taken from the directory the source VGM sat in, not from the score's
+    filename. The filename route worked only for names carrying a platform
+    marker and fell back to the first underscore-separated word for
+    anything else — which filed Sub-Terrania under "sub" and Red Zone
+    under "red", and would have made them two games instead of two
+    soundtracks by the same studio.
+    """
+    source = entry.get("source", "")
+    if source:
+        folder = os.path.basename(os.path.dirname(source))
+        if folder:
+            return _clean_game(folder)
+    stem = os.path.basename(entry.get("score", ""))
+    return _clean_game(stem) or "unknown"
+
+
+def _clean_game(name: str) -> str:
+    name = os.path.splitext(name)[0].lower()
+    name = "".join(c if c.isalnum() else "_" for c in name)
+    while "__" in name:
+        name = name.replace("__", "_")
+    name = name.strip("_")
+    for marker in _PLATFORM_MARKERS:
+        if marker in name:
+            name = name.split(marker)[0]
+            break
+    return name.strip("_")
 
 
 def rank(entries):

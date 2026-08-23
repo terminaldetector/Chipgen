@@ -1,12 +1,12 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 242 notes and 12 vibrato spans over 32.2s; the grid fits 32% of the
-# onsets at 340.5 ms per row.
+# 242 notes and 12 vibrato spans over 32.2s; the grid fits 33% of the
+# onsets at 340.4 ms per row.
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum
 # a DAC hit was is not recoverable from a register log at all.
-# chipgen tracker  (88.11 BPM, 2 rows/beat)
+# chipgen tracker  (88.12 BPM, 2 rows/beat)
 title 26 - Piano
-bpm 88.11
+bpm 88.12
 lpb 2
 inst fm0 26___piano_01
 inst fm1 26___piano_02
@@ -56,9 +56,9 @@ vib fm0 12.5 6.2
 vib fm5 12.4 6.2
 ...    E-2:23 ...    ...    ...    ...
 vib fm0 0 0
-B-4:23 ...    ...    ...    ...    ...
+===    ...    ...    ...    ...    ...
 vib fm5 0 0
-...    F-2:23 C-3:16 ===    ...    B-4:11
+B-4:23 F-2:23 C-3:16 ===    ...    B-4:11
 B-4:23 ...    ...    G-3:16 A-3:16 ...
 
 A-4:23 ...    ...    ...    ...    B-4:11
@@ -101,8 +101,8 @@ vib fm5 11.1 6.2
 vib fm0 0 0
 D-5:23 ...    ...    ...    ...    ...
 vib fm5 0 0
-E-5:23 C-3:23 G-3:16 F-4:16 B-4:16 D-5:11
-...    ...    ...    ...    ...    E-5:11
+E-5:23 C-3:23 ===    ===    ===    D-5:11
+...    ...    G-3:16 F-4:16 B-4:16 E-5:11
 C-5:23 F-3:23 A-3:16 C-4:16 ===    B-4:11
 
 ===    A-2:23 E-3:16 ===    ===    C-5:11
@@ -131,8 +131,8 @@ C-5:23 ...    ...    ...    ...    A#4:11
 ===    ...    ...    ...    ...    ===
 ===    ...    ...    ...    ...    G-5:11
 ===    ...    ...    ...    ...    F-5:11
-A#5:23 ...    ...    ...    ...    A#5:11
-G#5:23 G#2:23 C-3:16 D#3:16 G-3:16 ...
+A#5:23 ...    ...    ...    ...    ===
+G#5:23 G#2:23 C-3:16 D#3:16 G-3:16 A#5:11
 ...    ...    ...    ...    ...    G#5:11
 vib fm0 11.8 6.04
 vib fm5 11.7 6.08
@@ -144,7 +144,7 @@ vib fm5 11.7 6.08
 ...    ...    ...    ...    ...    ...
 ...    ...    ...    ...    ...    ...
 ...    ...    ...    ...    ...    ...
-vib fm5 0 0
 ...    ...    ...    ...    ...    ...
+vib fm5 0 0
 vib fm0 0 0
 ===    C-3:23 ===    ===    ===    ...

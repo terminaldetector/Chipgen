@@ -98,13 +98,29 @@ def scan(score_paths, limit=None):
         "drum_rows": collections.Counter(),
         "drum_tracks": 0,
         "notes": 0,
+        "roles": collections.defaultdict(collections.Counter),
     }
+
+    import roles as roles_mod
+    import score_model
 
     for path in (score_paths[:limit] if limit else score_paths):
         try:
             events, meta = _load(path)
         except Exception:
             continue
+        # What each voice is actually DOING, from roles.py rather than from
+        # its median pitch. The pitch rule read "bass" for every channel on
+        # this corpus, because a Genesis median sits below its threshold
+        # whatever the part is — fm0 through fm5 all came out "bass".
+        try:
+            score = score_model.from_events(events, meta, path=path)
+            for voice in score.voices:
+                role, confidence = roles_mod.best_role(voice, score)
+                if role and confidence >= 0.20:
+                    stats["roles"][voice][role] += 1
+        except Exception:
+            pass
         stats["tracks"] += 1
         stats["tempos"].append(meta.bpm)
         ticks_per_row = meta.ticks_per_row()
@@ -226,7 +242,14 @@ def render(stats, exemplars=()):
         mid = statistics.median(pitches)
         high = pitches[9 * len(pitches) // 10]
         share = stats["voice_tracks"][voice] / tracks
-        role = ("bass" if mid < 45 else "mid / harmony" if mid < 57
+        counted = stats["roles"].get(voice)
+        if counted:
+            top = counted.most_common(2)
+            role = top[0][0]
+            if len(top) > 1 and top[1][1] >= top[0][1] * 0.6:
+                role = f"{top[0][0]} / {top[1][0]}"
+        else:
+            role = ("bass" if mid < 45 else "mid / harmony" if mid < 57
                 else "lead / top")
         add(f"| {voice} | {share*100:.0f}% | {_note_name(low)} | "
             f"{_note_name(mid)} | {_note_name(high)} | {role} |")

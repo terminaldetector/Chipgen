@@ -4,9 +4,9 @@
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum
 # a DAC hit was is not recoverable from a register log at all.
-# chipgen tracker  (85.71 BPM, 4 rows/beat)
+# chipgen tracker  (85.72 BPM, 4 rows/beat)
 title 12 - Defeat Them All!
-bpm 85.71
+bpm 85.72
 lpb 4
 inst fm0 12___defeat_them_all_01
 inst fm1 12___defeat_them_all_02

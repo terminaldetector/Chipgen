@@ -1,12 +1,12 @@
 # Transcribed from a VGM register log by python/vgm_transcribe.py.
-# 141 notes and 8 vibrato spans over 8.1s; the grid fits 57% of the
-# onsets at 151.0 ms per row.
+# 141 notes and 8 vibrato spans over 8.1s; the grid fits 62% of the
+# onsets at 151.2 ms per row.
 # Vibrato is recovered with its measured depth and speed.
 # Portamento and volume ramps are not recovered, and which drum
 # a DAC hit was is not recoverable from a register log at all.
-# chipgen tracker  (99.34 BPM, 4 rows/beat)
+# chipgen tracker  (99.2 BPM, 4 rows/beat)
 title 17 - Revive
-bpm 99.34
+bpm 99.2
 lpb 4
 inst fm0 17___revive_03
 inst fm1 17___revive_01
@@ -57,19 +57,19 @@ vib fm2 19.9 6.05
 
 vib fm0 0 0
 vib fm2 0 0
-G-1:64 F#5:32 C#5:23 G-3:23 D-5:16 ...    C#5:2 C#5:4
-...    ...    ...    ...    ...    F#5:23 E-5:2 D-5:4
+G-1:64 F#5:32 C#5:23 G-3:23 D-5:16 ...    D-5:2 C#5:4
+...    ...    ...    ...    ...    F#5:23 E-5:2 E-5:4
 ...    ...    ...    ...    E-5:16 ...    G-5:2 F#5:4
 ...    ...    ...    ...    ...    ...    B-5:2 A-5:4
-...    G-5:32 ...    ...    ...    ...    D-6:2 C#6:4
+...    G-5:32 ...    ...    ...    ...    E-6:2 D-6:4
 vib fm3 21.2 4.91
 F-1:64 A-5:32 C-5:23 E-4:23 ...    G-5:23 F-6:2 F-6:4
 ...    ...    ...    ...    F#5:16 A-5:23 G-6:2 G-6:4
 vib fm5 11.1 5.47
-...    ...    ...    ...    G-5:16 ...    G-6:2 F-6:4
 vib fm0 14 5.93
 vib fm1 11.1 5.93
 vib fm2 18.7 5.93
+...    ...    ...    ...    G-5:16 ...    G-6:2 F-6:4
 ...    ...    ...    ...    ...    ...    G-6:2 F-6:4
 ...    ...    ...    ...    ...    ...    G-6:2 F-6:4
 ...    ...    ...    ...    ...    ...    F-6:2 G-6:4
