@@ -35,6 +35,7 @@ INCLUDE_FILES = [
     "bridge/make_zip.py",
     "bridge/manifest.json",
     "bridge/CORE.md",
+    "bridge/NES.md",
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
     "corpus/STUDY.md",

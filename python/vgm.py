@@ -33,6 +33,8 @@ CMD_PSG = 0x50            # 0x50 dd
 CMD_YM2612_PORT0 = 0x52   # 0x52 aa dd
 CMD_YM2612_PORT1 = 0x53   # 0x53 aa dd
 CMD_YM3812 = 0x5A         # 0x5A aa dd — the OPL2/AdLib chip
+CMD_NES_APU = 0xB4        # 0xB4 aa dd — RP2A03, register $40aa
+CMD_AY8910 = 0xA0         # 0xA0 aa dd
 CMD_WAIT_LONG = 0x61      # 0x61 nn nn  (16-bit sample count)
 CMD_WAIT_735 = 0x62       # one NTSC frame
 CMD_WAIT_882 = 0x63       # one PAL frame
@@ -299,16 +301,19 @@ class VGMWriter:
                 f"{len(self.to_bytes())} bytes")
 
 
+def _raw_bytes(path_or_bytes) -> bytes:
+    """A VGM's bytes, from a path or already in hand, gunzipped if .vgz."""
+    if isinstance(path_or_bytes, (bytes, bytearray)):
+        return bytes(path_or_bytes)
+    with open(path_or_bytes, "rb") as fh:
+        raw = fh.read()
+    return gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw
+
+
 def read_header(path_or_bytes) -> dict:
     """Parse a VGM header back out. Used by the tests, and handy for
     checking that a player's complaint is the file's fault or its own."""
-    if isinstance(path_or_bytes, (bytes, bytearray)):
-        raw = bytes(path_or_bytes)
-    else:
-        with open(path_or_bytes, "rb") as fh:
-            raw = fh.read()
-        if raw[:2] == b"\x1f\x8b":
-            raw = gzip.decompress(raw)
+    raw = _raw_bytes(path_or_bytes)
     if raw[:4] != b"Vgm ":
         raise ValueError("not a VGM file (bad magic)")
     version = struct.unpack_from("<I", raw, 0x08)[0]
@@ -329,4 +334,56 @@ def read_header(path_or_bytes) -> dict:
         "loop_offset": (loop_offset + 0x1C) if loop_offset else 0,
         "psg_feedback": struct.unpack_from("<H", raw, 0x28)[0],
         "psg_shift_width": raw[0x2A],
+        # NES APU and AY8910 arrived in later header revisions, so the
+        # fields only exist if the header is long enough to hold them.
+        # Reading them unconditionally on a 1.50 file reads the data
+        # section as a clock.
+        "nes_clock": (struct.unpack_from("<I", raw, 0x84)[0] & 0x7FFFFFFF
+                      if len(raw) >= 0x88 and data_offset + 0x34 > 0x84 else 0),
+        "ay8910_clock": (struct.unpack_from("<I", raw, 0x74)[0]
+                         if len(raw) >= 0x78 and data_offset + 0x34 > 0x74
+                         else 0),
     }
+
+
+#: Header offset -> chip name, for every clock field this project can act
+#: on plus the common ones it cannot, because "which chip is this" has to
+#: be answerable before "can we read it".
+CHIP_CLOCK_FIELDS = (
+    (0x0C, "SN76489"), (0x10, "YM2413"), (0x2C, "YM2612"), (0x30, "YM2151"),
+    (0x44, "YM2203"), (0x48, "YM2608"), (0x4C, "YM2610"), (0x50, "YM3812"),
+    (0x54, "YM3526"), (0x5C, "YMF262"), (0x74, "AY8910"), (0x80, "GameBoy"),
+    (0x84, "NES APU"), (0x9C, "K051649"), (0xA4, "HuC6280"), (0xB0, "Pokey"),
+)
+
+#: Which of those this project has a core for.
+SUPPORTED_CHIPS = ("SN76489", "YM2612", "YM3812", "NES APU")
+
+
+def detect_chips(path_or_bytes) -> dict:
+    """-> {chip name: clock Hz} for every chip the file declares.
+
+    A VGM is not one chip. Assuming the first one found is the whole
+    track silently drops half of a two-chip soundtrack — Gimmick! is NES
+    APU plus a Sunsoft 5B expansion, and reading only the APU loses the
+    bass and half the harmony.
+    """
+    raw = _raw_bytes(path_or_bytes)
+    if raw[:4] != b"Vgm ":
+        raise ValueError("not a VGM file")
+    data_offset = struct.unpack_from("<I", raw, 0x34)[0]
+    limit = (data_offset + 0x34) if data_offset else 0x40
+    found = {}
+    for offset, name in CHIP_CLOCK_FIELDS:
+        if offset + 4 > min(len(raw), limit):
+            continue
+        clock = struct.unpack_from("<I", raw, offset)[0] & 0x7FFFFFFF
+        if clock:
+            found[name] = clock
+    return found
+
+
+def unsupported_chips(path_or_bytes):
+    """Chips in this file that nothing here can render. Empty is good."""
+    return sorted(name for name in detect_chips(path_or_bytes)
+                  if name not in SUPPORTED_CHIPS)

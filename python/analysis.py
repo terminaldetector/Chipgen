@@ -176,110 +176,85 @@ def fundamental(mono, rate: float, minimum: float = MIN_F0,
                 maximum: float = MAX_F0):
     """Measured fundamental in Hz, or None if the signal is not pitched.
 
-    Autocorrelation via FFT, peak-picked in the plausible lag range, then
-    refined by locating the same peak at the highest multiple of the
-    period that still fits in the analysed window — which divides the
-    period error by that multiple.
+    YIN's cumulative-mean-normalised difference function, not peak-picking
+    on an autocorrelation. The difference matters on exactly the waveforms
+    this project deals with: a 75% duty square — an ordinary NES pulse
+    setting — has an autocorrelation whose true period peaks are small
+    ripples riding a strongly rising baseline, because after mean removal
+    the signal is asymmetric. Measured on a 440 Hz 75% duty wave, the
+    largest autocorrelation value in the search range sat at lag 1303
+    while the real period is lag 100, and peak-picking returned either
+    nothing or 34 Hz. The difference function has no such baseline: it
+    goes to zero at the period and the normalisation removes the trend.
     """
     n = len(mono)
     if n < 1024:
         return None
     size = min(_next_pow2(n), 65536)
     start = _loudest_window_start(mono, min(size, n))
-    frame = list(mono[start:start + size])
+    frame = [float(v) for v in mono[start:start + size]]
     if len(frame) < size:
         frame += [0.0] * (size - len(frame))
     mean = sum(frame) / size
     frame = [v - mean for v in frame]
-    energy = sum(v * v for v in frame)
-    if energy <= 0.0:
+    if sum(v * v for v in frame) <= 0.0:
         return None
 
-    corr = _autocorrelation(frame, size)
+    window = size // 2
     min_lag = max(2, int(rate / maximum))
-    max_lag = min(size // 2, int(rate / minimum))
+    max_lag = min(window - 1, int(rate / minimum))
     if max_lag <= min_lag:
         return None
 
-    # Start looking only after the correlation has first fallen away.
-    # Straight peak-picking from lag 0 finds the fundamental for a spiky
-    # waveform and fails outright for a near-sine: at 65 Hz a lag of 8
-    # samples is 4 degrees of phase, so corr[8] is 0.997*corr[0] — higher
-    # than the true peak at lag 674 once zero-padding has tapered it. The
-    # measured symptom was a 65 Hz sine reading 5520 Hz.
-    first_dip = 1
-    while first_dip < max_lag and corr[first_dip] > 0.0:
-        first_dip += 1
-    # From lag 1, not from min_lag: at 4186 Hz the period is 10.5 samples
-    # and min_lag is already 8, so starting the dip search there walks
-    # straight past the trough and lands in the NEXT period. Measured as
-    # a clean 1200-cent error.
-    first_dip = max(min_lag, min(first_dip, max_lag - 1))
+    # The difference function is computed further than the period search
+    # goes. Searching stops at MIN_F0 because nothing below that is a note,
+    # but refinement needs room to find the same dip at 2x, 4x and 8x the
+    # period. Without it, a 32.7 Hz tone has a period of 1349 samples
+    # against a search bound of 1470 — no multiple fits, no refinement
+    # happens, and it comes back 8 cents flat while everything above
+    # 65 Hz lands inside one cent.
+    refine_lag = min(window - 1, max_lag * 8)
+    difference = _difference_function(frame, window, refine_lag)
+    normalised = _cumulative_mean_normalise(difference, max_lag)
 
-    best_value = 0.0
-    for lag in range(first_dip, max_lag):
-        if corr[lag] > best_value:
-            best_value = corr[lag]
-    # A pitched signal correlates with itself. Noise does not.
-    if best_value < 0.2 * corr[0]:
-        return None
-
-    # The FIRST lag that reaches nearly the best correlation, not the
-    # highest one. Autocorrelation peaks at every multiple of the period,
-    # and once the zero-padding taper is normalised away those peaks are
-    # the same height, so a global max picks an arbitrary multiple: a
-    # 4186 Hz sine measured exactly one octave flat because lag 2T won.
-    peak_lag = 0
-    for lag in range(first_dip, max_lag - 1):
-        if corr[lag] >= 0.9 * best_value and corr[lag] >= corr[lag + 1] \
-                and corr[lag] > corr[lag - 1]:
-            peak_lag = lag
+    # The FIRST lag that dips below the threshold, not the deepest one:
+    # the difference function dips at every multiple of the period, and
+    # taking the deepest picks an arbitrary octave down.
+    lag = min_lag
+    chosen = 0
+    while lag < max_lag:
+        if normalised[lag] < _YIN_THRESHOLD:
+            while lag + 1 < max_lag and normalised[lag + 1] < normalised[lag]:
+                lag += 1
+            chosen = lag
             break
-    if peak_lag == 0:
-        return None
+        lag += 1
+    if chosen == 0:
+        # Nothing cleared the threshold. Fall back to the global minimum,
+        # but only if it is a real dip rather than noise.
+        chosen = min(range(min_lag, max_lag), key=lambda i: normalised[i])
+        if normalised[chosen] > _YIN_FALLBACK:
+            return None
 
-    period = _refine_period(corr, peak_lag, max_lag)
+    period = _refine_from(difference, chosen + _parabolic_min(normalised, chosen),
+                          refine_lag)
     return rate / period if period > 0 else None
 
 
-def _autocorrelation(frame, size: int):
-    if audio.HAVE_NUMPY:
-        import numpy as np
-        arr = np.asarray(frame, dtype=np.float64)
-        padded = np.zeros(size * 2)
-        padded[:size] = arr
-        spec = np.fft.rfft(padded)
-        raw = np.fft.irfft(spec * np.conjugate(spec))[:size]
-        # Zero-padded correlation tapers linearly with lag simply because
-        # fewer samples overlap. Divide that out, or every comparison
-        # between a short lag and a long one is biased toward the short one.
-        return raw / np.arange(size, 0, -1)
-    padded = frame + [0.0] * size
-    spec = _fft_pure(padded)
-    power = [s * s.conjugate() for s in spec]
-    back = _fft_pure([p.conjugate() for p in power])
-    return [(back[i].conjugate() / (size * 2)).real / (size - i)
-            for i in range(size)]
+def _refine_from(difference, period: float, max_lag: int) -> float:
+    """Sharpen a period estimate by locking onto it at higher multiples.
 
-
-def _refine_period(corr, peak_lag: int, max_lag: int) -> float:
-    """Lock the period onto the highest usable multiple, doubling as it goes.
-
-    One period measured to +/-0.1 samples at C5 is about 2 cents. The same
-    0.1 samples spread over eight periods is 0.25 cents, and the peaks are
-    there for free — autocorrelation of a periodic signal peaks at every
-    multiple of the period.
-
+    YIN picks the right octave and only the right octave: its estimate
+    comes from one period, so it lands within a few cents and no closer.
+    Measured, YIN alone put 17 of 75 generated tones inside 1.5 cents
+    where the old peak-picking managed 74 — it was more robust and less
+    precise. The difference function dips at every multiple of the period,
+    so measuring the dip at 2x, 4x, 8x divides the error by that multiple.
     Doubling rather than jumping straight to the largest multiple, because
-    the starting estimate is an integer lag and its error multiplies too.
-    At 1397 Hz the period is 31.57 samples; jumping to 47x searches around
-    31*47 = 1457 when the peak is at 1484, misses it, and locks onto the
-    wrong one. Measured as a consistent 33-cent error. Doubling keeps the
-    estimate refined at every step, so the search window stays valid.
+    the starting estimate's own error multiplies too.
     """
-    period = peak_lag + _parabolic(corr, peak_lag)
     if period <= 0:
-        return peak_lag
+        return period
     multiple = 2
     while True:
         centre = period * multiple
@@ -290,12 +265,72 @@ def _refine_period(corr, peak_lag: int, max_lag: int) -> float:
         hi = min(max_lag - 2, int(centre) + window)
         if hi <= lo:
             break
-        local = max(range(lo, hi + 1), key=lambda i: corr[i])
-        if corr[local] < 0.3 * corr[0]:
-            break
-        period = (local + _parabolic(corr, local)) / multiple
+        local = min(range(lo, hi + 1), key=lambda i: difference[i])
+        period = (local + _parabolic_min(difference, local)) / multiple
         multiple *= 2
     return period
+
+
+#: A dip below this in the normalised difference function is a period.
+#: 0.1 is YIN's own recommendation and holds up here: at 0.15 a noisy
+#: signal starts reporting a pitch, at 0.05 a real note with vibrato stops.
+_YIN_THRESHOLD = 0.10
+#: How deep the global minimum has to be to be believed when nothing
+#: cleared the threshold. Above this the signal is not pitched.
+_YIN_FALLBACK = 0.55
+
+
+def _difference_function(frame, window: int, max_lag: int):
+    """d(tau) = sum over the window of (x[i] - x[i+tau])^2.
+
+    Built from the autocorrelation plus running power sums rather than
+    directly, which turns an O(W * max_lag) loop into one FFT.
+    """
+    power = [0.0] * (len(frame) + 1)
+    for i, v in enumerate(frame):
+        power[i + 1] = power[i] + v * v
+    head = power[window]
+    corr = _raw_correlation(frame, len(frame))
+    return [head + (power[min(len(frame), lag + window)] - power[lag])
+            - 2.0 * float(corr[lag]) for lag in range(max_lag + 1)]
+
+
+def _cumulative_mean_normalise(difference, max_lag: int):
+    """d'(tau) = d(tau) / (mean of d(1..tau)). Removes the rising trend."""
+    out = [1.0] * (max_lag + 1)
+    running = 0.0
+    for lag in range(1, max_lag + 1):
+        running += difference[lag]
+        out[lag] = (difference[lag] * lag / running) if running > 0 else 1.0
+    return out
+
+
+def _raw_correlation(frame, size: int):
+    """Unnormalised autocorrelation via FFT."""
+    if audio.HAVE_NUMPY:
+        import numpy as np
+        arr = np.asarray(frame, dtype=np.float64)
+        padded = np.zeros(size * 2)
+        padded[:size] = arr
+        spec = np.fft.rfft(padded)
+        return np.fft.irfft(spec * np.conjugate(spec))[:size]
+    padded = list(frame) + [0.0] * size
+    spec = _fft_pure(padded)
+    power = [v * v.conjugate() for v in spec]
+    back = _fft_pure([v.conjugate() for v in power])
+    return [(back[i].conjugate() / (size * 2)).real for i in range(size)]
+
+
+def _parabolic_min(values, i: int) -> float:
+    """Sub-sample offset of the true minimum near index i."""
+    if i <= 0 or i >= len(values) - 1:
+        return 0.0
+    a, b, c = values[i - 1], values[i], values[i + 1]
+    denom = a - 2.0 * b + c
+    if denom == 0.0:
+        return 0.0
+    offset = 0.5 * (a - c) / denom
+    return offset if -1.0 < offset < 1.0 else 0.0
 
 
 def _parabolic(values, i: int) -> float:
