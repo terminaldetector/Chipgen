@@ -195,19 +195,22 @@ def test_an_old_header_does_not_report_chips_it_cannot_hold():
 def _nes_corpus():
     import score_model
     import os
+    # NES scores live in the audited corpus now, alongside the Genesis
+    # ones — corpus/nes keeps only the platform's own study profile.
     root = os.path.join(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__))), "corpus", "nes")
-    return score_model.load_all(score_model.corpus_paths(root))
+        os.path.abspath(__file__))), "corpus")
+    return [s for s in score_model.load_all(score_model.corpus_paths(root))
+            if set(s.voices) <= {"pulse1", "pulse2", "triangle", "noise"}]
 
 
 def test_the_nes_corpus_loads_and_holds_only_nes_voices():
     scores = _nes_corpus()
-    assert len(scores) > 100, f"only {len(scores)} NES scores"
+    assert len(scores) > 50, f"only {len(scores)} NES scores"
     names = {name for score in scores for name in score.voices}
     assert names <= {"pulse1", "pulse2", "triangle", "noise"}, \
         f"a non-NES voice got into the NES corpus: {names}"
     notes = sum(len(v) for s in scores for v in s.voices.values())
-    assert notes > 40000, notes   # 48,626 at the time of writing
+    assert notes > 15000, notes   # the audited core keeps 74 NES tracks
 
 
 def test_one_nes_voice_never_plays_two_notes_at_once():
@@ -233,7 +236,7 @@ def test_the_transcriber_walks_a_log_to_its_declared_end():
     import vgm
 
     root = os.path.join(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__))), "corpus", "nes", "scores")
+        os.path.abspath(__file__))), "corpus", "core", "scores")
     if not glob.glob(os.path.join(root, "*.json")):
         return                                  # corpus not installed
     # Build a tiny log by hand: one write, then a long wait, then end.

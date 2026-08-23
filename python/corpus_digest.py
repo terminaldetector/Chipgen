@@ -363,8 +363,15 @@ def render(stats, exemplars=()):
     return "\n".join(out)
 
 
-def pick_exemplars(manifest_path, bars=8, per_game=1):
-    """One excerpt per soundtrack, from its best-transcribed track."""
+def pick_exemplars(manifest_path, bars=8, per_game=1, limit=None):
+    """One excerpt per soundtrack, from its best-transcribed track.
+
+    `limit` caps how many make it in. The excerpts are the expensive part
+    of the pack — one per soundtrack was fine at twelve soundtracks and
+    took the digest to 52k tokens at twenty-four, which defeats the point
+    of distilling anything. Capped, the selection spreads across
+    soundtracks rather than taking the first N alphabetically.
+    """
     root = os.path.dirname(os.path.abspath(manifest_path))
     with open(manifest_path, encoding="utf-8") as handle:
         manifest = json.load(handle)
@@ -373,10 +380,17 @@ def pick_exemplars(manifest_path, bars=8, per_game=1):
     import corpus_split
     by_game = collections.defaultdict(list)
     for entry in entries:
-        by_game[corpus_split.game_of(entry)].append(entry)
+        # An audited manifest names the soundtrack outright; guessing it
+        # from the filename is only the fallback for older ones.
+        by_game[entry.get("soundtrack")
+                or corpus_split.game_of(entry)].append(entry)
 
     picked = []
-    for game in sorted(by_game):
+    games = sorted(by_game)
+    if limit and len(games) > limit:
+        step = len(games) / float(limit)
+        games = [games[int(i * step)] for i in range(limit)]
+    for game in games:
         best = sorted(by_game[game],
                       key=lambda e: (-e.get("grid_fit", 0),
                                      -e.get("notes", 0)))[:per_game]
@@ -387,9 +401,16 @@ def pick_exemplars(manifest_path, bars=8, per_game=1):
             except Exception:
                 continue
             name = entry.get("gd3", {}).get("title") or entry["source"]
-            picked.append((f"{game} — {name} "
-                           f"({entry['bpm']:.0f} BPM, fit "
-                           f"{entry['grid_fit']:.2f})", text))
+            # Tempo and grid fit are label decoration, and a manifest is
+            # allowed not to carry them — the NES corpus is built by a
+            # different transcriber and records neither.
+            detail = []
+            if entry.get("bpm"):
+                detail.append(f"{entry['bpm']:.0f} BPM")
+            if entry.get("grid_fit"):
+                detail.append(f"fit {entry['grid_fit']:.2f}")
+            suffix = f" ({', '.join(detail)})" if detail else ""
+            picked.append((f"{game} — {name}{suffix}", text))
     return picked
 
 
@@ -438,6 +459,8 @@ def main(argv):
     parser.add_argument("--bars", type=int, default=8,
                         help="bars per excerpt")
     parser.add_argument("--limit", type=int, help="scan only N scores")
+    parser.add_argument("--exemplars", type=int, default=10,
+                        help="cap how many excerpts go in")
     parser.add_argument("--no-excerpts", action="store_true")
     args = parser.parse_args(argv)
 
@@ -450,7 +473,7 @@ def main(argv):
     stats = scan(scores, limit=args.limit)
     exemplars = ()
     if not args.no_excerpts and os.path.exists(manifest):
-        exemplars = pick_exemplars(manifest, bars=args.bars)
+        exemplars = pick_exemplars(manifest, args.bars, limit=args.exemplars)
     text = render(stats, exemplars)
 
     with open(args.out, "w", encoding="utf-8") as handle:
