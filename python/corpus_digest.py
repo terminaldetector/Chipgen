@@ -242,7 +242,7 @@ def render(stats, exemplars=()):
         mid = statistics.median(pitches)
         high = pitches[9 * len(pitches) // 10]
         share = stats["voice_tracks"][voice] / tracks
-        counted = stats["roles"].get(voice)
+        counted = stats.get("roles", {}).get(voice)
         if counted:
             top = counted.most_common(2)
             role = top[0][0]
