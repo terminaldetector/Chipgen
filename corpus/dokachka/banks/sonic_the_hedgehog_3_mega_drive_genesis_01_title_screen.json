@@ -1,0 +1,185 @@
+[
+  {
+    "name": "01___title_screen_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 21,
+        "attack_rate": 20,
+        "decay_rate": 15,
+        "sustain_rate": 7,
+        "release_rate": 5,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 25,
+        "decay_rate": 13,
+        "sustain_rate": 4,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 25,
+        "decay_rate": 13,
+        "sustain_rate": 4,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 25,
+        "decay_rate": 13,
+        "sustain_rate": 4,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "01___title_screen_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 1,
+        "release_rate": 5,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 10,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "01___title_screen_03",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 34,
+        "attack_rate": 31,
+        "decay_rate": 17,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]

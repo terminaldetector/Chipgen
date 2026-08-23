@@ -1,0 +1,185 @@
+[
+  {
+    "name": "31___knuckles__theme_01",
+    "algorithm": 1,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 14,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "31___knuckles__theme_02",
+    "algorithm": 5,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 7,
+        "attack_rate": 31,
+        "decay_rate": 18,
+        "sustain_rate": 18,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 24,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "31___knuckles__theme_03",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 3,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 9,
+        "release_rate": 2,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 2,
+        "attack_rate": 23,
+        "decay_rate": 20,
+        "sustain_rate": 26,
+        "release_rate": 15,
+        "sustain_level": 9,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 3,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 17,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 3,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 29,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

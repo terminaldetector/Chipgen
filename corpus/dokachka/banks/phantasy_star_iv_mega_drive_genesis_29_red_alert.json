@@ -1,0 +1,246 @@
+[
+  {
+    "name": "29___red_alert_01",
+    "algorithm": 1,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 4,
+        "total_level": 31,
+        "attack_rate": 25,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 3,
+        "total_level": 26,
+        "attack_rate": 25,
+        "decay_rate": 10,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 25,
+        "attack_rate": 29,
+        "decay_rate": 11,
+        "sustain_rate": 11,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "29___red_alert_02",
+    "algorithm": 1,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 2,
+        "total_level": 32,
+        "attack_rate": 25,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 10,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 3,
+        "total_level": 37,
+        "attack_rate": 25,
+        "decay_rate": 10,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 22,
+        "attack_rate": 29,
+        "decay_rate": 11,
+        "sustain_rate": 11,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "29___red_alert_03",
+    "algorithm": 4,
+    "feedback": 3,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 7,
+        "total_level": 35,
+        "attack_rate": 29,
+        "decay_rate": 17,
+        "sustain_rate": 11,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 43,
+        "attack_rate": 30,
+        "decay_rate": 14,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 30,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "29___red_alert_04",
+    "algorithm": 3,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 7,
+        "total_level": 18,
+        "attack_rate": 5,
+        "decay_rate": 11,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 10,
+        "attack_rate": 6,
+        "decay_rate": 8,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 6,
+        "total_level": 16,
+        "attack_rate": 6,
+        "decay_rate": 10,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 20,
+        "attack_rate": 10,
+        "decay_rate": 8,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

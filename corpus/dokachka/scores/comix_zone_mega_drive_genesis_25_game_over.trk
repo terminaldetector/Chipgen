@@ -1,0 +1,61 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 116 notes and 0 vibrato spans over 6.9s; the grid fits 49% of the
+# onsets at 175.4 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
+# chipgen tracker  (85.5 BPM, 4 rows/beat)
+title 25 - Game Over
+bpm 85.5
+lpb 4
+inst fm0 25___game_over_02
+inst fm1 25___game_over_02
+inst fm2 25___game_over_03
+inst fm3 25___game_over_04
+inst fm4 25___game_over_01
+inst fm5 25___game_over_03
+cols fm0 fm1 fm2 fm3 fm4 fm5 dac
+
+# fm0    fm1    fm2    fm3    fm4   fm5    dac 
+E-3:45 A-2:17 A-2:45 A-2:27 A-2:1 ...    kick
+...    ...    ...    ...    ...   ...    ...
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    ...
+G-2:45 G-2:17 D-3:45 G-2:27 G-2:1 ...    ...
+...    ...    ...    ...    ...   ...    ...
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    ...
+...    ...    ...    ...    ...   ...    kick
+E-2:17 G-2:25 D-3:45 E-2:27 E-2:1 ...    ...
+...    ...    ...    ...    ...   ...    kick
+...    ...    ...    ...    ...   ...    ...
+...    ===    ...    ...    ===   ...    kick
+
+...    ===    ...    ...    A#2:1 ...    ...
+...    ===    ...    ...    ===   ...    kick
+...    G-2:25 ===    ...    D-3:1 ...    kick
+...    ===    ...    ...    ===   ...    kick
+...    G-2:25 ...    ...    E-3:1 ...    kick
+...    ===    ...    ...    ===   ...    kick
+...    G-2:25 ...    ...    E-3:1 ...    kick
+...    G-2:25 ...    ...    E-3:1 ...    ...
+...    G-2:25 G-3:12 ...    E-3:1 ...    kick
+...    ===    ...    ...    E-3:1 ...    ...
+...    G-2:25 ...    ...    E-3:1 ...    ...
+...    G-2:25 ...    ...    E-3:1 E-4:45 ...
+G-2:25 E-3:45 ...    ...    E-3:1 ===    kick
+===    ...    ...    ...    E-3:1 ...    kick
+G-2:25 D-4:45 ...    ...    E-3:1 ...    kick
+===    ...    ...    ...    E-2:1 ...    kick
+
+...    ...    ...    ...    ...   ...    ...
+...    ...    ...    ...    ...   ...    kick
+...    ...    ===    ...    ...   ...    ...
+...    ...    ...    ...    ===   ...    ...
+E-2:17 B-2:45 E-3:45 E-2:27 E-2:1 ...    kick
+...    ...    ...    ...    ...   ...    ...
+...    ...    ...    ...    ...   ...    ...
+===    ===    ...    ===    ===   ...    ...

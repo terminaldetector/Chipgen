@@ -1,0 +1,78 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 308 notes and 0 vibrato spans over 11.7s; the grid fits 65% of the
+# onsets at 220.0 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
+# chipgen tracker  (136.35 BPM, 2 rows/beat)
+title 22 - Invincibility
+bpm 136.35
+lpb 2
+inst fm0 22___invincibility_01
+inst fm1 22___invincibility_02
+inst fm2 22___invincibility_01
+inst fm3 22___invincibility_01
+inst fm4 22___invincibility_01
+cols fm0 fm1 fm2 fm3 fm4 noise dac
+
+# fm0    fm1    fm2    fm3    fm4    noise dac 
+...    ===    ...    ===    ===    ...   kick
+...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...   ...
+...    ...    ...    ...    ...    ...   ...
+...    ===    ===    ===    ...    ===   ...
+C#5:29 ===    ===    ===    C#5:29 w1:3  kick
+...    ===    ===    ===    ...    ===   kick
+===    ===    ===    ===    ===    w1:3  kick
+
+D-5:29 G-2:58 D-4:35 B-3:35 D-5:29 ===   kick
+B-4:29 F#2:58 F#4:35 D-4:35 B-4:29 w1:3  kick
+...    G-2:58 ...    ...    ...    ===   kick
+===    F#2:58 A-4:35 F#4:35 ===    w1:3  kick
+===    ===    ===    ===    ===    ===   kick
+===    ===    ===    ===    ===    w1:3  kick
+===    ===    ===    ===    ===    ===   kick
+===    ===    ===    ===    ===    w1:3  kick
+
+G-4:29 D-3:58 G-4:35 D-4:35 G-4:29 ===   kick
+B-4:29 C#3:58 G-4:35 D-4:35 B-4:29 w1:3  kick
+...    D-3:58 ...    ...    ...    ===   kick
+===    C#3:58 ...    ...    ===    w1:3  ...
+...    ===    ===    ===    ...    ===   kick
+C#5:29 ===    ===    ===    C#5:29 w1:3  kick
+...    ===    ===    ===    ...    ===   kick
+===    ===    ===    ===    ===    w1:3  kick
+
+D-5:29 G-2:58 D-4:35 B-3:35 D-5:29 ===   kick
+B-4:29 F#2:58 F#4:35 D-4:35 B-4:29 w1:3  kick
+...    G-2:58 ...    ...    ...    ===   kick
+===    F#2:58 A-4:35 F#4:35 ===    w1:3  kick
+===    ===    ===    ===    ===    ===   kick
+===    ===    ===    ===    ===    w1:3  kick
+===    ===    ===    ===    ===    ===   kick
+A-4:29 E-2:58 C#4:35 A-3:35 A-4:29 w1:3  kick
+
+G-4:29 D-3:58 G-4:35 D-4:35 G-4:29 ===   kick
+B-4:29 C#3:58 G-4:35 D-4:35 B-4:29 w1:3  kick
+...    D-3:58 ...    ...    ...    ===   kick
+...    C#3:58 ...    ...    ...    w1:3  ...
+===    B-1:58 ===    ===    ===    ===   kick
+...    G-1:58 G-3:35 B-3:35 ...    w1:3  ...
+...    ===    ===    ===    ...    ===   kick
+...    B-1:58 ...    ...    ...    w1:3  kick
+
+...    B-1:58 ...    ...    ...    ===   kick
+...    G-1:58 G-3:35 B-3:35 ...    w1:3  ...
+...    ===    ===    ===    ...    ===   kick
+...    B-1:58 ...    ...    ...    w1:3  kick
+B-4:38 A-1:58 ...    ...    B-4:38 ===   kick
+E-5:38 B-1:58 G-3:35 B-3:35 E-5:38 w1:3  ...
+C#5:38 C#2:58 A-3:35 C#4:35 C#5:38 ===   kick
+F#5:38 D#2:58 ===    ===    F#5:38 w1:3  kick
+
+D#5:38 B-1:58 ...    ...    D#5:38 ===   kick
+G#5:38 D#2:58 G-3:35 B-3:35 G#5:38 w1:3  ...
+F#5:38 C#2:58 A-3:35 C#4:35 F#5:38 ===   ...
+C-6:38 F-2:58 ===    ===    C-6:38 w1:3  ...
+===    A-2:58 E-4:35 C#4:35 ===    ===   ...
+C#5:29 A-2:58 ===    ===    ...    ...   ...

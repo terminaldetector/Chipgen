@@ -1,0 +1,246 @@
+[
+  {
+    "name": "11___rune_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 2,
+        "total_level": 20,
+        "attack_rate": 22,
+        "decay_rate": 28,
+        "sustain_rate": 29,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 20,
+        "attack_rate": 30,
+        "decay_rate": 25,
+        "sustain_rate": 19,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 20,
+        "attack_rate": 20,
+        "decay_rate": 1,
+        "sustain_rate": 13,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "11___rune_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 2,
+        "total_level": 34,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 2,
+        "total_level": 31,
+        "attack_rate": 23,
+        "decay_rate": 12,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 31,
+        "attack_rate": 19,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 31,
+        "attack_rate": 23,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "11___rune_03",
+    "algorithm": 5,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 12,
+        "attack_rate": 28,
+        "decay_rate": 1,
+        "sustain_rate": 16,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 22,
+        "decay_rate": 14,
+        "sustain_rate": 22,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 16,
+        "attack_rate": 29,
+        "decay_rate": 16,
+        "sustain_rate": 19,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 11,
+        "release_rate": 15,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "11___rune_04",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 21,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 26,
+        "attack_rate": 19,
+        "decay_rate": 21,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 56,
+        "attack_rate": 3,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 25,
+        "attack_rate": 23,
+        "decay_rate": 4,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]

@@ -1,0 +1,124 @@
+[
+  {
+    "name": "15___boss_defeated_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 21,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 11,
+        "attack_rate": 29,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 28,
+        "attack_rate": 28,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 9,
+        "attack_rate": 29,
+        "decay_rate": 23,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "15___boss_defeated_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 26,
+        "attack_rate": 15,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 18,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 18,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 20,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  }
+]

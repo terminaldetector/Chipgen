@@ -1,0 +1,185 @@
+[
+  {
+    "name": "06___reincarnated_soul__part_1__introduction_01",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 33,
+        "attack_rate": 20,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 31,
+        "attack_rate": 6,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 37,
+        "attack_rate": 2,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 10,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "06___reincarnated_soul__part_1__introduction_02",
+    "algorithm": 4,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 35,
+        "attack_rate": 18,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 35,
+        "attack_rate": 18,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 18,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 18,
+        "attack_rate": 18,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "06___reincarnated_soul__part_1__introduction_03",
+    "algorithm": 7,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 35,
+        "attack_rate": 21,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 18,
+        "attack_rate": 29,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 13,
+        "total_level": 35,
+        "attack_rate": 21,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 18,
+        "attack_rate": 28,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  }
+]

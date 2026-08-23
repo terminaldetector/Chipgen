@@ -1,0 +1,185 @@
+[
+  {
+    "name": "19___death_of_king_gedol_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 15,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 21,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 21,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 21,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "19___death_of_king_gedol_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 26,
+        "attack_rate": 15,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 18,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 18,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 20,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "19___death_of_king_gedol_03",
+    "algorithm": 0,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 31,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

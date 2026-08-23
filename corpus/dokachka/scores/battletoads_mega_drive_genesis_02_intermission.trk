@@ -1,0 +1,35 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 102 notes and 0 vibrato spans over 3.3s; the grid fits 93% of the
+# onsets at 208.4 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
+# chipgen tracker  (71.98 BPM, 4 rows/beat)
+title 02 - Intermission
+bpm 71.98
+lpb 4
+inst fm0 02___intermission_01
+inst fm1 02___intermission_02
+inst fm2 02___intermission_01
+inst fm3 02___intermission_02
+cols fm0 fm1 fm2 fm3 noise dac
+
+# fm0    fm1    fm2    fm3   noise dac 
+D-3:58 D-3:41 D-3:12 ...   w1:7  kick
+A-2:58 A-2:41 A-2:12 D-3:9 ===   ...
+C-3:58 C-3:41 C-3:12 A-2:9 w1:7  kick
+D-3:58 D-3:41 D-3:12 C-3:9 ===   ...
+E-3:58 E-3:41 E-3:12 D-3:9 w1:7  kick
+E-3:58 E-3:41 E-3:12 E-3:9 ===   ...
+D-3:58 D-3:41 D-3:12 E-3:9 w1:7  kick
+E-3:58 E-3:41 E-3:12 D-3:9 ===   ...
+F-3:58 F-3:41 F-3:12 E-3:9 w1:7  kick
+D-3:58 D-3:41 D-3:12 F-3:9 ===   ...
+F-3:58 F-3:41 F-3:12 D-3:9 w1:7  kick
+G-3:58 G-3:41 G-3:12 F-3:9 ===   ...
+F-3:58 F-3:41 F-3:12 G-3:9 w1:7  kick
+E-3:58 E-3:41 E-3:12 F-3:9 ===   ...
+D-3:58 D-3:41 D-3:12 E-3:9 w1:7  kick
+C-3:58 C-3:41 C-3:12 D-3:9 ===   ...
+
+===    ===    ===    ===   ...   ...

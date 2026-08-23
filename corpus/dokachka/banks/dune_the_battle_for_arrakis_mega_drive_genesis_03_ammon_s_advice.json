@@ -1,0 +1,246 @@
+[
+  {
+    "name": "03___ammon_s_advice_01",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 29,
+        "decay_rate": 3,
+        "sustain_rate": 13,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 3,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 2,
+        "multiple": 15,
+        "total_level": 10,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 23,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___ammon_s_advice_02",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 13,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 31,
+        "release_rate": 8,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 27,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 40,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 31,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 70,
+        "attack_rate": 15,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___ammon_s_advice_03",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 10,
+        "total_level": 36,
+        "attack_rate": 20,
+        "decay_rate": 15,
+        "sustain_rate": 21,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 10,
+        "total_level": 43,
+        "attack_rate": 21,
+        "decay_rate": 14,
+        "sustain_rate": 21,
+        "release_rate": 11,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 6,
+        "total_level": 72,
+        "attack_rate": 25,
+        "decay_rate": 19,
+        "sustain_rate": 21,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 6,
+        "total_level": 16,
+        "attack_rate": 28,
+        "decay_rate": 14,
+        "sustain_rate": 21,
+        "release_rate": 14,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___ammon_s_advice_04",
+    "algorithm": 3,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 39,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 7,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 29,
+        "attack_rate": 27,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 26,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 1,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]

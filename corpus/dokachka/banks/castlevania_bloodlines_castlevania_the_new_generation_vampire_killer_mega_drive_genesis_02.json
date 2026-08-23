@@ -1,0 +1,307 @@
+[
+  {
+    "name": "02___the_beating_in_darkness__title_theme_01",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 29,
+        "attack_rate": 16,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 4,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 30,
+        "attack_rate": 16,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 27,
+        "attack_rate": 16,
+        "decay_rate": 31,
+        "sustain_rate": 11,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 30,
+        "attack_rate": 16,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "02___the_beating_in_darkness__title_theme_02",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 10,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 22,
+        "release_rate": 1,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 21,
+        "release_rate": 1,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 7,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 21,
+        "release_rate": 1,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 6,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 14,
+        "sustain_rate": 14,
+        "release_rate": 7,
+        "sustain_level": 10,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "02___the_beating_in_darkness__title_theme_03",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 33,
+        "attack_rate": 20,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 31,
+        "attack_rate": 6,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 37,
+        "attack_rate": 2,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 10,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "02___the_beating_in_darkness__title_theme_04",
+    "algorithm": 4,
+    "feedback": 2,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 23,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 25,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 7,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 7,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "02___the_beating_in_darkness__title_theme_05",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 29,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 14,
+        "attack_rate": 14,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 14,
+        "attack_rate": 14,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 14,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

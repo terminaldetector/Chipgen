@@ -1,0 +1,63 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 131 notes and 0 vibrato spans over 9.3s; the grid fits 73% of the
+# onsets at 231.9 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
+# chipgen tracker  (129.35 BPM, 2 rows/beat)
+title 18 - Continue
+bpm 129.35
+lpb 2
+inst fm0 18___continue_03
+inst fm1 18___continue_02
+inst fm2 18___continue_01
+inst fm3 18___continue_01
+cols fm0 fm1 fm2 fm3 dac
+
+# fm0    fm1    fm2    fm3    dac 
+...    A-2:54 ...    ...    ...
+...    G#2:54 ...    ...    ...
+...    G-2:54 ...    ...    ...
+...    F#2:54 ...    ...    ...
+...    ===    ===    ===    kick
+C#4:58 ===    ===    ===    kick
+===    ===    ===    ===    kick
+===    ===    ===    ===    kick
+
+D-4:58 G-2:64 D-5:11 B-4:11 kick
+B-3:58 F#2:64 D-5:11 B-4:11 kick
+...    G-2:64 ...    ...    kick
+===    F#2:64 ...    ...    kick
+...    ===    ===    ===    kick
+D-4:58 ===    ===    ===    kick
+===    ===    ===    ===    kick
+===    ===    ===    ===    kick
+
+D#4:58 G#2:64 D-5:11 B-4:11 kick
+C-4:58 G-2:64 D-5:11 B-4:11 kick
+...    G#2:64 ...    ...    kick
+...    G-2:64 ...    ...    kick
+===    B-2:64 E-5:11 C#5:11 kick
+D#4:58 B-2:64 E-5:11 C#5:11 kick
+...    F#2:64 C#5:11 A-4:11 kick
+D#4:58 F#2:64 C#5:11 A-4:11 kick
+
+E-4:58 A-2:64 D-5:11 B-4:11 kick
+===    ...    ...    ...    kick
+C#4:58 G#2:64 D-5:11 B-4:11 kick
+...    G#2:64 ...    ...    kick
+F-4:58 B-2:64 E-5:11 C#5:11 kick
+F-4:58 B-2:64 E-5:11 C#5:11 kick
+F-4:58 F#2:64 C#5:11 A-4:11 kick
+C-4:58 F#2:64 C#5:11 A-4:11 kick
+
+A#3:58 E-3:64 G-5:11 D-5:11 kick
+===    ===    ===    ===    kick
+D-4:58 D#3:64 G-5:11 D-5:11 ...
+...    ...    ...    ...    ...
+...    ...    G-5:11 ...    ...
+...    ...    ...    ...    ...
+...    ...    ...    ...    ...
+...    ...    ...    ...    ...
+
+===    ===    ===    ...    ...

@@ -1,0 +1,86 @@
+# Transcribed from a VGM register log by python/vgm_transcribe.py.
+# 684 notes and 0 vibrato spans over 13.8s; the grid fits 45% of the
+# onsets at 230.6 ms per row.
+# Vibrato is recovered with its measured depth and speed.
+# Portamento and volume ramps are not recovered, and which drum
+# a DAC hit was is not recoverable from a register log at all.
+# chipgen tracker  (130.07 BPM, 2 rows/beat)
+title 16 - Clinger Winger
+bpm 130.07
+lpb 2
+inst fm0 16___clinger_winger_01
+inst fm1 16___clinger_winger_02
+inst fm2 16___clinger_winger_01
+inst fm3 16___clinger_winger_02
+inst fm4 16___clinger_winger_04
+cols fm0 fm1 fm2 fm3 fm4 dac
+
+# fm0    fm1    fm2    fm3    fm4   dac 
+E-2:54 E-3:23 E-2:15 C#2:2  C#2:2 kick
+E-2:54 E-3:23 E-2:15 F#1:2  D#1:2 kick
+E-2:54 E-3:23 E-2:15 A-1:2  F#1:2 kick
+E-2:54 E-3:23 E-2:15 C-2:2  A-1:2 ...
+E-2:54 E-3:23 E-2:15 ===    C-2:2 kick
+E-2:54 E-3:23 E-2:15 D#2:2  D#2:2 kick
+D-2:54 D-3:23 ===    F#2:2  F#2:2 kick
+G-2:54 G-3:23 G-2:15 A-2:2  A-2:2 kick
+
+E-2:54 E-3:23 E-2:15 C-3:2  C-3:2 kick
+E-2:54 E-3:23 E-2:15 D#3:2  D#3:2 kick
+E-2:54 E-3:23 E-2:15 F#3:2  F#3:2 kick
+E-2:54 E-3:23 E-2:15 A-3:2  A-3:2 ...
+D-2:54 D-3:23 ===    C-4:2  ===   kick
+G-2:54 G-3:23 G-2:15 D#4:2  ===   kick
+G-2:54 G-3:23 G-2:15 F#4:2  D#4:2 kick
+D-2:54 D-3:23 D-2:15 A-4:2  F#4:2 kick
+
+E-2:54 E-3:23 E-2:15 ===    A-4:2 kick
+E-2:54 E-3:23 E-2:15 ===    C-5:2 kick
+E-2:54 E-3:23 ===    E-3:6  ===   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+D-2:54 D-3:23 D-2:15 E-3:6  ...   kick
+G-2:54 G-3:23 G-2:15 D-3:6  ...   kick
+
+E-2:54 ===    E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+D-2:54 A-3:41 D-2:15 E-3:6  ...   kick
+G-2:54 D-4:41 G-2:15 ===    ...   kick
+G-2:54 G-4:41 ===    B-3:11 ...   kick
+D-2:54 ===    E-2:15 E-4:11 ...   kick
+
+E-2:54 E-3:23 E-2:15 E-5:11 ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 ===    E-2:15 E-3:6  ...   kick
+D-2:54 D-3:23 D-2:15 ===    ...   kick
+G-2:54 G-3:23 G-2:15 ===    ...   kick
+
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+===    E-3:23 E-2:15 E-3:6  ...   kick
+D-2:54 D-3:23 D-2:15 E-3:6  ...   kick
+G-2:54 G-3:23 G-2:15 E-3:6  ...   kick
+G-2:54 G-3:23 G-2:15 E-3:6  ...   kick
+D-2:54 D-3:23 D-2:15 A-3:6  ...   kick
+
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 ===    ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 E-2:15 E-3:6  ...   kick
+D-2:54 D-3:23 ===    E-3:6  ...   kick
+G-2:54 ===    E-2:15 E-3:6  ...   kick
+
+E-2:54 ===    E-2:15 E-3:6  ...   kick
+E-2:54 E-3:23 ===    E-3:6  ...   kick
+E-2:54 E-3:23 ===    E-3:6  ...   kick
+E-2:54 E-3:23 ===    E-3:6  ...   kick
+...    ...    E-2:15 ...    ...   kick

@@ -1,0 +1,307 @@
+[
+  {
+    "name": "26___emerald_hill__2p_01",
+    "algorithm": 5,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 40,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 6,
+        "total_level": 22,
+        "attack_rate": 25,
+        "decay_rate": 5,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 8,
+        "total_level": 16,
+        "attack_rate": 25,
+        "decay_rate": 5,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 29,
+        "attack_rate": 25,
+        "decay_rate": 5,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "26___emerald_hill__2p_02",
+    "algorithm": 0,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 6,
+        "multiple": 6,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 0,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 5,
+        "total_level": 58,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "26___emerald_hill__2p_03",
+    "algorithm": 2,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 22,
+        "attack_rate": 18,
+        "decay_rate": 13,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 29,
+        "attack_rate": 14,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 5,
+        "total_level": 42,
+        "attack_rate": 13,
+        "decay_rate": 12,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 10,
+        "attack_rate": 20,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "26___emerald_hill__2p_04",
+    "algorithm": 2,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 5,
+        "total_level": 36,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 48,
+        "attack_rate": 22,
+        "decay_rate": 3,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 41,
+        "attack_rate": 24,
+        "decay_rate": 27,
+        "sustain_rate": 4,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "26___emerald_hill__2p_05",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 6,
+        "multiple": 1,
+        "total_level": 34,
+        "attack_rate": 29,
+        "decay_rate": 4,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 34,
+        "attack_rate": 29,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 8,
+        "total_level": 30,
+        "attack_rate": 29,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 16,
+        "attack_rate": 16,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]

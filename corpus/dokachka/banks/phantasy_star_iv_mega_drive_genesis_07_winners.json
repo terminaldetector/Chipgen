@@ -1,0 +1,185 @@
+[
+  {
+    "name": "07___winners_01",
+    "algorithm": 1,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 4,
+        "total_level": 27,
+        "attack_rate": 28,
+        "decay_rate": 10,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 26,
+        "attack_rate": 30,
+        "decay_rate": 13,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "07___winners_02",
+    "algorithm": 1,
+    "feedback": 3,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 33,
+        "attack_rate": 14,
+        "decay_rate": 14,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 23,
+        "attack_rate": 14,
+        "decay_rate": 14,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 24,
+        "attack_rate": 13,
+        "decay_rate": 14,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 23,
+        "attack_rate": 22,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "07___winners_03",
+    "algorithm": 3,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 9,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 17,
+        "sustain_rate": 11,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 29,
+        "attack_rate": 30,
+        "decay_rate": 14,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

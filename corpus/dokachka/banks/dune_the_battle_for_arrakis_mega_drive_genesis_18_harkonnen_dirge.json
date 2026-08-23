@@ -1,0 +1,185 @@
+[
+  {
+    "name": "18___harkonnen_dirge_01",
+    "algorithm": 6,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 31,
+        "release_rate": 9,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 2,
+        "multiple": 1,
+        "total_level": 34,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 9,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 34,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      },
+      {
+        "detune": 5,
+        "multiple": 15,
+        "total_level": 52,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 21,
+        "release_rate": 9,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "18___harkonnen_dirge_02",
+    "algorithm": 1,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 17,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 12,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 23,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "18___harkonnen_dirge_03",
+    "algorithm": 3,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 39,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 7,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 29,
+        "attack_rate": 27,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 26,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  }
+]
