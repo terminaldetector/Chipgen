@@ -1,0 +1,551 @@
+[
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_01",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 28,
+        "attack_rate": 15,
+        "decay_rate": 14,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 15,
+        "decay_rate": 11,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 15,
+        "decay_rate": 14,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 4,
+        "total_level": 21,
+        "attack_rate": 15,
+        "decay_rate": 15,
+        "sustain_rate": 3,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_02",
+    "algorithm": 5,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 25,
+        "decay_rate": 25,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 27,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 27,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 18,
+        "attack_rate": 27,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_03",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 10,
+        "total_level": 40,
+        "attack_rate": 23,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 30,
+        "attack_rate": 23,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 6,
+        "total_level": 35,
+        "attack_rate": 23,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 19,
+        "attack_rate": 23,
+        "decay_rate": 7,
+        "sustain_rate": 4,
+        "release_rate": 11,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_04",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 30,
+        "attack_rate": 27,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 40,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 6,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_05",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 0,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 15,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 12,
+        "release_rate": 11,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_06",
+    "algorithm": 6,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_07",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 26,
+        "attack_rate": 19,
+        "decay_rate": 4,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 24,
+        "attack_rate": 19,
+        "decay_rate": 11,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 23,
+        "attack_rate": 19,
+        "decay_rate": 7,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 2,
+        "total_level": 23,
+        "attack_rate": 11,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_08",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 6,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "05___avatar_of_flame__stage_1_boss_09",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 9,
+        "total_level": 40,
+        "attack_rate": 27,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 9,
+        "total_level": 44,
+        "attack_rate": 27,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 19,
+        "attack_rate": 27,
+        "decay_rate": 11,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 1,
+        "total_level": 19,
+        "attack_rate": 27,
+        "decay_rate": 11,
+        "sustain_rate": 4,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

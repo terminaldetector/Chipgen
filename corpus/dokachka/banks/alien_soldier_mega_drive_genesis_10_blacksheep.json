@@ -1,0 +1,1222 @@
+[
+  {
+    "name": "10___blacksheep_01",
+    "algorithm": 3,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 27,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 27,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 27,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 10,
+        "attack_rate": 31,
+        "decay_rate": 27,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 16,
+        "attack_rate": 16,
+        "decay_rate": 28,
+        "sustain_rate": 9,
+        "release_rate": 0,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 6,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 2,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_03",
+    "algorithm": 5,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 20,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 20,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 20,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 8,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 20,
+        "sustain_rate": 0,
+        "release_rate": 6,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_04",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 30,
+        "sustain_rate": 14,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 1,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_05",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 8,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 9,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 11,
+        "total_level": 6,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 11,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 4,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 9,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_06",
+    "algorithm": 6,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 2,
+        "attack_rate": 25,
+        "decay_rate": 16,
+        "sustain_rate": 2,
+        "release_rate": 0,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 28,
+        "sustain_rate": 5,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 28,
+        "sustain_rate": 5,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 28,
+        "sustain_rate": 5,
+        "release_rate": 1,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_07",
+    "algorithm": 4,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 6,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 2,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 5,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 3,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 5,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 2,
+        "total_level": 13,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 10,
+        "release_rate": 5,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_08",
+    "algorithm": 6,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 7,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 8,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 8,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_09",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 14,
+        "sustain_rate": 14,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_10",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_11",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 4,
+        "total_level": 31,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 15,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 6,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 12,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 15,
+        "total_level": 18,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 12,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 4,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 13,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_12",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 4,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 18,
+        "sustain_rate": 11,
+        "release_rate": 8,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 3,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 12,
+        "release_rate": 8,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 8,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 8,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 6,
+        "total_level": 23,
+        "attack_rate": 31,
+        "decay_rate": 18,
+        "sustain_rate": 7,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_13",
+    "algorithm": 4,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 6,
+        "total_level": 21,
+        "attack_rate": 31,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 3,
+        "sustain_rate": 3,
+        "release_rate": 7,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 7,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_14",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 11,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 2,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 1,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 5,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_15",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 15,
+        "total_level": 33,
+        "attack_rate": 31,
+        "decay_rate": 23,
+        "sustain_rate": 12,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 8,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 9,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 2,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_16",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 3,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 1,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 15,
+        "release_rate": 7,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 7,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 2,
+        "release_rate": 7,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_17",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 5,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 30,
+        "sustain_rate": 14,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 11,
+        "attack_rate": 31,
+        "decay_rate": 21,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 6,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 4,
+        "total_level": 13,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_18",
+    "algorithm": 0,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 7,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 15,
+        "release_rate": 8,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 5,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 8,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 6,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 8,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_19",
+    "algorithm": 5,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 13,
+        "total_level": 5,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 9,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 15,
+        "attack_rate": 15,
+        "decay_rate": 12,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 5,
+        "total_level": 15,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 5,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 8,
+        "total_level": 12,
+        "attack_rate": 15,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "10___blacksheep_20",
+    "algorithm": 4,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 26,
+        "sustain_rate": 10,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 10,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 7,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 6,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 15,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]
