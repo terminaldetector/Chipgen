@@ -591,6 +591,31 @@ wrong. What the warning actually checks is each patch against the bank's
 own reference level, the same measurement calibration makes, because that
 is the only test that does not depend on what else is in the score.
 
+## Five voices in one octave is one voice
+
+Six FM channels is the whole chip. Spend three or more of them inside a
+single octave and you do not have three parts — you have one chord voiced
+almost in unison, and it reads as a single thick sound with nothing
+distinguishable in it. Every timing, register and level check passes,
+because nothing is wrong with any individual channel.
+
+`sanity.check()` reports it, and it does so from **where the parts sit**
+rather than from what the patches are called: the bass/lead register
+checks look the instrument up by name, so they see nothing at all on an
+imported bank whose patches are `hl_01` and `hl_05` — which is exactly
+where this goes wrong unnoticed.
+
+    5 FM voices (FM2, FM4, FM3, FM1, FM5) sit within 8 semitones of each
+    other — inside one octave.
+
+That one is `examples/neon_transit.trk`, a shipped 64-second demo: its
+bass sits at F-3 and its other five voices at G#-4, A-4, B-4, C-5 and
+E-5. The warning is right about it. Bass an octave or two down, lead an
+octave up, and no more than two voices holding the middle.
+
+(The check declines to judge anything under 5 seconds — a few rows is not
+an arrangement.)
+
 ## Things that will bite you if nobody says them
 
 - **PSG volume is backwards.** `0` is loudest, `15` is silent. It is an

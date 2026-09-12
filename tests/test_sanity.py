@@ -293,3 +293,97 @@ def test_overlap_sweep_handles_the_awkward_shapes():
     assert sanity._overlap_seconds([(0, 1), (2, 3)], [(0.5, 2.5)]) == 1.0
     assert sanity._overlap_seconds([], [(0, 5)]) == 0.0
     assert sanity._overlap_seconds([(0, 5)], [(5, 10)]) == 0.0
+
+
+def _stacked(pitches, instruments_used, bars=16):
+    """A full-length score putting each voice at a fixed pitch.
+
+    Full length because sanity.check() bails out under
+    MIN_TRACK_SECONDS — a four-row fixture is not an arrangement and it
+    correctly declines to judge one. Getting that wrong is why this
+    helper exists rather than a two-note score.
+    """
+    head = ("bpm 140\nlpb 4\n"
+            + "".join(f"inst fm{i} {n}\n"
+                      for i, n in enumerate(instruments_used))
+            + "cols " + " ".join(f"fm{i}" for i in range(len(pitches)))
+            + "\n")
+    rows = []
+    for _ in range(bars):
+        rows.append("  ".join(f"{p}:100" for p in pitches))
+        for _ in range(3):
+            rows.append("  ".join("..." for _ in pitches))
+    return head + "\n".join(rows) + "\nend\n"
+
+
+BUILT_IN = ("deep_bass", "saw_lead", "brass", "organ")
+
+
+def _crowding(score_text):
+    import sanity
+    import tracker
+
+    events, _ = tracker.loads(score_text)
+    return [w for w in sanity.check(events)
+            if "semitones of each other" in w]
+
+
+def test_voices_stacked_in_one_octave_are_reported():
+    """Six FM voices is the whole chip; three in one octave is most of it.
+
+    The two register checks above look the patch up BY NAME, so they see
+    nothing on an imported bank — and an imported bank is exactly where
+    this goes wrong unnoticed. Crowding is a property of where the parts
+    sit, not of what they are called, so this one never asks.
+    """
+    crowded = _crowding(_stacked(("B-2", "D-3", "F#3", "B-3"), BUILT_IN))
+    assert len(crowded) == 1, \
+        f"four voices inside one octave should be reported, got {crowded}"
+    assert "FM0" in crowded[0] and "FM3" in crowded[0], \
+        f"the warning should name the voices involved: {crowded[0]}"
+
+    spread = _crowding(_stacked(("B-1", "D-5", "F#3", "B-6"), BUILT_IN))
+    assert not spread, \
+        f"voices spread across five octaves should not be reported: {spread}"
+
+
+def test_crowding_is_seen_on_an_imported_bank_too():
+    # The point of the check. A bank of hl_01/hl_05 names matches nothing
+    # in BASS_PATCH_NAMES or LEAD_PATCH_NAMES, so the name-based checks
+    # are silent and this is the only thing that speaks.
+    import instruments
+    import json
+    import os
+
+    import support
+
+    original = dict(instruments.BANK)
+    with support.TempDir() as tmp:
+        try:
+            data = []
+            for index, source in enumerate(BUILT_IN):
+                patch = instruments.BANK[source].copy()
+                patch.name = f"hl_{index:02d}"
+                data.append(instruments.instrument_to_dict(patch))
+            path = os.path.join(tmp, "bank.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(data, handle)
+            instruments.load_bank(path)
+
+            names = tuple(f"hl_{i:02d}" for i in range(len(BUILT_IN)))
+            crowded = _crowding(_stacked(("B-2", "D-3", "F#3", "B-3"), names))
+            assert crowded, (
+                "an imported bank stacked in one octave produced no "
+                "warning at all — the name-based checks cannot see it, so "
+                "this is the only one that can")
+        finally:
+            instruments.BANK.clear()
+            instruments.BANK.update(original)
+
+
+def test_two_voices_in_one_octave_are_left_alone():
+    # A bass and one other part sharing a register is a normal thing to
+    # do, and the check above already covers the bass/lead case by name.
+    # Firing on two would make this noise.
+    crowded = _crowding(_stacked(("B-2", "D-3"), BUILT_IN[:2]))
+    assert not crowded, f"two voices should not be reported: {crowded}"

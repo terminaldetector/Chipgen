@@ -451,6 +451,18 @@ def info() -> dict:
                            "percussion voices need the voices actually "
                            "emulated; use the dac kit for drums.",
         },
+        "arrangement_checks": {
+            "crowding": "three or more FM voices whose median pitches fall "
+                        "inside one octave are reported: six is the whole "
+                        "chip, so that is most of the arrangement in one "
+                        "band, reading as a single thick sound. Measured "
+                        "from where the parts sit, with no reference to "
+                        "patch names — the bass/lead register checks look "
+                        "the instrument up by name and so see nothing on "
+                        "an imported bank.",
+            "note": "sanity.check() declines to judge anything shorter "
+                    "than 5 seconds; a few rows is not an arrangement",
+        },
         "mix_levels": {
             "how": "`chipgen.py score.trk --levels` renders each voice "
                    "ALONE and reports rms, peak, crest factor and unused "

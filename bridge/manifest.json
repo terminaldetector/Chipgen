@@ -154,6 +154,10 @@
     "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute sine, 3 pulse-sine. Rectifying doubles the frequency, so waves 2 and 3 put their loudest partial on the SECOND harmonic — measured at A-4 the fundamental is 90 dB down and the note sounds an octave up. Changing waveform mid-phrase changes octave with it.",
     "rhythm_mode": "NOT implemented. Register 0xBD's five percussion voices need the voices actually emulated; use the dac kit for drums."
   },
+  "arrangement_checks": {
+    "crowding": "three or more FM voices whose median pitches fall inside one octave are reported: six is the whole chip, so that is most of the arrangement in one band, reading as a single thick sound. Measured from where the parts sit, with no reference to patch names — the bass/lead register checks look the instrument up by name and so see nothing on an imported bank.",
+    "note": "sanity.check() declines to judge anything shorter than 5 seconds; a few rows is not an arrangement"
+  },
   "mix_levels": {
     "how": "`chipgen.py score.trk --levels` renders each voice ALONE and reports rms, peak, crest factor and unused patch headroom, plus what to do about it. Result.levels() from Python.",
     "why_not_the_mix": "a per-channel level cannot be recovered from a finished mix — a mix is a sum. Each voice is re-rendered with the others' notes removed and its own setup intact.",

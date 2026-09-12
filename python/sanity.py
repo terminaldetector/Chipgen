@@ -107,6 +107,20 @@ BASS_PATCH_NAMES = frozenset({"bass", "sub_bass", "deep_bass", "slap_bass",
 LEAD_PATCH_NAMES = frozenset({"distorted_lead", "square_lead", "saw_lead",
                               "lead"})
 
+#: How many voices have to pile into one narrow pitch band before it is
+#: worth saying so, and how narrow that band is. Name-free on purpose:
+#: the two checks above look up the patch assigned to a channel, so they
+#: see nothing at all on an imported bank whose patches are called hl_01
+#: and hl_05 — and crowding is a property of where the parts SIT, not of
+#: what they are called.
+#:
+#: An octave is the band. Three or more melodic voices whose median
+#: pitches all fall inside one octave are not three parts, they are one
+#: chord voiced in unison-ish, and on a chip with six voices total that
+#: is most of the arrangement spent on a single band.
+CROWDED_VOICES = 3
+CROWDED_SPAN_SEMITONES = 12
+
 
 def _midi(note: str, octave: int) -> int:
     """Note name + octave -> a comparable integer. Octave 4 holds A440."""
@@ -379,6 +393,11 @@ def _register_warnings(fm_pitches, fm_instrument) -> List[str]:
                 f"an octave or two, or use a lead patch and let something "
                 f"else carry the low end")
 
+    # And the same question without reference to any patch name, because
+    # the two checks above only fire on the built-in bank's names and an
+    # imported one is exactly where this goes wrong unseen.
+    warnings.extend(_crowding_warnings(fm_pitches))
+
     for bass_channel, bass_name in sorted(bass_channels.items()):
         bass_centre = _median(fm_pitches[bass_channel])
         for lead_channel, lead_name in sorted(lead_channels.items()):
@@ -391,6 +410,51 @@ def _register_warnings(fm_pitches, fm_instrument) -> List[str]:
                     f"each other instead of reading as two parts. Move the "
                     f"lead up an octave or the bass down one")
 
+    return warnings
+
+
+def _crowding_warnings(fm_pitches) -> List[str]:
+    """Voices stacked into one narrow band mask each other.
+
+    Six FM voices is the whole chip, so spending three or more of them
+    inside one octave is most of the arrangement in a single band —
+    a chord voiced almost in unison rather than three parts. It reads as
+    one thick sound with nothing distinguishable in it, and every timing
+    and register check above passes, because nothing is wrong with any
+    individual channel.
+
+    Deliberately about pitch, not patches: the checks above look the
+    instrument up by name and so are blind on any imported bank.
+    """
+    warnings: List[str] = []
+    centres = {channel: _median(pitches)
+               for channel, pitches in sorted(fm_pitches.items())
+               if pitches}
+    if len(centres) < CROWDED_VOICES:
+        return warnings
+
+    # The widest group that still fits inside the span.
+    ordered = sorted(centres.items(), key=lambda pair: pair[1])
+    best = []
+    for start in range(len(ordered)):
+        group = [ordered[start]]
+        for channel, centre in ordered[start + 1:]:
+            if centre - ordered[start][1] <= CROWDED_SPAN_SEMITONES:
+                group.append((channel, centre))
+        if len(group) > len(best):
+            best = group
+
+    if len(best) < CROWDED_VOICES:
+        return warnings
+    names = ", ".join(f"FM{channel}" for channel, _ in best)
+    span = best[-1][1] - best[0][1]
+    warnings.append(
+        f"{len(best)} FM voices ({names}) sit within {span:.0f} semitones "
+        f"of each other — inside one octave. That is not {len(best)} parts, "
+        f"it is one chord voiced almost in unison, and it reads as a single "
+        f"thick sound with nothing distinguishable in it. Spread them: bass "
+        f"an octave or two down, lead an octave up, and let the middle hold "
+        f"two voices at most")
     return warnings
 
 

@@ -113,6 +113,23 @@ noise enable. Hi-hats and cymbals come from the PCM DAC or from the PSG
 noise channel. There is no operator setting that makes a convincing hat —
 do not spend four operators trying.
 
+**MUL 0 is x0.5, not zero.** The frequency multiplier's sixteen values
+run x0.5, x1, x2, x3 … so an operator at MUL 0 is a sub-octave, not a
+silenced one. Measured on a carrier given A-4: MUL 0 sounds at 220.07 Hz
+with the same RMS as MUL 1 at 440.13. Reading a patch's `mul 10, 0, 0, 0`
+as "three modulators at nearly zero ratio" is therefore backwards — those
+three are running an octave below the note, which is a deliberate and
+common FM configuration.
+
+**Three FM voices inside one octave is not three parts.** Six is the
+whole chip, so half of it spent in a single band reads as one thick sound
+with nothing distinguishable in it — and every timing, register and level
+check passes, because nothing is wrong with any individual channel.
+`sanity.check()` reports this by measuring where the parts SIT, without
+reference to patch names, because the bass/lead register checks look the
+instrument up by name and are blind on any imported bank. Bass an octave
+or two down, lead an octave up, two voices at most in the middle.
+
 **The drums own the master, and no amount of patch work changes that.**
 Mastering normalises **peak**, and a drum is almost all peak. Measured
 against the fully calibrated built-in bank, the DAC channel peaks 5-6 dB
