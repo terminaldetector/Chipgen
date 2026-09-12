@@ -10,7 +10,7 @@
     "syntax": "NOTE[:velocity][/EFFECT]... e.g. A-2:100/1F0/4A3",
     "separator": "/",
     "effects": {
-      "0xy": "arpeggio \u2014 PARSED BUT NOT IMPLEMENTED; use the `arp` directive",
+      "0xy": "arpeggio — PARSED BUT NOT IMPLEMENTED; use the `arp` directive",
       "1xx": "pitch slide up, 8 cents/s per unit",
       "2xx": "pitch slide down, 8 cents/s per unit",
       "3xx": "portamento to the written note",
@@ -18,12 +18,12 @@
       "7xy": "tremolo, speed x+1 Hz, depth y",
       "8xx": "pan: 00 left, 80 centre, FF right",
       "Axy": "volume slide, (x-y) x 16 per second",
-      "Cxx": "note delay \u2014 PARSED BUT NOT IMPLEMENTED"
+      "Cxx": "note delay — PARSED BUT NOT IMPLEMENTED"
     },
     "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz",
     "columns": {
       "all": "every column takes the effect column: fm0-fm5, psg0-psg2, opl0-opl8, noise, dac",
-      "pitch_effects": "fm, opl and psg only. `noise` and `dac` REFUSE 1/2/3/4 rather than accept and do nothing \u2014 the noise rate is four discrete settings and the DAC's pitch is its feed rate, already at the byte ceiling. For a pitched noise sweep bend psg2 and use periodic noise at rate 3.",
+      "pitch_effects": "fm, opl and psg only. `noise` and `dac` REFUSE 1/2/3/4 rather than accept and do nothing — the noise rate is four discrete settings and the DAC's pitch is its feed rate, already at the byte ceiling. For a pitched noise sweep bend psg2 and use periodic noise at rate 3.",
       "pan": "fm only; 8xx on any other column is refused",
       "dac_limits": "measured: the effect clock is 60 Hz and the longest built-in sample is 260 ms, so A0F reaches only about -2 dB by the end of a tom, while tremolo 75A swings 7.4 dB. Once a drum decays into its last few 8-bit codes, scaling cannot be represented and the tail flattens."
     }
@@ -75,13 +75,13 @@
     "absolute": "values are absolute and the next note-on reloads the patch over them, as on the hardware"
   },
   "ch3_special": {
-    "how": "`ch3 special` then `ch3op 1 A-5` \u2014 each of channel 3's operators takes its own pitch instead of tracking the channel; `ch3 normal` gives it back",
-    "what_for": "one channel holding a fixed inharmonic cluster: bells, gongs, metallic percussion \u2014 the FM side has no noise generator, so this is how drivers get it",
-    "what_you_write_is_a_base_frequency": "not a partial: `mul` multiplies it, the algorithm decides whether the operator sounds or only modulates, and a carrier at tl 127 is muted. On an arbitrary patch the mode gives an inharmonic smear rather than the cluster you wrote. Measured: bell_pluck's operator 3 is mul 7, so a G-6 written there sounds at 10976 Hz and nothing appears at 1568 Hz \u2014 an 80 dB swing against mul 1.",
+    "how": "`ch3 special` then `ch3op 1 A-5` — each of channel 3's operators takes its own pitch instead of tracking the channel; `ch3 normal` gives it back",
+    "what_for": "one channel holding a fixed inharmonic cluster: bells, gongs, metallic percussion — the FM side has no noise generator, so this is how drivers get it",
+    "what_you_write_is_a_base_frequency": "not a partial: `mul` multiplies it, the algorithm decides whether the operator sounds or only modulates, and a carrier at tl 127 is muted. On an arbitrary patch the mode gives an inharmonic smear rather than the cluster you wrote. Measured: bell_pluck's operator 3 is mul 7, so a G-6 written there sounds at 10976 Hz and nothing appears at 1568 Hz — an 80 dB swing against mul 1.",
     "operator_numbering": "`op` and `ch3op` take block-diagram numbering 1-4. FMInstrument.operators is in REGISTER order (op1, op3, op2, op4), so reading a patch in Python is what misleads, not the directives.",
-    "to_hear_the_pitches_as_written": "put the channel on algorithm 7 (four parallel carriers), set every mul to 1, and give each operator an audible tl \u2014 `alg fm2 7` then `op fm2 N mul 1` / `op fm2 N tl V`",
-    "persistence": "the operators you pitch keep those pitches across note-ons \u2014 the supplementary registers are not part of a patch, so a new note re-keys the cluster rather than replacing it. `ch3 normal` clears it.",
-    "scope": "channel 3 only \u2014 one bit in one register, not a global mode; the other five channels are unaffected",
+    "to_hear_the_pitches_as_written": "put the channel on algorithm 7 (four parallel carriers), set every mul to 1, and give each operator an audible tl — `alg fm2 7` then `op fm2 N mul 1` / `op fm2 N tl V`",
+    "persistence": "the operators you pitch keep those pitches across note-ons — the supplementary registers are not part of a patch, so a new note re-keys the cluster rather than replacing it. `ch3 normal` clears it.",
+    "scope": "channel 3 only — one bit in one register, not a global mode; the other five channels are unaffected",
     "registers": {
       "1": [
         "0xa9",
@@ -101,7 +101,7 @@
       ]
     },
     "register_note": "the supplementary pairs were mapped by experiment, not from a published table: $A8/$AC is operator THREE, because these registers ascend in the same op1,op3,op2 order the operator offsets do",
-    "operator_4": "has no supplementary pair of its own \u2014 it follows the channel's own frequency at $A2/$A6",
+    "operator_4": "has no supplementary pair of its own — it follows the channel's own frequency at $A2/$A6",
     "csm": "`ch3 csm` also keys the channel from timer A (a speech trick); accepted, and does nothing without a timer"
   },
   "nes": {
@@ -109,15 +109,50 @@
     "cells": "nes0-nes2 take notes (A-4, A#3:100, ===); nes3 takes a noise period 0-15 with optional m for the short shift register and :velocity (6, 4m:80); nes4 takes a kit sample name",
     "directives": "`nes duty nes0 1` (0=12.5% 1=25% 2=50% 3=75%), `nes sweep nes0 3 2 up|down`, `nes sweep nes0 off`, `nes dmc nes4 64`",
     "ranges": {
-      "pulse": "A-1 (55 Hz) up to about C-6. Below A-1 the 11-bit timer clamps and the note sounds SHARP, not low \u2014 a written C-1 measures +888 cents.",
+      "pulse": "A-1 (55 Hz) up to about C-6. Below A-1 the 11-bit timer clamps and the note sounds SHARP, not low — a written C-1 measures +888 cents.",
       "triangle": "A-0 (27.5 Hz) to about A-5, one octave lower because it divides by 32 rather than 16",
       "accuracy": "measured within 4 cents to C-6, degrading to 12 cents at A-6 as the timer runs out"
     },
-    "the_sweep_mute": "the sweep unit silences a pulse channel whenever the target period passes $7FF, and it does that whether or not the sweep is enabled. With shift 0 the target is twice the period, so everything below about 110 Hz would be muted \u2014 measured, A-1/C-2/E-2/G-2 all render 0.0000 RMS. chipgen writes the negate bit at init so the octave is audible, the same thing real drivers do. A `down` sweep re-arms the mute.",
+    "the_sweep_mute": "the sweep unit silences a pulse channel whenever the target period passes $7FF, and it does that whether or not the sweep is enabled. With shift 0 the target is twice the period, so everything below about 110 Hz would be muted — measured, A-1/C-2/E-2/G-2 all render 0.0000 RMS. chipgen writes the negate bit at init so the octave is audible, the same thing real drivers do. A `down` sweep re-arms the mute.",
     "the_triangle_has_no_volume": "not approximated, refused: its output measures bit-identical at velocity 8 and 127, so 7xy and Axy on nes2 raise an error. Pitch effects work on it.",
-    "duty_3_equals_duty_1": "75% is 25% inverted \u2014 measured identical harmonics, differing only in phase. Two pulse channels on 1 and 3 give one timbre twice.",
+    "duty_3_equals_duty_1": "75% is 25% inverted — measured identical harmonics, differing only in phase. Two pulse channels on 1 and 3 give one timbre twice.",
     "dmc": "$4011 is a plain 7-bit DAC, so nes4 plays the same kit the Genesis DAC does, one bit coarser. Effects on it are volume-only, same as the dac column.",
     "vgm": "exported with the NES clock at header offset 0x84 and command 0xB4 per register write; vgm_player replays it. Every voice round-trips above 0.997 correlation against its own render."
+  },
+  "live_opl2": {
+    "how": "`op opl0 2 wave 2` writes one operator field mid-note; `alg opl0 0|1` sets FM or additive, with optional feedback",
+    "operators": "1 (modulator) and 2 (carrier) — two, not four",
+    "algorithm": "one bit: 0 FM (modulator into carrier), 1 additive (both heard). `alg opl0 4` is refused, not clamped.",
+    "fields": [
+      "am",
+      "ar",
+      "dr",
+      "eg",
+      "ksl",
+      "ksr",
+      "mul",
+      "rr",
+      "sl",
+      "tl",
+      "vib",
+      "wave"
+    ],
+    "aliases": {
+      "d1r": "dr",
+      "d2r": "rr",
+      "sus": "eg",
+      "sustain": "eg",
+      "mult": "mul",
+      "multiple": "mul",
+      "waveform": "wave",
+      "level": "tl",
+      "attack": "ar",
+      "decay": "dr",
+      "release": "rr"
+    },
+    "which_operator_to_attenuate": "depends on the connection bit. Measured on opl_organ, which is additive: tl 40 on the carrier alone gives -1.7 dB, the modulator alone -4.7, both together -19.1. In FM mode the same single carrier write gives -17.4. On an additive patch, move both.",
+    "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute sine, 3 pulse-sine. Rectifying doubles the frequency, so waves 2 and 3 put their loudest partial on the SECOND harmonic — measured at A-4 the fundamental is 90 dB down and the note sounds an octave up. Changing waveform mid-phrase changes octave with it.",
+    "rhythm_mode": "NOT implemented. Register 0xBD's five percussion voices need the voices actually emulated; use the dac kit for drums."
   },
   "instrument_selection": {
     "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
@@ -159,15 +194,15 @@
       "channels": "2 pulse + triangle + noise + DMC",
       "role": "NES / Famicom APU, register-level model with the hardware's non-linear mixing",
       "scoreable": true,
-      "notes": "the triangle has no volume control and the pulse channels are muted below ~110 Hz unless the sweep negate bit is set \u2014 see the `nes` section"
+      "notes": "the triangle has no volume control and the pulse channels are muted below ~110 Hz unless the sweep negate bit is set — see the `nes` section"
     },
     "YM2612": {
       "channels": 6,
       "role": "4-operator FM; channel 6 doubles as an 8-bit PCM DAC",
       "backend": "native",
       "revisions": {
-        "ym2612": "discrete (Model 1 / Model 2 VA2) \u2014 has the DAC ladder, so muting bleeds and silence is gritty",
-        "ym3438": "integrated ASIC (later models) \u2014 clean muting"
+        "ym2612": "discrete (Model 1 / Model 2 VA2) — has the DAC ladder, so muting bleeds and silence is gritty",
+        "ym3438": "integrated ASIC (later models) — clean muting"
       }
     },
     "SN76489": {
@@ -503,7 +538,7 @@
           ]
         }
       },
-      "doc": "Global LFO on/off and rate (register 0x22). Shared by all 6 channels.\n\n    A channel only hears it if its FMPan sets ams/pms above zero \u2014 that\n    split (one global rate, per-channel depth) is the chip's, not ours."
+      "doc": "Global LFO on/off and rate (register 0x22). Shared by all 6 channels.\n\n    A channel only hears it if its FMPan sets ams/pms above zero — that\n    split (one global rate, per-channel depth) is the chip's, not ours."
     },
     "FMVolume": {
       "fields": {
@@ -543,7 +578,7 @@
           ]
         }
       },
-      "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed \u2014 vibrato, pitch envelopes and slides are\n    a series of these."
+      "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed — vibrato, pitch envelopes and slides are\n    a series of these."
     },
     "Portamento": {
       "fields": {
@@ -567,7 +602,7 @@
           ]
         }
       },
-      "doc": "Slide a voice's pitch toward `to_cents` at `cents_per_second`.\n\n    `target` names the voice the way a tracker column does \u2014 \"fm0\",\n    \"psg1\", \"opl3\" \u2014 because chipgen drives three chips now and an int\n    channel cannot say which one it means.\n\n    The slide stops on arrival and stays there, so `to_cents=0` is how a\n    bend returns to the written pitch. A rate of 0 stops it where it is."
+      "doc": "Slide a voice's pitch toward `to_cents` at `cents_per_second`.\n\n    `target` names the voice the way a tracker column does — \"fm0\",\n    \"psg1\", \"opl3\" — because chipgen drives three chips now and an int\n    channel cannot say which one it means.\n\n    The slide stops on arrival and stays there, so `to_cents=0` is how a\n    bend returns to the written pitch. A rate of 0 stops it where it is."
     },
     "Vibrato": {
       "fields": {
@@ -687,7 +722,7 @@
           "default": 127
         }
       },
-      "doc": "`voice` is \"pulse1\", \"pulse2\" or \"triangle\".\n\n    Two ranges worth knowing, both measured and both hard floors rather\n    than gentle roll-offs. The pulse channels reach **A-1 (55 Hz)** and\n    the triangle **A-0 (27.5 Hz)**; below that the 11-bit timer clamps and\n    the note sounds an octave or more sharp instead of low. And velocity\n    does nothing at all on the triangle \u2014 it has no volume register, so it\n    plays at one level or not at all."
+      "doc": "`voice` is \"pulse1\", \"pulse2\" or \"triangle\".\n\n    Two ranges worth knowing, both measured and both hard floors rather\n    than gentle roll-offs. The pulse channels reach **A-1 (55 Hz)** and\n    the triangle **A-0 (27.5 Hz)**; below that the 11-bit timer clamps and\n    the note sounds an octave or more sharp instead of low. And velocity\n    does nothing at all on the triangle — it has no volume register, so it\n    plays at one level or not at all."
     },
     "NESNoteOff": {
       "fields": {
@@ -707,7 +742,7 @@
           "default": 127
         }
       },
-      "doc": "0-127, linear in amplitude \u2014 no dB curve to undo, unlike FM.\n\n    A no-op on the triangle, deliberately rather than silently: there is\n    no register to write, so approximating it would mean faking a level\n    the hardware cannot produce."
+      "doc": "0-127, linear in amplitude — no dB curve to undo, unlike FM.\n\n    A no-op on the triangle, deliberately rather than silently: there is\n    no register to write, so approximating it would mean faking a level\n    the hardware cannot produce."
     },
     "NESDuty": {
       "fields": {
@@ -719,7 +754,7 @@
           "default": 2
         }
       },
-      "doc": "Pulse waveform: 0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%.\n\n    3 and 1 are the same waveform inverted, so they measure identically\n    and differ only in phase \u2014 worth knowing before spending a channel on\n    the distinction."
+      "doc": "Pulse waveform: 0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%.\n\n    3 and 1 are the same waveform inverted, so they measure identically\n    and differ only in phase — worth knowing before spending a channel on\n    the distinction."
     },
     "NESSweep": {
       "fields": {
@@ -743,7 +778,7 @@
           "default": true
         }
       },
-      "doc": "The pulse channels' hardware pitch slide.\n\n    Free \u2014 the CPU writes nothing per frame \u2014 but coarse, and it silences\n    the channel whenever the target period leaves range, which is the\n    classic \"my sweep killed the note\". `negate` is also what keeps the\n    low octave audible at all: chipgen sets it by default, and a positive\n    sweep re-arms the mute below about 110 Hz."
+      "doc": "The pulse channels' hardware pitch slide.\n\n    Free — the CPU writes nothing per frame — but coarse, and it silences\n    the channel whenever the target period leaves range, which is the\n    classic \"my sweep killed the note\". `negate` is also what keeps the\n    low octave audible at all: chipgen sets it by default, and a positive\n    sweep re-arms the mute below about 110 Hz."
     },
     "NESNoiseOn": {
       "fields": {
@@ -760,7 +795,7 @@
           "default": false
         }
       },
-      "doc": "`period` is 0-15 and runs backwards: 0 is the highest pitch.\n\n    `metallic` is the mode bit. It shortens the shift register from 32767\n    steps to 93, which is short enough to have a pitch \u2014 the NES's only\n    route to a tonal metallic timbre."
+      "doc": "`period` is 0-15 and runs backwards: 0 is the highest pitch.\n\n    `metallic` is the mode bit. It shortens the shift register from 32767\n    steps to 93, which is short enough to have a pitch — the NES's only\n    route to a tonal metallic timbre."
     },
     "NESNoiseOff": {
       "fields": {},
@@ -862,6 +897,40 @@
       },
       "doc": ""
     },
+    "OPLOperator": {
+      "fields": {
+        "channel": {
+          "type": "int"
+        },
+        "operator": {
+          "type": "int"
+        },
+        "field": {
+          "type": "str"
+        },
+        "value": {
+          "type": "int",
+          "default": 0
+        }
+      },
+      "doc": "One OPL2 operator field, written while the note sounds.\n\n    `operator` is 1 (modulator) or 2 (carrier) — this chip has two, not\n    four. `wave` is the field with no YM2612 equivalent and the most\n    character: sine, half-sine, absolute sine, pulse-sine. As on the\n    YM2612 the value is absolute and the next instrument select reloads\n    the patch over it."
+    },
+    "OPLConnection": {
+      "fields": {
+        "channel": {
+          "type": "int"
+        },
+        "additive": {
+          "type": "int",
+          "default": 0
+        },
+        "feedback": {
+          "type": "int",
+          "default": null
+        }
+      },
+      "doc": "Register 0xC0: FM or additive, plus the modulator's feedback.\n\n    The OPL2's entire algorithm space is one bit, which is most of why a\n    patch here carries so much less than a YM2612 one."
+    },
     "OPLVolume": {
       "fields": {
         "channel": {
@@ -901,7 +970,7 @@
           ]
         }
       },
-      "doc": "The chip's two global LFO depths (register 0xBD).\n\n    They are global, not per channel \u2014 one tremolo depth and one vibrato\n    depth for all nine voices \u2014 and only operators with their AM or VIB\n    bit set are affected at all."
+      "doc": "The chip's two global LFO depths (register 0xBD).\n\n    They are global, not per channel — one tremolo depth and one vibrato\n    depth for all nine voices — and only operators with their AM or VIB\n    bit set are affected at all."
     },
     "DACEnable": {
       "fields": {
@@ -1010,7 +1079,7 @@
           ]
         }
       },
-      "doc": "Set a PSG channel's attenuation without retriggering its note.\n\n    Channel 3 is the noise voice. PSG has no envelope generator at all, so\n    a volume ramp \u2014 every PSG decay you have ever heard \u2014 is literally a\n    run of these events."
+      "doc": "Set a PSG channel's attenuation without retriggering its note.\n\n    Channel 3 is the noise voice. PSG has no envelope generator at all, so\n    a volume ramp — every PSG decay you have ever heard — is literally a\n    run of these events."
     },
     "PSGNoiseOn": {
       "fields": {

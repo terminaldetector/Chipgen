@@ -103,7 +103,7 @@ from events import (
     FMPitch, FMVolume, LoopPoint, Marker, NESDMCLevel, NESDuty,
     NESNoiseOff, NESNoiseOn, NESNoteOff, NESNoteOn, NESSample, NESSweep,
     NESVolume, OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
-    OPLVolume, Portamento, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
+    OPLConnection, OPLOperator, OPLVolume, Portamento, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
     PSGVolume, Tempo, Tremolo, Vibrato, VolumeSlide, Wait)
 
 DEFAULT_BPM = 150.0
@@ -677,9 +677,19 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
     elif head == "op":
         # `op fm0 4 tl 20` — write one operator field mid-note. Lands
         # between the rows around it, because a directive flushes the
-        # pending ones first.
-        need(4, "a channel, an operator 1-4, a field and a value, "
-                "e.g. `op fm0 4 tl 20`")
+        # pending ones first. Takes an OPL column too: `op opl0 2 wave 2`
+        # — same directive rather than a second name, because it is the
+        # same job and a model should not have to learn which chip spells
+        # it differently.
+        need(4, "a channel, an operator, a field and a value, "
+                "e.g. `op fm0 4 tl 20` or `op opl0 2 wave 2`")
+        if _column(args[0], lineno) in _OPL_COLUMNS:
+            # False, not True: this function's return value means "stop
+            # parsing the score" — it is how `end` works — so returning
+            # True here ended the track at the first `op opl0` line and
+            # silently dropped everything after it.
+            _opl_operator(args, events, lineno)
+            return False
         channel = _fm_channel(args[0], lineno)
         try:
             operator = int(args[1])
@@ -709,6 +719,29 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
         # `alg fm1 4` or `alg fm1 4 6` (algorithm, feedback)
         need(2, "a channel and an algorithm 0-7, e.g. `alg fm1 4` "
                 "or `alg fm1 4 6` to set feedback too")
+        if _column(args[0], lineno) in _OPL_COLUMNS:
+            # The OPL2's whole algorithm space is one bit: 0 is FM
+            # (modulator into carrier), 1 is additive (both heard).
+            # Anything else would be a number this chip cannot hold.
+            channel = int(_column(args[0], lineno)[3:])
+            try:
+                additive = int(args[1])
+                feedback = int(args[2]) if len(args) > 2 else None
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: the OPL2 takes `alg {args[0]} 0` for "
+                    f"FM or `alg {args[0]} 1` for additive, optionally "
+                    f"with a feedback 0-7") from None
+            if additive not in (0, 1):
+                raise TrackerError(
+                    f"line {lineno}: the OPL2 has one algorithm bit, not "
+                    f"eight — 0 is FM, 1 is additive. Got {additive}")
+            if feedback is not None and not 0 <= feedback <= 7:
+                raise TrackerError(
+                    f"line {lineno}: feedback is 0-7, got {feedback}")
+            events.append(OPLConnection(channel=channel, additive=additive,
+                                        feedback=feedback))
+            return False
         channel = _fm_channel(args[0], lineno)
         try:
             algorithm = int(args[1])
@@ -813,6 +846,42 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
     elif head == "end":
         return True
     return False
+
+
+def _opl_operator(args, events, lineno):
+    """`op opl0 2 wave 2` — one OPL2 operator field, mid-note."""
+    import opl2 as _opl2
+
+    channel = int(_column(args[0], lineno)[3:])
+    try:
+        operator = int(args[1])
+    except ValueError:
+        raise TrackerError(
+            f"line {lineno}: {args[1]!r} is not an operator number. The "
+            f"OPL2 has two: 1 is the modulator, 2 the carrier") from None
+    if operator not in (1, 2):
+        raise TrackerError(
+            f"line {lineno}: the OPL2 has two operators per channel, "
+            f"1 (modulator) and 2 (carrier); got {operator}")
+    field = args[2].lower()
+    known = _opl2.YM3812.OPERATOR_FIELDS
+    resolved = _opl2.YM3812.OPERATOR_ALIASES.get(field, field)
+    if resolved not in known:
+        raise TrackerError(
+            f"line {lineno}: unknown OPL2 operator field {args[2]!r}. "
+            f"Valid: {', '.join(sorted(known))}")
+    try:
+        value = int(args[3], 0)
+    except ValueError:
+        raise TrackerError(
+            f"line {lineno}: {args[3]!r} is not a number") from None
+    _base, _shift, mask = known[resolved]
+    if not 0 <= value <= mask:
+        raise TrackerError(
+            f"line {lineno}: {resolved} is 0-{mask} on the OPL2, got "
+            f"{value}")
+    events.append(OPLOperator(channel=channel, operator=operator,
+                              field=resolved, value=value))
 
 
 def _column(name: str, lineno: int) -> str:

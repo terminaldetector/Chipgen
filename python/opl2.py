@@ -544,6 +544,94 @@ class YM3812:
         chan.volume = max(0, min(127, volume))
         self._write_levels(channel, chan.volume, 127)
 
+    #: Operator register fields, as (register base, shift, mask). The
+    #: same job opn2's OPERATOR_FIELDS does: a driver that shapes a note
+    #: while it sounds writes these one at a time, and until now the
+    #: OPL2 could only be handed a whole patch.
+    #:
+    #: `wave` is the one with no YM2612 equivalent and the most character
+    #: — this chip's four waveforms are sine, half-sine (the negative
+    #: half clamped to zero), absolute sine (rectified) and pulse-sine
+    #: (the first quarter of each half, rest clamped). Switching it
+    #: mid-note is an OPL sound in itself.
+    OPERATOR_FIELDS = {
+        "am":   (REG_AM_VIB_EGT_KSR_MULT, 7, 0x1),
+        "vib":  (REG_AM_VIB_EGT_KSR_MULT, 6, 0x1),
+        "eg":   (REG_AM_VIB_EGT_KSR_MULT, 5, 0x1),
+        "ksr":  (REG_AM_VIB_EGT_KSR_MULT, 4, 0x1),
+        "mul":  (REG_AM_VIB_EGT_KSR_MULT, 0, 0xF),
+        "ksl":  (REG_KSL_TL, 6, 0x3),
+        "tl":   (REG_KSL_TL, 0, 0x3F),
+        "ar":   (REG_AR_DR, 4, 0xF),
+        "dr":   (REG_AR_DR, 0, 0xF),
+        "sl":   (REG_SL_RR, 4, 0xF),
+        "rr":   (REG_SL_RR, 0, 0xF),
+        "wave": (REG_WAVEFORM, 0, 0x3),
+    }
+
+    #: Spellings a model is likely to reach for. `sus` for the EG-type
+    #: bit especially: on this chip "sustaining" is a flag, not a level,
+    #: and `sl` is the level — a distinction worth aliasing around rather
+    #: than letting a score pick the wrong one silently.
+    OPERATOR_ALIASES = {
+        "d1r": "dr", "d2r": "rr", "sus": "eg", "sustain": "eg",
+        "mult": "mul", "multiple": "mul", "waveform": "wave",
+        "level": "tl", "attack": "ar", "decay": "dr", "release": "rr",
+    }
+
+    def set_operator(self, channel: int, operator: int, field: str,
+                     value: int):
+        """Write one operator field on a sounding channel.
+
+        `operator` is 1 (modulator) or 2 (carrier) — this chip has two,
+        not four, and the register interleave that puts channel 3's
+        modulator at offset 8 is handled here rather than by the caller.
+
+        Two fields share every one of these registers, so the shadow is
+        read back and the neighbour preserved; writing `tl` must not zero
+        `ksl`. And as on the YM2612 the value is absolute and the next
+        `set_instrument` reloads the patch over it.
+        """
+        if operator not in (1, 2):
+            raise ValueError(
+                f"the OPL2 has two operators per channel, 1 (modulator) "
+                f"and 2 (carrier); got {operator}")
+        name = self.OPERATOR_ALIASES.get(field.lower(), field.lower())
+        try:
+            base, shift, mask = self.OPERATOR_FIELDS[name]
+        except KeyError:
+            raise ValueError(
+                f"no OPL2 operator field {field!r}. Valid: "
+                f"{', '.join(sorted(self.OPERATOR_FIELDS))}") from None
+        if not 0 <= value <= mask:
+            raise ValueError(
+                f"{name} is 0-{mask} on this chip, got {value}")
+        offset = _CHANNEL_OFFSETS[channel][operator - 1]
+        address = base + offset
+        previous = self._shadow[address]
+        if previous < 0:
+            previous = 0
+        merged = (previous & ~(mask << shift)) | ((value & mask) << shift)
+        self.write(address, merged)
+        return merged
+
+    def set_connection(self, channel: int, additive: int,
+                       feedback: int = None):
+        """Register 0xC0: FM or additive, and the modulator's feedback.
+
+        The OPL2's whole algorithm space is one bit — modulator into
+        carrier, or both straight to the output — which is why a patch
+        here carries so much less than a YM2612 one.
+        """
+        chan = self.channels[channel]
+        if feedback is None:
+            feedback = chan.feedback
+        if not 0 <= feedback <= 7:
+            raise ValueError(f"feedback is 0-7, got {feedback}")
+        value = ((feedback & 7) << 1) | (1 if additive else 0)
+        self.write(REG_FEEDBACK_CONNECTION + channel, value)
+        return value
+
     def set_pitch_offset(self, channel: int, cents: float):
         """Retune a sounding channel without retriggering it.
 

@@ -271,6 +271,16 @@ def vocabulary() -> dict:
     return events_mod.describe_vocabulary()
 
 
+def _opl2_fields():
+    import opl2
+    return opl2.YM3812.OPERATOR_FIELDS
+
+
+def _opl2_aliases():
+    import opl2
+    return opl2.YM3812.OPERATOR_ALIASES
+
+
 def info() -> dict:
     """Machine-readable description of what this copy of chipgen can do.
 
@@ -398,6 +408,33 @@ def info() -> dict:
                    "command 0xB4 per register write; vgm_player replays "
                    "it. Every voice round-trips above 0.997 correlation "
                    "against its own render.",
+        },
+        "live_opl2": {
+            "how": "`op opl0 2 wave 2` writes one operator field mid-note; "
+                   "`alg opl0 0|1` sets FM or additive, with optional "
+                   "feedback",
+            "operators": "1 (modulator) and 2 (carrier) — two, not four",
+            "algorithm": "one bit: 0 FM (modulator into carrier), 1 "
+                         "additive (both heard). `alg opl0 4` is refused, "
+                         "not clamped.",
+            "fields": sorted(_opl2_fields()),
+            "aliases": _opl2_aliases(),
+            "which_operator_to_attenuate": "depends on the connection "
+                    "bit. Measured on opl_organ, which is additive: "
+                    "tl 40 on the carrier alone gives -1.7 dB, the "
+                    "modulator alone -4.7, both together -19.1. In FM "
+                    "mode the same single carrier write gives -17.4. On "
+                    "an additive patch, move both.",
+            "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute "
+                    "sine, 3 pulse-sine. Rectifying doubles the "
+                    "frequency, so waves 2 and 3 put their loudest "
+                    "partial on the SECOND harmonic — measured at A-4 "
+                    "the fundamental is 90 dB down and the note sounds "
+                    "an octave up. Changing waveform mid-phrase changes "
+                    "octave with it.",
+            "rhythm_mode": "NOT implemented. Register 0xBD's five "
+                           "percussion voices need the voices actually "
+                           "emulated; use the dac kit for drums.",
         },
         "instrument_selection": {
             "how": "patches are measured, not tagged; roles and genres are "

@@ -35,7 +35,8 @@ from mixer import DEFAULT_NES_GAIN, DEFAULT_OPL_GAIN, DEFAULT_PSG_GAIN
 DEFAULT_TICKS_PER_SECOND = 192.0
 
 #: Which events mean "this score plays the OPL2".
-_OPL_EVENTS = ("OPLNoteOn", "OPLInstrumentSelect", "OPLVolume", "OPLDepth")
+_OPL_EVENTS = ("OPLNoteOn", "OPLInstrumentSelect", "OPLVolume",
+               "OPLDepth", "OPLOperator", "OPLConnection")
 
 #: And which mean it plays the NES.
 _NES_EVENTS = ("NESNoteOn", "NESNoteOff", "NESVolume", "NESDuty", "NESSweep",
@@ -376,6 +377,12 @@ class Sequencer:
             state.reapply("noise")
         elif isinstance(ev, E.PSGNoiseOff):
             psg.noise_off()
+        elif isinstance(ev, E.OPLOperator):
+            if opl is not None:
+                opl.set_operator(ev.channel, ev.operator, ev.field, ev.value)
+        elif isinstance(ev, E.OPLConnection):
+            if opl is not None:
+                opl.set_connection(ev.channel, ev.additive, ev.feedback)
         elif isinstance(ev, E.NESNoteOn):
             if state.nes_voices is not None:
                 state.nes_voices.note_on(ev.voice, ev.note, ev.octave,

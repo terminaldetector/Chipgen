@@ -259,6 +259,34 @@ class OPLNoteOff(Event):
 
 
 @dataclass
+class OPLOperator(Event):
+    """One OPL2 operator field, written while the note sounds.
+
+    `operator` is 1 (modulator) or 2 (carrier) — this chip has two, not
+    four. `wave` is the field with no YM2612 equivalent and the most
+    character: sine, half-sine, absolute sine, pulse-sine. As on the
+    YM2612 the value is absolute and the next instrument select reloads
+    the patch over it.
+    """
+    channel: int
+    operator: int
+    field: str
+    value: int = 0
+
+
+@dataclass
+class OPLConnection(Event):
+    """Register 0xC0: FM or additive, plus the modulator's feedback.
+
+    The OPL2's entire algorithm space is one bit, which is most of why a
+    patch here carries so much less than a YM2612 one.
+    """
+    channel: int
+    additive: int = 0
+    feedback: int = None
+
+
+@dataclass
 class OPLVolume(Event):
     """Channel volume, 0-127, on the same linear-in-amplitude scale as FM."""
     channel: int
@@ -540,6 +568,8 @@ _EVENT_TYPES = {
     "OPLInstrumentSelect": OPLInstrumentSelect,
     "OPLNoteOn": OPLNoteOn,
     "OPLNoteOff": OPLNoteOff,
+    "OPLOperator": OPLOperator,
+    "OPLConnection": OPLConnection,
     "OPLVolume": OPLVolume,
     "OPLDepth": OPLDepth,
     "DACEnable": DACEnable,

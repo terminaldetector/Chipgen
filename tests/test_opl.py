@@ -511,3 +511,200 @@ def test_a_volume_slide_upward_at_full_volume_does_nothing():
     assert upward == plain, (
         f"sliding up from full volume should write nothing extra; "
         f"plain {plain} vs upward {upward}")
+
+
+def _seg_db(result, start, end):
+    import math
+
+    import analysis
+
+    samples = [float(v) for v in analysis.to_mono(result.audio)]
+    rate = result.sample_rate
+    chunk = samples[int(start * rate):int(end * rate)]
+    if not chunk:
+        return -180.0
+    power = math.sqrt(sum(v * v for v in chunk) / len(chunk))
+    return 20 * math.log10(max(power, 1e-9))
+
+
+def _partials(result, f0, count=6, seconds=0.5):
+    """Each harmonic's level relative to the loudest of them, in dB."""
+    import math
+
+    import analysis
+
+    samples = [float(v) for v in analysis.to_mono(result.audio)]
+    rate = result.sample_rate
+    chunk = samples[:int(seconds * rate)]
+    n = len(chunk)
+
+    def amplitude(frequency):
+        re = im = 0.0
+        for i, value in enumerate(chunk):
+            window = 0.5 - 0.5 * math.cos(2 * math.pi * i / (n - 1))
+            phase = 2 * math.pi * frequency * i / rate
+            re += value * window * math.cos(phase)
+            im += value * window * math.sin(phase)
+        return math.hypot(re, im)
+
+    found = [(k, amplitude(f0 * k)) for k in range(1, count + 1)]
+    loudest = max(a for _, a in found)
+    return {k: 20 * math.log10(max(a, 1e-12) / loudest) for k, a in found}
+
+
+def test_one_operator_field_can_be_written_mid_note():
+    """`op opl0 2 tl 40` — the job `op fm0 4 tl 12` does on the YM2612.
+
+    Until this existed the OPL2 could only be handed a whole patch, so a
+    part that should shape itself while it sounds had to be rebuilt out
+    of note-ons.
+    """
+    import chipgen
+
+    def score(write, pre=""):
+        return ("bpm 120\nlpb 4\ninst opl0 opl_organ\n" + pre
+                + "cols opl0\nA-4:110\n...\n...\n...\n" + write
+                + "...\n...\n...\nend\n")
+
+    # opl_organ is ADDITIVE, so both operators reach the output and
+    # attenuating one barely moves the sum. That is the connection bit
+    # doing its job, not a missed write — and it is the thing to know
+    # before reaching for `op` on this chip.
+    quiet = chipgen.compose(score("op opl0 2 tl 40\n"))
+    both = chipgen.compose(score("op opl0 1 tl 40\nop opl0 2 tl 40\n"))
+    fm = chipgen.compose(score("op opl0 2 tl 40\n", pre="alg opl0 0\n"))
+
+    one_operator = _seg_db(quiet, 0.55, 0.90) - _seg_db(quiet, 0.10, 0.45)
+    two_operators = _seg_db(both, 0.55, 0.90) - _seg_db(both, 0.10, 0.45)
+    carrier_only = _seg_db(fm, 0.55, 0.90) - _seg_db(fm, 0.10, 0.45)
+
+    assert two_operators < -12.0, (
+        f"attenuating both operators of an additive patch should drop it "
+        f"audibly; measured {two_operators:.1f} dB")
+    assert one_operator > two_operators + 8.0, (
+        f"on an additive patch one operator should matter much less than "
+        f"two; measured {one_operator:.1f} against {two_operators:.1f} dB")
+    assert carrier_only < -12.0, (
+        f"in FM mode the carrier is the only thing heard, so attenuating "
+        f"it should drop the note; measured {carrier_only:.1f} dB")
+
+
+def test_the_waveform_select_has_no_ym2612_equivalent_and_shifts_the_octave():
+    """The OPL2's four shapes, and the trap in two of them.
+
+    Waves 2 and 3 rectify the sine, which DOUBLES its frequency: at the
+    same written note their loudest partial is the second harmonic, an
+    octave above where waves 0 and 1 put it. A melody that changes
+    waveform mid-phrase changes octave with it, and nothing errors.
+    """
+    import chipgen
+
+    def shape(wave):
+        return chipgen.compose(
+            "bpm 60\nlpb 4\ninst opl0 opl_organ\nalg opl0 1\n"
+            "op opl0 1 mul 1\nop opl0 2 mul 1\n"
+            f"op opl0 1 wave {wave}\nop opl0 2 wave {wave}\n"
+            "cols opl0\nA-4:110\n...\n...\n...\nend\n")
+
+    sine = _partials(shape(0), 440.0)
+    half = _partials(shape(1), 440.0)
+    rectified = _partials(shape(2), 440.0)
+
+    # A sine is a sine: nothing but the fundamental.
+    assert sine[1] > -1.0 and sine[2] < -40.0, (
+        f"wave 0 should be a pure sine; h1={sine[1]:.0f} h2={sine[2]:.0f} dB")
+    # Half-sine keeps the fundamental but adds the even harmonics.
+    assert half[1] > -1.0 and half[2] > -20.0, (
+        f"wave 1 should add even harmonics; h1={half[1]:.0f} "
+        f"h2={half[2]:.0f} dB")
+    # Absolute sine loses the fundamental almost entirely.
+    assert rectified[2] > -1.0 and rectified[1] < -40.0, (
+        f"wave 2 rectifies, so its second harmonic should dominate and the "
+        f"fundamental nearly vanish; h1={rectified[1]:.0f} "
+        f"h2={rectified[2]:.0f} dB")
+
+
+def test_the_opl_algorithm_space_is_one_bit_and_says_so():
+    # `alg opl0 4` would be a YM2612 habit. This chip has FM or additive
+    # and nothing else, so the error names the two rather than clamping
+    # to something that renders.
+    import tracker
+
+    try:
+        tracker.loads("bpm 120\nlpb 4\ninst opl0 opl_organ\ncols opl0\n"
+                      "A-4\nalg opl0 4\n...\nend\n")
+    except tracker.TrackerError as error:
+        assert "one algorithm bit" in str(error), \
+            f"the error did not explain the OPL2's algorithm space: {error}"
+    else:
+        raise AssertionError("the OPL2 accepted algorithm 4")
+
+    for value in (0, 1):
+        events, _ = tracker.loads(
+            "bpm 120\nlpb 4\ninst opl0 opl_organ\ncols opl0\n"
+            f"A-4\nalg opl0 {value}\n...\nend\n")
+        assert any(type(e).__name__ == "OPLConnection" for e in events), \
+            f"alg opl0 {value} produced no connection event"
+
+
+def test_a_directive_after_an_opl_op_still_runs():
+    """_directive returns True to mean STOP PARSING, which `end` uses.
+
+    The OPL branch first returned True on success, so the score ended at
+    the first `op opl0` line and everything after it — every later
+    directive, every remaining row — was dropped with no error. Pinned
+    because the symptom is a short render, not a failure.
+    """
+    import tracker
+
+    events, _ = tracker.loads(
+        "bpm 120\nlpb 4\ninst opl0 opl_organ\ncols opl0\n"
+        "A-4:100\nop opl0 2 tl 20\nop opl0 1 wave 2\nalg opl0 1 5\n"
+        "...\nC-5:100\n...\nend\n")
+    kinds = [type(e).__name__ for e in events]
+    assert kinds.count("OPLOperator") == 2, \
+        f"expected both operator writes, got {kinds}"
+    assert "OPLConnection" in kinds, "the alg directive after an op was lost"
+    assert kinds.count("OPLNoteOn") == 2, \
+        f"the second note went missing: {kinds}"
+
+
+def test_writing_one_operator_field_preserves_the_one_sharing_its_register():
+    # Two fields per register on this chip too, so `tl` must not zero
+    # `ksl`, `ar` must not zero `dr`, and so on.
+    import opl2
+    import opl_instruments
+
+    chip = opl2.YM3812()
+    try:
+        chip.set_instrument(0, opl_instruments.get("opl_organ"))
+        chip.note_on(0, "A", 4)
+        chip.set_operator(0, 2, "tl", 20)
+        merged = chip.set_operator(0, 2, "ksl", 2)
+        assert merged & 0x3F == 20, (
+            f"writing ksl zeroed tl: register is 0x{merged:02X}")
+        assert (merged >> 6) & 3 == 2, \
+            f"ksl did not take: register is 0x{merged:02X}"
+
+        chip.set_operator(0, 1, "ar", 12)
+        merged = chip.set_operator(0, 1, "dr", 5)
+        assert (merged >> 4) & 0xF == 12, \
+            f"writing dr zeroed ar: register is 0x{merged:02X}"
+    finally:
+        chip.close()
+
+
+def test_a_bad_opl_operator_or_field_is_refused_with_the_options():
+    import tracker
+
+    for line, wanted in (("op opl0 3 tl 20", "two operators"),
+                         ("op opl0 2 nope 20", "unknown OPL2 operator field"),
+                         ("op opl0 2 wave 9", "0-3")):
+        try:
+            tracker.loads("bpm 120\nlpb 4\ninst opl0 opl_organ\ncols opl0\n"
+                          f"A-4\n{line}\n...\nend\n")
+        except tracker.TrackerError as error:
+            assert wanted in str(error), \
+                f"{line!r} was refused without saying why: {error}"
+        else:
+            raise AssertionError(f"{line!r} was accepted")

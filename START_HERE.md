@@ -84,7 +84,9 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `pan fm1 L` | `L` / `R` / `C` / `off`; `pan fm1 C 2 3` adds AMS/PMS |
 | `lfo on 4` | global LFO, rate 0–7 (`lfo off` to stop) |
 | `op fm0 4 tl 12` | write one operator field mid-note — see **Live FM** |
+| `op opl0 2 wave 2` | the same on an OPL2 channel — see **Live OPL2** |
 | `alg fm1 4 6` | change the algorithm, and feedback if given |
+| `alg opl0 1 5` | OPL2: `0` FM / `1` additive, plus feedback |
 | `pitch fm1 -12` | detune the channel in cents |
 | `ch3 special` | give channel 3's four operators separate pitches — see **Channel 3 special** |
 | `ch3op 1 A-5` | pitch one of those operators |
@@ -300,6 +302,53 @@ pair pointed at a different pitch, then the level measured at each pitch
 names the operator sitting there. These registers ascend in the same
 op1, op3, op2 order the operator offsets do, which is why a plausible
 guess lands on the wrong operator.
+
+**Live OPL2** — `op` takes an OPL column too, same directive rather than
+a second name. The operator is **1 (modulator) or 2 (carrier)**: this chip
+has two, not four, and its whole algorithm space is the one bit `alg
+opl0 0|1` sets — `0` is FM (modulator into carrier), `1` is additive
+(both heard). Fields: `tl ar dr sl rr ksl ksr mul am vib eg wave`.
+
+```
+inst opl0 opl_organ
+cols opl0
+A-4:110
+...
+op opl0 2 tl 30          ; and this is where the trap is, below
+op opl0 1 wave 2
+```
+
+Two things measured here, both of which make an `op` write look like it
+did nothing.
+
+**Which operator to attenuate depends on the connection bit.** On an
+additive patch — and `opl_organ` is one — both operators reach the
+output, so quietening one leaves the other at full level and the sum
+barely moves: measured, `op opl0 2 tl 40` on it gives **−1.7 dB**, the
+modulator alone −4.7, and **both together −19.1**. In FM mode (`alg
+opl0 0`) the carrier is the only thing heard and the same single write
+gives −17.4 dB. So on an additive patch, move both.
+
+**`wave` is the field with no YM2612 equivalent, and two of its four
+values shift the octave.** The shapes are `0` sine, `1` half-sine
+(negative half clamped), `2` absolute sine (rectified), `3` pulse-sine.
+Rectifying doubles the frequency, so waves 2 and 3 put their loudest
+partial on the *second* harmonic — measured at A-4, the fundamental is
+90 dB down on wave 2 and the note sounds an octave up. A melody that
+changes waveform mid-phrase changes octave with it, and nothing errors.
+Wave 0 is a pure sine (h2 at −94 dB); wave 1 keeps the fundamental and
+brings the even harmonics in at −7 dB.
+
+As on the YM2612, values are absolute and the next `inst` reloads the
+patch over them.
+
+Rhythm mode — the OPL2's five percussion voices in register `0xBD` — is
+still not implemented, and `python/opl2.py` says so at the top. It needs
+the percussion voices actually emulated (they key individual operator
+slots on channels 6–8 and draw on the phase generators for the noise
+components), which is a different size of job from the rest of this; a
+half-right one would sound wrong rather than error. Use the `dac` kit for
+drums meanwhile.
 
 **The NES** — the same notation drives an RP2A03. Five columns:
 `nes0` and `nes1` are the pulse channels, `nes2` the triangle, `nes3` the
