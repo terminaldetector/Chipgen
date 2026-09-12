@@ -88,6 +88,8 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `pitch fm1 -12` | detune the channel in cents |
 | `ch3 special` | give channel 3's four operators separate pitches — see **Channel 3 special** |
 | `ch3op 1 A-5` | pitch one of those operators |
+| `nes duty nes0 1` | NES pulse waveform — see **The NES** |
+| `nes sweep nes0 3 2 up` | the NES's hardware pitch slide (`off` to stop) |
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
 | `pattern verse` | start a named block of rows — see **Form** |
@@ -107,6 +109,9 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `psg0`–`psg2` | `A-4`, `A-4:8` (volume 0–15, **0 is loudest**), `===`, `...` |
 | `noise` | `w0`–`w3` white, `p0`–`p3` periodic, `===`, `...` |
 | `dac` | `kick` `snare` `hat` `hat_open` `tom` `clap` `rim`, or `...`; `kick@D-3` plays it at that pitch, `kick@D-3:0.5` also at half level |
+| `nes0`–`nes2` | NES pulse 1, pulse 2, triangle — notes like the FM columns |
+| `nes3` | NES noise: a period `0`–`15`, `4m` for the short shift register, `6:80` for velocity |
+| `nes4` | NES DMC: a kit sample name, `kick:0.5` for level |
 
 Comments: `;` anywhere, or `#` at the start of a line.
 
@@ -295,6 +300,77 @@ pair pointed at a different pitch, then the level measured at each pitch
 names the operator sitting there. These registers ascend in the same
 op1, op3, op2 order the operator offsets do, which is why a plausible
 guess lands on the wrong operator.
+
+**The NES** — the same notation drives an RP2A03. Five columns:
+`nes0` and `nes1` are the pulse channels, `nes2` the triangle, `nes3` the
+noise and `nes4` the DMC. Aliases exist if you prefer words: `pulse1`,
+`pu1`, `sq1` for `nes0`, and `tri`, `nnoise`, `dmc` likewise.
+
+```
+bpm 150
+lpb 4
+cols nes0 nes1 nes2 nes3 nes4
+nes duty nes0 1
+A-4:110/456  E-5:80   A-2   6:90    kick
+...          ...      ...   ...     ...
+C-5          G-5:80   C-3   4m:70   hat
+```
+
+Everything the Genesis columns do works here — the effect column,
+patterns and an order, live register writes, samples. Four things are
+specific to this chip, and all four were found by measurement because all
+four fail silently.
+
+**The pulse channels are muted below about 110 Hz unless you know one
+trick.** The sweep unit silences a channel whenever its *target* period
+would pass `$7FF`, and it does that whether or not the sweep is enabled —
+with a shift count of zero the target is twice the period, so anything
+below period 1023 goes quiet. Measured with the sweep register left at
+zero: A-1, C-2, E-2 and G-2 all render **0.0000 RMS**, exact silence,
+while A-2 at period 1016 plays fine. Setting the negate bit makes the
+target negative instead and the whole octave comes back at full accuracy
+— A-1 lands at 55.00 Hz within 0.1 cents. chipgen writes that bit at
+init, which is what real NES drivers do, so you never see this. It is
+here because a `down` sweep re-arms the mute, and then a bass line
+vanishes with no error.
+
+**The ranges are hard floors, and past them a note sounds sharp rather
+than low.** The pulses reach **A-1 (55 Hz)**, the triangle **A-0
+(27.5 Hz)** — an octave lower, because it divides by 32 where they divide
+by 16. Below the floor the 11-bit timer clamps: a written C-1 on a pulse
+measures **+888 cents**, which is the same note an octave and a fifth up.
+Accuracy is within 4 cents to C-6 and degrades to 12 cents at A-6 as the
+timer runs out, the same way the PSG's does. Put the bass on `nes2`.
+
+**The triangle has no volume control at all.** Not a coarse one — none.
+Its output measures bit-identical at velocity 8 and velocity 127, so a
+velocity on `nes2` is ignored and `7xy`/`Axy` on it are **refused** rather
+than accepted and dropped. Pitch effects work on it normally. For a
+swelling line use a pulse channel; to shape the triangle, gate it with
+note-offs.
+
+**Duty 3 is duty 1 inverted.** `nes duty` takes 0 (12.5%), 1 (25%),
+2 (50%) and 3 (75%), but 75% and 25% are one waveform and its inverse:
+they measure the same harmonic series and differ only in phase. Two pulse
+channels on 1 and 3 give you one timbre twice. Duty 2 is the square — its
+even harmonics cancel, measured at −40.9 dB against −5.6 for the others,
+which is why it reads as hollow next to them.
+
+`nes sweep nes0 PERIOD SHIFT up|down` is the hardware's own pitch slide,
+free in CPU terms but coarse: period and shift are 0–7, and `up`/`down`
+is the pitch, not the register (they run opposite ways — the negate bit
+raises the pitch). Measured with period 1, shift 3 over half a second:
+`up` takes A-4 up 2,716 cents, `down` down 2,815. `nes sweep nes0 off`
+returns to the safe default.
+
+`nes4` plays the same sample kit the Genesis DAC does, through `$4011`,
+which is a plain 7-bit DAC — so one bit coarser than the Genesis path and
+otherwise the same. Effects on it are volume-only, like `dac`.
+
+A NES score exports a .vgm carrying the APU (clock at header offset 0x84,
+command 0xB4 per write) and `vgm_player.py` replays it: every voice
+round-trips above 0.997 correlation against its own render, which is the
+same fidelity the Genesis path gets.
 
 **Effects** — a cell may carry them after the note, separated by `/`:
 

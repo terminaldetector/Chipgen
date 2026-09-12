@@ -62,7 +62,8 @@ def load(path_or_bytes) -> bytes:
 def iter_commands(raw: bytes, header: dict = None, max_samples: int = None):
     """Walk a VGM's command stream.
 
-    Yields ("ym", port, addr, data), ("opl", addr, data), ("psg", byte)
+    Yields ("ym", port, addr, data), ("opl", addr, data),
+    ("nes", addr, data), ("psg", byte)
     and ("wait", samples),
     where samples counts 44100ths. Both the player and the instrument
     importer consume this, so there is one VGM parser in the project rather
@@ -94,6 +95,10 @@ def iter_commands(raw: bytes, header: dict = None, max_samples: int = None):
             yield ("ym", port, raw[pos], raw[pos + 1]); pos += 2
         elif cmd == vgm_mod.CMD_YM3812:
             yield ("opl", raw[pos], raw[pos + 1]); pos += 2
+        elif cmd == vgm_mod.CMD_NES_APU:
+            # 0xB4 aa dd, where aa is the register's low byte inside the
+            # APU's $40xx page.
+            yield ("nes", 0x4000 | raw[pos], raw[pos + 1]); pos += 2
         elif cmd == vgm_mod.CMD_WAIT_LONG:
             n = struct.unpack_from("<H", raw, pos)[0]; pos += 2
             elapsed += n
@@ -154,13 +159,23 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
         opl = opl2.YM3812(clock=float(header["opl_clock"]))
         opl_rate = opl.native_rate
 
+    # Same rule for the NES APU, whose clock lives at header offset 0x84.
+    nes = None
+    nes_rate = 0.0
+    if header.get("nes_clock"):
+        import nes_apu
+        nes = nes_apu.NESAPU(clock=float(header["nes_clock"]))
+        nes_rate = nes.native_rate
+
     fm_rate = ym.native_rate
     psg_rate = psg.native_rate
     fm_chunks, psg_chunks, opl_chunks = [], [], []
+    nes_chunks = []
     fm_pending = psg_pending = opl_pending = 0.0
+    nes_pending = 0.0
 
     def flush():
-        nonlocal fm_pending, psg_pending, opl_pending
+        nonlocal fm_pending, psg_pending, opl_pending, nes_pending
         n = int(fm_pending)
         if n > 0:
             fm_chunks.append(ym.render(n))
@@ -173,6 +188,10 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
         if n > 0 and opl is not None:
             opl_chunks.append(opl.render(n))
             opl_pending -= n
+        n = int(nes_pending)
+        if n > 0 and nes is not None:
+            nes_chunks.append(nes.render(n))
+            nes_pending -= n
 
     max_samples = int(max_seconds * vgm_mod.DEFAULT_SAMPLE_RATE)
     for command in iter_commands(raw, header, max_samples):
@@ -181,6 +200,7 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
             fm_pending += seconds * fm_rate
             psg_pending += seconds * psg_rate
             opl_pending += seconds * opl_rate
+            nes_pending += seconds * nes_rate
         elif command[0] == "psg":
             flush()
             psg.write(command[1])
@@ -188,6 +208,10 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
             flush()
             if opl is not None:
                 opl.write(command[1], command[2])
+        elif command[0] == "nes":
+            flush()
+            if nes is not None:
+                nes.write(command[1], command[2])
         else:
             flush()
             ym.write(command[1], command[2], command[3])
@@ -197,6 +221,8 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
     psg.close()
     if opl is not None:
         opl.close()
+    if nes is not None:
+        nes.close()
 
     # Same mixer the sequencer uses, so a replayed export and the render it
     # came from agree by construction rather than by both being maintained.
@@ -205,7 +231,10 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
                      psg_gain=psg_gain, dc_block=dc_block,
                      opl_audio=_audio.concat(opl_chunks, 1) if opl_chunks
                      else None,
-                     opl_rate=opl_rate)
+                     opl_rate=opl_rate,
+                     nes_audio=_audio.concat(nes_chunks, 2) if nes_chunks
+                     else None,
+                     nes_rate=nes_rate)
 
 
 def main(argv):

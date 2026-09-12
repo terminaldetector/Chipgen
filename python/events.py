@@ -393,6 +393,120 @@ class PSGNoiseOff(Event):
     pass
 
 
+# --------------------------------------------------------------------------
+# NES / RP2A03
+# --------------------------------------------------------------------------
+# The APU emulator and the VGM transcriber both predate these events, so
+# for a while a NES track could be READ into a score and never written
+# back out. Two pulse channels, a triangle with no volume control, a noise
+# channel, and $4011 as a bare DAC.
+
+
+@dataclass
+class NESNoteOn(Event):
+    """`voice` is "pulse1", "pulse2" or "triangle".
+
+    Two ranges worth knowing, both measured and both hard floors rather
+    than gentle roll-offs. The pulse channels reach **A-1 (55 Hz)** and
+    the triangle **A-0 (27.5 Hz)**; below that the 11-bit timer clamps and
+    the note sounds an octave or more sharp instead of low. And velocity
+    does nothing at all on the triangle — it has no volume register, so it
+    plays at one level or not at all.
+    """
+    voice: str
+    note: str
+    octave: int
+    velocity: int = 127
+
+
+@dataclass
+class NESNoteOff(Event):
+    voice: str
+
+
+@dataclass
+class NESVolume(Event):
+    """0-127, linear in amplitude — no dB curve to undo, unlike FM.
+
+    A no-op on the triangle, deliberately rather than silently: there is
+    no register to write, so approximating it would mean faking a level
+    the hardware cannot produce.
+    """
+    voice: str
+    velocity: int = 127
+
+
+@dataclass
+class NESDuty(Event):
+    """Pulse waveform: 0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%.
+
+    3 and 1 are the same waveform inverted, so they measure identically
+    and differ only in phase — worth knowing before spending a channel on
+    the distinction.
+    """
+    voice: str
+    duty: int = 2
+
+
+@dataclass
+class NESSweep(Event):
+    """The pulse channels' hardware pitch slide.
+
+    Free — the CPU writes nothing per frame — but coarse, and it silences
+    the channel whenever the target period leaves range, which is the
+    classic "my sweep killed the note". `negate` is also what keeps the
+    low octave audible at all: chipgen sets it by default, and a positive
+    sweep re-arms the mute below about 110 Hz.
+    """
+    voice: str
+    period: int = 0
+    shift: int = 0
+    negate: bool = False
+    enabled: bool = True
+
+
+@dataclass
+class NESNoiseOn(Event):
+    """`period` is 0-15 and runs backwards: 0 is the highest pitch.
+
+    `metallic` is the mode bit. It shortens the shift register from 32767
+    steps to 93, which is short enough to have a pitch — the NES's only
+    route to a tonal metallic timbre.
+    """
+    period: int = 4
+    velocity: int = 127
+    metallic: bool = False
+
+
+@dataclass
+class NESNoiseOff(Event):
+    pass
+
+
+@dataclass
+class NESDMCLevel(Event):
+    """Write the DMC's 7-bit output register directly.
+
+    $4011 is the one register on this chip that is a plain DAC: writing it
+    moves the output immediately. Feeding it in a loop is how NES games
+    play samples without DPCM data, and it is the same trick as the
+    YM2612's register 0x2A.
+    """
+    level: int = 64
+
+
+@dataclass
+class NESSample(Event):
+    """A kit sample, played through $4011 at `rate` bytes per second.
+
+    The same sample kit the Genesis DAC uses, requantised to the DMC's
+    7 bits on the way out.
+    """
+    name: str
+    volume: float = 1.0
+    rate: int = 0
+
+
 @dataclass
 class End(Event):
     pass
@@ -414,6 +528,15 @@ _EVENT_TYPES = {
     "Vibrato": Vibrato,
     "VolumeSlide": VolumeSlide,
     "Tremolo": Tremolo,
+    "NESNoteOn": NESNoteOn,
+    "NESNoteOff": NESNoteOff,
+    "NESVolume": NESVolume,
+    "NESDuty": NESDuty,
+    "NESSweep": NESSweep,
+    "NESNoiseOn": NESNoiseOn,
+    "NESNoiseOff": NESNoiseOff,
+    "NESDMCLevel": NESDMCLevel,
+    "NESSample": NESSample,
     "OPLInstrumentSelect": OPLInstrumentSelect,
     "OPLNoteOn": OPLNoteOn,
     "OPLNoteOff": OPLNoteOff,

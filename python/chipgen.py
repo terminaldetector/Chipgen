@@ -356,6 +356,49 @@ def info() -> dict:
             "csm": "`ch3 csm` also keys the channel from timer A (a speech "
                    "trick); accepted, and does nothing without a timer",
         },
+        "nes": {
+            "columns": "nes0/nes1 pulses, nes2 triangle, nes3 noise, "
+                       "nes4 DMC. Aliases: pulse1/pu1/sq1, pulse2/pu2/sq2, "
+                       "tri/triangle, nnoise/nesnoise, dmc/nespcm",
+            "cells": "nes0-nes2 take notes (A-4, A#3:100, ===); nes3 takes "
+                     "a noise period 0-15 with optional m for the short "
+                     "shift register and :velocity (6, 4m:80); nes4 takes "
+                     "a kit sample name",
+            "directives": "`nes duty nes0 1` (0=12.5% 1=25% 2=50% 3=75%), "
+                          "`nes sweep nes0 3 2 up|down`, `nes sweep nes0 "
+                          "off`, `nes dmc nes4 64`",
+            "ranges": {
+                "pulse": "A-1 (55 Hz) up to about C-6. Below A-1 the "
+                         "11-bit timer clamps and the note sounds SHARP, "
+                         "not low — a written C-1 measures +888 cents.",
+                "triangle": "A-0 (27.5 Hz) to about A-5, one octave lower "
+                            "because it divides by 32 rather than 16",
+                "accuracy": "measured within 4 cents to C-6, degrading to "
+                            "12 cents at A-6 as the timer runs out",
+            },
+            "the_sweep_mute": "the sweep unit silences a pulse channel "
+                    "whenever the target period passes $7FF, and it does "
+                    "that whether or not the sweep is enabled. With shift "
+                    "0 the target is twice the period, so everything below "
+                    "about 110 Hz would be muted — measured, A-1/C-2/E-2/"
+                    "G-2 all render 0.0000 RMS. chipgen writes the negate "
+                    "bit at init so the octave is audible, the same thing "
+                    "real drivers do. A `down` sweep re-arms the mute.",
+            "the_triangle_has_no_volume": "not approximated, refused: its "
+                    "output measures bit-identical at velocity 8 and 127, "
+                    "so 7xy and Axy on nes2 raise an error. Pitch effects "
+                    "work on it.",
+            "duty_3_equals_duty_1": "75% is 25% inverted — measured "
+                    "identical harmonics, differing only in phase. Two "
+                    "pulse channels on 1 and 3 give one timbre twice.",
+            "dmc": "$4011 is a plain 7-bit DAC, so nes4 plays the same kit "
+                   "the Genesis DAC does, one bit coarser. Effects on it "
+                   "are volume-only, same as the dac column.",
+            "vgm": "exported with the NES clock at header offset 0x84 and "
+                   "command 0xB4 per register write; vgm_player replays "
+                   "it. Every voice round-trips above 0.997 correlation "
+                   "against its own render.",
+        },
         "instrument_selection": {
             "how": "patches are measured, not tagged; roles and genres are "
                    "target positions on measured axes, and every pick comes "
@@ -371,6 +414,16 @@ def info() -> dict:
         "summary": "Generative chiptune on real YM2612 + SN76489 emulation, "
                    "driven by a flat event vocabulary any model can emit.",
         "chips": {
+            "RP2A03": {
+                "channels": "2 pulse + triangle + noise + DMC",
+                "role": "NES / Famicom APU, register-level model with "
+                        "the hardware's non-linear mixing",
+                "scoreable": True,
+                "notes": "the triangle has no volume control and the "
+                         "pulse channels are muted below ~110 Hz unless "
+                         "the sweep negate bit is set — see the `nes` "
+                         "section",
+            },
             "YM2612": {
                 "channels": 6,
                 "role": "4-operator FM; channel 6 doubles as an 8-bit PCM DAC",

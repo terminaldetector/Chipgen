@@ -101,7 +101,7 @@ class VGMWriter:
 
     def __init__(self, ym_clock: float = 7_670_453.57,
                  psg_clock: float = 3_579_545, opl_clock: float = 0,
-                 gd3: GD3 = None,
+                 nes_clock: float = 0, gd3: GD3 = None,
                  pcm_blocks: bool = True):
         self.ym_clock = int(round(ym_clock))
         self.psg_clock = int(round(psg_clock))
@@ -109,6 +109,13 @@ class VGMWriter:
         #: knows not to instantiate one. Set it only when the score
         #: actually plays the chip.
         self.opl_clock = int(round(opl_clock))
+        #: Same rule for the NES APU. Zero until a score plays it — a
+        #: header claiming a chip the data never writes makes a player
+        #: instantiate one and hold it silent, and a header NOT claiming
+        #: a chip the data does write makes the player drop those
+        #: commands. Either way the file plays wrong with no error, which
+        #: is why this is set from the sequencer rather than defaulted on.
+        self.nes_clock = int(round(nes_clock))
         self.gd3 = gd3 or GD3()
         #: Route DAC bytes into a PCM data block (0x67) played back with
         #: 0x8n commands, the way ripped Genesis VGMs do it. One byte per
@@ -141,6 +148,22 @@ class VGMWriter:
         """Log one YM3812 register write (VGM command 0x5A)."""
         self._flush_wait()
         self._data += bytes((CMD_YM3812, addr & 0xFF, data & 0xFF))
+
+    def nes_logger(self, addr: int, data: int):
+        """Log one RP2A03 register write (VGM command 0xB4).
+
+        The command carries the register as a single byte: $4000-$4017
+        become 0x00-0x17, since the APU's whole register file lives in
+        that page. A write outside it is dropped rather than truncated —
+        0xB4 has nowhere to put the high bits, and silently aliasing
+        $5011 onto $4011 would be worse than losing it.
+        """
+        register = addr & 0xFFFF
+        if not 0x4000 <= register <= 0x40FF:
+            return
+        self._flush_wait()
+        self._data += bytes((CMD_NES_APU, register & 0xFF, data & 0xFF))
+        self._writes += 1
 
     def psg_logger(self, byte: int):
         """Attach as SN76489(logger=...)."""
@@ -257,6 +280,12 @@ class VGMWriter:
         # YM3812's clock lives at 0x50 in the VGM header. It is only
         # meaningful from version 1.51, which 1.71 is comfortably past.
         struct.pack_into("<I", header, 0x50, self.opl_clock)
+        # The NES APU's clock is at 0x84, which only exists from version
+        # 1.61 onward — 1.71 covers it. The header is already
+        # HEADER_SIZE bytes of zeros, so a Genesis-only file writes
+        # nothing here and stays byte-identical to what it was before
+        # the NES existed in this writer.
+        struct.pack_into("<I", header, 0x84, self.nes_clock)
         struct.pack_into("<I", header, 0x34, HEADER_SIZE - 0x34)
         return bytes(header) + data + gd3
 

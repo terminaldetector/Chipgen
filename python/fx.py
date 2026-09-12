@@ -113,11 +113,21 @@ def parse(code: str):
 #: Voices with a level but no continuous pitch. A pitch code on one of
 #: these used to be accepted and then quietly do nothing, which is the
 #: failure this module exists to avoid.
-_VOLUME_ONLY = ("noise", "dac")
+_VOLUME_ONLY = ("noise", "dac", "dmc")
 
 #: The codes that need a pitch to bend.
 _PITCH_CODES = {"1": "pitch slide up", "2": "pitch slide down",
                 "3": "portamento to note", "4": "vibrato"}
+
+#: The codes that need a level to move.
+_VOLUME_CODES = {"7": "tremolo", "A": "volume slide"}
+
+#: Voices with a pitch but no level. Exactly one: the NES triangle has no
+#: volume register at all, so it plays at one level or not at all —
+#: measured, its RMS is bit-identical at velocity 8 and velocity 127.
+#: Accepting a tremolo on it and writing nothing is the failure this
+#: module exists to avoid.
+_PITCH_ONLY = ("triangle",)
 
 
 def _dac_ceiling() -> int:
@@ -133,6 +143,16 @@ def to_events(target: str, code: str, note=None, octave=None):
     """
     kind, high, low, value = parse(code)
     E = events_mod
+
+    if target in _PITCH_ONLY and kind in _VOLUME_CODES:
+        raise FXError(
+            f"effect {code!r} ({_VOLUME_CODES[kind]}) needs a level to "
+            f"move, and the NES triangle has no volume register — it plays "
+            f"at one level or not at all, and its output measures "
+            f"identical at velocity 8 and velocity 127. Pitch effects "
+            f"(1xx/2xx/3xx slides, 4xy vibrato) do work on it; for a "
+            f"swelling bass line use a pulse channel, or gate the triangle "
+            f"with note-offs.")
 
     if target in _VOLUME_ONLY and kind in _PITCH_CODES:
         raise FXError(

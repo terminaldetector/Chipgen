@@ -98,12 +98,13 @@ import re
 import events as events_mod
 import fx
 from events import (
-    FMOperator, FMAlgorithm, FMCh3Mode, FMCh3Frequency,Portamento, Tremolo, Vibrato, VolumeSlide,
-                    DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
-                    FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
-                    OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
-                    OPLVolume, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
-                    PSGVolume, Tempo, Wait)
+    DACSample, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
+    FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn, FMOperator, FMPan,
+    FMPitch, FMVolume, LoopPoint, Marker, NESDMCLevel, NESDuty,
+    NESNoiseOff, NESNoiseOn, NESNoteOff, NESNoteOn, NESSample, NESSweep,
+    NESVolume, OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
+    OPLVolume, Portamento, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
+    PSGVolume, Tempo, Tremolo, Vibrato, VolumeSlide, Wait)
 
 DEFAULT_BPM = 150.0
 DEFAULT_LPB = 4
@@ -126,6 +127,28 @@ for _i in range(3):
 for _i in range(9):
     _COLUMN_ALIASES[f"o{_i}"] = f"opl{_i}"
     _COLUMN_ALIASES[f"opl{_i}"] = f"opl{_i}"
+#: The NES's five voices, numbered like every other chip's columns here
+#: rather than named, so `cols` reads the same whichever chip a score
+#: plays. nes0/nes1 are the pulses, nes2 the triangle, nes3 the noise and
+#: nes4 the DMC. Numbered and not named for one concrete reason: `noise`
+#: already means the PSG's noise voice, and a column whose meaning
+#: depended on which other columns the score used would be the kind of
+#: implicit mode that costs a take to debug.
+_NES_COLUMNS = tuple(f"nes{i}" for i in range(5))
+
+#: Column -> the voice name the chip and the effect engine both use.
+_NES_VOICE = {"nes0": "pulse1", "nes1": "pulse2", "nes2": "triangle",
+              "nes3": "noise", "nes4": "dmc"}
+
+for _i in range(5):
+    _COLUMN_ALIASES[f"nes{_i}"] = f"nes{_i}"
+_COLUMN_ALIASES.update({
+    "pulse1": "nes0", "pu1": "nes0", "sq1": "nes0",
+    "pulse2": "nes1", "pu2": "nes1", "sq2": "nes1",
+    "tri": "nes2", "triangle": "nes2",
+    "nnoise": "nes3", "nesnoise": "nes3",
+    "dmc": "nes4", "nespcm": "nes4",
+})
 _COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
                         "d": "dac", "pcm": "dac", "dac": "dac"})
 
@@ -134,7 +157,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
               "author", "game", "notes", "end", "opldepth", "op", "alg",
-              "sample", "pattern", "order", "ch3", "ch3op",
+              "sample", "pattern", "order", "ch3", "ch3op", "nes",
               "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
@@ -168,6 +191,11 @@ _NOTE_CELL = re.compile(r"^([A-Ga-g])([#b]?)-?(\d)(?::(\d+))?$")
 #: so that the sharp in `A#2` survives.
 _COMMENT = re.compile(r"(?:(?:^|(?<=\s))#|;)")
 _NOISE_CELL = re.compile(r"^([wpWP])([0-3])(?::(\d+))?$")
+
+#: The NES noise cell: a period 0-15, an optional `m` for the short
+#: (metallic) shift register, an optional velocity. `6m:80` is period 6,
+#: metallic, at velocity 80.
+_NES_NOISE_CELL = re.compile(r"^(\d{1,2})([mM])?(?::(\d+))?$")
 
 
 class TrackerError(ValueError):
@@ -535,6 +563,99 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
                 f"line {lineno}: unknown ch3 mode {args[0]!r}. Valid: "
                 f"{', '.join(sorted(_opn2.YM2612._CH3_MODE_BITS))}")
         events.append(FMCh3Mode(mode=mode))
+    elif head == "nes":
+        # `nes duty nes0 1` and `nes sweep nes0 3 2 down` — the NES's
+        # live register writes, the same job `op` does on the YM2612.
+        # Both take effect mid-note and neither is reloaded by the next
+        # note-on, unlike an FM patch.
+        need(2, "a setting and a column, e.g. `nes duty nes0 1` or "
+                "`nes sweep nes0 3 2 down`")
+        setting = args[0].lower()
+        column = _column(args[1], lineno)
+        if column not in _NES_COLUMNS:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not a NES column; want one "
+                f"of {', '.join(_NES_COLUMNS)}")
+        voice = _NES_VOICE[column]
+        if setting == "duty":
+            need(3, "a duty 0-3, e.g. `nes duty nes0 1`")
+            if voice not in ("pulse1", "pulse2"):
+                raise TrackerError(
+                    f"line {lineno}: only the pulse channels (nes0, nes1) "
+                    f"have a duty cycle; {args[1]} does not")
+            try:
+                duty = int(args[2])
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {args[2]!r} is not a duty "
+                    f"(want 0=12.5%, 1=25%, 2=50%, 3=75%)") from None
+            if not 0 <= duty <= 3:
+                raise TrackerError(
+                    f"line {lineno}: duty must be 0-3, got {duty}")
+            events.append(NESDuty(voice=voice, duty=duty))
+        elif setting == "sweep":
+            # `nes sweep nes0 PERIOD SHIFT [up|down] [off]`
+            if voice not in ("pulse1", "pulse2"):
+                raise TrackerError(
+                    f"line {lineno}: only the pulse channels (nes0, nes1) "
+                    f"have a sweep unit; {args[1]} does not")
+            if len(args) >= 3 and args[2].lower() == "off":
+                # Back to the default chipgen sets at init: negate on,
+                # shift zero, which is what keeps the low octave audible.
+                events.append(NESSweep(voice=voice, period=0, shift=0,
+                                       negate=True, enabled=False))
+            else:
+                need(4, "a period 0-7 and a shift 0-7, e.g. "
+                        "`nes sweep nes0 3 2 down`")
+                try:
+                    period, shift = int(args[2]), int(args[3])
+                except ValueError:
+                    raise TrackerError(
+                        f"line {lineno}: sweep period and shift must be "
+                        f"whole numbers 0-7, got {args[2]!r} "
+                        f"{args[3]!r}") from None
+                if not 0 <= period <= 7 or not 0 <= shift <= 7:
+                    raise TrackerError(
+                        f"line {lineno}: sweep period and shift are both "
+                        f"0-7, got period={period} shift={shift}")
+                direction = args[4].lower() if len(args) > 4 else "down"
+                if direction not in ("up", "down"):
+                    raise TrackerError(
+                        f"line {lineno}: sweep direction is `up` or "
+                        f"`down`, got {args[4]!r}")
+                # `up` means the PITCH rises, which on this chip means
+                # the negate bit: the sweep unit works on the timer
+                # period, and period and frequency run opposite ways.
+                # Measured with period 1, shift 3 over half a second:
+                # negate on takes A-4 up 2,716 cents, negate off takes it
+                # down 2,815. Getting this backwards is silent — the note
+                # simply sweeps the wrong way.
+                #
+                # It also decides whether the sweep re-arms the
+                # low-register mute. A downward sweep grows the target
+                # period, and once that passes $7FF the channel goes
+                # silent — the classic "my sweep killed the note".
+                events.append(NESSweep(voice=voice, period=period,
+                                       shift=shift,
+                                       negate=(direction == "up"),
+                                       enabled=True))
+        elif setting == "dmc":
+            need(3, "a level 0-127, e.g. `nes dmc nes4 64`")
+            try:
+                level = int(args[2])
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {args[2]!r} is not a DMC level "
+                    f"(want 0-127)") from None
+            if not 0 <= level <= 127:
+                raise TrackerError(
+                    f"line {lineno}: DMC level is 0-127, got {level}")
+            events.append(NESDMCLevel(level=level))
+        else:
+            raise TrackerError(
+                f"line {lineno}: unknown nes setting {args[0]!r}. "
+                f"Valid: duty, sweep, dmc")
+
     elif head == "ch3op":
         # `ch3op 1 A-5` pitches one of channel 3's operators.
         need(2, "an operator 1-4 and a note, e.g. `ch3op 1 A-5`")
@@ -697,7 +818,8 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
 def _column(name: str, lineno: int) -> str:
     key = name.lower()
     resolved = _COLUMN_ALIASES.get(key, key)
-    valid = _FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+    valid = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
+             + ("noise", "dac"))
     if resolved not in valid:
         raise TrackerError(
             f"line {lineno}: unknown column {name!r}. Valid: "
@@ -808,6 +930,73 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(OPLNoteOn(channel=ch, note=note, octave=octave,
                                 velocity=velocity if velocity else 127))
         _apply_effects(column, codes, events, lineno, raw)
+        return
+
+    if column in _NES_COLUMNS:
+        voice = _NES_VOICE[column]
+        if column == "nes3":
+            # The NES noise cell carries a period, not a note: 0-15, and
+            # it runs backwards — 0 is the highest pitch. `m` asks for the
+            # short shift register, which is the chip's only route to a
+            # tonal metallic timbre.
+            if lowered in OFF_TOKENS:
+                events.append(NESNoiseOff())
+                _apply_effects(voice, codes, events, lineno, raw)
+                return
+            m = _NES_NOISE_CELL.match(token)
+            if not m:
+                raise TrackerError(
+                    f"line {lineno}: {token!r} is not a NES noise cell "
+                    f"(want a period 0-15, optionally m for metallic and "
+                    f":velocity — e.g. 6, 6m, 6:80, ===)\n  {raw.strip()}")
+            period, metallic, velocity = m.groups()
+            if int(period) > 15:
+                raise TrackerError(
+                    f"line {lineno}: NES noise period is 0-15, got "
+                    f"{period}\n  {raw.strip()}")
+            events.append(NESNoiseOn(
+                period=int(period), metallic=bool(metallic),
+                velocity=int(velocity) if velocity else 127))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        if column == "nes4":
+            # $4011 is a plain DAC, so the DMC column takes the same kit
+            # the Genesis one does.
+            if lowered in OFF_TOKENS:
+                return
+            name, _, level = token.partition(":")
+            import samples as samples_mod
+            if name not in samples_mod.KIT:
+                raise TrackerError(
+                    f"line {lineno}: unknown sample {name!r}; have: "
+                    f"{', '.join(samples_mod.names())}\n  {raw.strip()}")
+            volume = 1.0
+            if level:
+                try:
+                    volume = float(level)
+                except ValueError:
+                    raise TrackerError(
+                        f"line {lineno}: {level!r} is not a DMC volume "
+                        f"(want 0.0-1.0)\n  {raw.strip()}") from None
+                if not 0.0 <= volume <= 1.0:
+                    raise TrackerError(
+                        f"line {lineno}: DMC volume {volume} is outside "
+                        f"0.0-1.0\n  {raw.strip()}")
+            events.append(NESSample(name=name, volume=volume, rate=0))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        if lowered in OFF_TOKENS:
+            events.append(NESNoteOff(voice=voice))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-4, A#3, ===)\n  {raw.strip()}")
+        note, octave, velocity = parsed
+        events.append(NESNoteOn(voice=voice, note=note, octave=octave,
+                                velocity=velocity if velocity else 127))
+        _apply_effects(voice, codes, events, lineno, raw)
         return
 
     if column in _PSG_COLUMNS:
@@ -1066,7 +1255,8 @@ def dumps(events, meta: Metadata = None, columns=None,
                                      else "")
 
     if columns is None:
-        order = _FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+        order = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
+                 + ("noise", "dac"))
         columns = [c for c in order if c in used] or list(DEFAULT_COLUMNS)
 
     widths = {c: max(len(c), 3) for c in columns}

@@ -38,6 +38,17 @@ def test_every_type_round_trips_through_dict():
         "PSGVolume": E.PSGVolume(channel=3, volume=9),
         "PSGNoiseOn": E.PSGNoiseOn(white=True, rate=2, volume=6),
         "PSGNoiseOff": E.PSGNoiseOff(),
+        "NESNoteOn": E.NESNoteOn(voice="pulse1", note="D#", octave=4,
+                                 velocity=96),
+        "NESNoteOff": E.NESNoteOff(voice="triangle"),
+        "NESVolume": E.NESVolume(voice="pulse2", velocity=72),
+        "NESDuty": E.NESDuty(voice="pulse1", duty=1),
+        "NESSweep": E.NESSweep(voice="pulse2", period=3, shift=2,
+                               negate=True, enabled=True),
+        "NESNoiseOn": E.NESNoiseOn(period=7, velocity=88, metallic=True),
+        "NESNoiseOff": E.NESNoiseOff(),
+        "NESDMCLevel": E.NESDMCLevel(level=100),
+        "NESSample": E.NESSample(name="snare", volume=0.7, rate=16000),
         "End": E.End(),
     }
     # Nothing in the vocabulary may be unrepresentable as JSON: the whole

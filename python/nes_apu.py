@@ -470,3 +470,276 @@ class NESAPU:
 
     def triangle_frequency(self, period: int) -> float:
         return self.clock / (32.0 * (period + 1))
+
+
+# --------------------------------------------------------------------------
+# The musical layer
+# --------------------------------------------------------------------------
+# Everything above is the chip: write a register, get a sample. What
+# follows is the layer every other chip here already had and this one did
+# not, which is why a NES score could be READ (nes_transcribe.py) but
+# never written. It is deliberately the same shape as opn2/opl2/sn76489 —
+# note_on, note_off, set_volume, set_pitch_offset — so the sequencer does
+# not learn a fourth vocabulary.
+
+#: The channels a score can address, in the spelling the tracker uses.
+VOICE_NAMES = ("pulse1", "pulse2", "triangle", "noise")
+
+#: Pulse duty settings and what they sound like. 75% and 25% are the same
+#: waveform inverted, so they measure identically and only differ in
+#: phase — worth knowing before spending a channel on the distinction.
+DUTY_NAMES = {0: "12.5%", 1: "25%", 2: "50% (square)", 3: "75%"}
+
+#: Length-counter index that means "as long as possible", for notes whose
+#: end is a note-off rather than a timer. 0x1F is 254 frames.
+_LONGEST_LENGTH = 0x1F
+
+
+class _Voice:
+    __slots__ = ("note", "velocity", "duty", "cents", "sounding",
+                 "high_byte")
+
+    def __init__(self):
+        self.note = None
+        self.velocity = 127
+        self.duty = 2
+        self.cents = 0.0
+        self.sounding = False
+        #: The last value written to this voice's period-high register,
+        #: so a re-tune that does not change it can skip the write. See
+        #: _write_period for why that matters.
+        self.high_byte = None
+
+
+class Voices:
+    """A musical interface over NESAPU.
+
+    Holds no audio state of its own — every method turns into register
+    writes on the APU it was given, so a .vgm log and the rendered audio
+    cannot disagree.
+    """
+
+    #: Base register for each pulse channel.
+    _PULSE_BASE = {"pulse1": 0x4000, "pulse2": 0x4004}
+
+    def __init__(self, apu):
+        self.apu = apu
+        self.voices = {name: _Voice() for name in VOICE_NAMES}
+        self._enabled = 0x00
+        # Nothing sounds until $4015 says so, and a score should not have
+        # to know that. All FIVE bits: 0x0F enables the two pulses, the
+        # triangle and the noise but leaves bit 4 clear, which gates the
+        # DMC's output to zero — a sample written to $4011 then logs
+        # every byte and renders exact silence, with nothing to suggest
+        # the channel was switched off rather than the sample empty.
+        self._write_enable(0x1F)
+        # And then the quirk that costs a whole octave. The sweep unit
+        # mutes a pulse channel whenever the TARGET period would exceed
+        # $7FF, and it does that whether or not the sweep is enabled.
+        # With a shift count of zero the target is twice the period, so
+        # every period above 1023 mutes — which is everything below about
+        # 110 Hz. Measured: with $4001 left at zero, A-1, C-2, E-2 and
+        # G-2 all render 0.0000 RMS, exact silence, while A-2 at period
+        # 1016 plays fine. Setting the negate bit makes the target
+        # negative instead, the overflow check passes, and A-1 comes back
+        # at 55.00 Hz within 0.1 cents. Real NES drivers write this at
+        # init for the same reason; a score should not have to.
+        for base in sorted(self._PULSE_BASE.values()):
+            self.apu.write(base + 1, 0x08)
+
+    # -- helpers -----------------------------------------------------------
+    def _write_enable(self, mask: int):
+        self._enabled = mask & 0x1F
+        self.apu.write(0x4015, self._enabled)
+
+    def _voice(self, name: str) -> _Voice:
+        try:
+            return self.voices[name]
+        except KeyError:
+            raise KeyError(f"no NES voice named {name!r}. Valid: "
+                           f"{', '.join(VOICE_NAMES)}") from None
+
+    @staticmethod
+    def _level(velocity: int) -> int:
+        """0-127 velocity -> the 4-bit envelope volume.
+
+        Linear in the register, which is linear in amplitude on this chip:
+        unlike the YM2612's Total Level there is no dB curve to undo.
+        """
+        return max(0, min(15, int(round(velocity * 15.0 / 127.0))))
+
+    # -- pulses ------------------------------------------------------------
+    def set_duty(self, name: str, duty: int):
+        voice = self._voice(name)
+        if name not in self._PULSE_BASE:
+            raise ValueError(f"{name} has no duty cycle; only "
+                             f"{', '.join(self._PULSE_BASE)} do")
+        if not 0 <= duty <= 3:
+            raise ValueError(f"duty must be 0-3 ({DUTY_NAMES}), got {duty}")
+        voice.duty = duty
+        if voice.sounding:
+            self._write_pulse_control(name)
+
+    def _write_pulse_control(self, name: str):
+        voice = self.voices[name]
+        base = self._PULSE_BASE[name]
+        # Bit 5 halts the length counter: a note ends when the score says
+        # so, not when a timer runs out. Bit 4 is constant volume, which
+        # is what a velocity means here — the alternative is the hardware
+        # envelope, and a score that wanted that would say so.
+        self.apu.write(base, ((voice.duty & 3) << 6) | 0x30
+                       | self._level(voice.velocity))
+
+    def set_sweep(self, name: str, period: int, shift: int,
+                  negate: bool = False, enabled: bool = True):
+        """The pulse channels' own pitch slide, run by the hardware.
+
+        Kept separate from the effect column's portamento on purpose: this
+        one is free (the CPU writes nothing per frame) but coarse, and it
+        silences the channel when the target period goes out of range,
+        which is the classic "my sweep killed the note" surprise.
+        """
+        if name not in self._PULSE_BASE:
+            raise ValueError(f"{name} has no sweep unit")
+        if not 0 <= period <= 7 or not 0 <= shift <= 7:
+            raise ValueError("sweep period and shift are both 0-7, got "
+                             f"period={period} shift={shift}")
+        value = ((0x80 if enabled else 0) | ((period & 7) << 4)
+                 | (0x08 if negate else 0) | (shift & 7))
+        self.apu.write(self._PULSE_BASE[name] + 1, value)
+
+    # -- notes -------------------------------------------------------------
+    def note_on(self, name: str, note: str, octave: int, velocity: int = 127):
+        voice = self._voice(name)
+        voice.note = (note, octave)
+        voice.velocity = max(1, min(127, velocity))
+        voice.sounding = True
+        voice.cents = 0.0
+        if name in self._PULSE_BASE:
+            self._write_pulse_control(name)
+            self._write_period(name, self._frequency(voice), force=True)
+        elif name == "triangle":
+            # The triangle has NO volume control — it plays at one level
+            # or not at all, so velocity is ignored rather than quietly
+            # approximated. 0x80 halts the linear counter, which is what
+            # keeps it sounding until a note-off.
+            self.apu.write(0x4008, 0xFF)
+            self._write_period(name, self._frequency(voice), force=True)
+        else:
+            raise ValueError("the noise channel takes noise(), not a note")
+
+    def note_off(self, name: str):
+        voice = self._voice(name)
+        voice.sounding = False
+        voice.note = None
+        if name in self._PULSE_BASE:
+            # Silence by zeroing the envelope volume, not by clearing the
+            # enable bit: clearing enable also resets the length counter,
+            # and the next note-on then has to restore it.
+            base = self._PULSE_BASE[name]
+            self.apu.write(base, ((voice.duty & 3) << 6) | 0x30)
+        elif name == "triangle":
+            # No volume to zero, so the linear counter is the only way
+            # down: reload it with zero and the sequencer stops.
+            self.apu.write(0x4008, 0x00)
+        elif name == "noise":
+            self.apu.write(0x400C, 0x30)
+
+    def noise_on(self, period: int, velocity: int = 127,
+                 metallic: bool = False):
+        """Gate the noise channel. `period` is 0-15, low index = high pitch.
+
+        `metallic` is the mode bit: it shortens the shift register from
+        32767 steps to 93, which is periodic enough to have a pitch. That
+        is the NES's only route to a tonal metallic timbre.
+        """
+        if not 0 <= period <= 15:
+            raise ValueError(f"noise period is 0-15, got {period}")
+        voice = self._voice("noise")
+        voice.velocity = max(1, min(127, velocity))
+        voice.sounding = True
+        self.apu.write(0x400C, 0x30 | self._level(voice.velocity))
+        self.apu.write(0x400E, (0x80 if metallic else 0x00) | (period & 0x0F))
+        self.apu.write(0x400F, _LONGEST_LENGTH << 3)
+
+    def noise_off(self):
+        self.note_off("noise")
+
+    # -- pitch and volume, for the effect column ---------------------------
+    def _frequency(self, voice) -> float:
+        if voice.note is None:
+            return 0.0
+        from opn2 import note_to_freq
+        freq = note_to_freq(*voice.note)
+        if voice.cents:
+            freq *= 2.0 ** (voice.cents / 1200.0)
+        return freq
+
+    def _write_period(self, name: str, frequency: float, force: bool = False):
+        """Set a voice's timer, writing the high register only if it moved.
+
+        This is not an optimisation. On this chip a write to $4003/$4007
+        resets the pulse's duty phase and restarts its envelope, and
+        $400B reloads the triangle's linear counter — so re-asserting an
+        unchanged high byte 60 times a second turns the effect clock into
+        an audible tone. Measured on a held note re-tuned at 60 Hz:
+        writing both registers every tick puts a 60 Hz component at
+        -30.5 dB with harmonics at -29.7 and -28.2, where writing only
+        the low byte leaves it at -148.8 dB. That is 118 dB of buzz from
+        one redundant write, and it is the same mistake as re-seeding the
+        PSG's noise register on every hat.
+
+        `force` is for a note-on, which does want the phase reset and the
+        length-counter reload.
+        """
+        if frequency <= 0:
+            return
+        voice = self.voices[name]
+        if name in self._PULSE_BASE:
+            period = self.apu.pulse_period(frequency)
+            base = self._PULSE_BASE[name]
+            low, high = base + 2, base + 3
+        else:
+            period = self.apu.triangle_period(frequency)
+            low, high = 0x400A, 0x400B
+        high_value = (_LONGEST_LENGTH << 3) | ((period >> 8) & 7)
+        self.apu.write(low, period & 0xFF)
+        if force or voice.high_byte != high_value:
+            self.apu.write(high, high_value)
+            voice.high_byte = high_value
+
+    def set_pitch_offset(self, name: str, cents: float):
+        """Retune a sounding voice without restarting it.
+
+        Relative to the note that was keyed on, so calls do not compound.
+        The timer is 11 bits and the resolution runs out in the top
+        octaves exactly as the PSG's does — that is the hardware.
+        """
+        voice = self._voice(name)
+        if voice.note is None:
+            return
+        voice.cents = float(cents)
+        self._write_period(name, self._frequency(voice))
+
+    def set_volume(self, name: str, velocity: int):
+        """0-127. A no-op on the triangle, which has no volume register."""
+        voice = self._voice(name)
+        voice.velocity = max(0, min(127, velocity))
+        if name in self._PULSE_BASE:
+            if voice.sounding:
+                self._write_pulse_control(name)
+        elif name == "noise":
+            if voice.sounding:
+                self.apu.write(0x400C, 0x30 | self._level(voice.velocity))
+        # triangle: nothing to write. Documented, not silently rounded.
+
+    # -- DMC, the NES's PCM ------------------------------------------------
+    def dmc_level(self, level: int):
+        """Write the DMC's 7-bit output directly.
+
+        $4011 is the one register on this chip that is a straight DAC:
+        writing it moves the output level immediately. Feeding it in a
+        loop is how NES games play samples without DPCM data, and it is
+        the same trick as the YM2612's register 0x2A.
+        """
+        self.apu.write(0x4011, max(0, min(127, int(level))))

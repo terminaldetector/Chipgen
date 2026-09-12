@@ -35,6 +35,16 @@ DEFAULT_PSG_GAIN = 0.65
 #: voices at once do not swamp the FM.
 DEFAULT_OPL_GAIN = 0.75
 
+#: The NES APU's own mix() already applies the hardware's non-linear
+#: summing and lands around 0..1, which is hot next to one FM channel —
+#: measured, three NES voices at full velocity peak 0.50 and read 0.32
+#: RMS where an FM channel reads around 0.05. This brings a full NES
+#: arrangement alongside the other chips instead of on top of them.
+#: Set the same way as the two above: by ear against a reference render,
+#: not off a schematic, since nothing about a Mega Drive and a Famicom in
+#: one mix is a hardware fact.
+DEFAULT_NES_GAIN = 0.30
+
 #: Ceiling for the safety limiter, leaving a little room below clipping.
 #: This only ever attenuates, and only when a mix would otherwise clip.
 NORMALISE_TARGET = 0.98
@@ -53,19 +63,25 @@ def mix(fm_audio, psg_audio, fm_rate: float, psg_rate: float,
         target_rate: int, fm_gain: float = 1.0,
         psg_gain: float = DEFAULT_PSG_GAIN, dc_block: bool = True,
         opl_audio=None, opl_rate: float = 0.0,
-        opl_gain: float = DEFAULT_OPL_GAIN):
+        opl_gain: float = DEFAULT_OPL_GAIN,
+        nes_audio=None, nes_rate: float = 0.0,
+        nes_gain: float = DEFAULT_NES_GAIN):
     """Resample every chip to target_rate, balance, centre and normalise.
 
-    The OPL2 is optional and mono, and is skipped entirely when a score
-    does not use it — resampling an empty buffer is cheap, but building
-    one is not.
+    The OPL2 and the NES APU are both optional, and both are skipped
+    entirely when a score does not use them — resampling an empty buffer
+    is cheap, but building one is not. The OPL2 is mono; the NES is mono
+    too but its emulator hands back both channels already.
     """
     fm = _audio.resample(fm_audio, fm_rate, target_rate)
     psg = _audio.resample(psg_audio, psg_rate, target_rate)
     opl = (_audio.resample(opl_audio, opl_rate, target_rate)
            if opl_audio is not None and len(opl_audio) and opl_rate else None)
+    nes = (_audio.resample(nes_audio, nes_rate, target_rate)
+           if nes_audio is not None and len(nes_audio) and nes_rate else None)
 
-    frames = max(len(fm), len(psg), len(opl) if opl is not None else 0)
+    frames = max(len(fm), len(psg), len(opl) if opl is not None else 0,
+                 len(nes) if nes is not None else 0)
     out = _audio.zeros(frames, 2)
     if len(fm):
         _audio.add_stereo_into(out, fm, fm_gain)
@@ -73,6 +89,8 @@ def mix(fm_audio, psg_audio, fm_rate: float, psg_rate: float,
         _audio.add_mono_into_stereo(out, psg, psg_gain)
     if opl is not None and len(opl):
         _audio.add_mono_into_stereo(out, opl, opl_gain)
+    if nes is not None and len(nes):
+        _audio.add_stereo_into(out, nes, nes_gain)
 
     if dc_block:
         out = remove_dc(out)

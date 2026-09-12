@@ -113,10 +113,64 @@ whole chip.
   arpeggiates so much. It is not a stylistic choice.
 - **The triangle is the bass.** See section 2.
 - **Percussion is the noise channel and the DMC.** There is one of each.
-- Pulse periods below 8 are muted by the sweep unit, which puts a hard
-  floor on how high a pulse can play.
+- **The sweep unit mutes a pulse at BOTH ends.** Periods below 8 are
+  muted, which caps how high a pulse can play. Less obviously, the unit
+  also mutes whenever the *target* period would pass `$7FF` — and it
+  does that whether or not the sweep is enabled. With a shift count of
+  zero the target is twice the period, so every period above 1023 is
+  silenced too, which is everything below about 110 Hz. Measured with
+  `$4001` left at zero: A-1, C-2, E-2 and G-2 all render **0.0000 RMS**,
+  exact silence, while A-2 at period 1016 plays normally. Setting the
+  negate bit makes the target negative, the check passes, and A-1 comes
+  back at 55.00 Hz within 0.1 cents. `nes_apu.Voices` writes that bit at
+  init, which is what real drivers do — but a `down` sweep re-arms it,
+  and then a bass line disappears with no error.
 
-## 9. Expansion chips
+## 9. Writing a score for it
+
+This page used to be about reading NES music. The chip is now scoreable
+from the same notation the Genesis columns use — five columns, `nes0` and
+`nes1` for the pulses, `nes2` the triangle, `nes3` the noise, `nes4` the
+DMC:
+
+    bpm 150
+    lpb 4
+    cols nes0 nes1 nes2 nes3 nes4
+    nes duty nes0 1
+    A-4:110/456  E-5:80   A-2   6:90    kick
+    ...          ...      ...   ...     ...
+    C-5          G-5:80   C-3   4m:70   hat
+
+Everything the other chips have works here: the effect column, `pattern`
+and `order`, live register writes, samples. Chip-specific:
+
+- `nes3` cells are a noise **period** 0-15, not a note, and the scale
+  runs backwards — 0 is the highest. `4m` asks for the short (93-step)
+  shift register, which is the only way to get a pitched metallic sound
+  out of this chip.
+- `nes4` plays the same sample kit the Genesis DAC does, through `$4011`,
+  a plain 7-bit DAC — one bit coarser and otherwise identical.
+- `nes duty nes0 0..3` is the pulse waveform. **Duty 3 is duty 1
+  inverted**: measured identical harmonics, differing only in phase. Two
+  pulses on 1 and 3 give you one timbre twice. Duty 2 is the square, its
+  even harmonics cancelling at -40.9 dB against -5.6 for the others.
+- `nes sweep nes0 PERIOD SHIFT up|down` is the hardware slide. `up` and
+  `down` name the **pitch**, not the register — they run opposite ways,
+  and the negate bit raises the pitch. Measured with period 1, shift 3
+  over half a second: `up` takes A-4 up 2,716 cents, `down` down 2,815.
+  `nes sweep nes0 off` returns to the safe default.
+- Ranges are hard floors and past them a note reads **sharp, not low**:
+  the pulses reach A-1 (55 Hz), the triangle A-0 (27.5 Hz). A written
+  C-1 on a pulse clamps and measures +888 cents. Accuracy is within 4
+  cents to C-6, 12 cents at A-6.
+- Volume effects on `nes2` are **refused**, not ignored — see section 2.
+
+A NES score exports a .vgm carrying the APU (clock at header offset
+`0x84`, command `0xB4` per write) and `vgm_player.py` replays it. Every
+voice round-trips above 0.997 correlation against its own render, which
+is what the Genesis path scores on the same measure.
+
+## 10. Expansion chips
 
 Several NES soundtracks use an expansion chip on the cartridge and are
 not one chip at all: Gimmick! is the APU plus a Sunsoft 5B, Castlevania

@@ -46,12 +46,19 @@ DEFAULT_RATE = 60.0
 #: settings, not a continuum, and the DAC's pitch is its feed rate, which
 #: is already up against the chip's 15,980 Hz ceiling. fx.py refuses a
 #: pitch code on either rather than accept it and do nothing.
-VOLUME_ONLY = ("noise", "dac")
+VOLUME_ONLY = ("noise", "dac", "dmc")
+
+#: The NES's voices, named rather than indexed. `noise` is deliberately
+#: shared with the PSG's noise voice: a score plays one chip or the other,
+#: and giving them separate names would mean the effect column needed to
+#: know which.
+NES_VOICES = ("pulse1", "pulse2", "triangle")
 
 
 def voice_names():
     return ([f"fm{i}" for i in range(6)] + [f"psg{i}" for i in range(3)]
-            + [f"opl{i}" for i in range(9)] + list(VOLUME_ONLY))
+            + [f"opl{i}" for i in range(9)] + list(NES_VOICES)
+            + list(VOLUME_ONLY))
 
 
 class _Voice:
