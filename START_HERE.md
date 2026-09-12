@@ -102,7 +102,7 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | any column | add effects with `/`: `A-2:100/1F0/4A3` — see **Effects** below |
 | `psg0`–`psg2` | `A-4`, `A-4:8` (volume 0–15, **0 is loudest**), `===`, `...` |
 | `noise` | `w0`–`w3` white, `p0`–`p3` periodic, `===`, `...` |
-| `dac` | `kick` `snare` `hat` `hat_open` `tom` `clap` `rim`, or `...` |
+| `dac` | `kick` `snare` `hat` `hat_open` `tom` `clap` `rim`, or `...`; `kick@D-3` plays it at that pitch, `kick@D-3:0.5` also at half level |
 
 Comments: `;` anywhere, or `#` at the start of a line.
 
@@ -111,6 +111,33 @@ Chord qualities: `maj` `min` `dim` `aug` `sus2` `sus4` `maj6` `min6`
 shorthands (`m`, `M7`, `7`, `9`, `o7`). Ask for more channels than the
 chord has notes and it keeps going up an octave rather than doubling in
 unison.
+
+**Your own samples** — `sample` imports a WAV into the kit, and a cell can
+ask for a pitch:
+
+```
+sample bass808 kits/808.wav C-2     ; C-2 is the pitch the file sounds at
+cols dac
+bass808@C-2
+bass808@G-2
+kick@D-3                             ; the built-in kit repitches too
+```
+
+Paths are relative to where the render runs, not to the score. Stereo is
+mixed down and the file is requantised to 8-bit, because that is what
+register 0x2A takes.
+
+One hardware limit worth knowing, because it is invisible otherwise: **the
+DAC accepts new bytes at about 15,980 Hz and no faster**. Measured, not
+from a datasheet — feed a 220 Hz tone in at rising rates and it reads
+220.0 at 11 kHz, 219.7 at 16 kHz, then 159.4 at 22 kHz and 79.7 at 44 kHz,
+every failure landing on the same effective 15,980. Above the ceiling the
+chip drops bytes, so a sample keeps its **length** and only loses its
+**pitch**, which is why it reads as broken repitching rather than as a
+limit. chipgen therefore pitches a sample up by thinning its data, not by
+feeding faster, and stores imports at a rate the chip can play. Accuracy
+across four octaves is within 6 cents, worst at the top where the
+thinning gets coarse.
 
 **Live FM** — a patch selected once is a preset. `op` writes one operator
 field between two rows, which is how a Genesis driver shapes a note while

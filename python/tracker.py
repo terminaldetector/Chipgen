@@ -134,6 +134,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
               "author", "game", "notes", "end", "opldepth", "op", "alg",
+              "sample",
               "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
@@ -386,6 +387,29 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
             raise TrackerError(
                 f"line {lineno}: {head} wants numbers or `off`, got "
                 f"{' '.join(rest)!r}") from None
+    elif head == "sample":
+        # `sample bass808 kits/808.wav` — import a WAV as a DAC sample.
+        # `sample bass808 kits/808.wav C-2` says what pitch the file
+        # sounds at, which is what lets a cell ask for another one.
+        need(2, "a name and a .wav path, e.g. "
+                "`sample bass808 kits/808.wav`, optionally the pitch it "
+                "sounds at: `sample bass808 kits/808.wav C-2`")
+        import samples as samples_mod
+        name, path = args[0], args[1]
+        base = args[2] if len(args) > 2 else None
+        if base is not None and parse_note(base) is None:
+            raise TrackerError(
+                f"line {lineno}: {base!r} is not a note (want e.g. C-2)")
+        try:
+            samples_mod.load_wav(name, path, base_note=base)
+        except FileNotFoundError:
+            raise TrackerError(
+                f"line {lineno}: no such file {path!r}. Paths are relative "
+                f"to where the render runs, not to the score.") from None
+        except Exception as error:
+            raise TrackerError(
+                f"line {lineno}: could not read {path!r} as a WAV: "
+                f"{error}") from None
     elif head == "op":
         # `op fm0 4 tl 20` — write one operator field mid-note. Lands
         # between the rows around it, because a directive flushes the
@@ -669,6 +693,25 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         if lowered in OFF_TOKENS:
             return
         name, _, level = token.partition(":")
+        # `kick@D-3` plays the sample at that pitch, by playing it faster
+        # or slower. Split the pitch off before the volume so both can be
+        # given: `kick@D-3:0.5`.
+        name, at, pitch = name.partition("@")
+        rate = 0
+        if at:
+            parsed = parse_note(pitch)
+            if parsed is None:
+                raise TrackerError(
+                    f"line {lineno}: {pitch!r} is not a note to play "
+                    f"{name!r} at (want e.g. D-3)\n  {raw.strip()}")
+            import samples as samples_mod
+            try:
+                sample = samples_mod.KIT[name]
+            except KeyError:
+                raise TrackerError(
+                    f"line {lineno}: unknown sample {name!r}; have: "
+                    f"{', '.join(samples_mod.names())}") from None
+            name, rate = samples_mod.for_note(sample, parsed[0], parsed[1])
         volume = 1.0
         if level:
             try:
@@ -681,7 +724,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
                 raise TrackerError(
                     f"line {lineno}: DAC volume {volume} is outside 0.0-1.0"
                     f"\n  {raw.strip()}")
-        events.append(DACSample(name=name, volume=volume))
+        events.append(DACSample(name=name, volume=volume, rate=rate))
         return
 
 

@@ -285,6 +285,16 @@ def info() -> dict:
     return {
         "name": "chipgen",
         "effect_column": fx.vocabulary(),
+        "samples": {
+            "kit": samples_mod.names(),
+            "import": "`sample NAME PATH.wav [BASE_NOTE]` in a score, or "
+                      "samples.load_wav(name, path, base_note=...)",
+            "pitched": "`kick@D-3` in a dac cell; `kick@D-3:0.5` for level too",
+            "dac_rate_ceiling_hz": samples_mod.DAC_RATE_CEILING,
+            "ceiling_note": "measured: above this the chip drops bytes, so a "
+                            "sample keeps its length and loses its pitch. "
+                            "Pitching up thins the data instead.",
+        },
         "live_fm": {
             "how": "`op fm0 4 tl 12` writes one operator field between two "
                    "rows; `alg fm1 4 6` changes routing and feedback",

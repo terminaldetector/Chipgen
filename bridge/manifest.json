@@ -16,6 +16,21 @@
     },
     "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz"
   },
+  "samples": {
+    "kit": [
+      "clap",
+      "hat",
+      "hat_open",
+      "kick",
+      "rim",
+      "snare",
+      "tom"
+    ],
+    "import": "`sample NAME PATH.wav [BASE_NOTE]` in a score, or samples.load_wav(name, path, base_note=...)",
+    "pitched": "`kick@D-3` in a dac cell; `kick@D-3:0.5` for level too",
+    "dac_rate_ceiling_hz": 15980,
+    "ceiling_note": "measured: above this the chip drops bytes, so a sample keeps its length and loses its pitch. Pitching up thins the data instead."
+  },
   "live_fm": {
     "how": "`op fm0 4 tl 12` writes one operator field between two rows; `alg fm1 4 6` changes routing and feedback",
     "operator_numbering": "1-4 as on a block diagram; the register interleave op1,op3,op2,op4 is handled",
@@ -859,6 +874,7 @@
       "pan",
       "pitch",
       "porta",
+      "sample",
       "ticks",
       "title",
       "trem",
