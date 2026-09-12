@@ -272,6 +272,8 @@ class YM2612:
         self._channel_cents = [0.0] * 6
         self._channel_note = [None] * 6      # (note, octave) currently keyed on
         self._keyed_on = [False] * 6
+        #: (port, address) -> last byte written. See write().
+        self._shadow = {}
         #: Per channel: did the last note_on write attenuated carriers?
         self._velocity_dirty = [False] * 6
         self._dac_enabled = False
@@ -297,9 +299,18 @@ class YM2612:
 
     def write(self, port: int, addr: int, data: int):
         """Write one register. `port` is the ADDRESS port (0 or 2); data goes
-        to port+1, exactly as a Genesis driver would do it."""
+        to port+1, exactly as a Genesis driver would do it.
+
+        Every write is also kept in `_shadow`. The chip cannot be read
+        back, and four of its operator registers pack two fields into one
+        byte — dt with mul, ks with ar, am with d1r, sl with rr — so
+        changing one field means rebuilding the byte from what was last
+        written. A real Genesis driver keeps the same copy in RAM for the
+        same reason.
+        """
         addr &= 0xFF
         data &= 0xFF
+        self._shadow[(port, addr)] = data
         if self.logger is not None:
             self.logger(port, addr, data)
         if self._py is not None:
@@ -326,6 +337,89 @@ class YM2612:
         self.write(addr_port, 0xB0 + ch, ((instrument.feedback & 0x7) << 3) | (instrument.algorithm & 0x7))
         self.write(addr_port, 0xB4 + ch, 0xC0)  # pan L+R on, AMS/PMS off
         self._channel_instrument[channel] = instrument
+
+    #: Operator register fields, as (offset from 0x30, shift, mask). A
+    #: driver that shapes a note while it sounds writes these one at a
+    #: time, which is what separates a live FM part from a patch that was
+    #: loaded once. Measured on Streets of Rage's title theme: 1,657 Total
+    #: Level changes mid-note against 6,256 key-ons.
+    OPERATOR_FIELDS = {
+        "dt":  (0x00, 4, 0x7),
+        "mul": (0x00, 0, 0xF),
+        "tl":  (0x10, 0, 0x7F),
+        "ks":  (0x20, 6, 0x3),
+        "ar":  (0x20, 0, 0x1F),
+        "am":  (0x30, 7, 0x1),
+        "d1r": (0x30, 0, 0x1F),
+        "d2r": (0x40, 0, 0x1F),
+        "sl":  (0x50, 4, 0xF),
+        "rr":  (0x50, 0, 0xF),
+        "ssg": (0x60, 0, 0xF),
+    }
+    #: Names a tracker or a patch editor is likely to use instead.
+    OPERATOR_ALIASES = {"dr": "d1r", "sr": "d2r", "multiple": "mul",
+                        "detune": "dt", "total_level": "tl",
+                        "attack": "ar", "decay": "d1r", "sustain": "d2r",
+                        "release": "rr", "sustain_level": "sl",
+                        "ssg_eg": "ssg"}
+
+    def set_operator(self, channel: int, operator: int, field: str,
+                     value: int):
+        """Write one field of one operator while the note is sounding.
+
+        `operator` is 1-4 in the ORDINARY numbering off a block diagram,
+        not the register order. The chip's offsets ascend op1, op3, op2,
+        op4, so a caller passing 2 means the operator at offset 0x08 and
+        would otherwise silently address op3.
+
+        Two fields share a register — dt with mul, ks with ar, am with
+        d1r, sl with rr — so the other half is read back from the shadow
+        and preserved. Writing `mul` alone must not zero the detune.
+
+        The value is absolute, and the next note_on on this channel
+        reloads the patch over it. That is what the hardware does and why
+        real drivers rewrite these every tick rather than once.
+        """
+        key = self.OPERATOR_ALIASES.get(field.lower(), field.lower())
+        spec = self.OPERATOR_FIELDS.get(key)
+        if spec is None:
+            raise ValueError(
+                f"unknown operator field {field!r}; have: "
+                f"{', '.join(sorted(self.OPERATOR_FIELDS))}")
+        if not 1 <= operator <= 4:
+            raise ValueError(f"operator must be 1-4, got {operator}")
+        offset, shift, mask = spec
+        addr_port, _, ch = self._port_addr_for(channel)
+        slot = _OP_TO_LIST[operator]
+        address = 0x30 + offset + self._OP_OFFSETS[slot] + ch
+        previous = self._shadow.get((addr_port, address), 0)
+        merged = (previous & ~(mask << shift)) | ((int(value) & mask) << shift)
+        self.write(addr_port, address, merged)
+        return merged
+
+    def set_algorithm(self, channel: int, algorithm: int = None,
+                      feedback: int = None):
+        """Register 0xB0: which operator feeds which, and op1's self-feedback.
+
+        Either may be left alone. Both live in one register, so the one
+        not given is read back from the shadow rather than zeroed.
+        """
+        addr_port, _, ch = self._port_addr_for(channel)
+        address = 0xB0 + ch
+        previous = self._shadow.get((addr_port, address), 0)
+        if algorithm is None:
+            algorithm = previous & 0x7
+        if feedback is None:
+            feedback = (previous >> 3) & 0x7
+        value = ((feedback & 0x7) << 3) | (algorithm & 0x7)
+        self.write(addr_port, address, value)
+        instrument = self._channel_instrument[channel]
+        if instrument is not None:
+            # Keep the stored patch honest: carrier_indices() is what
+            # velocity and set_volume attenuate, and after an algorithm
+            # change the carriers are different operators.
+            instrument.algorithm = algorithm & 0x7
+        return value
 
     def set_pan(self, channel: int, left: bool = True, right: bool = True,
                 ams: int = 0, pms: int = 0):

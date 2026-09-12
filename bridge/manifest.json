@@ -16,6 +16,37 @@
     },
     "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz"
   },
+  "live_fm": {
+    "how": "`op fm0 4 tl 12` writes one operator field between two rows; `alg fm1 4 6` changes routing and feedback",
+    "operator_numbering": "1-4 as on a block diagram; the register interleave op1,op3,op2,op4 is handled",
+    "fields": [
+      "am",
+      "ar",
+      "d1r",
+      "d2r",
+      "dt",
+      "ks",
+      "mul",
+      "rr",
+      "sl",
+      "ssg",
+      "tl"
+    ],
+    "aliases": {
+      "dr": "d1r",
+      "sr": "d2r",
+      "multiple": "mul",
+      "detune": "dt",
+      "total_level": "tl",
+      "attack": "ar",
+      "decay": "d1r",
+      "sustain": "d2r",
+      "release": "rr",
+      "sustain_level": "sl",
+      "ssg_eg": "ssg"
+    },
+    "absolute": "values are absolute and the next note-on reloads the patch over them, as on the hardware"
+  },
   "instrument_selection": {
     "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
     "roles": [
@@ -807,6 +838,7 @@
   },
   "tracker_syntax": {
     "directives": [
+      "alg",
       "arp",
       "author",
       "bpm",
@@ -822,6 +854,7 @@
       "lpb",
       "mark",
       "notes",
+      "op",
       "opldepth",
       "pan",
       "pitch",

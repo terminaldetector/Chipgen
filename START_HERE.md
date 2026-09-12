@@ -83,6 +83,8 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `vol fm0 100` | channel volume (FM 0–127, PSG 0–15) |
 | `pan fm1 L` | `L` / `R` / `C` / `off`; `pan fm1 C 2 3` adds AMS/PMS |
 | `lfo on 4` | global LFO, rate 0–7 (`lfo off` to stop) |
+| `op fm0 4 tl 12` | write one operator field mid-note — see **Live FM** |
+| `alg fm1 4 6` | change the algorithm, and feedback if given |
 | `pitch fm1 -12` | detune the channel in cents |
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
@@ -109,6 +111,35 @@ Chord qualities: `maj` `min` `dim` `aug` `sus2` `sus4` `maj6` `min6`
 shorthands (`m`, `M7`, `7`, `9`, `o7`). Ask for more channels than the
 chord has notes and it keeps going up an octave rather than doubling in
 unison.
+
+**Live FM** — a patch selected once is a preset. `op` writes one operator
+field between two rows, which is how a Genesis driver shapes a note while
+it sounds:
+
+```
+inst fm0 deep_bass
+C-3
+...
+op fm0 1 tl 10      ; modulator louder: the note brightens here
+...
+op fm0 1 mul 7      ; and higher, which brightens it further
+```
+
+Fields: `tl ar d1r d2r sl rr dt mul ks am ssg` (`dr`/`sr` also accepted for
+`d1r`/`d2r`). The operator is 1–4 in the ordinary block-diagram numbering —
+the register interleave is handled for you.
+
+Two things to know. The value is absolute, and **the next note-on reloads
+the patch over it** — that is the hardware, and the reason real drivers
+rewrite these every tick. And two fields share a register (`dt`/`mul`,
+`ks`/`ar`, `am`/`d1r`, `sl`/`rr`), so writing one preserves the other
+rather than zeroing it.
+
+What this is for, measured: Streets of Rage's title theme changes Total
+Level 1,657 times against 6,256 key-ons, and reshapes the decay rates
+another 1,300 times. It writes the algorithm register 343 times and
+changes its value 15 — so reach for `op`, not `alg`, when a part sounds
+static.
 
 **Effects** — a cell may carry them after the note, separated by `/`:
 

@@ -280,10 +280,21 @@ def info() -> dict:
     """
     backend = core_loader.status()
     import fx
+    import opn2
     import selection
     return {
         "name": "chipgen",
         "effect_column": fx.vocabulary(),
+        "live_fm": {
+            "how": "`op fm0 4 tl 12` writes one operator field between two "
+                   "rows; `alg fm1 4 6` changes routing and feedback",
+            "operator_numbering": "1-4 as on a block diagram; the register "
+                                  "interleave op1,op3,op2,op4 is handled",
+            "fields": sorted(opn2.YM2612.OPERATOR_FIELDS),
+            "aliases": opn2.YM2612.OPERATOR_ALIASES,
+            "absolute": "values are absolute and the next note-on reloads "
+                        "the patch over them, as on the hardware",
+        },
         "instrument_selection": {
             "how": "patches are measured, not tagged; roles and genres are "
                    "target positions on measured axes, and every pick comes "

@@ -260,6 +260,12 @@ class Sequencer:
             ym.set_lfo(ev.enable, ev.freq)
         elif isinstance(ev, E.FMVolume):
             ym.set_volume(ev.channel, ev.volume)
+        elif isinstance(ev, E.FMOperator):
+            ym.set_operator(ev.channel, ev.operator, ev.field, ev.value)
+
+        elif isinstance(ev, E.FMAlgorithm):
+            ym.set_algorithm(ev.channel, ev.algorithm, ev.feedback)
+
         elif isinstance(ev, E.FMPitch):
             ym.set_pitch_offset(ev.channel, ev.cents)
         elif isinstance(ev, E.OPLInstrumentSelect):

@@ -171,6 +171,42 @@ class FMPitch(Event):
 # YM2612 DAC — channel 6 in PCM mode
 # --------------------------------------------------------------------------
 @dataclass
+class FMOperator(Event):
+    """Write one field of one operator while the channel is sounding.
+
+    `operator` is 1-4 in the ordinary block-diagram numbering; the
+    register interleave is the chip layer's problem, not the score's.
+    `field` is one of opn2.YM2612.OPERATOR_FIELDS — tl, ar, d1r, d2r, sl,
+    rr, dt, mul, ks, am, ssg.
+
+    This is what a live FM part is made of. A patch selected once and left
+    alone is a preset; measured on Streets of Rage's title theme, the
+    driver changes Total Level 1,657 times against 6,256 key-ons and
+    reshapes the decay rates another 1,300. The value is absolute and the
+    next note-on reloads the patch over it, which is the hardware's
+    behaviour and the reason real drivers rewrite these continuously.
+    """
+    channel: int
+    operator: int
+    field: str
+    value: int
+
+
+@dataclass
+class FMAlgorithm(Event):
+    """Register 0xB0: the operator routing and op1's self-feedback.
+
+    Either may be None to leave it as it is. Worth having and worth not
+    over-rating: the same measurement shows 343 writes to this register
+    across the title theme but only 15 that change its value — the driver
+    is reloading the patch block, not modulating the algorithm.
+    """
+    channel: int
+    algorithm: int = None
+    feedback: int = None
+
+
+@dataclass
 class OPLInstrumentSelect(Event):
     """Assign a patch to one of the OPL2's nine channels (0-8).
 

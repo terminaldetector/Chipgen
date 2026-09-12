@@ -97,7 +97,8 @@ import re
 
 import events as events_mod
 import fx
-from events import (Portamento, Tremolo, Vibrato, VolumeSlide,
+from events import (
+    FMOperator, FMAlgorithm,Portamento, Tremolo, Vibrato, VolumeSlide,
                     DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
                     FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
                     OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
@@ -132,7 +133,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
-              "author", "game", "notes", "end", "opldepth",
+              "author", "game", "notes", "end", "opldepth", "op", "alg",
               "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
@@ -385,6 +386,56 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
             raise TrackerError(
                 f"line {lineno}: {head} wants numbers or `off`, got "
                 f"{' '.join(rest)!r}") from None
+    elif head == "op":
+        # `op fm0 4 tl 20` — write one operator field mid-note. Lands
+        # between the rows around it, because a directive flushes the
+        # pending ones first.
+        need(4, "a channel, an operator 1-4, a field and a value, "
+                "e.g. `op fm0 4 tl 20`")
+        channel = _fm_channel(args[0], lineno)
+        try:
+            operator = int(args[1])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not an operator number "
+                f"(want 1-4, in the ordinary numbering)") from None
+        if not 1 <= operator <= 4:
+            raise TrackerError(
+                f"line {lineno}: operator must be 1-4, got {operator}")
+        field = args[2].lower()
+        import opn2 as _opn2
+        known = _opn2.YM2612.OPERATOR_FIELDS
+        resolved = _opn2.YM2612.OPERATOR_ALIASES.get(field, field)
+        if resolved not in known:
+            raise TrackerError(
+                f"line {lineno}: unknown operator field {args[2]!r}. "
+                f"Valid: {', '.join(sorted(known))}")
+        try:
+            value = int(args[3], 0)
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[3]!r} is not a number") from None
+        events.append(FMOperator(channel=channel, operator=operator,
+                                 field=resolved, value=value))
+    elif head == "alg":
+        # `alg fm1 4` or `alg fm1 4 6` (algorithm, feedback)
+        need(2, "a channel and an algorithm 0-7, e.g. `alg fm1 4` "
+                "or `alg fm1 4 6` to set feedback too")
+        channel = _fm_channel(args[0], lineno)
+        try:
+            algorithm = int(args[1])
+            feedback = int(args[2]) if len(args) > 2 else None
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: algorithm and feedback must be numbers") from None
+        if not 0 <= algorithm <= 7:
+            raise TrackerError(
+                f"line {lineno}: algorithm must be 0-7, got {algorithm}")
+        if feedback is not None and not 0 <= feedback <= 7:
+            raise TrackerError(
+                f"line {lineno}: feedback must be 0-7, got {feedback}")
+        events.append(FMAlgorithm(channel=channel, algorithm=algorithm,
+                                  feedback=feedback))
     elif head == "opldepth":
         need(2, "a tremolo and a vibrato depth, e.g. `opldepth 0 1`")
         events.append(OPLDepth(tremolo=int(args[0]), vibrato=int(args[1])))
