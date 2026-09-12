@@ -86,6 +86,8 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `op fm0 4 tl 12` | write one operator field mid-note — see **Live FM** |
 | `alg fm1 4 6` | change the algorithm, and feedback if given |
 | `pitch fm1 -12` | detune the channel in cents |
+| `ch3 special` | give channel 3's four operators separate pitches — see **Channel 3 special** |
+| `ch3op 1 A-5` | pitch one of those operators |
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
 | `pattern verse` | start a named block of rows — see **Form** |
@@ -202,6 +204,97 @@ Level 1,657 times against 6,256 key-ons, and reshapes the decay rates
 another 1,300 times. It writes the algorithm register 343 times and
 changes its value 15 — so reach for `op`, not `alg`, when a part sounds
 static.
+
+**Channel 3 special** — the FM side of this chip has no noise generator,
+so a bell or a gong has to be built out of pitches that are not in a
+harmonic series. Register 0x27 lets channel 3 do exactly that: each of its
+four operators takes its own frequency instead of all four tracking the
+note.
+
+The thing to understand first, because it is what makes the mode look
+broken: **the supplementary register sets an operator's base frequency,
+not a partial you will hear.** Three things stand between the two, and all
+three are part of the patch you selected:
+
+1. `mul` multiplies it. `bell_pluck`'s operator 3 runs at `mul 7`, so a
+   G-6 written there does not appear at 1568 Hz at all — it sounds at
+   10,976 Hz. Measured swing between `mul 7` and `mul 1` at the written
+   pitch: over 80 dB.
+2. The algorithm decides whether the operator is a carrier or a modulator.
+   A modulator's frequency colours its carrier instead of sounding, so the
+   pitch you wrote is nowhere in the spectrum.
+3. A carrier at `tl 127` is muted. `sub_bass` is algorithm 7 — all four
+   operators parallel — with three of them at 127, which is how it gets a
+   pure tone. Pitch those three in special mode and nothing happens.
+
+One trap to know if you inspect a patch to work out its multipliers: in
+`instruments.py` an `FMInstrument`'s `operators` list is in **register**
+order — op1, op3, op2, op4 — the same interleave the chip uses everywhere.
+So the second entry in the list is operator *three*. The `op` and `ch3op`
+directives both take ordinary block-diagram numbering and undo that for
+you; it is only reading the Python that will mislead you.
+
+So `ch3 special` on an arbitrary patch gives an inharmonic smear rather
+than the cluster you wrote. To hear the four pitches as written, put the
+channel on algorithm 7 (four parallel carriers), set every `mul` to 1, and
+give each operator an audible level — which is what `alg` and `op` are
+for:
+
+```
+inst fm2 sub_bass            ; fm2 IS channel 3
+alg fm2 7                    ; four parallel carriers
+op fm2 1 mul 1
+op fm2 2 mul 1
+op fm2 3 mul 1
+op fm2 4 mul 1
+op fm2 1 tl 8                ; and four audible levels, 6 apart
+op fm2 2 tl 14
+op fm2 3 tl 20
+op fm2 4 tl 26
+ch3 special
+ch3op 1 A-5
+ch3op 2 D#6                  ; a tritone above — deliberately inharmonic
+ch3op 3 G-6
+cols fm2
+A-4                          ; the note-on still keys the channel
+...
+```
+
+Measured on exactly that score: partials at 880.00, 1244.51, 1567.98 and
+440.00 Hz — the three written pitches plus the cell's own note — at 0.0,
+−4.6, −9.1 and −14.1 dB relative. That is the TL ladder written above
+(6 steps × 0.75 dB = 4.5 dB per rung), so the levels are the patch's, not
+an addressing artefact.
+
+Operators are 1–4 in block-diagram numbering. Operator 4 has no
+supplementary register of its own and follows the channel's note, which is
+also what all four do when the mode is off — so the cell's pitch is never
+ignored, it just stops applying to the operators you have pitched
+yourself.
+
+Two more things worth knowing, both measured. `ch3 special` affects
+channel 3 and nothing else — it is one bit in one register on one channel,
+not a global mode, and the other five channels carry on. And **the
+operators you pitch keep those pitches across note-ons**: the
+supplementary registers are not part of a patch, so a new note re-keys the
+cluster rather than replacing it. On the score above the second note
+measures identical to the first within 0.1 dB at all four partials, and a
+register trace shows `$A8`–`$AE` written once at setup and never again,
+while `$A2/$A6` — operator 4, i.e. the channel — is rewritten on every
+note-on. Writing `ch3 normal` is what clears it.
+
+`ch3 csm` is the third setting: it also keys the channel on and off from
+timer A, which is a speech trick. It is accepted and does nothing useful
+without a timer running.
+
+The supplementary registers are `$A9/$AD`, `$AA/$AE`, `$A8/$AC` for
+operators 1, 2, 3 — note that **`$A8/$AC` is operator three**, not two.
+That was established here by experiment rather than taken from a table:
+four operators on algorithm 7 at levels 9 dB apart, every supplementary
+pair pointed at a different pitch, then the level measured at each pitch
+names the operator sitting there. These registers ascend in the same
+op1, op3, op2 order the operator offsets do, which is why a plausible
+guess lands on the wrong operator.
 
 **Effects** — a cell may carry them after the note, separated by `/`:
 

@@ -68,6 +68,36 @@
     },
     "absolute": "values are absolute and the next note-on reloads the patch over them, as on the hardware"
   },
+  "ch3_special": {
+    "how": "`ch3 special` then `ch3op 1 A-5` — each of channel 3's operators takes its own pitch instead of tracking the channel; `ch3 normal` gives it back",
+    "what_for": "one channel holding a fixed inharmonic cluster: bells, gongs, metallic percussion — the FM side has no noise generator, so this is how drivers get it",
+    "what_you_write_is_a_base_frequency": "not a partial: `mul` multiplies it, the algorithm decides whether the operator sounds or only modulates, and a carrier at tl 127 is muted. On an arbitrary patch the mode gives an inharmonic smear rather than the cluster you wrote. Measured: bell_pluck's operator 3 is mul 7, so a G-6 written there sounds at 10976 Hz and nothing appears at 1568 Hz — an 80 dB swing against mul 1.",
+    "operator_numbering": "`op` and `ch3op` take block-diagram numbering 1-4. FMInstrument.operators is in REGISTER order (op1, op3, op2, op4), so reading a patch in Python is what misleads, not the directives.",
+    "to_hear_the_pitches_as_written": "put the channel on algorithm 7 (four parallel carriers), set every mul to 1, and give each operator an audible tl — `alg fm2 7` then `op fm2 N mul 1` / `op fm2 N tl V`",
+    "persistence": "the operators you pitch keep those pitches across note-ons — the supplementary registers are not part of a patch, so a new note re-keys the cluster rather than replacing it. `ch3 normal` clears it.",
+    "scope": "channel 3 only — one bit in one register, not a global mode; the other five channels are unaffected",
+    "registers": {
+      "1": [
+        "0xa9",
+        "0xad"
+      ],
+      "2": [
+        "0xaa",
+        "0xae"
+      ],
+      "3": [
+        "0xa8",
+        "0xac"
+      ],
+      "4": [
+        "0xa2",
+        "0xa6"
+      ]
+    },
+    "register_note": "the supplementary pairs were mapped by experiment, not from a published table: $A8/$AC is operator THREE, because these registers ascend in the same op1,op3,op2 order the operator offsets do",
+    "operator_4": "has no supplementary pair of its own — it follows the channel's own frequency at $A2/$A6",
+    "csm": "`ch3 csm` also keys the channel from timer A (a speech trick); accepted, and does nothing without a timer"
+  },
   "instrument_selection": {
     "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
     "roles": [
@@ -863,6 +893,8 @@
       "arp",
       "author",
       "bpm",
+      "ch3",
+      "ch3op",
       "chord",
       "cols",
       "columns",

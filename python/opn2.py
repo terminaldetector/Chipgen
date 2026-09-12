@@ -274,6 +274,7 @@ class YM2612:
         self._keyed_on = [False] * 6
         #: (port, address) -> last byte written. See write().
         self._shadow = {}
+        self._ch3_mode = "normal"
         #: Per channel: did the last note_on write attenuated carriers?
         self._velocity_dirty = [False] * 6
         self._dac_enabled = False
@@ -470,6 +471,82 @@ class YM2612:
         # 0xA4 before 0xA0 is what makes both halves take effect together.
         self.write(addr_port, 0xA4 + ch, ((block & 0x7) << 3) | (fnum >> 8))
         self.write(addr_port, 0xA0 + ch, fnum & 0xFF)
+
+    #: Register 0x27, bits 6-7: what channel 3 is doing.
+    CH3_NORMAL, CH3_SPECIAL, CH3_CSM = "normal", "special", "csm"
+    _CH3_MODE_BITS = {CH3_NORMAL: 0x00, CH3_SPECIAL: 0x40, CH3_CSM: 0x80}
+
+    #: Supplementary frequency registers for channel 3's operators, as
+    #: (low byte, block/high byte). Which pair drives which operator is
+    #: not obvious, so this was established by experiment rather than
+    #: taken from a mapping: four operators on algorithm 7 at levels 9 dB
+    #: apart, every supplementary pair pointed at a different pitch, and
+    #: then the level measured at each pitch names the operator sitting
+    #: there. The reading was unambiguous —
+    #:
+    #:      $A9/$AD  +0.0 dB -> op1 (TL 0)
+    #:      $AA/$AE  -8.5 dB -> op2 (TL 12)
+    #:      $A8/$AC -18.7 dB -> op3 (TL 24)
+    #:      $A2/$A6 -26.5 dB -> op4 (TL 36)
+    #:
+    #: Note the shape: $A8/$AC is operator THREE. The supplementary
+    #: registers ascend in the same op1, op3, op2 order the operator
+    #: offsets do, which is the interleave this chip applies everywhere
+    #: and the reason a plausible guess here lands on the wrong operator.
+    CH3_OPERATOR_REGISTERS = {
+        1: (0xA9, 0xAD),
+        2: (0xAA, 0xAE),
+        3: (0xA8, 0xAC),
+        #: Operator 4 has no supplementary pair — it follows the channel.
+        4: (0xA2, 0xA6),
+    }
+
+    def set_ch3_mode(self, mode: str):
+        """Register 0x27: hand channel 3 its four separate frequencies.
+
+        In special mode each of channel 3's operators takes its own pitch
+        instead of all four tracking the channel. That is what the mode is
+        for: one channel playing a fixed inharmonic cluster, which is how
+        drivers get bells, gongs and metallic percussion out of a chip
+        with no noise generator on the FM side.
+
+        CSM additionally keys the channel on and off from timer A, which
+        is a speech trick and needs the timer running; it is accepted here
+        and does nothing useful without one.
+
+        Measured in Streets of Rage's title theme: 149 writes to this
+        register across the track.
+        """
+        if mode not in self._CH3_MODE_BITS:
+            raise ValueError(
+                f"ch3 mode must be one of "
+                f"{', '.join(sorted(self._CH3_MODE_BITS))}, got {mode!r}")
+        previous = self._shadow.get((0, 0x27), 0)
+        value = (previous & 0x3F) | self._CH3_MODE_BITS[mode]
+        self.write(0, 0x27, value)
+        self._ch3_mode = mode
+        return value
+
+    def set_ch3_operator_frequency(self, operator: int, note: str, octave: int,
+                                   cents: float = 0.0):
+        """Pitch one of channel 3's operators, in special mode.
+
+        `operator` is 1-4 in the ordinary numbering. Operator 4 has no
+        supplementary register of its own: it uses the channel's normal
+        frequency at 0xA2/0xA6, which is also what every operator follows
+        when the mode is off.
+        """
+        if not 1 <= operator <= 4:
+            raise ValueError(f"operator must be 1-4, got {operator}")
+        freq = note_to_freq(note, octave)
+        if cents:
+            freq *= 2.0 ** (cents / 1200.0)
+        fnum, block = freq_to_fnum_block(freq, self.clock)
+        low, high = self.CH3_OPERATOR_REGISTERS.get(operator, (0xA2, 0xA6))
+        # Block/high first, same latching rule as a channel frequency.
+        self.write(0, high, ((block & 0x7) << 3) | (fnum >> 8))
+        self.write(0, low, fnum & 0xFF)
+        return fnum, block
 
     def _key_code(self, channel: int) -> int:
         return channel if channel < 3 else channel + 1  # 0,1,2,4,5,6

@@ -266,6 +266,13 @@ class Sequencer:
         elif isinstance(ev, E.FMAlgorithm):
             ym.set_algorithm(ev.channel, ev.algorithm, ev.feedback)
 
+        elif isinstance(ev, E.FMCh3Mode):
+            ym.set_ch3_mode(ev.mode)
+
+        elif isinstance(ev, E.FMCh3Frequency):
+            ym.set_ch3_operator_frequency(ev.operator, ev.note, ev.octave,
+                                          ev.cents)
+
         elif isinstance(ev, E.FMPitch):
             ym.set_pitch_offset(ev.channel, ev.cents)
         elif isinstance(ev, E.OPLInstrumentSelect):

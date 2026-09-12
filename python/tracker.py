@@ -98,7 +98,7 @@ import re
 import events as events_mod
 import fx
 from events import (
-    FMOperator, FMAlgorithm,Portamento, Tremolo, Vibrato, VolumeSlide,
+    FMOperator, FMAlgorithm, FMCh3Mode, FMCh3Frequency,Portamento, Tremolo, Vibrato, VolumeSlide,
                     DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
                     FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
                     OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
@@ -134,7 +134,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
               "author", "game", "notes", "end", "opldepth", "op", "alg",
-              "sample", "pattern", "order",
+              "sample", "pattern", "order", "ch3", "ch3op",
               "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
@@ -525,6 +525,34 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
             raise TrackerError(
                 f"line {lineno}: could not read {path!r} as a WAV: "
                 f"{error}") from None
+    elif head == "ch3":
+        # `ch3 special` gives channel 3's operators their own pitches.
+        need(1, "a mode: `ch3 normal`, `ch3 special` or `ch3 csm`")
+        mode = args[0].lower()
+        import opn2 as _opn2
+        if mode not in _opn2.YM2612._CH3_MODE_BITS:
+            raise TrackerError(
+                f"line {lineno}: unknown ch3 mode {args[0]!r}. Valid: "
+                f"{', '.join(sorted(_opn2.YM2612._CH3_MODE_BITS))}")
+        events.append(FMCh3Mode(mode=mode))
+    elif head == "ch3op":
+        # `ch3op 1 A-5` pitches one of channel 3's operators.
+        need(2, "an operator 1-4 and a note, e.g. `ch3op 1 A-5`")
+        try:
+            operator = int(args[0])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[0]!r} is not an operator number "
+                f"(want 1-4)") from None
+        if not 1 <= operator <= 4:
+            raise TrackerError(
+                f"line {lineno}: operator must be 1-4, got {operator}")
+        parsed = parse_note(args[1])
+        if parsed is None:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not a note (want e.g. A-5)")
+        events.append(FMCh3Frequency(operator=operator, note=parsed[0],
+                                     octave=parsed[1]))
     elif head == "op":
         # `op fm0 4 tl 20` — write one operator field mid-note. Lands
         # between the rows around it, because a directive flushes the

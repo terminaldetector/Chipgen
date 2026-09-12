@@ -207,6 +207,33 @@ class FMAlgorithm(Event):
 
 
 @dataclass
+class FMCh3Mode(Event):
+    """Register 0x27: what channel 3 is doing. "normal", "special", "csm".
+
+    In special mode each of channel 3's operators takes its own pitch
+    instead of all four tracking the channel, which is how a chip with no
+    FM noise gets bells, gongs and metallic percussion — one voice
+    holding a fixed inharmonic cluster. Streets of Rage's title theme
+    writes this register 149 times.
+    """
+    mode: str = "normal"
+
+
+@dataclass
+class FMCh3Frequency(Event):
+    """Pitch one of channel 3's operators while it is in special mode.
+
+    `operator` is 1-4 in the ordinary numbering. Operator 4 has no
+    supplementary register and follows the channel's own frequency, so
+    setting it is the same as playing the channel.
+    """
+    operator: int
+    note: str
+    octave: int
+    cents: float = 0.0
+
+
+@dataclass
 class OPLInstrumentSelect(Event):
     """Assign a patch to one of the OPL2's nine channels (0-8).
 

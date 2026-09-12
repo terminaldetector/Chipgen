@@ -113,6 +113,24 @@ noise enable. Hi-hats and cymbals come from the PCM DAC or from the PSG
 noise channel. There is no operator setting that makes a convincing hat —
 do not spend four operators trying.
 
+**Channel 3 can hold four separate pitches, and that is the FM side's
+only route to an inharmonic timbre.** Register `0x27` bits 6–7 put channel
+3 in special mode, where each operator takes its own frequency from a
+supplementary register instead of tracking the note — bells, gongs,
+metallic percussion. In chipgen: `ch3 special`, then `ch3op 1 A-5`.
+
+Two silent failures here. The supplementary register holds an operator's
+**base** frequency, not a partial: `mul` multiplies it (a `mul 7` operator
+given G-6 sounds at 11 kHz, with nothing at 1568 Hz — an 80 dB swing), the
+algorithm decides whether the operator sounds at all or only modulates,
+and a carrier at TL 127 is silent. So the mode on an arbitrary patch gives
+a smear, not the cluster you wrote. To hear the pitches as written: `alg
+fm2 7`, every `mul` 1, an audible TL on each operator. And the
+supplementary registers are `$A9/$AD`, `$AA/$AE`, `$A8/$AC` for operators
+1, 2, 3 — **`$A8/$AC` is operator three**, because these ascend in the
+same op1, op3, op2 order as everything else on this chip. Operator 4 has
+no pair and follows the channel.
+
 **The DAC takes channel 6 outright.** Setting bit 7 of register `0x2B`
 hands FM channel 6 to the sample player; the FM voice measures 0.00000
 RMS while it is on. It is not mixed, not attenuated — gone. So a
