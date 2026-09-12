@@ -377,6 +377,8 @@ class Sequencer:
             state.reapply("noise")
         elif isinstance(ev, E.PSGNoiseOff):
             psg.noise_off()
+        elif isinstance(ev, E.DACVolume):
+            state.set_dac_volume(ev.volume)
         elif isinstance(ev, E.OPLOperator):
             if opl is not None:
                 opl.set_operator(ev.channel, ev.operator, ev.field, ev.value)
@@ -467,9 +469,21 @@ class _RenderState:
         #: this rather than the running value, so a tremolo does not
         #: compound itself byte after byte.
         self._dac_base = 1.0
+        #: The hit's own `:level`, and the channel fader, separately.
+        self._dac_hit = 1.0
+        self.dac_volume = 1.0
         self._dac = None
 
     # -- DAC ---------------------------------------------------------------
+    def set_dac_volume(self, volume: int):
+        """The DAC channel fader, 0-127, multiplying every later hit."""
+        self.dac_volume = max(0, min(127, int(volume))) / 127.0
+        if self._dac is not None:
+            # A fader move lands immediately, mid-hit, the way `vol fm0`
+            # does — otherwise a long sample ignores it until it ends.
+            self._dac_base = self._dac_hit * self.dac_volume
+            self._dac["volume"] = self._dac_base
+
     def start_dac(self, ev):
         sample = samples_mod.KIT[ev.name]
         rate = ev.rate or sample.rate
@@ -479,7 +493,10 @@ class _RenderState:
             # drum would be one more thing for a model to forget, and there
             # is no case where DACSample means anything else.
             self.ym.set_dac_enable(True)
-        self._dac_base = max(0.0, min(1.0, ev.volume))
+        #: The hit's own level, kept apart from the channel fader so the
+        #: two multiply rather than overwrite each other.
+        self._dac_hit = max(0.0, min(1.0, ev.volume))
+        self._dac_base = self._dac_hit * self.dac_volume
         self._dac = {
             "data": sample.data,
             "pos": 0,

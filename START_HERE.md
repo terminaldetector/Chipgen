@@ -80,7 +80,7 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `bpm 150` | tempo |
 | `lpb 4` | rows per beat (4 = 16ths, 8 = 32nds) |
 | `inst fm0 bass` | assign a patch to an FM channel |
-| `vol fm0 100` | channel volume (FM 0–127, PSG 0–15) |
+| `vol fm0 100` | channel volume (FM 0–127, PSG 0–15, `vol dac 55` for the drums) |
 | `pan fm1 L` | `L` / `R` / `C` / `off`; `pan fm1 C 2 3` adds AMS/PMS |
 | `lfo on 4` | global LFO, rate 0–7 (`lfo off` to stop) |
 | `op fm0 4 tl 12` | write one operator field mid-note — see **Live FM** |
@@ -536,6 +536,60 @@ The headlines, all counted rather than asserted:
 `bridge/LEARNING.md` explains why the digest exists rather than the
 archive: the full corpus is ~1.5 million tokens, and thirty-one arbitrary
 tracks is a worse sample than all 235 summarised.
+
+## When you can hear the drums but not the instruments
+
+Run `--levels`. It renders every voice **alone** and tells you what each
+one contributes, which is not recoverable from the finished mix — a mix
+is a sum.
+
+```
+python3 python/chipgen.py song.trk -o song.wav --levels
+```
+
+```
+voice      patch             rms      peak    vs loudest  crest   headroom
+--------------------------------------------------------------------------
+dac                          -32.2    -14.7       +0.0   17.4          —
+fm0        hl_02             -43.1    -37.6      -22.9    5.5    24.0 dB
+fm1        hl_01             -39.2    -35.3      -20.6    3.9    18.0 dB
+```
+
+Two things cause this, and the report names both with their remedy.
+
+**The drums own the master, and calibration does not fix it.** Mastering
+normalises **peak**, and a drum is almost all peak. Measured against the
+*fully calibrated* built-in bank: the DAC channel peaks 5–6 dB above
+every FM voice while sitting about 1 dB **below** them in RMS — its crest
+factor is 17.4 dB against 5–8 for an FM voice. That gap comes straight
+out of everything else's gain. `vol dac 55` measured them level; `vol dac
+32` put the FM 5.7 dB on top.
+
+**An imported bank may be 12–18 dB below the one it was dropped into, and
+`vol` cannot reach it.** A game's driver rewrites Total Level every tick,
+so a patch snapshotted from a .vgm is at whatever level it happened to be
+at, not its concert level. Carrier TL 32 is 18 dB below the built-in
+bank's TL 8. And `vol` scales **velocity**, which attenuates *down* from
+the patch's own level and never above it — so `vol fm0 110` cannot
+recover a single dB of it. The fix is the bank:
+
+```
+python3 python/vgm_import.py --recalibrate bank.json
+```
+
+That levels an existing bank file in place, which previously had no route
+at all: calibration only ran during import, so a bank saved with
+`--no-calibrate` was stuck unless you still had the original .vgm. On a
+bank at the levels above it recovered 13 and 18 TL steps and took the
+spread from 22.9 dB down to 6.7.
+
+The `headroom` column is the one actionable number: how much louder the
+patch could still go before its carriers hit Total Level 0. The built-in
+patches carry 4.5–9 dB of it **on purpose** — that space is what lets
+several voices sum without clipping — so a large number is not by itself
+wrong. What the warning actually checks is each patch against the bank's
+own reference level, the same measurement calibration makes, because that
+is the only test that does not depend on what else is in the score.
 
 ## Things that will bite you if nobody says them
 

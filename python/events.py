@@ -376,6 +376,26 @@ class DACSample(Event):
 # SN76489 (PSG) — tone channels 0-2 + shared noise
 # --------------------------------------------------------------------------
 @dataclass
+class DACVolume(Event):
+    """Level for every DAC hit that follows, 0-127.
+
+    Separate from a hit's own `:level` the way `vol fm0` is separate from
+    a note's velocity: one is the channel fader, the other is how hard
+    this particular note was struck, and they multiply.
+
+    This exists because the drums own the master. normalize_peak() works
+    on peak, and a drum is almost all peak — measured against the fully
+    calibrated built-in bank, the DAC channel peaks 7-9 dB above every FM
+    voice in the same score while sitting 2 dB BELOW them in RMS. Its
+    crest factor is 17.4 dB against 5-8 for an FM voice. So a mix
+    normalised to peak hands the whole gain budget to the kick and
+    everything else arrives that much quieter, and no amount of patch
+    calibration fixes it — the fader has to come down.
+    """
+    volume: int = 127
+
+
+@dataclass
 class PSGToneOn(Event):
     channel: int         # 0-2
     note: str
@@ -574,6 +594,7 @@ _EVENT_TYPES = {
     "OPLDepth": OPLDepth,
     "DACEnable": DACEnable,
     "DACSample": DACSample,
+    "DACVolume": DACVolume,
     "PSGToneOn": PSGToneOn,
     "PSGToneOff": PSGToneOff,
     "PSGVolume": PSGVolume,
@@ -610,6 +631,7 @@ SPEC: Dict[str, Dict[str, Any]] = {
     "OPLDepth":           {"tremolo": (0, 1), "vibrato": (0, 1)},
     "DACEnable":          {},
     "DACSample":          {"rate": (0, 96_000), "volume": (0.0, 1.0)},
+    "DACVolume":          {"volume": (0, 127)},
     "PSGToneOn":          {"channel": (0, 2), "octave": (0, 9), "volume": (0, 15)},
     "PSGToneOff":         {"channel": (0, 2)},
     "PSGVolume":          {"channel": (0, 3), "volume": (0, 15)},

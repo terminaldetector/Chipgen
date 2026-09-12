@@ -233,49 +233,115 @@ def _prefix_from_source(source) -> str:
     return cleaned or "vgm"
 
 
-def to_bank(patches, calibrate: bool = True) -> dict:
+def to_bank(patches, calibrate: bool = True, report=None) -> dict:
     """name -> FMInstrument, optionally levelled against the built-in bank."""
     bank = {p.instrument.name: p.instrument for p in patches}
     if calibrate:
-        calibrate_bank(bank)
+        calibrate_bank(bank, report=report)
     return bank
 
 
-def calibrate_bank(bank: dict) -> dict:
+def calibrate_bank(bank: dict, report=None) -> dict:
     """Measure imported patches and set their trims to match the main bank.
 
     Imported patches arrive at whatever level their source game mixed them
     at, which is not this bank's level, so dropping them in unlevelled
-    reintroduces exactly the problem calibration was meant to remove.
+    reintroduces exactly the problem calibration was meant to remove. A
+    game's driver rewrites Total Level every tick; a snapshot of the
+    register file is whatever level that patch happened to be at when it
+    was sampled, not its concert level.
+
+    Trim is clamped to the patch's own headroom — the smallest carrier
+    Total Level — because that is how much louder the patch can actually
+    go before its carriers reach TL 0. A patch snapshotted at carrier
+    TL 32 has 24 dB in hand and `vol` cannot reach any of it: `vol`
+    scales velocity, and velocity attenuates DOWN from the patch's
+    level, never above it. That is why an uncalibrated import cannot be
+    rescued from the score.
+
+    `report` is called with a line per patch when given, because the two
+    failure paths below used to return silently — a calibration that
+    quietly did nothing looks exactly like one that worked.
     """
+    import math
+
     import calibrate_bank as calibrator
     from sequencer import Sequencer
+
+    def say(line):
+        if report is not None:
+            report(line)
 
     seq = Sequencer()
     reference = calibrator.measure("organ", seq)     # a mid-bank sustained voice
     if reference <= 0:
+        say("calibration SKIPPED: the reference patch 'organ' measured "
+            "silent, so there is nothing to level against. The bank is "
+            "saved untrimmed.")
         return bank
 
     original = dict(instruments_mod.BANK)
     try:
-        for name, instrument in bank.items():
+        for name, instrument in sorted(bank.items()):
             instrument.trim = 0
             instruments_mod.BANK[name] = instrument
             level = calibrator.measure(name, seq)
             if level <= 0:
+                say(f"  {name:16s} measured silent — left untrimmed. Check "
+                    f"its carrier levels; a patch whose carriers are all "
+                    f"at TL 127 cannot be levelled into audibility.")
                 continue
-            import math
-            steps = int(round(20.0 * math.log10(level / reference)
-                              / calibrator.TL_STEP_DB))
-            instrument.trim = max(-instrument.headroom(), min(127, steps))
+            offset_db = 20.0 * math.log10(level / reference)
+            steps = int(round(offset_db / calibrator.TL_STEP_DB))
+            headroom = instrument.headroom()
+            instrument.trim = max(-headroom, min(127, steps))
+            clamped = ("  (clamped: the patch has only "
+                       f"{headroom * calibrator.TL_STEP_DB:.1f} dB of "
+                       f"headroom)" if steps < -headroom else "")
+            say(f"  {name:16s} {offset_db:+6.1f} dB vs organ  ->  trim "
+                f"{instrument.trim:+4d}{clamped}")
     finally:
         instruments_mod.BANK.clear()
         instruments_mod.BANK.update(original)
     return bank
 
 
-def save_bank(patches, path: str, calibrate: bool = True) -> str:
-    bank = to_bank(patches, calibrate=calibrate)
+def recalibrate_file(path: str, report=None) -> dict:
+    """Level a bank that is already on disk, in place.
+
+    The gap this closes: calibration only ever ran during import, so a
+    bank saved with --no-calibrate was stuck that way and the only route
+    back was re-importing from the original .vgm — which the person
+    holding the .json may not have.
+    """
+    bank = _read_bank(path)
+    calibrate_bank(bank, report=report)
+    data = [instruments_mod.instrument_to_dict(i)
+            for i in sorted(bank.values(), key=lambda i: i.name)]
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2)
+    return bank
+
+
+def _read_bank(path: str) -> dict:
+    """Read a bank file without installing it into the global BANK.
+
+    load_bank() merges into instruments.BANK by design; calibration needs
+    the patches on their own, so that the built-in bank stays available
+    as the reference to level against.
+    """
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    out = {}
+    for entry in data:
+        instrument = instruments_mod.instrument_from_dict(entry)
+        out[instrument.name] = instrument
+    return out
+
+
+def save_bank(patches, path: str, calibrate: bool = True,
+              report=None) -> str:
+    bank = to_bank(patches, calibrate=calibrate, report=report)
     directory = os.path.dirname(os.path.abspath(path))
     if directory:
         os.makedirs(directory, exist_ok=True)
@@ -330,7 +396,9 @@ def main(argv):
     parser = argparse.ArgumentParser(
         prog="vgm_import",
         description="Extract FM instruments from a Genesis VGM.")
-    parser.add_argument("source", help="a .vgm or .vgz file")
+    parser.add_argument("source", nargs="?",
+                        help="a .vgm or .vgz file (not needed with "
+                             "--recalibrate)")
     parser.add_argument("-o", "--out", help="write a bank JSON here")
     parser.add_argument("--prefix", default="", help="name prefix (default: filename)")
     parser.add_argument("--min-uses", type=int, default=1,
@@ -340,8 +408,28 @@ def main(argv):
     parser.add_argument("--audition", metavar="DIR",
                         help="render one WAV per patch into DIR")
     parser.add_argument("--no-calibrate", action="store_true",
-                        help="skip loudness levelling against the built-in bank")
+                        help="skip loudness levelling against the built-in "
+                             "bank. Patches then arrive at whatever level "
+                             "their source game happened to be at, which "
+                             "can be 18 dB below the built-in bank and is "
+                             "NOT recoverable with `vol` — see "
+                             "--recalibrate")
+    parser.add_argument("--recalibrate", metavar="BANK.JSON",
+                        help="level an existing bank file in place and "
+                             "exit. For a bank saved with --no-calibrate, "
+                             "or one whose patches turned out too quiet to "
+                             "sit in a mix.")
     args = parser.parse_args(argv)
+
+    if args.recalibrate:
+        print(f"levelling {args.recalibrate} against the built-in bank:")
+        bank = recalibrate_file(args.recalibrate, report=print)
+        print(f"\nrewrote {args.recalibrate} — {len(bank)} patches")
+        return 0
+
+    if not args.source:
+        parser.error("give a .vgm to import from, or --recalibrate "
+                     "BANK.JSON to level a bank you already have")
 
     patches = extract(args.source, prefix=args.prefix, min_uses=args.min_uses)
     if args.top:
@@ -355,7 +443,8 @@ def main(argv):
     print(describe(patches))
 
     if args.out:
-        save_bank(patches, args.out, calibrate=not args.no_calibrate)
+        save_bank(patches, args.out, calibrate=not args.no_calibrate,
+                  report=print if not args.no_calibrate else None)
         print(f"\nwrote {args.out}")
         print(f'  instruments.load_bank("{args.out}")  — и имена доступны в партитуре')
     if args.audition:

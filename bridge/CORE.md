@@ -113,6 +113,25 @@ noise enable. Hi-hats and cymbals come from the PCM DAC or from the PSG
 noise channel. There is no operator setting that makes a convincing hat —
 do not spend four operators trying.
 
+**The drums own the master, and no amount of patch work changes that.**
+Mastering normalises **peak**, and a drum is almost all peak. Measured
+against the fully calibrated built-in bank, the DAC channel peaks 5-6 dB
+above every FM voice in the same score while sitting about 1 dB *below*
+them in RMS — its crest factor is 17.4 dB against 5-8 for an FM voice.
+That gap comes straight out of everything else's gain, which is why a
+render can be at full scale and still read as "the kick is there and the
+instruments aren't". `vol dac 55` measured them level. Run `--levels` and
+it says so with the number.
+
+**An imported bank can be 12-18 dB below the built-in one, and `vol`
+cannot reach it.** A game's driver rewrites Total Level every tick, so a
+patch snapshotted out of a .vgm sits at whatever level it happened to be
+at — carrier TL 32 is 18 dB below the built-in bank's TL 8. `vol` scales
+*velocity*, and velocity attenuates DOWN from the patch's own level and
+never above it, so `vol fm0 110` recovers none of it. Fix the bank:
+`python3 python/vgm_import.py --recalibrate BANK.json`. Import without
+`--no-calibrate` and this never arises.
+
 **Channel 3 can hold four separate pitches, and that is the FM side's
 only route to an inharmonic timbre.** Register `0x27` bits 6–7 put channel
 3 in special mode, where each operator takes its own frequency from a

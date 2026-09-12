@@ -100,7 +100,11 @@ def test_archive_is_lean_and_reproducible():
         # runs to confirm the emulation works in its sandbox), 26 KB
         # bridge/, 25 KB core/, 24 KB of docs.
         size = os.path.getsize(first)
-        assert size < 440 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Raised again to 470 KB for levels.py and the DAC fader, which
+        # exist because "the drums are there but the instruments aren't"
+        # took a manual channel-by-channel investigation to answer and
+        # should have been one command.
+        assert size < 470 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

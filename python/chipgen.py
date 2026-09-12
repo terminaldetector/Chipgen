@@ -108,6 +108,21 @@ class Result:
     def __repr__(self):
         return f"<chipgen.Result {self.summary()}>"
 
+    def levels(self, sequencer=None):
+        """Every sounding voice, rendered alone and measured.
+
+        The question this answers is "why can't I hear the instruments",
+        and it is not answerable from the mix — a mix is a sum. Each
+        voice is re-rendered with the others' notes removed and its own
+        setup intact, so the number is that channel's contribution
+        rather than a guess from the event list.
+
+        Costs one render per voice, which is why it is a method you call
+        rather than something compose() always does.
+        """
+        import levels as levels_mod
+        return levels_mod.measure(self.events, sequencer)
+
     def profile(self, bpm: float = None, beats_per_bar: int = 4):
         """RMS/peak per section — by Marker if the score used them,
         otherwise by fixed bar length if a bpm is known.
@@ -436,6 +451,39 @@ def info() -> dict:
                            "percussion voices need the voices actually "
                            "emulated; use the dac kit for drums.",
         },
+        "mix_levels": {
+            "how": "`chipgen.py score.trk --levels` renders each voice "
+                   "ALONE and reports rms, peak, crest factor and unused "
+                   "patch headroom, plus what to do about it. "
+                   "Result.levels() from Python.",
+            "why_not_the_mix": "a per-channel level cannot be recovered "
+                               "from a finished mix — a mix is a sum. "
+                               "Each voice is re-rendered with the others' "
+                               "notes removed and its own setup intact.",
+            "the_drums_own_the_master": "measured against the fully "
+                    "calibrated built-in bank: the DAC peaks 5-6 dB above "
+                    "every FM voice while sitting ~1 dB BELOW them in RMS, "
+                    "because its crest factor is 17.4 dB against 5-8. "
+                    "Mastering normalises PEAK, so that gap comes straight "
+                    "out of everything else. Patch calibration narrows it "
+                    "and cannot close it — `vol dac N` is the fix, and "
+                    "`vol dac 55` measured them level.",
+            "uncalibrated_banks": "a bank imported with --no-calibrate "
+                    "carries whatever level its source game happened to "
+                    "be at, which can be 12-18 dB under the built-in "
+                    "bank. `vol` CANNOT recover it: velocity attenuates "
+                    "down from the patch's own level and never above it. "
+                    "Fix the bank, not the score: `python3 "
+                    "python/vgm_import.py --recalibrate BANK.json`.",
+            "how_the_check_works": "each patch is measured against the "
+                    "bank's own reference (the same measurement "
+                    "calibration makes) rather than against whatever else "
+                    "is in the score. Unused headroom alone would flag "
+                    "the built-in bank, whose patches hold 4.5-9 dB on "
+                    "purpose; 'quiet relative to the mix' would miss an "
+                    "uncalibrated bank, which holds every patch back "
+                    "equally and so looks level once the drums are down.",
+        },
         "instrument_selection": {
             "how": "patches are measured, not tagged; roles and genres are "
                    "target positions on measured axes, and every pick comes "
@@ -585,6 +633,12 @@ def main(argv):
                         help="keep the DAC ladder's DC offset instead of "
                              "centring the mix (for comparing against an "
                              "unfiltered capture)")
+    parser.add_argument("--levels", action="store_true",
+                        help="render each voice alone and report its level, "
+                             "headroom and crest factor — the answer to "
+                             "'the drums are there but the instruments "
+                             "aren't'. One render per voice, so it is "
+                             "slower than the render itself.")
     parser.add_argument("--profile", action="store_true",
                         help="print RMS/peak per section after rendering — "
                              "by Marker if the score has them, else by bar "
@@ -662,6 +716,14 @@ def main(argv):
     for path in (result.wav_path, result.vgm_path, args.tracker, args.it):
         if path:
             print(f"wrote {path}")
+
+    if args.levels:
+        import levels as levels_mod
+        measured = result.levels()
+        print()
+        print(levels_mod.format_table(measured))
+        for warning in levels_mod.warnings(measured):
+            print(f"\nwarning: {warning}")
 
     if args.profile:
         stats = result.profile(beats_per_bar=args.beats_per_bar)

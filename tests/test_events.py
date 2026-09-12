@@ -36,6 +36,7 @@ def test_every_type_round_trips_through_dict():
         "OPLConnection": E.OPLConnection(channel=4, additive=1, feedback=5),
         "DACEnable": E.DACEnable(enable=True),
         "DACSample": E.DACSample(name="kick", rate=16000, volume=0.8),
+        "DACVolume": E.DACVolume(volume=60),
         "PSGToneOn": E.PSGToneOn(channel=1, note="C", octave=5, volume=4),
         "PSGToneOff": E.PSGToneOff(channel=1),
         "PSGVolume": E.PSGVolume(channel=3, volume=9),

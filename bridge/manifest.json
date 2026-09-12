@@ -154,6 +154,13 @@
     "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute sine, 3 pulse-sine. Rectifying doubles the frequency, so waves 2 and 3 put their loudest partial on the SECOND harmonic — measured at A-4 the fundamental is 90 dB down and the note sounds an octave up. Changing waveform mid-phrase changes octave with it.",
     "rhythm_mode": "NOT implemented. Register 0xBD's five percussion voices need the voices actually emulated; use the dac kit for drums."
   },
+  "mix_levels": {
+    "how": "`chipgen.py score.trk --levels` renders each voice ALONE and reports rms, peak, crest factor and unused patch headroom, plus what to do about it. Result.levels() from Python.",
+    "why_not_the_mix": "a per-channel level cannot be recovered from a finished mix — a mix is a sum. Each voice is re-rendered with the others' notes removed and its own setup intact.",
+    "the_drums_own_the_master": "measured against the fully calibrated built-in bank: the DAC peaks 5-6 dB above every FM voice while sitting ~1 dB BELOW them in RMS, because its crest factor is 17.4 dB against 5-8. Mastering normalises PEAK, so that gap comes straight out of everything else. Patch calibration narrows it and cannot close it — `vol dac N` is the fix, and `vol dac 55` measured them level.",
+    "uncalibrated_banks": "a bank imported with --no-calibrate carries whatever level its source game happened to be at, which can be 12-18 dB under the built-in bank. `vol` CANNOT recover it: velocity attenuates down from the patch's own level and never above it. Fix the bank, not the score: `python3 python/vgm_import.py --recalibrate BANK.json`.",
+    "how_the_check_works": "each patch is measured against the bank's own reference (the same measurement calibration makes) rather than against whatever else is in the score. Unused headroom alone would flag the built-in bank, whose patches hold 4.5-9 dB on purpose; 'quiet relative to the mix' would miss an uncalibrated bank, which holds every patch back equally and so looks level once the drums are down."
+  },
   "instrument_selection": {
     "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
     "roles": [
@@ -1004,6 +1011,19 @@
         }
       },
       "doc": "Play a PCM sample through the DAC. `name` indexes samples.KIT.\n\n    This is the Genesis drum trick: FM channel 6 gives up its voice and\n    becomes an 8-bit sample player, which is how Streets of Rage and\n    Contra: Hard Corps get real drums out of the chip."
+    },
+    "DACVolume": {
+      "fields": {
+        "volume": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Level for every DAC hit that follows, 0-127.\n\n    Separate from a hit's own `:level` the way `vol fm0` is separate from\n    a note's velocity: one is the channel fader, the other is how hard\n    this particular note was struck, and they multiply.\n\n    This exists because the drums own the master. normalize_peak() works\n    on peak, and a drum is almost all peak — measured against the fully\n    calibrated built-in bank, the DAC channel peaks 7-9 dB above every FM\n    voice in the same score while sitting 2 dB BELOW them in RMS. Its\n    crest factor is 17.4 dB against 5-8 for an FM voice. So a mix\n    normalised to peak hands the whole gain budget to the kick and\n    everything else arrives that much quieter, and no amount of patch\n    calibration fixes it — the fader has to come down."
     },
     "PSGToneOn": {
       "fields": {

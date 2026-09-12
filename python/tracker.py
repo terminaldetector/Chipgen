@@ -98,7 +98,7 @@ import re
 import events as events_mod
 import fx
 from events import (
-    DACSample, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
+    DACSample, DACVolume, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
     FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn, FMOperator, FMPan,
     FMPitch, FMVolume, LoopPoint, Marker, NESDMCLevel, NESDuty,
     NESNoiseOff, NESNoiseOn, NESNoteOff, NESNoteOn, NESSample, NESSweep,
@@ -771,8 +771,34 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
             events.append(PSGVolume(channel=int(target[3:]), volume=int(args[1])))
         elif target == "noise":
             events.append(PSGVolume(channel=3, volume=int(args[1])))
+        elif target == "dac":
+            # The drums own the master otherwise. normalize_peak works on
+            # peak and a drum is nearly all peak: measured against the
+            # fully calibrated built-in bank, the DAC peaks 7-9 dB above
+            # every FM voice in the same score while sitting 2 dB BELOW
+            # them in RMS (crest 17.4 dB against 5-8). Patch calibration
+            # narrows that and cannot close it — this is the fader that
+            # does.
+            events.append(DACVolume(volume=int(args[1])))
+        elif target in _NES_COLUMNS:
+            voice = _NES_VOICE[target]
+            if voice == "dmc":
+                events.append(DACVolume(volume=int(args[1])))
+            elif voice == "triangle":
+                raise TrackerError(
+                    f"line {lineno}: the NES triangle has no volume "
+                    f"register — its output is identical at velocity 8 "
+                    f"and 127. Gate it with note-offs instead.")
+            elif voice == "noise":
+                events.append(NESNoiseOn(period=4,
+                                         velocity=int(args[1])))
+            else:
+                events.append(NESVolume(voice=voice, velocity=int(args[1])))
         else:
-            raise TrackerError(f"line {lineno}: cannot set volume on {args[0]}")
+            raise TrackerError(
+                f"line {lineno}: cannot set volume on {args[0]}. Volume "
+                f"works on fm0-fm5, opl0-opl8, psg0-psg2, noise, dac and "
+                f"nes0/nes1/nes4")
     elif head == "pan":
         need(2, "a channel and L/R/C/off, e.g. `pan fm1 L`")
         side = args[1].upper()
