@@ -279,9 +279,11 @@ def info() -> dict:
     looking at the same thing.
     """
     backend = core_loader.status()
+    import fx
     import selection
     return {
         "name": "chipgen",
+        "effect_column": fx.vocabulary(),
         "instrument_selection": {
             "how": "patches are measured, not tagged; roles and genres are "
                    "target positions on measured axes, and every pick comes "

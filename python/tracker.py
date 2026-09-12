@@ -96,6 +96,7 @@ so group rows into bars however you like.
 import re
 
 import events as events_mod
+import fx
 from events import (Portamento, Tremolo, Vibrato, VolumeSlide,
                     DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
                     FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
@@ -526,9 +527,27 @@ def resolve_quality(name: str, lineno: int) -> str:
     return key
 
 
+
+def _apply_effects(column, codes, events, lineno, raw):
+    """Turn a cell's effect codes into events on that column's voice."""
+    for code in codes:
+        try:
+            events.extend(fx.to_events(column, code))
+        except fx.FXError as error:
+            raise TrackerError(
+                f"line {lineno}: {error}\n  {raw.strip()}") from None
+
+
 def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
-    token = cell.strip()
+    # A cell may carry effects after its note: `A-2:100/1F0/4A3`. They are
+    # emitted AFTER the note event, because a note-on restarts the
+    # modulators and would otherwise wipe the vibrato it was given.
+    token, codes = fx.split_cell(cell.strip())
+    token = token.strip()
+    if token in HOLD_TOKENS and not codes:
+        return
     if token in HOLD_TOKENS:
+        _apply_effects(column, codes, events, lineno, raw)
         return
     lowered = token.lower()
 
@@ -537,6 +556,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         if lowered in OFF_TOKENS:
             events.append(FMNoteOff(channel=ch))
             fm_sounding[ch] = False
+            _apply_effects(column, codes, events, lineno, raw)
             return
         parsed = parse_note(token)
         if parsed is None:
@@ -546,6 +566,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(FMNoteOn(channel=ch, note=note, octave=octave,
                                velocity=velocity if velocity else 127))
         fm_sounding[ch] = True
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column in _OPL_COLUMNS:
@@ -567,6 +588,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         if lowered in OFF_TOKENS:
             events.append(PSGToneOff(channel=ch))
             psg_sounding[ch] = False
+            _apply_effects(column, codes, events, lineno, raw)
             return
         parsed = parse_note(token)
         if parsed is None:
@@ -576,6 +598,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(PSGToneOn(channel=ch, note=note, octave=octave,
                                 volume=volume if volume is not None else 0))
         psg_sounding[ch] = True
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column == "noise":

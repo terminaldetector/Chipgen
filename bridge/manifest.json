@@ -1,5 +1,21 @@
 {
   "name": "chipgen",
+  "effect_column": {
+    "syntax": "NOTE[:velocity][/EFFECT]... e.g. A-2:100/1F0/4A3",
+    "separator": "/",
+    "effects": {
+      "0xy": "arpeggio — PARSED BUT NOT IMPLEMENTED; use the `arp` directive",
+      "1xx": "pitch slide up, 8 cents/s per unit",
+      "2xx": "pitch slide down, 8 cents/s per unit",
+      "3xx": "portamento to the written note",
+      "4xy": "vibrato, speed x+1 Hz, depth y x 8 cents",
+      "7xy": "tremolo, speed x+1 Hz, depth y",
+      "8xx": "pan: 00 left, 80 centre, FF right",
+      "Axy": "volume slide, (x-y) x 16 per second",
+      "Cxx": "note delay — PARSED BUT NOT IMPLEMENTED"
+    },
+    "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz"
+  },
   "instrument_selection": {
     "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
     "roles": [

@@ -97,6 +97,7 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | column | cells |
 |---|---|
 | `fm0`–`fm5` | `A-2`, `A#3`, `A-2:100` (velocity 1–127), `===` note off, `...` hold |
+| any column | add effects with `/`: `A-2:100/1F0/4A3` — see **Effects** below |
 | `psg0`–`psg2` | `A-4`, `A-4:8` (volume 0–15, **0 is loudest**), `===`, `...` |
 | `noise` | `w0`–`w3` white, `p0`–`p3` periodic, `===`, `...` |
 | `dac` | `kick` `snare` `hat` `hat_open` `tom` `clap` `rim`, or `...` |
@@ -108,6 +109,33 @@ Chord qualities: `maj` `min` `dim` `aug` `sus2` `sus4` `maj6` `min6`
 shorthands (`m`, `M7`, `7`, `9`, `o7`). Ask for more channels than the
 chord has notes and it keeps going up an octave rather than doubling in
 unison.
+
+**Effects** — a cell may carry them after the note, separated by `/`:
+
+| code | effect |
+|---|---|
+| `1xx` / `2xx` | pitch slide up / down, 8 cents per second per unit |
+| `3xx` | portamento to the written note |
+| `4xy` | vibrato: speed `x`+1 Hz, depth `y` × 8 cents |
+| `7xy` | tremolo: speed `x`+1 Hz, depth `y` |
+| `8xx` | pan (FM only): `00` left, `80` centre, `FF` right |
+| `Axy` | volume slide, (`x`−`y`) × 16 per second |
+
+```
+A-2:100/1F0      note at velocity 100, sliding up
+.../4A3          vibrato on a note already held
+===/A0C          note off with a fade
+G-4/3A0/4C4      slide to this note, then vibrato
+```
+
+`455` is 6 Hz at 40 cents, which is where the corpus sits — its median
+vibrato is 34 cents at 6 Hz across 4,839 measured spans. Start there and
+adjust; anything past depth `9` reads as a bend, not a vibrato.
+
+`0xy` (arpeggio) and `Cxx` (note delay) parse and then refuse: both need
+to place events between rows, which the cell layer cannot do yet. Use the
+`arp` directive for arpeggios. They error rather than doing nothing
+quietly, which is the failure that costs you a take.
 
 **Instruments**
 
