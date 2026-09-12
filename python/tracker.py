@@ -134,7 +134,7 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
               "author", "game", "notes", "end", "opldepth", "op", "alg",
-              "sample",
+              "sample", "pattern", "order",
               "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
@@ -221,6 +221,121 @@ def parse_note(cell: str):
     return canonical, int(octave), (int(param) if param is not None else None)
 
 
+
+#: Repetition shorthand in an `order` line: `verse*4`.
+_ORDER_REPEAT = re.compile(r"^(?P<name>[^*]+)\*(?P<count>\d+)$")
+#: How many times one `order` entry may repeat. A typo of `*1000` on a
+#: 16-row pattern is 16,000 rows, which renders for minutes before anyone
+#: notices something is wrong.
+MAX_ORDER_REPEAT = 64
+
+
+def expand_patterns(text: str):
+    """-> [(original line number, line)] with `pattern`/`order` resolved.
+
+    Writing a two-minute piece as one sheet of rows is the wrong shape for
+    the job: Streets of Rage's title theme is 98 seconds, and at four rows
+    to the beat that is roughly 650 rows of mostly repetition. A tracker
+    answers this with patterns and an order, so:
+
+        pattern verse
+          D-2  ...  kick
+          ...  A-4  ...
+
+        pattern chorus
+          A-2  C-5  kick
+
+        order verse verse chorus verse*2
+
+    Everything before the first `pattern` is the preamble and runs once.
+    Lines inside a pattern — rows AND directives — replay every time the
+    order names it, which is what lets a `mark` or an instrument change
+    belong to a section. A score with no `pattern` in it is untouched.
+
+    Line numbers are carried through rather than renumbered, so an error
+    inside a pattern used four times still points at the line the author
+    wrote.
+    """
+    lines = list(enumerate(text.splitlines(), start=1))
+    if not any(_COMMENT.split(raw, 1)[0].strip().split()[:1] == ["pattern"]
+               for _n, raw in lines):
+        return lines
+
+    preamble = []
+    patterns = {}
+    order = []
+    epilogue = []
+    current = None
+    seen_order = False
+    for lineno, raw in lines:
+        stripped = _COMMENT.split(raw, maxsplit=1)[0].strip()
+        words = stripped.split()
+        head = words[0].lower() if words else ""
+        if head == "pattern":
+            if len(words) < 2:
+                raise TrackerError(
+                    f"line {lineno}: pattern needs a name, e.g. `pattern verse`")
+            name = words[1]
+            if name in patterns:
+                raise TrackerError(
+                    f"line {lineno}: pattern {name!r} is already defined")
+            current = patterns.setdefault(name, [])
+            continue
+        if head == "order":
+            if len(words) < 2:
+                raise TrackerError(
+                    f"line {lineno}: order needs at least one pattern name")
+            for token in words[1:]:
+                match = _ORDER_REPEAT.match(token)
+                name = match.group("name") if match else token
+                count = int(match.group("count")) if match else 1
+                if count < 1 or count > MAX_ORDER_REPEAT:
+                    raise TrackerError(
+                        f"line {lineno}: {token!r} repeats {count} times; "
+                        f"the limit is {MAX_ORDER_REPEAT}")
+                order.append((lineno, name, count))
+            current = None
+            seen_order = True
+            continue
+        # Before the first pattern is preamble; inside one is the pattern;
+        # after the order is epilogue. Sending the tail to the preamble
+        # put a trailing `end` BEFORE the music and rendered six events of
+        # silence.
+        if current is not None:
+            current.append((lineno, raw))
+        elif seen_order:
+            epilogue.append((lineno, raw))
+        else:
+            preamble.append((lineno, raw))
+
+    if not order:
+        raise TrackerError(
+            "the score defines patterns but never plays them — add an "
+            "`order` line, e.g. `order "
+            + " ".join(list(patterns)[:3]) + "`")
+
+    named = set()
+    out = list(preamble)
+    for lineno, name, count in order:
+        if name not in patterns:
+            raise TrackerError(
+                f"line {lineno}: order names pattern {name!r}, which is not "
+                f"defined. Defined: {', '.join(sorted(patterns)) or 'none'}")
+        named.add(name)
+        for _ in range(count):
+            out.extend(patterns[name])
+    unused = sorted(set(patterns) - named)
+    if unused:
+        # Loudly, because the symptom is a section missing from the render
+        # while everything else works — the quiet failure this project
+        # keeps running into.
+        raise TrackerError(
+            f"pattern(s) {', '.join(repr(u) for u in unused)} are defined "
+            f"but not in any `order` line, so they would not be played")
+    out.extend(epilogue)
+    return out
+
+
 def loads(text: str):
     """Parse tracker text. Returns (events, metadata)."""
     meta = Metadata()
@@ -274,7 +389,7 @@ def loads(text: str):
             events.append(Wait(ticks=base + (1 if step < remainder else 0)))
         return True
 
-    for lineno, raw in enumerate(text.splitlines(), start=1):
+    for lineno, raw in expand_patterns(text):
         line = _COMMENT.split(raw, maxsplit=1)[0].strip()
         if not line or stopped:
             continue

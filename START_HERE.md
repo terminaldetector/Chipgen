@@ -88,6 +88,8 @@ chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
 | `pitch fm1 -12` | detune the channel in cents |
 | `cols fm0 fm1 psg0` | which columns the rows below carry |
 | `loop` | mark the VGM loop point |
+| `pattern verse` | start a named block of rows — see **Form** |
+| `order verse main*3 break` | play the patterns in that sequence |
 | `mark <label>` | name a section boundary — costs one line, makes `--profile` (below) report by name |
 | `chord A-3 min fm2 fm3 fm4` | spread a chord over those channels in one line instead of aligning three columns by hand; `chord off fm2 fm3 fm4` releases them |
 | `arp fm1 0 3 7` | tracker arpeggio — that channel's pitch cycles through those semitone offsets inside every row; `arp fm1 off` stops |
@@ -111,6 +113,39 @@ Chord qualities: `maj` `min` `dim` `aug` `sus2` `sus4` `maj6` `min6`
 shorthands (`m`, `M7`, `7`, `9`, `o7`). Ask for more channels than the
 chord has notes and it keeps going up an octave rather than doubling in
 unison.
+
+**Form** — a two-minute piece written as one sheet of rows is the wrong
+shape for the job. Streets of Rage's title theme is 98 seconds, which at
+four rows to the beat is around 650 rows of mostly repetition. Name the
+blocks and give an order instead:
+
+```
+pattern verse
+mark verse
+D-2:110  D-5:90   kick
+...      ...      hat
+
+pattern break
+mark break
+D-2:30   ===      ...
+...      ...      ...
+
+order verse verse*3 break verse*2
+```
+
+Everything before the first `pattern` runs once, as setup. Lines inside a
+pattern — rows *and* directives — replay every time the order names it,
+which is what lets a `mark` or an instrument change belong to a section.
+Anything after the `order` line comes last. A score with no `pattern` in
+it behaves exactly as before.
+
+`name*N` repeats, up to 64. Naming a pattern that is not defined is an
+error, and so is defining one the order never plays — the symptom
+otherwise is a section quietly missing from the render while everything
+else works.
+
+Line numbers point at the text you wrote, so an error inside a pattern
+used four times still names the one line it is in.
 
 **Your own samples** — `sample` imports a WAV into the kit, and a cell can
 ask for a pitch:

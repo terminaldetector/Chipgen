@@ -284,6 +284,16 @@ def info() -> dict:
     import selection
     return {
         "name": "chipgen",
+        "form": {
+            "how": "`pattern NAME` opens a block of rows; `order a b*3 c` "
+                   "plays them in sequence",
+            "repeat": f"name*N, up to {tracker_mod.MAX_ORDER_REPEAT}",
+            "scope": "before the first pattern is setup and runs once; "
+                     "lines inside a pattern replay on every use; after "
+                     "the order comes last",
+            "strict": "an undefined pattern in the order, and a defined "
+                      "pattern the order never plays, are both errors",
+        },
         "effect_column": fx.vocabulary(),
         "samples": {
             "kit": samples_mod.names(),
