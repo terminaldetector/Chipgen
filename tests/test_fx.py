@@ -162,3 +162,102 @@ def test_pan_is_refused_on_a_voice_that_cannot_pan():
         assert "pan" in str(error)
     else:
         raise AssertionError("8xx was accepted on a PSG channel")
+
+
+def _rms_envelope(result, window=0.020):
+    """RMS per fixed window, as a list — the shape of a sound over time."""
+    import math
+
+    import analysis
+
+    samples = analysis.to_mono(result.audio)
+    step = int(window * result.sample_rate)
+    out = []
+    for start in range(0, len(samples) - step, step):
+        chunk = samples[start:start + step]
+        total = sum(float(v) * float(v) for v in chunk)
+        out.append(math.sqrt(total / len(chunk)))
+    return out
+
+
+def test_pitch_effects_are_refused_on_noise_and_dac_with_a_reason():
+    """Neither voice has a pitch to bend, and both used to accept the code.
+
+    The PSG noise rate is four discrete settings; the DAC's pitch is its
+    feed rate, already at the chip's byte ceiling. Silently accepting a
+    vibrato on either is the failure this module exists to prevent, so it
+    raises and the message says what to do instead.
+    """
+    import fx
+
+    for target in ("noise", "dac"):
+        for code in ("1F0", "2F0", "3F0", "4A6"):
+            try:
+                fx.to_events(target, code)
+            except fx.FXError as error:
+                assert "pitch" in str(error), \
+                    f"{target}/{code} was refused without saying why"
+            else:
+                raise AssertionError(
+                    f"{target} accepted {code}, which it cannot perform")
+
+    # The volume half must still work on both.
+    for target in ("noise", "dac"):
+        for code in ("756", "A0F"):
+            assert fx.to_events(target, code), \
+                f"{target} should accept the volume effect {code}"
+
+
+def test_volume_effects_reach_the_psg_noise_channel():
+    # A hat swelling into a fill is the musical want here, and it was
+    # unreachable: the tracker parsed a noise cell's effect codes and
+    # dropped them, exactly as it did for the OPL columns.
+    import chipgen
+
+    held = "\n...\n...\n...\n...\n...\n...\n...\nend\n"
+    plain = _rms_envelope(chipgen.compose(
+        "bpm 120\nlpb 4\ncols noise\nw2:0" + held))
+    fading = _rms_envelope(chipgen.compose(
+        "bpm 120\nlpb 4\ncols noise\nw2:0/A0F" + held))
+
+    def spread_db(envelope):
+        import math
+        loud = max(envelope)
+        quiet = min(v for v in envelope if v > 0) if any(envelope) else 1e-9
+        return 20 * math.log10(loud / quiet)
+
+    assert spread_db(plain) < 6.0, (
+        f"a plain held hat should be level; it varied by "
+        f"{spread_db(plain):.1f} dB")
+    assert spread_db(fading) > 15.0, (
+        f"a volume slide on the noise channel should fade it audibly; "
+        f"the envelope only varied by {spread_db(fading):.1f} dB")
+
+
+def test_tremolo_reaches_the_dac():
+    """Tremolo on a sample, measured against the same sample without it.
+
+    Comparing envelopes window by window is what makes this visible: a
+    drum's own decay is 40 dB and swamps the effect in any absolute
+    reading. The 60 Hz effect clock and a 260 ms sample are the ceiling
+    on how far a DAC effect can travel — plus 8-bit quantisation, which
+    flattens any scaling once the sample's own amplitude is down in the
+    last few codes.
+    """
+    import math
+
+    import chipgen
+
+    held = "\n...\n...\n...\n...\n...\n...\n...\nend\n"
+    base = "bpm 120\nlpb 8\ncols dac\n"
+    plain = _rms_envelope(chipgen.compose(base + "tom" + held))
+    shaken = _rms_envelope(chipgen.compose(base + "tom/75A" + held))
+
+    inside = min(13, len(plain), len(shaken))       # tom is 260 ms
+    difference = [20 * math.log10(max(shaken[i], 1e-9) / max(plain[i], 1e-9))
+                  for i in range(inside)]
+    assert min(difference) < -4.0, (
+        f"tremolo should duck the sample audibly; the deepest window was "
+        f"{min(difference):.1f} dB against the untouched sample")
+    assert max(difference) > -1.0, \
+        "tremolo should also come back up; it only ever attenuated"

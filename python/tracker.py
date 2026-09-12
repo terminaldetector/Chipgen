@@ -788,9 +788,17 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         return
 
     if column in _OPL_COLUMNS:
+        # The OPL2 gets the same effect column the FM and PSG channels do.
+        # Everything downstream was already in place — effects.py carries
+        # opl0-8 voices and the sequencer's _write_effect pushes them to
+        # set_pitch_offset/set_volume — so for a while an `opl0` cell
+        # parsed its effect codes and then dropped them on the floor,
+        # which is the kind of silence that reads as "vibrato does nothing
+        # on this chip" rather than as a missing wire.
         ch = int(column[3:])
         if lowered in OFF_TOKENS:
             events.append(OPLNoteOff(channel=ch))
+            _apply_effects(column, codes, events, lineno, raw)
             return
         parsed = parse_note(token)
         if parsed is None:
@@ -799,6 +807,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         note, octave, velocity = parsed
         events.append(OPLNoteOn(channel=ch, note=note, octave=octave,
                                 velocity=velocity if velocity else 127))
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column in _PSG_COLUMNS:
@@ -820,8 +829,12 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         return
 
     if column == "noise":
+        # Volume effects only, and fx.py refuses the pitch codes with a
+        # reason: the noise rate is four discrete settings, so there is
+        # nothing to bend. A hat swelling into a fill is the point.
         if lowered in OFF_TOKENS:
             events.append(PSGNoiseOff())
+            _apply_effects(column, codes, events, lineno, raw)
             return
         m = _NOISE_CELL.match(token)
         if not m:
@@ -830,10 +843,12 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         kind, rate, volume = m.groups()
         events.append(PSGNoiseOn(white=kind.lower() == "w", rate=int(rate),
                                  volume=int(volume) if volume else 0))
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column == "dac":
         if lowered in OFF_TOKENS:
+            _apply_effects(column, codes, events, lineno, raw)
             return
         name, _, level = token.partition(":")
         # `kick@D-3` plays the sample at that pitch, by playing it faster
@@ -868,6 +883,10 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
                     f"line {lineno}: DAC volume {volume} is outside 0.0-1.0"
                     f"\n  {raw.strip()}")
         events.append(DACSample(name=name, volume=volume, rate=rate))
+        # Volume effects only, same as `noise`: the DAC's pitch is its
+        # feed rate, which is already against the chip's byte ceiling, so
+        # fx.py refuses the pitch codes rather than accept and ignore.
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
 

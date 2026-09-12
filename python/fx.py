@@ -110,6 +110,21 @@ def parse(code: str):
     return kind, value >> 4, value & 0x0F, value
 
 
+#: Voices with a level but no continuous pitch. A pitch code on one of
+#: these used to be accepted and then quietly do nothing, which is the
+#: failure this module exists to avoid.
+_VOLUME_ONLY = ("noise", "dac")
+
+#: The codes that need a pitch to bend.
+_PITCH_CODES = {"1": "pitch slide up", "2": "pitch slide down",
+                "3": "portamento to note", "4": "vibrato"}
+
+
+def _dac_ceiling() -> int:
+    import samples
+    return samples.DAC_RATE_CEILING
+
+
 def to_events(target: str, code: str, note=None, octave=None):
     """One effect on one voice -> the events that realise it.
 
@@ -118,6 +133,16 @@ def to_events(target: str, code: str, note=None, octave=None):
     """
     kind, high, low, value = parse(code)
     E = events_mod
+
+    if target in _VOLUME_ONLY and kind in _PITCH_CODES:
+        raise FXError(
+            f"effect {code!r} ({_PITCH_CODES[kind]}) needs a pitch to bend, "
+            f"and {target} has none to bend continuously. The PSG noise "
+            f"rate is four discrete settings, and the DAC's pitch is its "
+            f"feed rate, already at the chip's "
+            f"{_dac_ceiling():,} Hz ceiling. Volume effects (7xy tremolo, Axy "
+            f"volume slide) do work on {target}; for a pitched noise "
+            f"sweep, bend psg2 and use periodic noise at rate 3.")
 
     if kind == "1":
         return [E.Portamento(target=target,
@@ -227,4 +252,22 @@ def vocabulary() -> dict:
         },
         "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the "
                        "corpus median of 34 cents at 6 Hz",
+        "columns": {
+            "all": "every column takes the effect column: fm0-fm5, "
+                   "psg0-psg2, opl0-opl8, noise, dac",
+            "pitch_effects": "fm, opl and psg only. `noise` and `dac` "
+                             "REFUSE 1/2/3/4 rather than accept and do "
+                             "nothing — the noise rate is four discrete "
+                             "settings and the DAC's pitch is its feed "
+                             "rate, already at the byte ceiling. For a "
+                             "pitched noise sweep bend psg2 and use "
+                             "periodic noise at rate 3.",
+            "pan": "fm only; 8xx on any other column is refused",
+            "dac_limits": "measured: the effect clock is 60 Hz and the "
+                          "longest built-in sample is 260 ms, so A0F "
+                          "reaches only about -2 dB by the end of a tom, "
+                          "while tremolo 75A swings 7.4 dB. Once a drum "
+                          "decays into its last few 8-bit codes, scaling "
+                          "cannot be represented and the tail flattens.",
+        },
     }

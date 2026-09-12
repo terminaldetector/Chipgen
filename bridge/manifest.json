@@ -20,7 +20,13 @@
       "Axy": "volume slide, (x-y) x 16 per second",
       "Cxx": "note delay — PARSED BUT NOT IMPLEMENTED"
     },
-    "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz"
+    "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz",
+    "columns": {
+      "all": "every column takes the effect column: fm0-fm5, psg0-psg2, opl0-opl8, noise, dac",
+      "pitch_effects": "fm, opl and psg only. `noise` and `dac` REFUSE 1/2/3/4 rather than accept and do nothing — the noise rate is four discrete settings and the DAC's pitch is its feed rate, already at the byte ceiling. For a pitched noise sweep bend psg2 and use periodic noise at rate 3.",
+      "pan": "fm only; 8xx on any other column is refused",
+      "dac_limits": "measured: the effect clock is 60 Hz and the longest built-in sample is 260 ms, so A0F reaches only about -2 dB by the end of a tom, while tremolo 75A swings 7.4 dB. Once a drum decays into its last few 8-bit codes, scaling cannot be represented and the tail flattens."
+    }
   },
   "samples": {
     "kit": [

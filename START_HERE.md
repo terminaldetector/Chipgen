@@ -318,6 +318,35 @@ G-4/3A0/4C4      slide to this note, then vibrato
 vibrato is 34 cents at 6 Hz across 4,839 measured spans. Start there and
 adjust; anything past depth `9` reads as a bend, not a vibrato.
 
+**Which columns take which effects.** All of them take the effect
+column — `fm0`–`fm5`, `psg0`–`psg2`, `opl0`–`opl8`, `noise` and `dac` —
+but two of them have no pitch to bend:
+
+| column | pitch effects (`1` `2` `3` `4`) | volume effects (`7` `A`) | pan (`8`) |
+|---|---|---|---|
+| `fm0`–`fm5` | yes | yes | yes |
+| `opl0`–`opl8` | yes | yes | no |
+| `psg0`–`psg2` | yes | yes | no |
+| `noise` | **refused** | yes | no |
+| `dac` | **refused** | yes | no |
+
+`noise` and `dac` refuse the pitch codes rather than accept them and do
+nothing: the PSG noise rate is four discrete settings, not a continuum,
+and the DAC's pitch is its feed rate, which is already against the
+15,980 Hz ceiling. For a pitched noise sweep, bend `psg2` and use
+periodic noise at rate 3 — the noise channel tracks channel 3's tone
+there.
+
+Two measured limits on `dac` effects, because they are smaller than they
+look. The effect clock is 60 Hz and the longest built-in sample is 260 ms,
+so a slide gets about fifteen ticks: `A0F`, the steepest, reaches roughly
+−2 dB by the end of a `tom`. Tremolo fares better because it does not
+need to travel — `75A` measures a 7.4 dB swing against the same sample
+untouched. And once a drum's own decay has run down to the last few of its
+256 codes, scaling it cannot be represented at all, so the tail flattens
+out. Effects on the DAC shape a hit; they do not fade a sustained sound,
+because there isn't one.
+
 `0xy` (arpeggio) and `Cxx` (note delay) parse and then refuse: both need
 to place events between rows, which the cell layer cannot do yet. Use the
 `arp` directive for arpeggios. They error rather than doing nothing

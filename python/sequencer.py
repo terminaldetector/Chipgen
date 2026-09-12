@@ -323,6 +323,9 @@ class Sequencer:
             psg.set_volume(ev.channel, ev.volume)
         elif isinstance(ev, E.PSGNoiseOn):
             psg.noise_on(ev.white, ev.rate, ev.volume, restart=ev.restart)
+            state.note_velocity["noise"] = ev.volume
+            state.effects.note_on("noise")
+            state.reapply("noise")
         elif isinstance(ev, E.PSGNoiseOff):
             psg.noise_off()
         else:
@@ -354,6 +357,10 @@ class _RenderState:
         #: rather than replacing it, so a tremolo on a quiet note stays
         #: quiet.
         self.note_velocity = {}
+        #: The level a DAC hit was started at. A volume effect scales
+        #: this rather than the running value, so a tremolo does not
+        #: compound itself byte after byte.
+        self._dac_base = 1.0
         self._dac = None
 
     # -- DAC ---------------------------------------------------------------
@@ -366,11 +373,12 @@ class _RenderState:
             # drum would be one more thing for a model to forget, and there
             # is no case where DACSample means anything else.
             self.ym.set_dac_enable(True)
+        self._dac_base = max(0.0, min(1.0, ev.volume))
         self._dac = {
             "data": sample.data,
             "pos": 0,
             "rate": float(rate),
-            "volume": max(0.0, min(1.0, ev.volume)),
+            "volume": self._dac_base,
             "countdown": 0.0,          # FM samples until the next byte
             "auto_enabled": auto_enabled,
         }
@@ -390,6 +398,22 @@ class _RenderState:
             self._write_effect(target, cents, scale)
 
     def _write_effect(self, target: str, cents: float, scale: float):
+        # `noise` and `dac` carry a level but no index and no pitch, so
+        # they are handled before anything tries to slice digits off the
+        # end of the name.
+        if target == "noise":
+            base = self.note_velocity.get("noise")
+            if base is not None and self.psg is not None:
+                # The PSG attenuator runs backwards, and the noise voice
+                # is channel 3.
+                quiet = 15 - (15 - base) * scale
+                self.psg.set_volume(3, max(0, min(15, int(round(quiet)))))
+            return
+        if target == "dac":
+            if self._dac is not None:
+                self._dac["volume"] = max(0.0, min(1.0,
+                                                   self._dac_base * scale))
+            return
         index = int(target[3:]) if target.startswith("psg") or \
             target.startswith("opl") else int(target[2:])
         base = self.note_velocity.get(target)

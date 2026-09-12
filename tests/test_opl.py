@@ -407,3 +407,107 @@ def test_a_score_without_opl_leaves_the_vgm_header_clock_at_zero():
         path = os.path.join(directory, "plain.vgm")
         chipgen.compose("inst fm0 bass\ncols fm0\nA-2\n...\n===\n", vgm=path)
         assert vgm_mod.read_header(path)["opl_clock"] == 0
+
+
+def _opl_register_trace(cell, watch, patch="opl_organ"):
+    """Every value the OPL2 is given at `watch` while a one-note score runs.
+
+    Registers, not audio: the claim under test is that the tracker's effect
+    codes reach this chip at all, and a register trace answers that without
+    a pitch detector's octave errors in the way.
+    """
+    import opl2
+    import sequencer
+    import tracker
+
+    events, _ = tracker.loads(
+        f"bpm 120\nlpb 4\ninst opl0 {patch}\ncols opl0\n{cell}\n"
+        "...\n...\n...\nend\n")
+    seen = []
+    original = opl2.YM3812.__init__
+
+    def patched(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        inner = self.write
+
+        def spy(addr, value):
+            if addr in watch:
+                seen.append(value & 0x3F if addr == 0x43 else value)
+            return inner(addr, value)
+
+        self.write = spy
+
+    opl2.YM3812.__init__ = patched
+    try:
+        sequencer.Sequencer().render(events)
+    finally:
+        opl2.YM3812.__init__ = original
+    return seen
+
+
+def test_the_effect_column_reaches_the_opl2():
+    """Pitch effects on an `opl` cell must move the F-Number.
+
+    This was silently broken: effects.py has carried opl0-8 voices and the
+    sequencer's _write_effect has pushed them to set_pitch_offset all
+    along, but the tracker's OPL branch parsed a cell's effect codes and
+    then dropped them. Nothing errored — the note simply played straight,
+    which reads as "this chip has no vibrato" rather than as a missing
+    wire. One F-Number write means no effect ran.
+    """
+    plain = _opl_register_trace("A-4:100", {0xA0})
+    assert len(plain) == 1, \
+        f"a plain note should set the F-Number once, got {len(plain)} writes"
+
+    rising = _opl_register_trace("A-4:100/1F0", {0xA0})
+    assert len(rising) > 20, \
+        f"a pitch slide should rewrite the F-Number per tick, got {len(rising)}"
+    assert len(set(rising)) > 20, (
+        f"the slide wrote {len(rising)} times but only "
+        f"{len(set(rising))} distinct values")
+
+
+def test_vibrato_depth_scales_on_the_opl2():
+    # 4xy is speed x, depth y — the ProTracker order, and the order
+    # fx.vocabulary() advertises. Reading it as depth-then-speed is an
+    # easy mistake: every 4A6/456/416 then looks like the same depth.
+    swings = {}
+    for depth, code in ((2, "452"), (6, "456"), (10, "45A")):
+        seen = _opl_register_trace(f"A-4:100/{code}", {0xA0})
+        swings[depth] = (max(seen) - min(seen)) / 2.0
+
+    assert swings[2] < swings[6] < swings[10], \
+        f"vibrato depth did not scale the F-Number swing: {swings}"
+    # Linear in cents: 8 cents per depth unit, so the ratio of swings
+    # should track the ratio of depths within the F-Number's quantisation.
+    ratio = swings[10] / swings[2]
+    assert 3.5 < ratio < 7.0, \
+        f"depth 10 swung {ratio:.1f}x depth 2; expected about 5x"
+
+
+def test_volume_effects_reach_the_opl2_carrier_level():
+    # The OPL2 has no channel volume register, so the only route down is
+    # the carrier's Total Level. Higher is quieter.
+    plain = _opl_register_trace("A-4:100", {0x43})
+    fading = _opl_register_trace("A-4:100/A0F", {0x43})
+    tremolo = _opl_register_trace("A-4:100/756", {0x43})
+
+    assert max(fading) > max(plain) + 10, (
+        f"a steep volume slide should attenuate the carrier; plain reached "
+        f"TL {max(plain)}, sliding reached {max(fading)}")
+    assert len(set(tremolo)) > 2, \
+        f"tremolo should move the level repeatedly, saw {sorted(set(tremolo))}"
+
+
+def test_a_volume_slide_upward_at_full_volume_does_nothing():
+    """Axy is x up, y down — and `A40` on a loud note is a no-op.
+
+    Worth pinning because it is how this looked like a bug: `A40` produced
+    no level writes at all, which reads as "volume effects are not wired"
+    when in fact the note was already against the ceiling.
+    """
+    plain = _opl_register_trace("A-4:100", {0x43})
+    upward = _opl_register_trace("A-4:100/A40", {0x43})
+    assert upward == plain, (
+        f"sliding up from full volume should write nothing extra; "
+        f"plain {plain} vs upward {upward}")

@@ -40,9 +40,18 @@ DEFAULT_RATE = 60.0
 
 #: Names of the voices effects can address, in the same spelling the
 #: tracker's columns use.
+#: `noise` and `dac` take volume effects only. Both are real musical
+#: wants — a hat swelling into a fill, a sample fading under a pad — and
+#: neither has a pitch to slide: the PSG noise rate is four discrete
+#: settings, not a continuum, and the DAC's pitch is its feed rate, which
+#: is already up against the chip's 15,980 Hz ceiling. fx.py refuses a
+#: pitch code on either rather than accept it and do nothing.
+VOLUME_ONLY = ("noise", "dac")
+
+
 def voice_names():
     return ([f"fm{i}" for i in range(6)] + [f"psg{i}" for i in range(3)]
-            + [f"opl{i}" for i in range(9)])
+            + [f"opl{i}" for i in range(9)] + list(VOLUME_ONLY))
 
 
 class _Voice:
