@@ -23,6 +23,9 @@ read it, but the score itself does not say it needs one:
 | `neon_transit.trk` | a full-length Genesis track, 64 s | `--bank examples/neon_transit_bank.json` |
 | `dos_transit.trk` | a full-length OPL2 track, 53 s | `--opl-bank examples/opl_furnace_bank.json` |
 
+All five ship inside the bridge archive, with the two instrument banks —
+they cost 11.8 KB compressed, less than this file describing them.
+
 `tests/test_examples.py` renders all five on every test run, with the
 banks above, and fails if any of them stops parsing or comes out silent.
 If you add a score here that needs a bank, add it to `BANKS` in that file

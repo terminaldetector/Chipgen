@@ -39,13 +39,20 @@ INCLUDE_FILES = [
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
     "corpus/STUDY.md",
+    "examples/README.md",
     "core/README.md",
     "core/NUKED_OPN2_LICENSE",
 ]
 INCLUDE_TREES = [
     ("python", (".py",)),
     ("core", (".c", ".h")),
-    ("examples", (".py",)),
+    # The .trk scores too, not just the .py drivers. They were missing,
+    # so the archive shipped an examples/ directory with no scores in it
+    # — and examples/README.md, which names all five, would have pointed
+    # at files that were not there. The two full-length tracks bring
+    # their instrument banks along; all eight files cost 11.8 KB
+    # compressed, which is less than the README describing them.
+    ("examples", (".py", ".trk", ".json")),
     ("tests", (".py",)),
 ]
 BINARY_EXTENSIONS = (".so", ".dylib", ".dll")
