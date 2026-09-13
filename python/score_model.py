@@ -182,12 +182,33 @@ def load_all(paths, limit: int = None):
     return out
 
 
+#: Directories under corpus/ that hold .json files which are NOT scores.
+#: A corpus ships its instrument banks beside its scores, and a bank is
+#: a list of patches — load() raises TypeError on one.
+_NOT_SCORES = frozenset({"banks"})
+
+#: And the per-corpus metadata, same extension, also not scores.
+_METADATA = frozenset({"manifest.json", "profile.json"})
+
+
 def corpus_paths(root: str = None, suffixes=(".trk", ".json")):
-    """Every score in a corpus directory, sorted."""
+    """Every score in a corpus directory, sorted.
+
+    Banks and metadata are excluded, and that is not cosmetic. This used
+    to return every .json under corpus/, which meant 615 instrument
+    banks and 3 metadata files on top of the 773 actual scores — a count
+    of 1392 where the manifests say 773. Nothing visibly broke, because
+    load_all() catches and skips whatever will not parse, but that is
+    exactly the problem: with banks in the list, a genuinely malformed
+    score being skipped looks identical to a bank being correctly
+    ignored.
+    """
     root = root or os.path.join(os.path.dirname(_HERE), "corpus")
     found = []
-    for directory, _, files in os.walk(root):
+    for directory, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in _NOT_SCORES]
         for name in sorted(files):
-            if name.endswith(tuple(suffixes)):
-                found.append(os.path.join(directory, name))
+            if name in _METADATA or not name.endswith(tuple(suffixes)):
+                continue
+            found.append(os.path.join(directory, name))
     return sorted(found)

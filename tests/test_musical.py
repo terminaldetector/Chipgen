@@ -147,3 +147,75 @@ def test_syncopation_uses_the_scores_own_rows_per_beat():
                                 lengths=(2, 2, 2, 2), span_rows=8, lpb=2,
                                 role="bass", source="t")
     assert off_beat.syncopation == 1.0
+
+
+def test_corpus_paths_returns_scores_and_not_banks_or_metadata():
+    """A corpus ships its instrument banks beside its scores.
+
+    corpus_paths() used to return every .json under corpus/, which meant
+    615 banks and 3 metadata files on top of the 773 actual scores — a
+    count of 1392 against manifests that say 773. Nothing visibly broke,
+    because load_all() catches and skips whatever will not parse, and
+    that is exactly why it survived: with banks in the list, a genuinely
+    malformed score being skipped looks identical to a bank being
+    correctly ignored.
+    """
+    import os
+
+    import score_model
+    import support
+
+    root = os.path.join(support.ROOT, "corpus")
+    if not os.path.isdir(root):
+        return                      # no corpus installed; nothing to check
+
+    paths = score_model.corpus_paths()
+    if not paths:
+        return
+
+    for path in paths:
+        parts = path.split(os.sep)
+        assert "banks" not in parts, \
+            f"corpus_paths() returned an instrument bank: {path}"
+        assert os.path.basename(path) not in ("manifest.json",
+                                              "profile.json"), \
+            f"corpus_paths() returned corpus metadata: {path}"
+
+    # And every path it does return has to be loadable, or the list is
+    # still lying about what it contains.
+    loaded = score_model.load_all(paths)
+    assert len(loaded) == len(paths), (
+        f"{len(paths) - len(loaded)} of {len(paths)} paths from "
+        f"corpus_paths() did not parse as scores")
+
+
+def test_corpus_paths_agrees_with_the_manifests():
+    # Each corpus ships a manifest saying how many tracks it holds. The
+    # two numbers drifting apart means one of them is wrong, and the
+    # manifest is the one the audit wrote.
+    import json
+    import os
+
+    import score_model
+    import support
+
+    root = os.path.join(support.ROOT, "corpus")
+    if not os.path.isdir(root):
+        return
+
+    claimed = 0
+    found_any = False
+    for name in sorted(os.listdir(root)):
+        manifest = os.path.join(root, name, "manifest.json")
+        if not os.path.exists(manifest):
+            continue
+        with open(manifest, encoding="utf-8") as handle:
+            claimed += json.load(handle)["tracks"]
+        found_any = True
+    if not found_any:
+        return
+
+    actual = len(score_model.corpus_paths())
+    assert actual == claimed, (
+        f"corpus_paths() found {actual} scores but the manifests claim "
+        f"{claimed}")
