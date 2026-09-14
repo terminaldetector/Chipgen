@@ -43,6 +43,7 @@ interface change at all.
 | `directives` | every directive and cell, with literal copyable code | the reference cards |
 | `presets` | the authored reference-prompt library | the preset browser |
 | `instruments`, `samples`, `effects` | what a score may name | pickers and autocomplete |
+| `arrangement` | every rearrangement target, its channels, ranges and what a velocity means on each | the Rearrange tab, and saying what a target costs before you pick it |
 | `health` | backends, toolchain, last test result | the status bar |
 | `reference` | the engine's own prose on form, live FM, mix levels, NES | help text and tooltips |
 | `example` | a complete working score | what goes in the editor on first load |
@@ -85,7 +86,8 @@ cannot be quietly unable to reach part of the hardware.
 Two ways, and the page works either way — it detects which it has and
 says so in its status bar rather than leaving a dead button.
 
-**With the engine** — rendering, WAV, VGM, the section profile:
+**With the engine** — rendering, WAV, VGM, the section profile,
+rearranging onto another chip:
 
     python3 python/serve.py
     # http://127.0.0.1:8765
@@ -123,6 +125,29 @@ The interface can go public on its own and be genuinely useful — it is a
 complete hardware reference. The engine goes wherever there is a Python
 to run it. Neither needs the other to be deployed, and neither needs a
 toolchain: no npm, no bundler, no `pip install`.
+
+## Rearranging
+
+The Rearrange tab takes the score from the Compose tab and fits it onto
+another chip. It is a server route (`POST /api/arrange`) rather than
+something the page does itself, because the ranges, the role classifier
+and the tracker all live in the engine — and because the answer is two
+things, not one: the arranged score AND the report of what it cost.
+
+A route that returned only the score would let this page show a
+rearrangement that quietly lost the counter-melody. So the report comes
+back beside it, and the status line says `Fitted onto RP2A03, 4 voices
+dropped` rather than a green tick. The arrangement lands in a read-only
+box; **Use as score** moves it into the Compose tab, where it is an
+ordinary score you can edit before you commit to rendering it.
+
+The file picker beside the target takes a **MIDI file** as the source
+instead of the editor, and that is the join with everything outside this
+project: nothing here turns a recording into notes, but every tool that
+does writes MIDI. The file is read in the browser and sent as base64 —
+a JSON body carries no other kind of bytes — and the import's own report
+(tracks, tempo, how far quantising moved a note) comes back above the
+arrangement's.
 
 ## The rule, enforced
 

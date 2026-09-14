@@ -139,6 +139,8 @@ _NES_COLUMNS = tuple(f"nes{i}" for i in range(5))
 #: Column -> the voice name the chip and the effect engine both use.
 _NES_VOICE = {"nes0": "pulse1", "nes1": "pulse2", "nes2": "triangle",
               "nes3": "noise", "nes4": "dmc"}
+#: And back, for writing a score out.
+_NES_COLUMN = {voice: column for column, voice in _NES_VOICE.items()}
 
 for _i in range(5):
     _COLUMN_ALIASES[f"nes{_i}"] = f"nes{_i}"
@@ -1364,6 +1366,34 @@ def dumps(events, meta: Metadata = None, columns=None,
             used.add("dac")
             cell["dac"] = ev.name + (f":{ev.volume:g}" if ev.volume != 1.0
                                      else "")
+        # The NES half. These arrived late: the parser has read nes0-nes4
+        # since the chip was added, and this loop could not write one back
+        # out, so an NES score round-tripped to an empty file with a
+        # correct header. Nothing caught it because the NES corpus is
+        # stored as JSON, which does not come through here.
+        elif isinstance(ev, NESNoteOn):
+            column = _NES_COLUMN[ev.voice]
+            used.add(column)
+            suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
+            cell[column] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, NESNoteOff):
+            column = _NES_COLUMN[ev.voice]
+            used.add(column)
+            cell[column] = "==="
+        elif isinstance(ev, NESNoiseOn):
+            used.add("nes3")
+            cell["nes3"] = (f"{ev.period}" + ("m" if ev.metallic else "")
+                            + (f":{ev.velocity}" if ev.velocity != 127
+                               else ""))
+        elif isinstance(ev, NESNoiseOff):
+            used.add("nes3")
+            cell["nes3"] = "==="
+        elif isinstance(ev, NESSample):
+            used.add("nes4")
+            cell["nes4"] = ev.name + (f":{ev.volume:g}"
+                                      if ev.volume != 1.0 else "")
+        elif isinstance(ev, NESDuty):
+            directive(r, f"nes duty {_NES_COLUMN[ev.voice]} {ev.duty}")
 
     if columns is None:
         order = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS

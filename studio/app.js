@@ -135,6 +135,7 @@ const TABS = [
   ['brief', 'Brief a model'],
   ['directives', 'Directives'],
   ['voices', 'Channel bus'],
+  ['arrange', 'Rearrange'],
   ['instruments', 'Instruments'],
   ['chips', 'Architecture'],
   ['reference', 'Reference'],
@@ -467,6 +468,130 @@ function renderVoices() {
   }
 }
 
+/* ---- rearranging ------------------------------------------------------ */
+
+function arrangement() {
+  return (state.manifest && state.manifest.arrangement) || null;
+}
+
+function renderArrangeTargets() {
+  const data = arrangement();
+  const select = $('arrange-target');
+  clear(select);
+  if (!data) {
+    say($('arrange-status'), 'warn',
+      'This contract predates the arranger, so there is nothing to ' +
+      'arrange for.');
+    return;
+  }
+  for (const name of Object.keys(data.targets)) {
+    const target = data.targets[name];
+    select.appendChild(el('option', {
+      value: name,
+      text: `${name} — ${target.melodic_voices} melodic` +
+            (target.percussion.length
+              ? ` + ${target.percussion.length} percussion` : ''),
+    }));
+  }
+  select.addEventListener('change', showArrangeTarget);
+  showArrangeTarget();
+}
+
+function showArrangeTarget() {
+  const data = arrangement();
+  const channels = $('arrange-channels');
+  const notes = $('arrange-notes');
+  clear(channels);
+  clear(notes);
+  if (!data) return;
+  const target = data.targets[$('arrange-target').value];
+  if (!target) return;
+
+  const rows = target.channels.map((channel) => el('tr', {}, [
+    el('td', {}, [el('code', { class: 'inline', text: channel.column })]),
+    el('td', { text: channel.chip }),
+    el('td', { text: channel.kind }),
+    el('td', { text: data.dynamics[channel.dynamics] || channel.dynamics }),
+  ]));
+  channels.appendChild(el('div', { class: 'scroll' }, [
+    el('table', {}, [
+      el('tr', {}, ['column', 'chip', 'kind', 'dynamics']
+        .map((h) => el('th', { text: h }))),
+      ...rows,
+    ]),
+  ]));
+  for (const channel of target.channels.filter((c) => c.note)) {
+    channels.appendChild(el('p', { class: 'note' }, [
+      el('code', { class: 'inline', text: channel.column }),
+      ` ${channel.note}`,
+    ]));
+  }
+
+  // What the arranger promises, beside what the chip can hold: the two
+  // together are the whole answer to "what does this cost".
+  notes.appendChild(el('h3', { text: 'What it will not do quietly' }));
+  for (const promise of data.promises) {
+    notes.appendChild(el('p', { class: 'note', text: `— ${promise}` }));
+  }
+}
+
+async function arrangeScore() {
+  const status = $('arrange-status');
+  const report = $('arrange-report');
+  clear(report);
+
+  if (!state.live) {
+    say(status, 'warn',
+      'Arranging needs the engine: the ranges, the role classifier and ' +
+      'the tracker all live there.',
+      'python3 python/serve.py\n\nThen reload this page.');
+    return;
+  }
+
+  const button = $('arrange');
+  button.disabled = true;
+  button.textContent = 'arranging…';
+  try {
+    // A chosen MIDI file wins over the editor: picking one is a clear
+    // statement about which source you meant.
+    const file = ($('arrange-midi').files || [])[0];
+    const body = { target: $('arrange-target').value };
+    if (file) body.midi = await asBase64(file);
+    else body.score = $('score').value;
+
+    const response = await fetch('/api/arrange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      say(status, 'bad', 'Could not arrange that score:', data.error);
+      return;
+    }
+
+    $('arrange-out').value = data.score;
+    $('arrange-use').disabled = false;
+    $('arrange-copy').disabled = false;
+
+    const lost = Object.keys(data.report.dropped || {}).length;
+    say(status, data.report.lossless ? 'good' : 'warn',
+      data.report.lossless
+        ? `Fitted onto ${data.target} with nothing lost.`
+        : `Fitted onto ${data.target}` +
+          (lost ? `, ${lost} voice${lost === 1 ? '' : 's'} dropped.` : '.'));
+    const text = (data.imported ? data.imported.join('\n') + '\n\n' : '')
+      + data.lines.join('\n');
+    report.appendChild(el('pre', { class: 'report', text }));
+  } catch (err) {
+    say(status, 'bad', 'Could not reach the engine.', String(err));
+    state.live = false;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Arrange';
+  }
+}
+
 /* ---- instruments ----------------------------------------------------- */
 
 function renderInstruments() {
@@ -592,6 +717,7 @@ async function start() {
   renderBrief();
   renderDirectives();
   renderVoices();
+  renderArrangeTargets();
   renderInstruments();
   renderChips();
   renderReference();
@@ -600,6 +726,16 @@ async function start() {
   window.addEventListener('hashchange', () => selectTab(tabFromHash(), false));
 
   $('render').addEventListener('click', renderScore);
+  $('arrange').addEventListener('click', arrangeScore);
+  $('arrange-use').addEventListener('click', () => {
+    // Moving the arrangement into the Compose tab rather than rendering
+    // it here: one score box, one render path, and the arrangement is
+    // then an ordinary score you can edit before you commit to it.
+    $('score').value = $('arrange-out').value;
+    selectTab('compose');
+  });
+  $('arrange-copy').addEventListener('click',
+    (event) => copy($('arrange-out').value, event.target));
   $('copy-score').addEventListener('click',
     (event) => copy($('score').value, event.target));
   for (const [id, key] of [['download-wav', 'wav'], ['download-vgm', 'vgm']]) {

@@ -156,6 +156,75 @@ def render_score(payload: dict) -> dict:
     return out
 
 
+def arrange_score(payload: dict) -> dict:
+    """Fit a score onto another chip and hand back both halves.
+
+    Both halves on purpose: the arranged score AND the report of what it
+    cost. An endpoint that returned only the score would let an
+    interface show a rearrangement that quietly lost the counter-melody,
+    which is the one thing `arrange.py` exists to prevent.
+    """
+    import arrange as arrange_mod
+    import score_model as score_model_mod
+    import tracker as tracker_mod
+
+    score = payload.get("score") or ""
+    midi = payload.get("midi") or ""
+    target = payload.get("target") or ""
+    if target not in arrange_mod.TARGETS:
+        return {"ok": False,
+                "error": f"no target {target!r}. Have: "
+                         f"{', '.join(sorted(arrange_mod.TARGETS))}"}
+
+    imported = None
+    if midi:
+        # A MIDI file, base64 in the body. This is the join between the
+        # engine and every tool that turns a recording into notes —
+        # nothing here reads audio, and a browser cannot POST bytes
+        # through a JSON body any other way.
+        import base64
+        import binascii
+        import midi_import
+
+        try:
+            raw = base64.b64decode(midi, validate=True)
+        except (binascii.Error, ValueError) as error:
+            return {"ok": False, "error": f"the MIDI upload is not "
+                                          f"base64: {error}"}
+        if len(raw) > MAX_SCORE_BYTES:
+            return {"ok": False, "error": f"the MIDI file is larger than "
+                                          f"{MAX_SCORE_BYTES // 1024} KB"}
+        try:
+            imported = midi_import.read(raw, lpb=int(payload.get("lpb") or 4))
+        except midi_import.MidiError as error:
+            return {"ok": False, "error": str(error)}
+        source = imported.score
+    else:
+        if not score.strip():
+            return {"ok": False, "error": "empty score"}
+        if len(score.encode("utf-8")) > MAX_SCORE_BYTES:
+            return {"ok": False, "error": f"score is larger than "
+                                          f"{MAX_SCORE_BYTES // 1024} KB"}
+        source = score_model_mod.loads(score)
+
+    fitted, report = arrange_mod.arrange(source, target)
+
+    out_meta = tracker_mod.Metadata()
+    out_meta.bpm, out_meta.lpb = fitted.bpm, fitted.lpb
+    out_meta.title = fitted.title
+    answer = {
+        "ok": True,
+        "target": target,
+        "score": tracker_mod.dumps(score_model_mod.to_events(fitted),
+                                   out_meta),
+        "report": report.to_json(),
+        "lines": report.lines(),
+    }
+    if imported is not None:
+        answer["imported"] = imported.lines()
+    return answer
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "chipgen-studio"
 
@@ -220,7 +289,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?", 1)[0]
-        if path != "/api/render":
+        if path not in ("/api/render", "/api/arrange"):
             return self._error(404, f"no route {path}")
         try:
             length = int(self.headers.get("Content-Length") or 0)
@@ -234,7 +303,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._error(400, f"body is not JSON: {error}")
 
         try:
-            return self._send(200, render_score(payload))
+            handler = (arrange_score if path == "/api/arrange"
+                       else render_score)
+            return self._send(200, handler(payload))
         except Exception as error:
             # A tracker error is the normal way to be wrong here — a typo
             # in a score — so it comes back as a message the interface can

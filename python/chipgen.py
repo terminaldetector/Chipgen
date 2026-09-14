@@ -175,6 +175,14 @@ def to_events(source, ticks_per_second: float = None):
     if kind == "json":
         data = json.loads(source) if isinstance(source, str) else list(source)
         if isinstance(data, dict):
+            if "voices" in data:
+                # A Score, not an event list — the shape the NES half of
+                # the corpus is stored in. Without this branch all 74 of
+                # those files rendered to 1 event and 0.00 seconds, and
+                # said "wrote" on the way out.
+                import score_model as score_model_mod
+                score = score_model_mod.from_json(data)
+                return score_model_mod.to_events(score), [], None
             # tolerate {"events": [...]} — a shape models produce constantly
             data = data.get("events", data.get("pattern", []))
         events, warnings = events_mod.parse(data)
@@ -286,6 +294,11 @@ def _it_message(metadata, tag) -> str:
 def vocabulary() -> dict:
     """Every event type, field, default and range."""
     return events_mod.describe_vocabulary()
+
+
+def _arrange_targets() -> dict:
+    import arrange
+    return arrange.targets()
 
 
 def _opl2_fields():
@@ -454,6 +467,33 @@ def info() -> dict:
                            "percussion voices need the voices actually "
                            "emulated; use the dac kit for drums.",
         },
+        # Fitting music onto a chip, as opposed to checking an
+        # arrangement that already fits. `arrangement_checks` below is
+        # the second thing; this is the first.
+        "rearrangement": {
+            "what": "arrange.py fits a score from anywhere — a .trk, a "
+                    "transcribed register log, a Score JSON, a MIDI file "
+                    "— onto a target chip and reports every compromise: "
+                    "`--arrange-for RP2A03`, or `--arrangements` for what "
+                    "each target holds",
+            "targets": {name: f"{target['melodic_voices']} melodic voices"
+                              + (f" + {len(target['percussion'])} percussion"
+                                 if target["percussion"] else "")
+                        for name, target in _arrange_targets().items()},
+            "never_clamps": "a note out of range is transposed by whole "
+                            "octaves, never clamped: below the NES pulse "
+                            "floor the 11-bit timer clamps and the note "
+                            "sounds 888 cents SHARP rather than low",
+            "velocity_domains": "the YM2612, OPL2 and NES read 1-127 as a "
+                                "fader; the SN76489 reads 0-15 as an "
+                                "attenuator where 0 is loudest and a step "
+                                "is -2 dB. Crossing between them is "
+                                "converted through dB — copying the "
+                                "number inverts the dynamics",
+            "reports": "dropped voices, octave moves, folded notes, "
+                       "flattened chords and converted velocities are all "
+                       "named, per voice",
+        },
         "arrangement_checks": {
             "crowding": "three or more FM voices whose median pitches fall "
                         "inside one octave are reported: six is the whole "
@@ -565,6 +605,15 @@ def info() -> dict:
             "tracker": "compact text grid; see python/tracker.py docstring",
             "json": "array of event objects; see events",
             "events": "python objects from events.py",
+            "score_json": "a dict of voices and drums — notes rather than "
+                          "events, which is how the NES half of the corpus "
+                          "is stored",
+            "midi": "a Standard MIDI File (.mid). It holds PARTS, not "
+                    "channels, so it has to be fitted to a chip before it "
+                    "can be played — the CLI does that and says which chip "
+                    "it picked. This is the join with every tool that turns "
+                    "a recording into notes; nothing in this project reads "
+                    "audio",
         },
         "instrument_import": {
             "tool": "python/vgm_import.py",
@@ -701,6 +750,14 @@ def main(argv):
                              "carry its own copy of any of them. "
                              "`python3 python/studio.py --section X` for "
                              "one part of it")
+    parser.add_argument("--arrange-for", metavar="CHIP", dest="arrange_for",
+                        help="fit the score onto another chip before "
+                             "rendering, and print what that cost "
+                             "(RP2A03, YM2612, YM3812). `--arrangements` "
+                             "lists what each one can hold")
+    parser.add_argument("--arrangements", action="store_true",
+                        help="list the arrangement targets and every "
+                             "channel each one has, as JSON")
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
@@ -761,6 +818,11 @@ def main(argv):
             print(prompts_mod.starter(args.chip_target))
         return 0
 
+    if args.arrangements:
+        import arrange as arrange_mod
+        print(json.dumps(arrange_mod.targets(), indent=1))
+        return 0
+
     if args.studio:
         import studio as studio_mod
         print(json.dumps(studio_mod.manifest(), indent=1,
@@ -773,12 +835,49 @@ def main(argv):
         args.vgm = args.vgm or "output/chipgen_demo.vgm"
     elif args.source == "-":
         source = sys.stdin.read()
+    elif args.source and args.source.endswith((".mid", ".midi")):
+        # MIDI is bytes, not text, and it is the join between this engine
+        # and every tool that turns a recording into notes. A MIDI file
+        # holds PARTS, not channels, so it cannot be played until it has
+        # been fitted to a chip — which is why this sets a default target
+        # rather than rendering silence.
+        import midi_import
+        imported = midi_import.load(args.source)
+        print(imported)
+        print()
+        source = imported.score
+        if not args.arrange_for:
+            args.arrange_for = "YM2612"
+            print("no --arrange-for given: fitting onto YM2612, this "
+                  "engine's default chip. `--arrangements` lists the "
+                  "others.\n")
     elif args.source:
         with open(args.source, encoding="utf-8") as fh:
             source = fh.read()
     else:
         parser.error("give a score file, or --demo, or --info")
         return 2
+
+    if args.arrange_for:
+        import arrange as arrange_mod
+        import score_model as score_model_mod
+
+        score = (source if hasattr(source, "voices")
+                 else score_model_mod.loads(source, title=args.title))
+        fitted, report = arrange_mod.arrange(score, args.arrange_for)
+        print(report)
+        print()
+        # Back to text rather than straight to events, so the arrangement
+        # is a thing you can read, edit and re-render — an arranger whose
+        # output only exists inside one process is not reviewable.
+        out_meta = tracker_mod.Metadata()
+        out_meta.bpm, out_meta.lpb = fitted.bpm, fitted.lpb
+        out_meta.title = fitted.title
+        source = tracker_mod.dumps(score_model_mod.to_events(fitted),
+                                   out_meta)
+        if args.tracker:
+            with open(args.tracker, "w", encoding="utf-8") as handle:
+                handle.write(source)
 
     if not (args.wav or args.vgm or args.tracker or args.it):
         args.wav = "output/chipgen.wav"

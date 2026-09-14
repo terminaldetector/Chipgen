@@ -687,10 +687,49 @@ python/tracker.py       the notation, with its grammar in the docstring
 python/events.py        the event vocabulary
 python/instruments.py   the FM patch bank
 python/vgm_import.py    pull instruments out of any Genesis VGM
+python/arrange.py       fit a score onto a different chip, and report the cost
+python/midi_import.py   read a .mid — the join with every tool outside this one
 python/calibrate_bank.py  re-level the bank after adding a patch
 core/                   the C chip emulation (Nuked-OPN2 + Sega PSG)
 README.md               how and why the whole thing works
 ```
+
+## Putting a score on a different chip
+
+A score written for one chip does not fit another: the Genesis has ten
+voices, the NES three and a half, and a note under the NES pulse floor
+does not go quiet — the 11-bit timer clamps and it sounds 888 cents
+**sharp**. So this does not clamp anything. It moves a part by whole
+octaves, converts velocities between a fader (1-127, higher is louder)
+and an attenuator (0-15, 0 is loudest, -2 dB a step), and names every
+voice it had to drop.
+
+```bash
+python3 python/chipgen.py song.trk --arrange-for RP2A03 -o nes.wav
+python3 python/chipgen.py --arrangements   # what each target can hold
+```
+
+Read the report before you trust the file. `4 of 8 voices placed` is the
+useful half of the answer.
+
+One thing it is not: a way to get notes out of audio. Both transcribers
+read **register logs**, where the notes already exist. Turning a
+recording into notes is polyphonic transcription, which this project
+does not do.
+
+What it does instead is accept the answer from whatever did. Every
+transcriber, DAW and notation program writes MIDI, so the chain is
+whole — `recording -> some other tool -> .mid -> here`:
+
+```bash
+python3 python/chipgen.py song.mid --arrange-for YM2612 --vgm song.vgm
+```
+
+A MIDI file holds **parts**, not channels, so it cannot be played until
+it has been fitted to a chip; the CLI does that and says which chip it
+picked. Track names are used: a track called `Bass` is placed as one,
+which matters because the role classifier declines to judge a part with
+only a few notes and the name is then all there is.
 
 ## Two knobs worth knowing
 

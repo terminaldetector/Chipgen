@@ -107,7 +107,11 @@ def test_archive_is_lean_and_reproducible():
         # scores started shipping — the archive had an examples directory
         # with no scores in it, and a README naming five files that were
         # not there. All eight of those files cost 11.8 KB compressed.
-        assert size < 500 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # and to 540 KB for the arrangement layer: arrange.py, the
+        # Score->events inverse, and the tracker's missing NES dump half.
+        # Verified as source rather than data — the ten largest entries
+        # are all .py or .md, the biggest being tracker.py at 17.3 KB.
+        assert size < 540 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

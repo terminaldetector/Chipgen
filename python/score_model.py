@@ -63,6 +63,18 @@ def _voice_of(event):
         return f"psg{event.channel}"
     if isinstance(event, E.OPLNoteOn):
         return f"opl{event.channel}"
+    # The NES names its voices rather than numbering them, and so does
+    # the NES corpus. Without this a score written for the NES could be
+    # emitted but never read back — the asymmetry went unnoticed because
+    # nes_transcribe.py builds its Scores directly, never through here.
+    if isinstance(event, E.NESNoteOn):
+        return event.voice
+    if isinstance(event, E.NESNoiseOn):
+        return "noise"
+    # The SN76489's noise, same gap as the NES's: a noise track written
+    # out came back as nothing at all on the way in.
+    if isinstance(event, E.PSGNoiseOn):
+        return "noise"
     return None
 
 
@@ -74,6 +86,12 @@ def _voice_of_off(event):
         return f"psg{event.channel}"
     if isinstance(event, E.OPLNoteOff):
         return f"opl{event.channel}"
+    if isinstance(event, E.NESNoteOff):
+        return event.voice
+    if isinstance(event, E.NESNoiseOff):
+        return "noise"
+    if isinstance(event, E.PSGNoiseOff):
+        return "noise"
     return None
 
 
@@ -103,7 +121,7 @@ def from_events(events, meta, title: str = "", path: str = "") -> Score:
             break
         row = tick // ticks_per_row
 
-        if isinstance(event, E.DACSample):
+        if isinstance(event, (E.DACSample, E.NESSample)):
             drums.append(row)
             continue
 
@@ -119,7 +137,8 @@ def from_events(events, meta, title: str = "", path: str = "") -> Score:
         # one channel plays one note, so the previous one is over whether
         # or not the score bothered to say so.
         close(voice, row)
-        pitch = event.octave * 12 + events_mod.NOTE_NAMES.index(event.note)
+        pitch = (getattr(event, "octave", 0) * 12
+                 + events_mod.NOTE_NAMES.index(getattr(event, "note", "C")))
         velocity = getattr(event, "velocity", None)
         if velocity is None:
             velocity = getattr(event, "volume", 127)
@@ -134,6 +153,177 @@ def from_events(events, meta, title: str = "", path: str = "") -> Score:
                  drums=drums, bar=bar, lpb=meta.lpb, bpm=meta.bpm,
                  rows=final_row, title=title or getattr(meta, "title", ""),
                  path=path)
+
+
+#: Score voice name -> the NES voice the chip and the effect engine use.
+#: A Score names NES voices the way the transcriber found them
+#: ("pulse1"), the tracker numbers them ("nes0"); both arrive here.
+_NES_VOICES = {"nes0": "pulse1", "nes1": "pulse2", "nes2": "triangle",
+               "pulse1": "pulse1", "pulse2": "pulse2", "triangle": "triangle"}
+
+
+def _noise_period(pitch: int) -> int:
+    """A Score pitch -> the NES noise channel's 0-15 period index.
+
+    The noise channel has no note, it has a timer index into a fixed
+    table, so this picks the index whose shift rate is closest to the
+    pitch the Score stored. It is a one-way trip: `nes_transcribe.py`
+    derives that pitch from the raw nibble rather than the table (its own
+    docstring calls the noise track unreliable), so a noise voice does
+    not come back through here at the pitch it went out at. The rows and
+    the velocities do, which is what percussion is carrying.
+    """
+    import nes_apu
+    frequency = 440.0 * (2.0 ** ((pitch - 57) / 12.0))
+    if frequency <= 0:
+        return 4
+    return min(range(16),
+               key=lambda i: abs(nes_apu.NTSC_CPU_CLOCK
+                                 / nes_apu.NOISE_PERIODS_NTSC[i] - frequency))
+
+
+def is_nes(score: Score) -> bool:
+    """Whether a score's voices name the NES.
+
+    `noise` is a channel on the SN76489 AND on the NES, so the name alone
+    cannot say which chip a voice belongs to. The company it keeps can: a
+    score holding `pulse1` or `nes0` is an NES score.
+    """
+    return any(voice.lower() in _NES_VOICES for voice in score.voices)
+
+
+def _note_on(voice: str, note: Note, nes: bool = True):
+    E = events_mod
+    name = E.NOTE_NAMES[note.pitch % 12]
+    octave = note.pitch // 12
+    if voice.startswith("fm"):
+        return E.FMNoteOn(channel=int(voice[2:]), note=name, octave=octave,
+                          velocity=note.velocity)
+    if voice.startswith("opl"):
+        return E.OPLNoteOn(channel=int(voice[3:]), note=name, octave=octave,
+                           velocity=note.velocity)
+    if voice.startswith("psg"):
+        # The PSG's field is an attenuator, not a fader: the Score stores
+        # whatever the source wrote, and 0 is loudest there.
+        return E.PSGToneOn(channel=int(voice[3:]), note=name, octave=octave,
+                           volume=note.velocity)
+    if voice in _NES_VOICES:
+        return E.NESNoteOn(voice=_NES_VOICES[voice], note=name,
+                           octave=octave, velocity=note.velocity)
+    if voice == "nes3" or (voice == "noise" and nes):
+        return E.NESNoiseOn(period=_noise_period(note.pitch),
+                            velocity=note.velocity)
+    if voice in ("noise", "psgnoise"):
+        # The SN76489's noise has three fixed rates and no notes, so
+        # there is no pitch to carry across — white noise at the middle
+        # rate, with the velocity doing the work. `arrange.py` reports
+        # that the pitch does not survive rather than inventing one.
+        return E.PSGNoiseOn(white=True, rate=1, volume=note.velocity)
+    return None
+
+
+def _note_off(voice: str, nes: bool = True):
+    E = events_mod
+    if voice.startswith("fm"):
+        return E.FMNoteOff(channel=int(voice[2:]))
+    if voice.startswith("opl"):
+        return E.OPLNoteOff(channel=int(voice[3:]))
+    if voice.startswith("psg"):
+        return E.PSGToneOff(channel=int(voice[3:]))
+    if voice in _NES_VOICES:
+        return E.NESNoteOff(voice=_NES_VOICES[voice])
+    if voice == "nes3" or (voice == "noise" and nes):
+        return E.NESNoiseOff()
+    if voice in ("noise", "psgnoise"):
+        return E.PSGNoiseOff()
+    return None
+
+
+def to_events(score: Score, ticks_per_row: int = None, drum: str = "kick",
+              drum_voice: str = None):
+    """A Score back to events — the inverse of `from_events`.
+
+    Music arrives from outside as a Score (a transcription, an
+    arrangement, a generator); events are the only thing this engine
+    renders, so something has to close the loop.
+
+    Two things do not survive the round trip, and both are limits of the
+    Score model rather than of this function. A drum hit is stored as a
+    bare row with no sample name, so every hit comes back as `drum`. And
+    per-note effects were never in a Score at all.
+
+    `drum_voice` is "dac" or "nes"; by default a score holding NES voices
+    gets the DMC and everything else the Genesis DAC.
+    """
+    E = events_mod
+    if ticks_per_row is None:
+        # The row grid has to match the score's own tempo, or every row
+        # index is rescaled on the way back in and the music comes out
+        # at a different length. Measured: emitting at a flat 24 ticks a
+        # row and reading back at the score's 19 stretched every note by
+        # 26%.
+        meta = tracker_mod.Metadata()
+        meta.bpm, meta.lpb = score.bpm, score.lpb
+        ticks_per_row = meta.ticks_per_row()
+    nes = is_nes(score)
+    rows = {}
+    unassigned = []
+    for voice, notes in score.voices.items():
+        ordered = sorted(notes, key=lambda n: n.row)
+        for index, note in enumerate(ordered):
+            on = _note_on(voice, note, nes)
+            if on is None:
+                unassigned.append(voice)
+                break
+            rows.setdefault(note.row, []).append(on)
+            end = note.row + max(1, note.length)
+            # One channel holds one note: a key-off placed after the next
+            # note has already begun would silence that next note instead
+            # of this one, so an overlap ends where the next note starts.
+            if index + 1 < len(ordered):
+                end = min(end, ordered[index + 1].row)
+            off = _note_off(voice, nes)
+            if off is not None and end > note.row:
+                rows.setdefault(end, []).append(off)
+
+    if drum_voice is None:
+        drum_voice = "nes" if nes else "dac"
+    for row in score.drums:
+        rows.setdefault(row, []).append(
+            E.NESSample(name=drum) if drum_voice == "nes"
+            else E.DACSample(name=drum))
+
+    if unassigned:
+        # Silence is never the right answer to this. A Score read from
+        # MIDI has PARTS — "bass", "lead" — not channels, and turning one
+        # into events without assigning it to a chip first produced an
+        # empty event list, a successful render and 0.00 seconds of audio.
+        raise ValueError(
+            f"{', '.join(sorted(set(unassigned)))} "
+            f"{'is' if len(set(unassigned)) == 1 else 'are'} not "
+            f"channel{'' if len(set(unassigned)) == 1 else 's'} on any chip "
+            f"this engine drives. A score has to be fitted to a target "
+            f"before it can be played: arrange.arrange(score, 'YM2612'), "
+            f"or `--arrange-for YM2612` on the command line.")
+
+    out = []
+    previous = 0
+    for row in sorted(rows):
+        gap = row - previous
+        if gap > 0:
+            out.append(E.Wait(ticks=gap * ticks_per_row))
+        previous = row
+        # Note-offs before note-ons on the same row: a channel that is
+        # handed a new note on the row the old one ends must not have the
+        # new one silenced by the old one's off.
+        events_here = rows[row]
+        offs = (E.FMNoteOff, E.OPLNoteOff, E.PSGToneOff, E.PSGNoiseOff,
+                E.NESNoteOff, E.NESNoiseOff)
+        out.extend(e for e in events_here if isinstance(e, offs))
+        out.extend(e for e in events_here if not isinstance(e, offs))
+    out.append(E.Wait(ticks=ticks_per_row))
+    out.append(E.End())
+    return out
 
 
 def to_json(score: Score) -> dict:
@@ -159,8 +349,30 @@ def from_json(data: dict, path: str = "") -> Score:
         path=path)
 
 
+def loads(text: str, title: str = "", path: str = "") -> Score:
+    """Parse a score from text — tracker notation or Score JSON.
+
+    The text twin of `load`. Going through the event list instead loses
+    the title, because a JSON score carries one and an event list has
+    nowhere to put it.
+    """
+    stripped = text.lstrip()
+    if stripped.startswith("{"):
+        import json
+        data = json.loads(text)
+        if "voices" in data:
+            score = from_json(data, path=path)
+            return score._replace(title=title or score.title)
+    events, meta = tracker_mod.loads(text)
+    return from_events(events, meta, path=path,
+                       title=title or getattr(meta, "title", ""))
+
+
 def load(path: str) -> Score:
-    """Read a score. `.trk` is parsed as tracker text, `.json` as data."""
+    """Read a score. `.trk` is tracker text, `.json` data, `.mid` MIDI."""
+    if path.endswith((".mid", ".midi")):
+        import midi_import
+        return midi_import.load(path).score
     if path.endswith(".json"):
         import json
         with open(path, encoding="utf-8") as handle:

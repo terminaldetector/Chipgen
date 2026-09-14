@@ -386,3 +386,49 @@ def test_the_cli_prints_a_briefing_without_an_interface():
             f"{out[:200]!r}")
         if "--chip-target" in argv:
             assert "nes0" in out, "the targeted briefing names no columns"
+
+
+def test_the_contract_says_what_a_rearrangement_costs():
+    """An interface offering "play this on an NES" has to be able to say
+    what that costs before the user clicks it."""
+    import arrange
+    import studio
+
+    section = studio.manifest()["arrangement"]
+    assert set(section["targets"]) == set(arrange.TARGETS)
+    assert set(section["dynamics"]) == {arrange.FADER, arrange.ATTENUATOR,
+                                        arrange.SILENT}
+    assert section["promises"]
+    for name, target in section["targets"].items():
+        assert target["channels"], name
+        for channel in target["channels"]:
+            assert channel["dynamics"] in section["dynamics"], channel
+
+
+def test_the_arrange_route_returns_the_keys_the_page_reads():
+    """app.js reads these by name. A rename in Python that nothing
+    asserts breaks the page silently — the request succeeds, the report
+    renders as `undefined`, and the only symptom is a blank panel."""
+    import os
+    import re
+
+    import serve
+    import support
+
+    with open(os.path.join(support.ROOT, "studio", "app.js"),
+              encoding="utf-8") as handle:
+        js = handle.read()
+
+    answer = serve.arrange_score({
+        "score": "bpm 150\nlpb 4\ncols fm0\nC-4\n...\n...\n...\nend\n",
+        "target": "RP2A03"})
+    assert answer["ok"], answer
+
+    for key in ("ok", "target", "score", "report", "lines"):
+        assert key in answer, key
+        assert f"data.{key}" in js or f"'{key}'" in js, \
+            f"the page never reads {key!r} — either it is dead weight in " \
+            f"the response or the page reads something else"
+    for key in re.findall(r"data\.report\.(\w+)", js):
+        assert key in answer["report"], \
+            f"app.js reads report.{key}, which the engine does not send"

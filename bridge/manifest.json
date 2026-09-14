@@ -154,6 +154,17 @@
     "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute sine, 3 pulse-sine. Rectifying doubles the frequency, so waves 2 and 3 put their loudest partial on the SECOND harmonic — measured at A-4 the fundamental is 90 dB down and the note sounds an octave up. Changing waveform mid-phrase changes octave with it.",
     "rhythm_mode": "NOT implemented. Register 0xBD's five percussion voices need the voices actually emulated; use the dac kit for drums."
   },
+  "rearrangement": {
+    "what": "arrange.py fits a score from anywhere — a .trk, a transcribed register log, a Score JSON, a MIDI file — onto a target chip and reports every compromise: `--arrange-for RP2A03`, or `--arrangements` for what each target holds",
+    "targets": {
+      "RP2A03": "3 melodic voices + 2 percussion",
+      "YM2612": "8 melodic voices + 2 percussion",
+      "YM3812": "9 melodic voices"
+    },
+    "never_clamps": "a note out of range is transposed by whole octaves, never clamped: below the NES pulse floor the 11-bit timer clamps and the note sounds 888 cents SHARP rather than low",
+    "velocity_domains": "the YM2612, OPL2 and NES read 1-127 as a fader; the SN76489 reads 0-15 as an attenuator where 0 is loudest and a step is -2 dB. Crossing between them is converted through dB — copying the number inverts the dynamics",
+    "reports": "dropped voices, octave moves, folded notes, flattened chords and converted velocities are all named, per voice"
+  },
   "arrangement_checks": {
     "crowding": "three or more FM voices whose median pitches fall inside one octave are reported: six is the whole chip, so that is most of the arrangement in one band, reading as a single thick sound. Measured from where the parts sit, with no reference to patch names — the bass/lead register checks look the instrument up by name and so see nothing on an imported bank.",
     "note": "sanity.check() declines to judge anything shorter than 5 seconds; a few rows is not an arrangement"
@@ -240,7 +251,9 @@
   "inputs": {
     "tracker": "compact text grid; see python/tracker.py docstring",
     "json": "array of event objects; see events",
-    "events": "python objects from events.py"
+    "events": "python objects from events.py",
+    "score_json": "a dict of voices and drums — notes rather than events, which is how the NES half of the corpus is stored",
+    "midi": "a Standard MIDI File (.mid). It holds PARTS, not channels, so it has to be fitted to a chip before it can be played — the CLI does that and says which chip it picked. This is the join with every tool that turns a recording into notes; nothing in this project reads audio"
   },
   "instrument_import": {
     "tool": "python/vgm_import.py",

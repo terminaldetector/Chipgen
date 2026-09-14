@@ -292,6 +292,37 @@ def _prompts() -> dict:
     return prompts.vocabulary()
 
 
+def arrangement() -> dict:
+    """What a rearrangement onto another chip can and cannot carry.
+
+    An interface offering "play this on an NES" has to be able to say
+    what that costs before the user clicks it: three melodic voices, a
+    triangle with no volume register, a hard floor at A-1. The numbers
+    come from `arrange.py` so the interface never keeps its own copy of
+    a channel count that a new chip would make wrong.
+    """
+    import arrange
+
+    return {
+        "targets": arrange.targets(),
+        "dynamics": {
+            "fader": "1-127, higher is louder — YM2612, OPL2, NES",
+            "attenuator": "0-15, 0 is loudest, -2 dB a step — SN76489",
+            "none": "no volume register exists on this channel at all",
+        },
+        "promises": [
+            "a note out of range is transposed by whole octaves, never "
+            "clamped: below the NES pulse floor the timer clamps and the "
+            "note sounds 888 cents SHARP rather than low",
+            "a velocity crossing between a fader and an attenuator is "
+            "converted through dB, because copying the number inverts "
+            "the dynamics",
+            "a dropped voice is named with the reason it went",
+            "a score already written for the target comes back unchanged",
+        ],
+    }
+
+
 def manifest() -> dict:
     """The whole contract, as one document."""
     import chipgen
@@ -310,6 +341,7 @@ def manifest() -> dict:
         "samples": engine["dac_samples"],
         "effects": engine["effect_column"],
         "prompts": _prompts(),
+        "arrangement": arrangement(),
         "health": health(),
         # The engine's own reference material, passed through so an
         # interface can surface it without restating it.

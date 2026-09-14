@@ -141,6 +141,47 @@
     <div class="bus" id="voice-list"></div>
   </section>
 
+  <section id="tab-arrange" role="tabpanel" hidden>
+    <h2>Rearrange for another chip</h2>
+    <p class="lede">
+      Takes the score from the Compose tab and fits it onto a different
+      chip. Every compromise it has to make is reported — a part that had
+      to move an octave, a velocity that crossed between a fader and an
+      attenuator, a voice there was no channel for. An arrangement that
+      lost the counter-melody and did not say so would be worse than one
+      that refused.
+    </p>
+    <p class="lede">
+      A MIDI file works as the source too, and that is the join with
+      everything outside this project: nothing here turns a recording
+      into notes, but every tool that does writes MIDI.
+    </p>
+    <div class="row" style="align-items:flex-end">
+      <label class="field" style="flex:1 1 240px;margin:0">
+        <span>Target chip</span>
+        <select id="arrange-target"></select>
+      </label>
+      <label class="field" style="flex:0 1 220px;margin:0">
+        <span>Or a MIDI file</span>
+        <input type="file" id="arrange-midi" accept=".mid,.midi,audio/midi">
+      </label>
+      <button class="action primary" id="arrange">Arrange</button>
+      <button class="action" id="arrange-use" disabled>Use as score</button>
+      <button class="action" id="arrange-copy" disabled>Copy</button>
+    </div>
+    <div id="arrange-status"></div>
+    <div class="grid cols-2">
+      <div id="arrange-channels"></div>
+      <div id="arrange-notes"></div>
+    </div>
+    <div id="arrange-report"></div>
+    <label class="field" style="margin-top:12px">
+      <span>Arranged score</span>
+      <textarea id="arrange-out" rows="16" spellcheck="false"
+                readonly></textarea>
+    </label>
+  </section>
+
   <section id="tab-instruments" role="tabpanel" hidden>
     <h2>Instruments</h2>
     <div class="scroll"><table id="instrument-table"></table></div>
