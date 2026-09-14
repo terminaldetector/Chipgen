@@ -17,3 +17,8 @@ dist/
 # entries. bank_audition.json IS committed: that one is the built-in
 # bank's shipped measurements, which are the same for everybody.
 python/imported_audition.json
+
+# Stamped by tests/run_tests.py on a full run so studio.health() can
+# report the count without re-running the suite. Per-run, so tracking it
+# would make every test run a diff. Absent is reported honestly as None.
+tests/last_run.json

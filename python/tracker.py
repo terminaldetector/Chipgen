@@ -910,11 +910,27 @@ def _opl_operator(args, events, lineno):
                               field=resolved, value=value))
 
 
+def valid_columns() -> tuple:
+    """Every column name a score may use, in report order.
+
+    Public because anything building a score from outside — an interface,
+    a generator — needs the real list rather than its own copy of it.
+    A copy is right on the day it is written and wrong the first time a
+    chip is added, with nothing to say so.
+    """
+    return (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
+            + ("noise", "dac"))
+
+
+def column_aliases() -> dict:
+    """Alias -> canonical column, for an interface that accepts either."""
+    return dict(_COLUMN_ALIASES)
+
+
 def _column(name: str, lineno: int) -> str:
     key = name.lower()
     resolved = _COLUMN_ALIASES.get(key, key)
-    valid = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
-             + ("noise", "dac"))
+    valid = valid_columns()
     if resolved not in valid:
         raise TrackerError(
             f"line {lineno}: unknown column {name!r}. Valid: "

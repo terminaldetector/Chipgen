@@ -26,7 +26,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio"]
 
 
 def _collect(pattern=""):
@@ -81,11 +81,38 @@ def main(argv):
         print(f"skipped: {name}")
 
     total = len(cases)
-    print(f"\n{total - len(failures) - len(skipped)} passed, "
+    passed = total - len(failures) - len(skipped)
+    print(f"\n{passed} passed, "
           f"{len(failures)} failed"
           + (f", {len(skipped)} skipped" if skipped else "")
           + f"  ({total} total)")
+
+    # Stamp the result so studio.health() can report it. An interface
+    # asking "are you healthy" must not trigger two minutes of rendering,
+    # and shelling out to this runner to answer is exactly that.
+    # Only a full run is stamped: a filtered one says nothing about the
+    # suite, and stamping it would report 6/6 OK on a broken tree.
+    if not pattern:
+        _stamp(passed, len(failures), len(skipped), total)
     return 1 if failures else 0
+
+
+def _stamp(passed, failed, skipped, total):
+    import datetime
+    import json
+
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "last_run.json")
+    try:
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump({"passed": passed, "failed": failed,
+                       "skipped": skipped, "total": total,
+                       "when": datetime.datetime.now(
+                           datetime.timezone.utc).isoformat(
+                               timespec="seconds")},
+                      handle, indent=1)
+    except OSError:
+        pass                     # a read-only checkout is not a failure
 
 
 if __name__ == "__main__":

@@ -1,0 +1,131 @@
+{
+  "note": "Authored reference prompts, not measurements. The engine passes these through unchanged (python/studio.py) and has no opinion about what makes a good prompt — adding one should not mean touching Python. Reconstructed from the AI Studio interface; `chip` and `voices` are checked against the engine by tests/test_studio.py, so a preset naming a column that does not exist fails the suite.",
+  "presets": [
+    {
+      "id": "castle_in_the_clouds",
+      "title": "Castle in the Clouds",
+      "style": "Gothic NES",
+      "chip": "RP2A03",
+      "summary": "Castlevania-style dual-pulse counterpoint over a non-linear triangle bass, with short-noise metallic hats.",
+      "prompt": "Gothic 8-bit castle theme with melodic pulse leads, solid walking triangle bassline, metallic noise hi-hats, and rhythmic DMC drums. Sense of mystery and royal intrigue.",
+      "bpm": 144,
+      "key": "D Minor",
+      "genre": "Gothic Action",
+      "bars": 4,
+      "voices": ["nes0", "nes1", "nes2", "nes3", "nes4"],
+      "hints": [
+        "The triangle is the bass — it reaches A-0 (27.5 Hz) where the pulses stop at A-1, and it has no volume register to duck.",
+        "Metallic hats come from `4m:70` on nes3: the short 93-step register is the only pitched noise this chip has.",
+        "Counterpoint across two pulses wants different duties — but not 1 and 3, which are the same waveform inverted."
+      ]
+    },
+    {
+      "id": "adlib_dos_odyssey",
+      "title": "AdLib DOS Odyssey",
+      "style": "PC / MS-DOS FM",
+      "chip": "YM3812",
+      "summary": "Six-channel OPL2 piece with tremolo and vibrato depth, saw leads and pads — the Sound Blaster sound.",
+      "prompt": "Early-nineties PC adventure theme on an AdLib card: saw lead over a warm pad, organ counter-line, bell accents, and a square doubling the melody an octave up. Confident, exploratory, a little wistful.",
+      "bpm": 135,
+      "key": "A Minor",
+      "genre": "DOS Adventure",
+      "bars": 8,
+      "voices": ["opl0", "opl1", "opl2", "opl3", "opl4", "opl5"],
+      "hints": [
+        "The OPL2's four waveforms are what it has over the YM2612 — but waves 2 and 3 rectify, so they sound an octave above where they are written.",
+        "One algorithm bit, not eight: `alg opl0 0` is FM, `alg opl0 1` is additive. On an additive patch attenuating one operator barely changes the level.",
+        "Rhythm mode (register 0xBD) is not implemented — use the dac column for drums."
+      ]
+    },
+    {
+      "id": "neon_transit",
+      "title": "Neon Transit",
+      "style": "Cyberpunk FM",
+      "chip": "YM2612",
+      "summary": "High-octane Mega Drive industrial FM with stereo chorus panning and a rapid sixteenth bassline.",
+      "prompt": "Dark synthwave / cyberpunk chase with punchy FM resonant slap bass on fm0, detuned stereo lead, metallic stabs, and a driving sixteenth-note motor. Rain-slick, forward, relentless.",
+      "bpm": 150,
+      "key": "F Minor",
+      "genre": "Industrial FM",
+      "bars": 8,
+      "voices": ["fm0", "fm1", "fm2", "fm3", "psg0", "dac"],
+      "hints": [
+        "Six FM voices and a drum track are mutually exclusive — the DAC takes channel 6 outright.",
+        "Keep the drums under the FM with `vol dac 55`: mastering normalises peak and a drum is nearly all peak.",
+        "Three voices inside one octave is one thick sound, not three parts. Bass down, lead up."
+      ]
+    },
+    {
+      "id": "gtr_attack_runner",
+      "title": "GTR Attack / Runner",
+      "style": "Action FM",
+      "chip": "YM2612",
+      "summary": "Reference-driven study: aggressive guitar-like attack, role rotation between FM voices, and a modulation into a new key without breaking the motor.",
+      "prompt": "Give me the attack of an aggressive FM guitar, the forward motion of a high-speed runner stage, the density of sixteenth-note action-game writing, then move the lead to another voice and land in a new key without breaking the mechanical continuity.",
+      "bpm": 150,
+      "key": "E Minor to G Minor",
+      "genre": "High-speed Action",
+      "bars": 8,
+      "voices": ["fm0", "fm1", "fm2", "fm3", "fm4", "dac"],
+      "hints": [
+        "A reference names two independent things: timbre and motion. One phrase should not be expected to encode every musical dimension.",
+        "Role is musical, channel is hardware. The audible lead can move FM1 to FM3 to FM4 while the motor stays continuous.",
+        "A section called BREAKDOWN is not one if its RMS barely moves — check with `--profile`."
+      ]
+    },
+    {
+      "id": "sunset_boulevard",
+      "title": "Sunset Boulevard",
+      "style": "Genesis Ballad",
+      "chip": "YM2612",
+      "summary": "Slow FM ballad leaning on electric piano and strings, with the PSG holding high sparkle.",
+      "prompt": "Warm late-eighties Mega Drive ballad: electric piano chords, a soft FM string pad underneath, a singing lead with slow vibrato, and PSG arpeggios high above. Unhurried, golden, a little sad.",
+      "bpm": 88,
+      "key": "B Flat Major",
+      "genre": "Ballad",
+      "bars": 8,
+      "voices": ["fm0", "fm1", "fm2", "psg0", "psg1"],
+      "hints": [
+        "Slow vibrato is `455` — 6 Hz at 40 cents, which is where the corpus median sits across 4,839 measured spans.",
+        "Sustain Level is inverted: SL 0 holds, SL 15 dies. A pad set to 15 'so it sustains' decays to silence.",
+        "PSG pitch resolution runs out above about C6 — let it do sparkle, not the tune."
+      ]
+    },
+    {
+      "id": "bell_tower",
+      "title": "Bell Tower",
+      "style": "Inharmonic FM",
+      "chip": "YM2612",
+      "summary": "Channel 3 special mode holding a fixed inharmonic cluster — the FM side's only route to bells and gongs.",
+      "prompt": "A slow procession under a great bell: struck metallic clusters ringing over a deep sustained bass, sparse and cavernous, each strike left to decay before the next.",
+      "bpm": 72,
+      "key": "C Minor",
+      "genre": "Atmospheric",
+      "bars": 8,
+      "voices": ["fm0", "fm2", "fm4", "dac"],
+      "hints": [
+        "`ch3 special` gives fm2's four operators separate pitches. This chip has no FM noise generator, so it is the only way to a fixed inharmonic cluster.",
+        "The supplementary register holds a BASE frequency, not a partial: `mul` multiplies it and the algorithm decides whether the operator is heard at all.",
+        "To hear the pitches as written, put the channel on algorithm 7 with every `mul` at 1."
+      ]
+    },
+    {
+      "id": "boss_approach",
+      "title": "Boss Approach",
+      "style": "NES Tension",
+      "chip": "RP2A03",
+      "summary": "Sweep-driven descent and hardware pitch bends over a relentless triangle pulse.",
+      "prompt": "Something enormous is coming: descending pulse sirens, a triangle bass hammering eighth notes without pause, white-noise crashes, and no melody to hold on to. Dread rather than excitement.",
+      "bpm": 160,
+      "key": "E Minor",
+      "genre": "Tension",
+      "bars": 4,
+      "voices": ["nes0", "nes1", "nes2", "nes3"],
+      "hints": [
+        "`nes sweep nes0 3 2 down` is the siren — but a downward sweep re-arms the mute that silences a pulse below about 110 Hz.",
+        "The pulses bottom out at A-1 (55 Hz) and past the floor the timer clamps, so a written C-1 sounds 888 cents SHARP rather than low.",
+        "`12:80` on nes3 is the long-register crash; `4m:70` is the short metallic one."
+      ]
+    }
+  ]
+}

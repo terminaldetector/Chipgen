@@ -538,6 +538,19 @@ def info() -> dict:
                 "role": "Sega PSG, register-level model",
                 "backend": backend["sn76489"],
             },
+            "YM3812": {
+                "channels": 9,
+                "role": "OPL2 — AdLib / Sound Blaster. 2-operator FM with "
+                        "four selectable waveforms, which the YM2612 has "
+                        "not got",
+                "backend": "pure-python",
+                "scoreable": True,
+                "notes": "one algorithm bit (FM or additive), not eight. "
+                         "Waves 2 and 3 rectify, so they sound an octave "
+                         "above waves 0 and 1 at the same written note — "
+                         "see the `live_opl2` section. Rhythm mode "
+                         "(register 0xBD) is not implemented.",
+            },
         },
         "runtime": {
             "python": sys.version.split()[0],
@@ -665,6 +678,14 @@ def main(argv):
                              "has no Marker events (default 4)")
     parser.add_argument("--info", action="store_true",
                         help="print capabilities as JSON and exit")
+    parser.add_argument("--studio", action="store_true",
+                        help="print the interface contract as JSON and "
+                             "exit — every fact a front end renders "
+                             "(channel bus, directive catalogue, preset "
+                             "library, health), so the interface does not "
+                             "carry its own copy of any of them. "
+                             "`python3 python/studio.py --section X` for "
+                             "one part of it")
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
@@ -713,6 +734,12 @@ def main(argv):
 
     if args.info:
         print(json.dumps(info(), indent=2))
+        return 0
+
+    if args.studio:
+        import studio as studio_mod
+        print(json.dumps(studio_mod.manifest(), indent=1,
+                         ensure_ascii=False))
         return 0
 
     if args.demo:
