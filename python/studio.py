@@ -273,6 +273,25 @@ def health() -> dict:
     }
 
 
+def _prompts() -> dict:
+    """The briefing, in the contract.
+
+    This is the detail that decides whether the two paths stay one
+    project. An interface sending a generation request needs a system
+    prompt; with no interface, someone pastes one from bridge/PROMPT.md
+    or prints it from the CLI. If the interface writes its own, the two
+    drift — it teaches a model one thing about the DAC taking channel 6
+    and the pasted prompt teaches it another, and the difference lands as
+    tracks that render and sound wrong.
+
+    So it ships in the contract, which means the static bundle carries it
+    too: an interface with no Python behind it can still brief a model
+    correctly, because the briefing came with the facts.
+    """
+    import prompts
+    return prompts.vocabulary()
+
+
 def manifest() -> dict:
     """The whole contract, as one document."""
     import chipgen
@@ -290,6 +309,7 @@ def manifest() -> dict:
         "instruments": engine["instruments"],
         "samples": engine["dac_samples"],
         "effects": engine["effect_column"],
+        "prompts": _prompts(),
         "health": health(),
         # The engine's own reference material, passed through so an
         # interface can surface it without restating it.

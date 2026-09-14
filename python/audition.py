@@ -424,7 +424,8 @@ def save_index(index: dict, path: str = IMPORTED_CACHE_PATH) -> str:
     return path
 
 
-def characteristics(refresh: bool = False, progress=None):
+def characteristics(refresh: bool = False, progress=None,
+                    index_path: str = None):
     """Summarised measurements for every patch currently loaded.
 
     Incremental, and that is the whole point. It used to be
@@ -441,9 +442,15 @@ def characteristics(refresh: bool = False, progress=None):
     MEASUREMENT rather than by filename practical on a real corpus:
     175 patches is minutes the first time and instant afterwards.
     """
+    # `index_path` exists so a caller can keep its own index instead of
+    # the shared one. A test especially: one that writes its fixtures
+    # into the shared file pollutes it for every later run, and then
+    # depends on runs that came before — which is how this function's own
+    # test became order-dependent.
+    path = index_path or IMPORTED_CACHE_PATH
     names = instruments_mod.names()
     builtin = {} if refresh else (load_cache() or {})
-    index = {} if refresh else load_index()
+    index = {} if refresh else load_index(path)
 
     out = {}
     missing = []
@@ -465,7 +472,7 @@ def characteristics(refresh: bool = False, progress=None):
                 progress(position, len(missing), name)
             index[key] = summarise(audition(name))
             out[name] = dict(index[key])
-        save_index(index)
+        save_index(index, path)
 
     return out
 

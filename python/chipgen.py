@@ -411,10 +411,11 @@ def info() -> dict:
                     "G-2 all render 0.0000 RMS. chipgen writes the negate "
                     "bit at init so the octave is audible, the same thing "
                     "real drivers do. A `down` sweep re-arms the mute.",
-            "the_triangle_has_no_volume": "not approximated, refused: its "
-                    "output measures bit-identical at velocity 8 and 127, "
-                    "so 7xy and Axy on nes2 raise an error. Pitch effects "
-                    "work on it.",
+            "the_triangle_has_no_volume": "it has no volume register at "
+                    "all, and that is not approximated — its output "
+                    "measures bit-identical at velocity 8 and at 127, so "
+                    "7xy and Axy on nes2 raise an error rather than doing "
+                    "nothing. Pitch effects work on it normally.",
             "duty_3_equals_duty_1": "75% is 25% inverted — measured "
                     "identical harmonics, differing only in phase. Two "
                     "pulse channels on 1 and 3 give one timbre twice.",
@@ -678,6 +679,20 @@ def main(argv):
                              "has no Marker events (default 4)")
     parser.add_argument("--info", action="store_true",
                         help="print capabilities as JSON and exit")
+    parser.add_argument("--prompt", action="store_true",
+                        help="print the briefing to give a model, and "
+                             "exit. `--prompt --chip-target RP2A03` "
+                             "targets one chip; add --describe TEXT for a "
+                             "full generation request. This is the same "
+                             "briefing the interface sends — one source, "
+                             "so the two cannot teach a model different "
+                             "things")
+    parser.add_argument("--chip-target", metavar="CHIP",
+                        help="which chip --prompt is for (YM2612, RP2A03, "
+                             "YM3812, SN76489)")
+    parser.add_argument("--describe", metavar="TEXT",
+                        help="with --prompt, assemble a full generation "
+                             "request around this description")
     parser.add_argument("--studio", action="store_true",
                         help="print the interface contract as JSON and "
                              "exit — every fact a front end renders "
@@ -734,6 +749,16 @@ def main(argv):
 
     if args.info:
         print(json.dumps(info(), indent=2))
+        return 0
+
+    if args.prompt:
+        import prompts as prompts_mod
+        if args.describe:
+            print(prompts_mod.compose({
+                "chip": args.chip_target, "prompt": args.describe,
+                "bpm": args.bpm, "style": args.title or ""}))
+        else:
+            print(prompts_mod.starter(args.chip_target))
         return 0
 
     if args.studio:

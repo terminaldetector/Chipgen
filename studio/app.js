@@ -132,6 +132,7 @@ function renderHeader() {
 
 const TABS = [
   ['compose', 'Compose'],
+  ['brief', 'Brief a model'],
   ['directives', 'Directives'],
   ['voices', 'Channel bus'],
   ['instruments', 'Instruments'],
@@ -340,6 +341,81 @@ function showProfile(target, profile) {
   target.appendChild(el('div', { class: 'scroll' }, [table]));
 }
 
+/* ---- brief ----------------------------------------------------------- */
+
+/* The briefing is assembled from manifest.prompts — not written here.
+ * An interface that composes its own system prompt teaches a model
+ * something different from what the CLI teaches it, and the difference
+ * shows up as tracks that render and sound wrong. So this joins the
+ * engine's own strings together and adds nothing of its own. */
+
+function briefInputs() {
+  return {
+    chip: $('brief-chip').value,
+    prompt: $('brief-text').value.trim(),
+    bpm: Number($('brief-bpm').value) || 150,
+    key: $('brief-key').value.trim(),
+    style: $('brief-style').value.trim(),
+    bars: Number($('brief-bars').value) || 8,
+  };
+}
+
+function buildBrief() {
+  const prompts = state.manifest.prompts || {};
+  const chips = prompts.chips || {};
+  const input = briefInputs();
+  const spec = chips[input.chip];
+  if (!spec) { $('brief-out').value = ''; return; }
+
+  const lines = [
+    `Write an original chiptune score for the ${input.chip} ` +
+    `(${spec.platform}) in chipgen's tracker notation.`,
+  ];
+  if (input.prompt) lines.push('', `What it should be: ${input.prompt}`);
+  lines.push('', 'Specification:', `- tempo: ${input.bpm} BPM`);
+  if (input.key) lines.push(`- key: ${input.key}`);
+  if (input.style) lines.push(`- style: ${input.style}`);
+  lines.push(`- length: ${input.bars} bars`,
+             `- columns: \`cols ${spec.columns}\``, '',
+             'Hardware that will bite you. Every one of these fails ' +
+             'SILENTLY —', 'the render succeeds and the result is wrong:',
+             '');
+  for (const fact of spec.facts || []) lines.push(`- ${fact}`);
+  lines.push('', 'Return the score as tracker notation and nothing else — ' +
+             'no explanation around it, no markdown fence. It goes ' +
+             'straight into the renderer.');
+  $('brief-out').value = lines.join('\n');
+}
+
+function renderBrief() {
+  const prompts = state.manifest.prompts || {};
+  const select = $('brief-chip');
+  clear(select);
+  for (const name of Object.keys(prompts.chips || {})) {
+    select.appendChild(el('option', { value: name, text: name }));
+  }
+  for (const id of ['brief-chip', 'brief-text', 'brief-bpm', 'brief-key',
+                    'brief-style', 'brief-bars']) {
+    $(id).addEventListener('input', buildBrief);
+    $(id).addEventListener('change', buildBrief);
+  }
+  $('brief-copy').addEventListener('click',
+    (event) => copy($('brief-out').value, event.target));
+  $('brief-preset').addEventListener('click', () => {
+    const chosen = $('preset-select').value;
+    const preset = (state.manifest.presets || []).find((p) => p.id === chosen);
+    if (!preset) return;
+    $('brief-chip').value = preset.chip;
+    $('brief-text').value = preset.prompt;
+    $('brief-bpm').value = preset.bpm;
+    $('brief-key').value = preset.key || '';
+    $('brief-style').value = preset.genre || '';
+    $('brief-bars').value = preset.bars || 8;
+    buildBrief();
+  });
+  buildBrief();
+}
+
 /* ---- directives ------------------------------------------------------ */
 
 function renderDirectives() {
@@ -513,6 +589,7 @@ async function start() {
   renderHeader();
   renderTabs();
   renderPresets();
+  renderBrief();
   renderDirectives();
   renderVoices();
   renderInstruments();

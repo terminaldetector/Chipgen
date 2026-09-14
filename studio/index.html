@@ -68,6 +68,58 @@
     <div id="render-detail"></div>
   </section>
 
+  <section id="tab-brief" role="tabpanel" hidden>
+    <h2>Brief a model</h2>
+    <p class="lede">
+      The request to send. Assembled from the engine's own briefing, so it
+      carries the hardware that fails silently on the chip you picked —
+      the same text the CLI prints with
+      <code class="inline">--prompt</code>. This page does not call a
+      model: it builds the ask and you send it wherever you send it.
+    </p>
+    <div class="grid cols-2">
+      <div>
+        <label class="field">
+          <span>Target chip</span>
+          <select id="brief-chip"></select>
+        </label>
+        <label class="field">
+          <span>What it should be</span>
+          <textarea id="brief-text" rows="4" spellcheck="false"
+            placeholder="Gothic castle theme with melodic pulse leads, a walking triangle bassline, and metallic noise hats."></textarea>
+        </label>
+        <div class="row">
+          <label class="field" style="flex:0 0 90px;margin:0">
+            <span>BPM</span>
+            <input type="number" id="brief-bpm" value="144" min="20" max="400">
+          </label>
+          <label class="field" style="flex:1 1 120px;margin:0">
+            <span>Key</span>
+            <input type="text" id="brief-key" value="D Minor">
+          </label>
+          <label class="field" style="flex:0 0 80px;margin:0">
+            <span>Bars</span>
+            <input type="number" id="brief-bars" value="4" min="1" max="64">
+          </label>
+        </div>
+        <label class="field" style="margin-top:10px">
+          <span>Style</span>
+          <input type="text" id="brief-style" value="Gothic Action">
+        </label>
+        <div class="row">
+          <button class="action primary" id="brief-copy">Copy the brief</button>
+          <button class="action" id="brief-preset">From the chosen preset</button>
+        </div>
+      </div>
+      <div>
+        <label class="field">
+          <span>What gets sent</span>
+          <textarea id="brief-out" rows="22" spellcheck="false" readonly></textarea>
+        </label>
+      </div>
+    </div>
+  </section>
+
   <section id="tab-directives" role="tabpanel" hidden>
     <h2>Directives and cells</h2>
     <p class="lede">

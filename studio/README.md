@@ -135,3 +135,40 @@ because a fact in two places is a fact that will disagree with itself.
 Deep links work: `#directives`, `#voices`, `#chips` and the rest, so
 pointing someone at the NES reference does not mean telling them which
 tab to press.
+
+## The briefing
+
+Someone with the interface presses generate; someone without it pastes a
+prompt or runs the CLI. **Both get the same ask**, and that is not a
+convenience — it is the thing that keeps the two zones one project.
+
+    python3 python/chipgen.py --prompt                       the starter
+    python3 python/chipgen.py --prompt --chip-target RP2A03  one chip
+    python3 python/chipgen.py --prompt --describe "..."       a full request
+
+The interface builds the same text from `manifest.prompts`, which means
+the **static bundle carries it too** — a page with no Python behind it
+can still brief a model correctly, because the briefing came with the
+facts. A test rebuilds the interface's version from the contract and
+compares it to Python's, byte for byte.
+
+If the interface wrote its own system prompt, the two would drift: one
+would teach a model that the DAC takes channel 6 outright and the other
+would not mention it, and the difference would land as tracks that render
+and sound wrong. There is nothing to drift, because there is only one.
+
+### What a briefing carries
+
+Not the notation — `START_HERE.md` is that, and a model with the archive
+reads it. A briefing carries **what will go wrong**: the behaviours that
+fail silently on the chip being targeted. Those lines are pulled from
+`info()`, not written into a string, so correcting a measurement corrects
+the briefing and adding a chip briefs it.
+
+They are also scoped. The crowding check reads FM channels and nothing
+else, so it appears in a Genesis briefing and would be a lie in a NES
+one. `tests/test_studio.py` asserts every declared chip has a briefing,
+that each names columns the tracker accepts, and that no lifted fact
+begins mid-sentence — these values live under self-describing keys, so a
+key like `the_triangle_has_no_volume` IS the subject and has to come
+along when the value is lifted out.

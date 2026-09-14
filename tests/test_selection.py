@@ -157,7 +157,10 @@ def test_measuring_an_imported_bank_leaves_the_built_in_cache_alone():
                 json.dump([instruments.instrument_to_dict(patch)], handle)
             instruments.load_bank(path)
 
-            got = audition.characteristics()
+            # A private index, like the test below: the suite should not
+            # leave measurements behind in the file the next run reads.
+            got = audition.characteristics(
+                index_path=os.path.join(tmp, "index.json"))
             assert "imported_thing" in got, \
                 "the imported patch was not measured"
             assert "bass" in got, "the built-in patches went missing"
@@ -180,30 +183,42 @@ def test_characteristics_only_measures_what_it_does_not_already_have():
     import audition
     import instruments
 
-    import random
+    import os
+
+    import support
 
     measured = []
     original = dict(instruments.BANK)
-    try:
-        # The patch has to be one the index has genuinely never seen, or
-        # this measures nothing and passes for the wrong reason. An
-        # earlier run of this very test cached its own fixture and made
-        # the suite order-dependent — green on a cold cache, red on a
-        # warm one. Randomising the operator levels makes the fingerprint
-        # fresh every run.
-        patch = instruments.BANK["organ"].copy()
-        patch.name = "one_new_patch"
-        for operator in patch.operators:
-            operator.total_level = random.randint(1, 40)
-        instruments.BANK["one_new_patch"] = patch
-        assert audition.fingerprint(patch) not in audition.load_index(), \
-            "the fixture is already cached; the test would prove nothing"
+    # Its own index, not the shared one. Writing fixtures into the file
+    # every other run reads is how this test became order-dependent:
+    # it cached its own patch, then the next run found it already there
+    # and measured nothing — passing for the wrong reason until the
+    # assertion below was added, and then failing for a reason that was
+    # the test's fault rather than the code's.
+    with support.TempDir() as tmp:
+        index = os.path.join(tmp, "index.json")
+        try:
+            patch = instruments.BANK["organ"].copy()
+            patch.name = "one_new_patch"
+            patch.feedback = (patch.feedback + 1) % 8
+            instruments.BANK["one_new_patch"] = patch
 
-        audition.characteristics(
-            progress=lambda i, total, name: measured.append(name))
-        assert measured == ["one_new_patch"], (
-            f"adding one patch re-measured {len(measured)} of "
-            f"{len(instruments.BANK)}: {measured[:5]}")
-    finally:
-        instruments.BANK.clear()
-        instruments.BANK.update(original)
+            # Warm the private index with everything else first, so the
+            # only thing left unmeasured is the fixture.
+            audition.characteristics(index_path=index)
+            audition.characteristics(
+                index_path=index,
+                progress=lambda i, total, name: measured.append(name))
+            assert measured == [], (
+                f"a warm index still re-measured {measured[:5]}")
+
+            patch.feedback = (patch.feedback + 1) % 8    # now unknown again
+            audition.characteristics(
+                index_path=index,
+                progress=lambda i, total, name: measured.append(name))
+            assert measured == ["one_new_patch"], (
+                f"changing one patch re-measured {len(measured)} of "
+                f"{len(instruments.BANK)}: {measured[:5]}")
+        finally:
+            instruments.BANK.clear()
+            instruments.BANK.update(original)

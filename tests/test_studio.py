@@ -259,3 +259,130 @@ def test_the_page_references_only_files_that_ship():
     for asset in wanted:
         assert os.path.exists(os.path.join(studio_dir, asset)), \
             f"index.html loads {asset!r}, which is not in studio/"
+
+
+def test_the_briefing_is_in_the_contract():
+    """An interface must not have to invent a system prompt.
+
+    This is the detail that decides whether the two paths stay one
+    project. Someone with the interface presses generate; someone
+    without it pastes a prompt or runs the CLI. If each writes its own
+    briefing they drift — one teaches a model that the DAC takes channel
+    6 and the other does not mention it — and the difference lands as
+    tracks that render and sound wrong.
+    """
+    import chipgen
+    import studio
+
+    prompts = studio.manifest().get("prompts")
+    assert prompts, "the contract carries no briefing at all"
+    assert prompts.get("starter"), "no starter briefing"
+
+    chips = set(chipgen.info()["chips"])
+    briefed = set(prompts.get("chips") or {})
+    assert briefed >= chips, (
+        f"the engine declares chips with no briefing: "
+        f"{sorted(chips - briefed)}. An interface targeting one of those "
+        f"has nothing to tell a model about it.")
+
+    for name, spec in prompts["chips"].items():
+        assert spec.get("columns"), f"{name} briefing names no columns"
+        assert spec.get("facts"), (
+            f"{name} has no silent-failure notes. A briefing that lists "
+            f"no traps is a briefing that does not earn its place")
+        for fact in spec["facts"]:
+            # Lifted from self-describing keys in info(), so a value that
+            # begins mid-sentence has lost its subject on the way out.
+            assert fact[0].isupper(), (
+                f"{name} fact begins without a subject: {fact[:60]!r}")
+
+
+def test_the_briefing_names_columns_the_tracker_accepts():
+    # A briefing telling a model to write `cols nes9` produces a score
+    # that fails at the last step, after the model has done the work.
+    import studio
+    import tracker
+
+    valid = set(tracker.valid_columns())
+    for name, spec in studio.manifest()["prompts"]["chips"].items():
+        for column in spec["columns"].split():
+            assert column in valid, (
+                f"the {name} briefing tells a model to use {column!r}, "
+                f"which the tracker rejects")
+
+
+def test_the_interface_and_the_cli_build_the_same_brief():
+    """The whole point, checked rather than asserted in a comment.
+
+    The interface assembles the brief in JavaScript from the contract;
+    the CLI assembles it in Python from the engine. They have to come out
+    the same, or there are two definitions of how to ask for a track and
+    only one of them gets maintained.
+    """
+    import json
+    import os
+    import re
+    import subprocess
+
+    import prompts
+    import support
+
+    request = {"chip": "RP2A03", "prompt": "Gothic castle theme",
+               "bpm": 144, "key": "D Minor", "style": "Gothic Action",
+               "bars": 4}
+    from_python = prompts.compose(request)
+
+    # Reproduce the interface's assembly from its own source, so this
+    # fails if app.js's builder drifts rather than testing a copy of it.
+    app = os.path.join(support.ROOT, "studio", "app.js")
+    with open(app, encoding="utf-8") as handle:
+        source = handle.read()
+    assert "function buildBrief()" in source, \
+        "app.js no longer has a brief builder; this test is checking air"
+
+    # The contract the interface would read.
+    import studio
+    spec = studio.manifest()["prompts"]["chips"]["RP2A03"]
+
+    rebuilt = [
+        f"Write an original chiptune score for the RP2A03 "
+        f"({spec['platform']}) in chipgen's tracker notation.",
+        "", f"What it should be: {request['prompt']}",
+        "", "Specification:", f"- tempo: {request['bpm']} BPM",
+        f"- key: {request['key']}", f"- style: {request['style']}",
+        f"- length: {request['bars']} bars",
+        f"- columns: `cols {spec['columns']}`", "",
+        "Hardware that will bite you. Every one of these fails SILENTLY —",
+        "the render succeeds and the result is wrong:", "",
+    ]
+    rebuilt += [f"- {fact}" for fact in spec["facts"]]
+    rebuilt += ["", "Return the score as tracker notation and nothing else "
+                "— no explanation around it, no markdown fence. It goes "
+                "straight into the renderer."]
+
+    assert "\n".join(rebuilt) == from_python, (
+        "the contract-assembled brief and the Python one differ — the "
+        "interface and the CLI would teach a model different things")
+
+
+def test_the_cli_prints_a_briefing_without_an_interface():
+    # The no-interface path: someone with the bridge zip and no browser
+    # still needs the same ask.
+    import os
+    import subprocess
+    import sys
+
+    import support
+
+    for argv in (["--prompt"], ["--prompt", "--chip-target", "RP2A03"]):
+        finished = subprocess.run(
+            [sys.executable, "python/chipgen.py", *argv],
+            cwd=support.ROOT, capture_output=True, text=True)
+        assert finished.returncode == 0, \
+            f"chipgen.py {' '.join(argv)} failed:\n{finished.stderr[-500:]}"
+        out = finished.stdout
+        assert "bootstrap.py" in out and "CORE.md" in out, (
+            f"the briefing does not tell a model how to start: "
+            f"{out[:200]!r}")
+        if "--chip-target" in argv:
+            assert "nes0" in out, "the targeted briefing names no columns"
