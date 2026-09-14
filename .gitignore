@@ -28,3 +28,24 @@ tests/last_run.json
 # deploy bundle at build time — tracking it would mean a diff every time
 # the engine gains a directive.
 studio/studio.json
+
+# Source material and renders never belong in the branch. The game rips
+# are somebody's soundtrack, they are 18 MB, and nothing in the code
+# reads them — the corpus was transcribed out of them long ago and lives
+# in corpus/ as scores. They stay on claude/corpus-dokachka, which is
+# where the docs point for the raw material.
+#
+# Renders are output. A .wav or .vgm in a commit is a build artifact
+# somebody forgot, and it is the single easiest way for a repository
+# that fits in a chat window to stop fitting.
+*.zip
+*.7z
+*.rar
+*.wav
+*.vgm
+*.vgz
+*.mp3
+*.flac
+
+# Except the things that are meant to ship.
+!examples/*.json
