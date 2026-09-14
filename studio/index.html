@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chipgen studio</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>chipgen studio</h1>
+    <p class="tagline" id="tagline">loading the contract…</p>
+    <div class="badges" id="badges"></div>
+    <nav id="tabs" role="tablist"></nav>
+  </div>
+</header>
+
+<main>
+  <!-- Every section below is filled from the manifest. There is no
+       hard-coded chip, directive, instrument or preset anywhere in this
+       file: if the engine gains one, it appears here with no change. -->
+
+  <section id="tab-compose" role="tabpanel">
+    <h2>Score</h2>
+    <p class="lede">
+      Written in the tracker notation the engine parses. Pick a preset to
+      start from, or type. Rendering needs <code class="inline">serve.py</code>;
+      everything else on this page works without it.
+    </p>
+    <div class="grid cols-2">
+      <div>
+        <label class="field">
+          <span>Preset</span>
+          <select id="preset-select"></select>
+        </label>
+        <div id="preset-detail"></div>
+      </div>
+      <div>
+        <div class="row" style="margin-bottom:10px">
+          <label class="field" style="flex:1 1 130px;margin:0">
+            <span>Chip revision</span>
+            <select id="chip-select">
+              <option value="ym2612">ym2612 — discrete, DAC ladder</option>
+              <option value="ym3438">ym3438 — later ASIC, clean</option>
+            </select>
+          </label>
+          <label class="field" style="flex:0 0 110px;margin:0">
+            <span>Master peak</span>
+            <input type="number" id="peak" value="0.89" min="0" max="1"
+                   step="0.01">
+          </label>
+        </div>
+        <div class="row">
+          <button class="action primary" id="render">Render</button>
+          <button class="action" id="download-wav" disabled>WAV</button>
+          <button class="action" id="download-vgm" disabled>VGM</button>
+          <button class="action" id="copy-score">Copy score</button>
+        </div>
+        <div id="render-status"></div>
+      </div>
+    </div>
+    <label class="field" style="margin-top:12px">
+      <span>Tracker score (.trk)</span>
+      <textarea id="score" rows="20" spellcheck="false"></textarea>
+    </label>
+    <div id="render-detail"></div>
+  </section>
+
+  <section id="tab-directives" role="tabpanel" hidden>
+    <h2>Directives and cells</h2>
+    <p class="lede">
+      Every one of these is parsed by the real tracker in the test suite,
+      so a card here cannot produce a score the engine rejects. Click the
+      code to copy it.
+    </p>
+    <div class="row tight" id="directive-filters" style="margin-bottom:12px"></div>
+    <div class="grid cols-2" id="directive-list"></div>
+  </section>
+
+  <section id="tab-voices" role="tabpanel" hidden>
+    <h2>Channel bus</h2>
+    <p class="lede">
+      Every addressable voice, with the column a score writes. The engine
+      asserts this list and the parser agree in both directions — a chip
+      reachable from a score but missing here fails the suite.
+    </p>
+    <div class="bus" id="voice-list"></div>
+  </section>
+
+  <section id="tab-instruments" role="tabpanel" hidden>
+    <h2>Instruments</h2>
+    <div class="scroll"><table id="instrument-table"></table></div>
+    <h2>Sample kit</h2>
+    <div class="row tight" id="sample-list"></div>
+    <h2>Effect column</h2>
+    <div class="scroll"><table id="effect-table"></table></div>
+  </section>
+
+  <section id="tab-chips" role="tabpanel" hidden>
+    <h2>Architecture</h2>
+    <div class="grid cols-2" id="chip-list"></div>
+    <h2>Engine</h2>
+    <div class="panel" id="health-detail"></div>
+  </section>
+
+  <section id="tab-reference" role="tabpanel" hidden>
+    <h2>Reference</h2>
+    <p class="lede">
+      The engine's own notes, passed through unchanged. Most of it is
+      behaviour that fails silently — a render that succeeds and sounds
+      wrong.
+    </p>
+    <div id="reference-list"></div>
+  </section>
+</main>
+
+<div class="player">
+  <div class="wrap">
+    <div class="what">
+      <div class="title" id="player-title">nothing rendered yet</div>
+      <div class="sub" id="player-sub">render a score to hear it</div>
+    </div>
+    <audio id="player" controls preload="none"></audio>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

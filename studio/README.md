@@ -79,3 +79,59 @@ panel and the channel bus. `test_studio.py` asserts the bus and the
 tracker agree in **both** directions, so a chip reachable from a score
 but missing from the bus fails the suite — an interface built on this
 cannot be quietly unable to reach part of the hardware.
+
+## Running it
+
+Two ways, and the page works either way — it detects which it has and
+says so in its status bar rather than leaving a dead button.
+
+**With the engine** — rendering, WAV, VGM, the section profile:
+
+    python3 python/serve.py
+    # http://127.0.0.1:8765
+
+Loopback only, and that is the intent: it has no authentication and it
+writes files. It is a tool on your own machine.
+
+**Without it** — the whole reference, no Python at all:
+
+    python3 studio/make_bundle.py
+    # dist/chipgen-studio.zip — four files, 20 KB
+
+Unzip that onto any static host, or hand the folder to anything that
+deploys one. Every directive, preset, voice, chip and note is in it. What
+a static deployment cannot do is turn a score into sound, because that
+needs the emulation.
+
+The contract is baked in at build time. That is deliberate: a bundle is a
+snapshot of what the engine could do on the day it was built, and it
+cannot drift afterwards because there is nothing in it to drift — only a
+copy that is honestly stale rather than silently wrong. Rebuild when the
+engine changes.
+
+### Deploying the pair
+
+The split is what makes this portable. Two archives, no build step
+between them:
+
+| archive | what it is | needs |
+|---|---|---|
+| `dist/chipgen-studio.zip` | zone 1, 20 KB | a static host |
+| `dist/chipgen-bridge.zip` | zone 2, 466 KB | python3 |
+
+The interface can go public on its own and be genuinely useful — it is a
+complete hardware reference. The engine goes wherever there is a Python
+to run it. Neither needs the other to be deployed, and neither needs a
+toolchain: no npm, no bundler, no `pip install`.
+
+## The rule, enforced
+
+`app.js` states **no hardware fact of its own** — no chip name, no
+register address, no directive syntax, no patch name in running code. A
+test greps for them. It is a blunt check and that is the point: the
+moment someone types `YM2612` into the interface, the suite says so,
+because a fact in two places is a fact that will disagree with itself.
+
+Deep links work: `#directives`, `#voices`, `#chips` and the rest, so
+pointing someone at the NES reference does not mean telling them which
+tab to press.

@@ -166,3 +166,96 @@ def test_health_does_not_run_the_test_suite():
         "health() took seconds — it is doing real work"
     assert "cores" in got and "python" in got
     assert got["tests"] is None or isinstance(got["tests"], dict)
+
+
+def test_the_interface_holds_no_facts_of_its_own():
+    """The one rule the front end follows, enforced.
+
+    An interface that keeps its own list of NES directives is right on
+    the day it is written and wrong the first time the engine gains one,
+    with nothing to say so. So app.js renders the contract and states no
+    hardware fact itself — this catches the moment somebody types one in.
+    """
+    import os
+    import re
+
+    import support
+
+    path = os.path.join(support.ROOT, "studio", "app.js")
+    with open(path, encoding="utf-8") as handle:
+        source = handle.read()
+
+    # Chip names, register addresses and directive syntax are all facts.
+    # A comment may mention them; running code may not.
+    code = re.sub(r"/\*.*?\*/", "", source, flags=re.S)
+    code = re.sub(r"^\s*//.*$", "", code, flags=re.M)
+
+    forbidden = {
+        "YM2612": "a chip name", "YM3812": "a chip name",
+        "SN76489": "a chip name", "RP2A03": "a chip name",
+        "0x2B": "a register address", "0xBD": "a register address",
+        "nes duty": "a directive", "ch3 special": "a directive",
+        "opl_bass": "a patch name", "deep_bass": "a patch name",
+    }
+    for needle, what in forbidden.items():
+        assert needle not in code, (
+            f"app.js names {needle!r} ({what}) in running code. Facts live "
+            f"in python/studio.py — a fact in two places is a fact that "
+            f"will disagree with itself.")
+
+
+def test_the_static_bundle_carries_everything_the_page_needs():
+    """A bundle that renders half the reference is worse than none.
+
+    The deployable zip has no engine behind it, so anything the page
+    needs at runtime has to be inside it.
+    """
+    import json
+    import os
+    import sys
+    import zipfile
+
+    import support
+
+    sys.path.insert(0, os.path.join(support.ROOT, "studio"))
+    import make_bundle
+
+    with support.TempDir() as tmp:
+        path, manifest = make_bundle.build(os.path.join(tmp, "studio.zip"))
+        with zipfile.ZipFile(path) as archive:
+            names = set(archive.namelist())
+            contract = json.loads(archive.read("studio.json"))
+
+        assert names == {"index.html", "style.css", "app.js", "studio.json"}, \
+            f"the bundle carries the wrong files: {sorted(names)}"
+        assert os.path.getsize(path) < 200 * 1024, \
+            "the bundle should be small enough to deploy anywhere"
+
+        # Same contract as the live engine, or the bundle is a different
+        # product that happens to look similar.
+        assert contract["schema"] == manifest["schema"]
+        assert len(contract["directives"]) == len(manifest["directives"])
+        assert set(contract["chips"]) == set(manifest["chips"])
+
+        # Two builds of one tree give one set of bytes.
+        again, _ = make_bundle.build(os.path.join(tmp, "again.zip"))
+        assert open(path, "rb").read() == open(again, "rb").read(), \
+            "two builds of the same tree produced different archives"
+
+
+def test_the_page_references_only_files_that_ship():
+    # A missing stylesheet is a page that renders as unstyled text, which
+    # nothing errors about.
+    import os
+    import re
+
+    import support
+
+    studio_dir = os.path.join(support.ROOT, "studio")
+    with open(os.path.join(studio_dir, "index.html"), encoding="utf-8") as fh:
+        html = fh.read()
+
+    wanted = re.findall(r'(?:src|href)="([^":]+)"', html)
+    for asset in wanted:
+        assert os.path.exists(os.path.join(studio_dir, asset)), \
+            f"index.html loads {asset!r}, which is not in studio/"

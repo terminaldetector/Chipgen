@@ -180,13 +180,24 @@ def test_characteristics_only_measures_what_it_does_not_already_have():
     import audition
     import instruments
 
+    import random
+
     measured = []
     original = dict(instruments.BANK)
     try:
+        # The patch has to be one the index has genuinely never seen, or
+        # this measures nothing and passes for the wrong reason. An
+        # earlier run of this very test cached its own fixture and made
+        # the suite order-dependent — green on a cold cache, red on a
+        # warm one. Randomising the operator levels makes the fingerprint
+        # fresh every run.
         patch = instruments.BANK["organ"].copy()
         patch.name = "one_new_patch"
-        patch.feedback = (patch.feedback + 1) % 8
+        for operator in patch.operators:
+            operator.total_level = random.randint(1, 40)
         instruments.BANK["one_new_patch"] = patch
+        assert audition.fingerprint(patch) not in audition.load_index(), \
+            "the fixture is already cached; the test would prove nothing"
 
         audition.characteristics(
             progress=lambda i, total, name: measured.append(name))
