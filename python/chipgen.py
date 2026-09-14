@@ -211,7 +211,9 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     """
     if bank:
         # Merged into the shared bank, so names from an imported set and the
-        # built-in ones are referenced the same way in a score.
+        # built-in ones are referenced the same way in a score. Loading it
+        # twice is harmless — load_bank merges — and compose() is a public
+        # entry point in its own right, so it cannot rely on the CLI.
         instruments_mod.load_bank(bank)
     if opl_bank:
         import opl_instruments
@@ -666,6 +668,18 @@ def main(argv):
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
+
+    # --bank has to land BEFORE the branches that return early. It used
+    # to be loaded only inside compose(), so `--cast lead --bank x.json`
+    # ranked the built-in bank and never saw one patch of the imported
+    # one — which is the "picking a patch because its filename sounds
+    # appropriate" failure, with the tool that exists to prevent it
+    # silently looking at the wrong shelf.
+    if args.bank:
+        instruments_mod.load_bank(args.bank)
+    if args.opl_bank:
+        import opl_instruments
+        opl_instruments.load_bank(args.opl_bank)
 
     if args.audition:
 

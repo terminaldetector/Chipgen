@@ -11,3 +11,9 @@ __pycache__/
 
 # Bridge archives built by bridge/make_zip.py
 dist/
+
+# Measurements for imported banks, keyed by patch fingerprint. Generated
+# per user and unbounded in size — a corpus-sized bank adds hundreds of
+# entries. bank_audition.json IS committed: that one is the built-in
+# bank's shipped measurements, which are the same for everybody.
+python/imported_audition.json

@@ -364,6 +364,34 @@ def summarise(report: dict) -> dict:
 # --------------------------------------------------------------------------
 CACHE_PATH = os.path.join(_HERE, "bank_audition.json")
 
+#: Where measurements for patches that are NOT in the built-in bank go.
+#: Kept separate so importing a bank cannot overwrite the built-in
+#: bank's cache — which it used to, because both went to one file keyed
+#: by name alone.
+IMPORTED_CACHE_PATH = os.path.join(_HERE, "imported_audition.json")
+
+
+def fingerprint(instrument) -> str:
+    """What a patch IS, as a short stable key.
+
+    Not the name. Two banks can both contain a `bass`, and a patch can
+    be edited in place — keying measurements by name means one of those
+    silently gets the other's numbers. The fingerprint covers everything
+    that changes how a patch sounds: algorithm, feedback, and every
+    operator field. `trim` is deliberately excluded: it is a level
+    offset applied at set_instrument time and the measurements are taken
+    with it applied, so a recalibrated bank must re-measure.
+    """
+    import hashlib
+
+    parts = [str(instrument.algorithm), str(instrument.feedback),
+             str(getattr(instrument, "trim", 0))]
+    for operator in instrument.operators:
+        for field in sorted(operator.__slots__):
+            parts.append(f"{field}={getattr(operator, field)}")
+    digest = hashlib.sha256("|".join(parts).encode()).hexdigest()
+    return digest[:16]
+
 
 def load_cache(path: str = CACHE_PATH):
     try:
@@ -380,15 +408,90 @@ def save_cache(reports: dict, path: str = CACHE_PATH):
     return path
 
 
-def characteristics(refresh: bool = False):
-    """Summarised measurements for the whole bank, cached on disk."""
-    if not refresh:
-        cached = load_cache()
-        if cached and set(cached) >= set(instruments_mod.names()):
-            return cached
-    reports = audition_bank()
-    save_cache(reports)
-    return {name: summarise(r) for name, r in reports.items()}
+def load_index(path: str = IMPORTED_CACHE_PATH) -> dict:
+    """The by-fingerprint index: {fingerprint: summary}."""
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_index(index: dict, path: str = IMPORTED_CACHE_PATH) -> str:
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(index, handle, indent=1, sort_keys=True)
+    return path
+
+
+def characteristics(refresh: bool = False, progress=None):
+    """Summarised measurements for every patch currently loaded.
+
+    Incremental, and that is the whole point. It used to be
+    all-or-nothing against one shared file keyed by name: loading a
+    175-patch imported bank meant the cache no longer covered every
+    name, so all 194 patches were re-measured from scratch and the
+    result overwrote the built-in bank's cache — after which a plain
+    `--cast` re-measured everything too.
+
+    Now each patch is keyed by `fingerprint()`, so a name collision
+    between two banks cannot hand one the other's numbers, an edited
+    patch re-measures itself and nothing else, and the second run over
+    a big imported bank costs nothing. That is what makes selection by
+    MEASUREMENT rather than by filename practical on a real corpus:
+    175 patches is minutes the first time and instant afterwards.
+    """
+    names = instruments_mod.names()
+    builtin = {} if refresh else (load_cache() or {})
+    index = {} if refresh else load_index()
+
+    out = {}
+    missing = []
+    for name in names:
+        instrument = instruments_mod.BANK[name]
+        key = fingerprint(instrument)
+        if key in index:
+            summary = dict(index[key])
+            summary["name"] = name        # the same patch under any name
+            out[name] = summary
+        elif name in builtin and _matches_builtin(name, key, builtin):
+            out[name] = builtin[name]
+        else:
+            missing.append((name, key))
+
+    if missing:
+        for position, (name, key) in enumerate(missing, start=1):
+            if progress is not None:
+                progress(position, len(missing), name)
+            index[key] = summarise(audition(name))
+            out[name] = dict(index[key])
+        save_index(index)
+
+    return out
+
+
+#: Fingerprints of the built-in bank as its cache was written. Filled in
+#: lazily, because the built-in cache predates fingerprinting and has no
+#: keys in it — a built-in entry is trusted only while the patch on disk
+#: still matches what the shipped cache describes.
+_BUILTIN_KEYS = {}
+
+
+def _matches_builtin(name: str, key: str, cached: dict) -> bool:
+    """Is the shipped cache still describing this patch?
+
+    The built-in cache is stored by name and carries no fingerprint, so
+    it is trusted for a built-in patch whose algorithm still matches
+    what the cache recorded. Anything edited past that re-measures.
+    """
+    entry = cached.get(name)
+    if not isinstance(entry, dict):
+        return False
+    instrument = instruments_mod.BANK[name]
+    if entry.get("algorithm") != instrument.algorithm:
+        return False
+    _BUILTIN_KEYS[name] = key
+    return True
 
 
 def main(argv):

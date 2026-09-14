@@ -1,4 +1,5070 @@
 {
+ "02___opening_theme_01": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 218.94604499795446,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.9195498599287862,
+  "low_at_c2": 0.01502695431265548,
+  "mid_at_c4": 0.06573634154926247,
+  "name": "02___opening_theme_01",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.009987414601576457,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 12.282012190881513,
+  "worst_cents_error": 4460.002500189567
+ },
+ "02___opening_theme_02": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.215136160431406,
+  "brightness_label": "bright",
+  "harmonics": 22.25,
+  "high_at_c4": 0.16399335296239959,
+  "low_at_c2": 0.7648706858931615,
+  "mid_at_c4": 0.6605562991077847,
+  "name": "02___opening_theme_02",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.01075616705743,
+  "worst_cents_error": 2.1878296491331284
+ },
+ "02___opening_theme_03": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.0895161655311485,
+  "brightness_label": "bright",
+  "harmonics": 27.0,
+  "high_at_c4": 0.19902328864972782,
+  "low_at_c2": 0.5100967959634384,
+  "mid_at_c4": 0.7125604327635917,
+  "name": "02___opening_theme_03",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.985121452027265,
+  "worst_cents_error": 2.2451050476021934
+ },
+ "02___opening_theme_04": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.863355868793803,
+  "brightness_label": "bright",
+  "harmonics": 24.25,
+  "high_at_c4": 0.18907940438353363,
+  "low_at_c2": 0.6815478663493786,
+  "mid_at_c4": 0.6475988041994549,
+  "name": "02___opening_theme_04",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.002219665497524,
+  "worst_cents_error": 2.2178931707556195
+ },
+ "02___opening_theme_05": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.329894135039856,
+  "brightness_label": "bright",
+  "harmonics": 44.0,
+  "high_at_c4": 0.08994059543253179,
+  "low_at_c2": 0.7345092298825062,
+  "mid_at_c4": 0.8805955653982184,
+  "name": "02___opening_theme_05",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.5868646978710104
+ },
+ "02___opening_theme_06": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.556317163095283,
+  "brightness_label": "bright",
+  "harmonics": 26.25,
+  "high_at_c4": 0.1880768174745373,
+  "low_at_c2": 0.42046202463044574,
+  "mid_at_c4": 0.7878308173531317,
+  "name": "02___opening_theme_06",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.99367476600064,
+  "worst_cents_error": 4.947035618903577
+ },
+ "02___opening_theme_07": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.970699325068572,
+  "brightness_label": "medium",
+  "harmonics": 42.25,
+  "high_at_c4": 0.07576087161967779,
+  "low_at_c2": 0.7725952421105358,
+  "mid_at_c4": 0.8932785871927835,
+  "name": "02___opening_theme_07",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.5232952157199777
+ },
+ "02___opening_theme_08": {
+  "algorithm": 3,
+  "attack": 0.00994986793014196,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.7734403403137207,
+  "brightness_label": "dark",
+  "harmonics": 15.0,
+  "high_at_c4": 0.004655218185210874,
+  "low_at_c2": 0.9151846701414396,
+  "mid_at_c4": 0.17186528427150635,
+  "name": "02___opening_theme_08",
+  "peak_dbfs": -17.37896369856212,
+  "release": 0.4719053399244876,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.958763067310127,
+  "worst_cents_error": 1.0589611963578767
+ },
+ "02___opening_theme_09": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.4461397358500285,
+  "brightness_label": "medium",
+  "harmonics": 38.25,
+  "high_at_c4": 0.0599232429082758,
+  "low_at_c2": 0.8181507112915674,
+  "mid_at_c4": 0.9107063836107384,
+  "name": "02___opening_theme_09",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.3688750895680315
+ },
+ "02___opening_theme_10": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.946682775603227,
+  "brightness_label": "medium",
+  "harmonics": 30.75,
+  "high_at_c4": 0.03698006215483101,
+  "low_at_c2": 0.4602098678190278,
+  "mid_at_c4": 0.5034916605145535,
+  "name": "02___opening_theme_10",
+  "peak_dbfs": -15.699813498278981,
+  "release": 1.0336974112631634,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.100549030730118,
+  "worst_cents_error": 7.872976568501696
+ },
+ "02___opening_theme_11": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.025437930627854,
+  "brightness_label": "bright",
+  "harmonics": 46.75,
+  "high_at_c4": 0.10980495821241713,
+  "low_at_c2": 0.6786280921736322,
+  "mid_at_c4": 0.8552356014700075,
+  "name": "02___opening_theme_11",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.6824637002523963
+ },
+ "02___opening_theme_12": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.0895161655311485,
+  "brightness_label": "bright",
+  "harmonics": 27.0,
+  "high_at_c4": 0.19902328864972782,
+  "low_at_c2": 0.5100967959634384,
+  "mid_at_c4": 0.7125604327635917,
+  "name": "02___opening_theme_12",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.985121452027265,
+  "worst_cents_error": 2.2451050476021934
+ },
+ "02___opening_theme_13": {
+  "algorithm": 4,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 10.322799580763526,
+  "brightness_label": "bright",
+  "harmonics": 31.5,
+  "high_at_c4": 0.15017648809870435,
+  "low_at_c2": 0.6233978118735459,
+  "mid_at_c4": 0.561295960019176,
+  "name": "02___opening_theme_13",
+  "peak_dbfs": -19.514933920237848,
+  "release": 0.20599042615751442,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.521169914112974,
+  "worst_cents_error": 1198.5963015869775
+ },
+ "02___opening_theme_14": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.411676406857314,
+  "brightness_label": "medium",
+  "harmonics": 32.75,
+  "high_at_c4": 0.05260833317797207,
+  "low_at_c2": 0.880233507553808,
+  "mid_at_c4": 0.6420097149244548,
+  "name": "02___opening_theme_14",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.45317893754653177,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 18.044818523016513,
+  "worst_cents_error": 1.864103584896167
+ },
+ "02___opening_theme_15": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.869261339863022,
+  "brightness_label": "medium",
+  "harmonics": 26.75,
+  "high_at_c4": 0.018586884447790233,
+  "low_at_c2": 0.6628557246996496,
+  "mid_at_c4": 0.5506284460841773,
+  "name": "02___opening_theme_15",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.295745776513243,
+  "worst_cents_error": 7.280912800845828
+ },
+ "02___opening_theme_16": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.028786340513311,
+  "brightness_label": "medium",
+  "harmonics": 36.0,
+  "high_at_c4": 0.045909597014670483,
+  "low_at_c2": 0.8532074952000108,
+  "mid_at_c4": 0.9229358870651451,
+  "name": "02___opening_theme_16",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.1775996725281284
+ },
+ "02___opening_theme_17": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.155564931168194,
+  "brightness_label": "bright",
+  "harmonics": 21.0,
+  "high_at_c4": 0.14010688429743012,
+  "low_at_c2": 0.7662665635279946,
+  "mid_at_c4": 0.7144525911304681,
+  "name": "02___opening_theme_17",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.07901657330159,
+  "worst_cents_error": 2.1601450202507135
+ },
+ "02___opening_theme_18": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.556317163095283,
+  "brightness_label": "bright",
+  "harmonics": 26.25,
+  "high_at_c4": 0.1880768174745373,
+  "low_at_c2": 0.42046202463044574,
+  "mid_at_c4": 0.7878308173531317,
+  "name": "02___opening_theme_18",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.99367476600064,
+  "worst_cents_error": 4.947035618903577
+ },
+ "02___opening_theme_19": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.999760871979482,
+  "brightness_label": "medium",
+  "harmonics": 28.75,
+  "high_at_c4": 0.022080846724554574,
+  "low_at_c2": 0.6424087630728769,
+  "mid_at_c4": 0.5461647820000946,
+  "name": "02___opening_theme_19",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.246533805560109,
+  "worst_cents_error": 7.390987133501225
+ },
+ "02___opening_theme_20": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.411676406857314,
+  "brightness_label": "medium",
+  "harmonics": 32.75,
+  "high_at_c4": 0.05260833317797207,
+  "low_at_c2": 0.880233507553808,
+  "mid_at_c4": 0.6420097149244548,
+  "name": "02___opening_theme_20",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.45317893754653177,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 18.044818523016513,
+  "worst_cents_error": 1.864103584896167
+ },
+ "02___opening_theme_21": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.863355868793803,
+  "brightness_label": "bright",
+  "harmonics": 24.25,
+  "high_at_c4": 0.18907940438353363,
+  "low_at_c2": 0.6815478663493786,
+  "mid_at_c4": 0.6475988041994549,
+  "name": "02___opening_theme_21",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.002219665497524,
+  "worst_cents_error": 2.2178931707556195
+ },
+ "02___opening_theme_22": {
+  "algorithm": 4,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 10.322799580763526,
+  "brightness_label": "bright",
+  "harmonics": 31.5,
+  "high_at_c4": 0.15017648809870435,
+  "low_at_c2": 0.6233978118735459,
+  "mid_at_c4": 0.561295960019176,
+  "name": "02___opening_theme_22",
+  "peak_dbfs": -19.514933920237848,
+  "release": 0.20599042615751442,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.521169914112974,
+  "worst_cents_error": 1198.5963015869775
+ },
+ "02___opening_theme_23": {
+  "algorithm": 4,
+  "attack": 0.002238720284281941,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.003080755418017,
+  "brightness_label": "dark",
+  "harmonics": 1.5,
+  "high_at_c4": 2.7618701046053445e-05,
+  "low_at_c2": 0.9997177386585349,
+  "mid_at_c4": 0.9995956480236463,
+  "name": "02___opening_theme_23",
+  "peak_dbfs": -16.224271953018604,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.91203931198787,
+  "worst_cents_error": 1202.1119206177837
+ },
+ "02___opening_theme_24": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.946682775603227,
+  "brightness_label": "medium",
+  "harmonics": 30.75,
+  "high_at_c4": 0.03698006215483101,
+  "low_at_c2": 0.4602098678190278,
+  "mid_at_c4": 0.5034916605145535,
+  "name": "02___opening_theme_24",
+  "peak_dbfs": -15.699813498278981,
+  "release": 1.0336974112631634,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.100549030730118,
+  "worst_cents_error": 7.872976568501696
+ },
+ "02___opening_theme_25": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.8845329951050216,
+  "brightness_label": "medium",
+  "harmonics": 21.5,
+  "high_at_c4": 0.00016282953630713528,
+  "low_at_c2": 0.9733587420317089,
+  "mid_at_c4": 0.2974279902738965,
+  "name": "02___opening_theme_25",
+  "peak_dbfs": -23.951908912564974,
+  "release": 0.05368235348347346,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.633836845814265,
+  "worst_cents_error": 1200.99944150133
+ },
+ "02___opening_theme_26": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.999760871979482,
+  "brightness_label": "medium",
+  "harmonics": 28.75,
+  "high_at_c4": 0.022080846724554574,
+  "low_at_c2": 0.6424087630728769,
+  "mid_at_c4": 0.5461647820000946,
+  "name": "02___opening_theme_26",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.246533805560109,
+  "worst_cents_error": 7.390987133501225
+ },
+ "02___opening_theme_27": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.215136160431406,
+  "brightness_label": "bright",
+  "harmonics": 22.25,
+  "high_at_c4": 0.16399335296239959,
+  "low_at_c2": 0.7648706858931615,
+  "mid_at_c4": 0.6605562991077847,
+  "name": "02___opening_theme_27",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.01075616705743,
+  "worst_cents_error": 2.1878296491331284
+ },
+ "02___opening_theme_28": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.092813201054673,
+  "brightness_label": "bright",
+  "harmonics": 28.5,
+  "high_at_c4": 0.03135425861392605,
+  "low_at_c2": 0.4488732346780806,
+  "mid_at_c4": 0.509838850661144,
+  "name": "02___opening_theme_28",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.246533805560109,
+  "worst_cents_error": 7.869505262615945
+ },
+ "02___opening_theme_29": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.964286923103467,
+  "brightness_label": "medium",
+  "harmonics": 21.25,
+  "high_at_c4": 0.009846586724510638,
+  "low_at_c2": 0.6871680215249419,
+  "mid_at_c4": 0.614513315705389,
+  "name": "02___opening_theme_29",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.345238159070352,
+  "worst_cents_error": 12.322496453532551
+ },
+ "02___opening_theme_30": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.7656524859876725,
+  "brightness_label": "bright",
+  "harmonics": 51.0,
+  "high_at_c4": 0.12891618106907035,
+  "low_at_c2": 0.630711169742854,
+  "mid_at_c4": 0.8284409553817584,
+  "name": "02___opening_theme_30",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.047501975889325,
+  "worst_cents_error": 1.7519755014070997
+ },
+ "02___opening_theme_31": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.8637382002928424,
+  "brightness_label": "medium",
+  "harmonics": 35.25,
+  "high_at_c4": 0.03864337279567693,
+  "low_at_c2": 0.8751252603465209,
+  "mid_at_c4": 0.9286939407673386,
+  "name": "02___opening_theme_31",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.061799739838868,
+  "worst_cents_error": 1.0586440374659978
+ },
+ "02___opening_theme_32": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.092214575367825,
+  "brightness_label": "medium",
+  "harmonics": 17.0,
+  "high_at_c4": 0.04005523820841201,
+  "low_at_c2": 0.7480180491591083,
+  "mid_at_c4": 0.8745800507621243,
+  "name": "02___opening_theme_32",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.13857537759687333,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.13046325660675,
+  "worst_cents_error": 2.043974062250466
+ },
+ "02___opening_theme_33": {
+  "algorithm": 3,
+  "attack": 0.00721365424935292,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.054438349291724,
+  "brightness_label": "bright",
+  "harmonics": 57.5,
+  "high_at_c4": 0.16878611346304595,
+  "low_at_c2": 0.153567551606066,
+  "mid_at_c4": 0.7543976122955993,
+  "name": "02___opening_theme_33",
+  "peak_dbfs": -17.975288281284115,
+  "release": 0.4768990472252759,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.88632125368877,
+  "worst_cents_error": 1200.6727047817426
+ },
+ "02___opening_theme_34": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.967418245244055,
+  "brightness_label": "medium",
+  "harmonics": 19.25,
+  "high_at_c4": 0.006178548986919719,
+  "low_at_c2": 0.6666419821063125,
+  "mid_at_c4": 0.636377125552434,
+  "name": "02___opening_theme_34",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.295745776513243,
+  "worst_cents_error": 12.322496453532551
+ },
+ "02___opening_theme_35": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.869261339863022,
+  "brightness_label": "medium",
+  "harmonics": 26.75,
+  "high_at_c4": 0.018586884447790233,
+  "low_at_c2": 0.6628557246996496,
+  "mid_at_c4": 0.5506284460841773,
+  "name": "02___opening_theme_35",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.295745776513243,
+  "worst_cents_error": 7.280912800845828
+ },
+ "02___opening_theme_36": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.967418245244055,
+  "brightness_label": "medium",
+  "harmonics": 19.25,
+  "high_at_c4": 0.006178548986919719,
+  "low_at_c2": 0.6666419821063125,
+  "mid_at_c4": 0.636377125552434,
+  "name": "02___opening_theme_36",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.295745776513243,
+  "worst_cents_error": 12.322496453532551
+ },
+ "02___opening_theme_37": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.602952555176287,
+  "brightness_label": "medium",
+  "harmonics": 31.25,
+  "high_at_c4": 0.028966693541896276,
+  "low_at_c2": 0.8959097915422547,
+  "mid_at_c4": 0.93461341279038,
+  "name": "02___opening_theme_37",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.801586229103094,
+  "worst_cents_error": 0.8054796618311262
+ },
+ "02___opening_theme_38": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.964286923103467,
+  "brightness_label": "medium",
+  "harmonics": 21.25,
+  "high_at_c4": 0.009846586724510638,
+  "low_at_c2": 0.6871680215249419,
+  "mid_at_c4": 0.614513315705389,
+  "name": "02___opening_theme_38",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.87389877763794,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.345238159070352,
+  "worst_cents_error": 12.322496453532551
+ },
+ "02___opening_theme_39": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.0474971274687745,
+  "brightness_label": "medium",
+  "harmonics": 19.25,
+  "high_at_c4": 0.003886893026947191,
+  "low_at_c2": 0.9657552072144762,
+  "mid_at_c4": 0.9423393241113074,
+  "name": "02___opening_theme_39",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.022471682853547028,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.801586229103094,
+  "worst_cents_error": 0.204937839939926
+ },
+ "02___opening_theme_40": {
+  "algorithm": 3,
+  "attack": 0.00721365424935292,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.385860780520925,
+  "brightness_label": "bright",
+  "harmonics": 30.5,
+  "high_at_c4": 0.21619105889738263,
+  "low_at_c2": 0.46794677447792,
+  "mid_at_c4": 0.7555725493085834,
+  "name": "02___opening_theme_40",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.002219665497524,
+  "worst_cents_error": 2.294043197880118
+ },
+ "02___opening_theme_41": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.751773515587407,
+  "brightness_label": "medium",
+  "harmonics": 12.0,
+  "high_at_c4": 0.0008608143342675579,
+  "low_at_c2": 0.9217251548054007,
+  "mid_at_c4": 0.8430002313941887,
+  "name": "02___opening_theme_41",
+  "peak_dbfs": -15.802202380999615,
+  "release": 0.13857537759687333,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.99258909764874,
+  "worst_cents_error": 1.7677750573363735
+ },
+ "02___opening_theme_42": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.192926051866716,
+  "brightness_label": "bright",
+  "harmonics": 19.75,
+  "high_at_c4": 0.11237126107176619,
+  "low_at_c2": 0.7335884755535859,
+  "mid_at_c4": 0.7852929427807797,
+  "name": "02___opening_theme_42",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.199673898796885,
+  "worst_cents_error": 2.126055169156625
+ },
+ "02___opening_theme_43": {
+  "algorithm": 3,
+  "attack": 0.00746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.155564931168194,
+  "brightness_label": "bright",
+  "harmonics": 21.0,
+  "high_at_c4": 0.14010688429743012,
+  "low_at_c2": 0.7662665635279946,
+  "mid_at_c4": 0.7144525911304681,
+  "name": "02___opening_theme_43",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.13857537759687333,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.07901657330159,
+  "worst_cents_error": 2.1601450202507135
+ },
+ "02___opening_theme_44": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.70873436499567,
+  "brightness_label": "bright",
+  "harmonics": 23.25,
+  "high_at_c4": 0.3904497191264909,
+  "low_at_c2": 0.5599404603132992,
+  "mid_at_c4": 0.5532611590779157,
+  "name": "02___opening_theme_44",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.9038610214426693,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 15.64826504052277,
+  "worst_cents_error": 11.609100760028193
+ },
+ "02___opening_theme_45": {
+  "algorithm": 3,
+  "attack": 0.00721365424935292,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.054438349291724,
+  "brightness_label": "bright",
+  "harmonics": 57.5,
+  "high_at_c4": 0.16878611346304595,
+  "low_at_c2": 0.153567551606066,
+  "mid_at_c4": 0.7543976122955993,
+  "name": "02___opening_theme_45",
+  "peak_dbfs": -17.975288281284115,
+  "release": 0.4768990472252759,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.88632125368877,
+  "worst_cents_error": 1200.6727047817426
+ },
+ "02___sidelimits_01": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.3459004318315926,
+  "brightness_label": "medium",
+  "harmonics": 57.25,
+  "high_at_c4": 0.025446557193041494,
+  "low_at_c2": 0.9248061689843937,
+  "mid_at_c4": 0.17438048269608647,
+  "name": "02___sidelimits_01",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.07615403633702049,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 12.896239434978245,
+  "worst_cents_error": 1200.8919409274208
+ },
+ "02___sidelimits_02": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.658288078396412,
+  "brightness_label": "bright",
+  "harmonics": 4.75,
+  "high_at_c4": 0.43744894461486494,
+  "low_at_c2": 0.48576351333875495,
+  "mid_at_c4": 1.6342104175527722e-05,
+  "name": "02___sidelimits_02",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.5992448760945874,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 18.06179973983887,
+  "worst_cents_error": 4910.637667486289
+ },
+ "02___sidelimits_03": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 0.7284622917685207,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 4.7739429007401406e-05,
+  "low_at_c2": 0.9989413307952593,
+  "mid_at_c4": 0.6900261398769219,
+  "name": "02___sidelimits_03",
+  "peak_dbfs": -19.674312513663356,
+  "release": 0.218474694409485,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.115917607357375,
+  "worst_cents_error": 2403.1516694888483
+ },
+ "07___beatnik_on_the_ship_01": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 212.79718894979536,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.8673956438002006,
+  "low_at_c2": 0.07164628178682624,
+  "mid_at_c4": 0.11774480146512539,
+  "name": "07___beatnik_on_the_ship_01",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 15.90912217184228,
+  "worst_cents_error": 3450.4494017627626
+ },
+ "07___beatnik_on_the_ship_02": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.660762558929845,
+  "brightness_label": "medium",
+  "harmonics": 14.0,
+  "high_at_c4": 0.01824941025425126,
+  "low_at_c2": 0.8610006577840814,
+  "mid_at_c4": 0.9790537158030275,
+  "name": "07___beatnik_on_the_ship_02",
+  "peak_dbfs": -15.73380919583687,
+  "release": 0.0349559511055176,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.122389150911236,
+  "worst_cents_error": 1788.109921132447
+ },
+ "07___beatnik_on_the_ship_03": {
+  "algorithm": 2,
+  "attack": 0.002736213680789039,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 35.755975050547775,
+  "brightness_label": "bright",
+  "harmonics": 38.0,
+  "high_at_c4": 0.11325364538788751,
+  "low_at_c2": 0.477938886428327,
+  "mid_at_c4": 0.8313169184720646,
+  "name": "07___beatnik_on_the_ship_03",
+  "peak_dbfs": -15.767938472117212,
+  "release": 0.06242134125985286,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.010353056533713,
+  "worst_cents_error": 3306.591544043674
+ },
+ "07___beatnik_on_the_ship_04": {
+  "algorithm": 6,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.9124803167926703,
+  "brightness_label": "dark",
+  "harmonics": 6.25,
+  "high_at_c4": 7.090884959312267e-05,
+  "low_at_c2": 0.9999156798050437,
+  "mid_at_c4": 0.1617012948319311,
+  "name": "07___beatnik_on_the_ship_04",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.10861313379214396,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 14.722842147522645,
+  "worst_cents_error": 1242.3366500576508
+ },
+ "07___beatnik_on_the_ship_05": {
+  "algorithm": 4,
+  "attack": 0.02785963020439749,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4005626243653153,
+  "brightness_label": "dark",
+  "harmonics": 19.0,
+  "high_at_c4": 0.009508907795321486,
+  "low_at_c2": 0.9448269126792366,
+  "mid_at_c4": 0.34027716929646223,
+  "name": "07___beatnik_on_the_ship_05",
+  "peak_dbfs": -18.80755218491811,
+  "release": 0.07116032903623225,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.03494998232869,
+  "worst_cents_error": 1.6923196275624746
+ },
+ "07___beatnik_on_the_ship_06": {
+  "algorithm": 6,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.84278192564613,
+  "brightness_label": "dark",
+  "harmonics": 6.5,
+  "high_at_c4": 6.181328152051983e-05,
+  "low_at_c2": 0.9999244370252042,
+  "mid_at_c4": 0.135347487211486,
+  "name": "07___beatnik_on_the_ship_06",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.10861313379214396,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.646921948677722,
+  "worst_cents_error": 1200.5060875375955
+ },
+ "07___beatnik_on_the_ship_07": {
+  "algorithm": 0,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.973015745422261,
+  "brightness_label": "dark",
+  "harmonics": 24.5,
+  "high_at_c4": 0.0015149854339570148,
+  "low_at_c2": 0.9338321830395615,
+  "mid_at_c4": 0.0824286818932973,
+  "name": "07___beatnik_on_the_ship_07",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.027465390154335256,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.01075616705743,
+  "worst_cents_error": 1205.8294419352746
+ },
+ "07___beatnik_on_the_ship_08": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 177.1963840839014,
+  "brightness_label": "bright",
+  "harmonics": 46.5,
+  "high_at_c4": 0.44146349144209907,
+  "low_at_c2": 0.6248352878194048,
+  "mid_at_c4": 0.04348309232058713,
+  "name": "07___beatnik_on_the_ship_08",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 13.201038766112983,
+  "worst_cents_error": 4953.614841718319
+ },
+ "07___beatnik_on_the_ship_09": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.5593986195654113,
+  "brightness_label": "medium",
+  "harmonics": 3.75,
+  "high_at_c4": 9.267889848738108e-05,
+  "low_at_c2": 0.9999299961521297,
+  "mid_at_c4": 0.9979090197501744,
+  "name": "07___beatnik_on_the_ship_09",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.17103447505199684,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 15.90912217184228,
+  "worst_cents_error": 0.6134901482031904
+ },
+ "07___beatnik_on_the_ship_10": {
+  "algorithm": 3,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.14299437863235,
+  "brightness_label": "bright",
+  "harmonics": 35.25,
+  "high_at_c4": 0.13759368988340118,
+  "low_at_c2": 0.6810069189856265,
+  "mid_at_c4": 0.848877092203104,
+  "name": "07___beatnik_on_the_ship_10",
+  "peak_dbfs": -23.951908912564974,
+  "release": 0.0062421341259852854,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.633836845814265,
+  "worst_cents_error": 1883.9092748813418
+ },
+ "07___runner_ad2025_01": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 68.09002794845725,
+  "brightness_label": "bright",
+  "harmonics": 60.5,
+  "high_at_c4": 0.7517304343076694,
+  "low_at_c2": 0.12986928844208262,
+  "mid_at_c4": 0.2281045958916254,
+  "name": "07___runner_ad2025_01",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 20.93561583850937
+ },
+ "07___runner_ad2025_02": {
+  "algorithm": 4,
+  "attack": 0.0024874669825354903,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.2378797139601585,
+  "brightness_label": "medium",
+  "harmonics": 16.0,
+  "high_at_c4": 5.482293098234818e-05,
+  "low_at_c2": 0.9831371016843506,
+  "mid_at_c4": 0.3526720431605227,
+  "name": "07___runner_ad2025_02",
+  "peak_dbfs": -18.711041307132284,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.870893381714264,
+  "worst_cents_error": 1199.2363380512074
+ },
+ "07___runner_ad2025_03": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 28.691949677892737,
+  "brightness_label": "bright",
+  "harmonics": 36.25,
+  "high_at_c4": 0.4848209608858026,
+  "low_at_c2": 0.16363441247996557,
+  "mid_at_c4": 0.3429699561536741,
+  "name": "07___runner_ad2025_03",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.22846210901106145,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 1307.2112722379072
+ },
+ "07___runner_ad2025_04": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.336101597280617,
+  "brightness_label": "bright",
+  "harmonics": 32.5,
+  "high_at_c4": 0.1305020317434734,
+  "low_at_c2": 0.4971918138214438,
+  "mid_at_c4": 0.2548433295488286,
+  "name": "07___runner_ad2025_04",
+  "peak_dbfs": -17.975288281284115,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.90845092078816,
+  "worst_cents_error": 5027.854109839561
+ },
+ "07___runner_ad2025_05": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.122842850353867,
+  "brightness_label": "medium",
+  "harmonics": 17.5,
+  "high_at_c4": 0.005920220061857982,
+  "low_at_c2": 0.9807244451796008,
+  "mid_at_c4": 0.775515169681768,
+  "name": "07___runner_ad2025_05",
+  "peak_dbfs": -18.711041307132284,
+  "release": 0.20224514568192326,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.917432599735243,
+  "worst_cents_error": 1197.8761490594643
+ },
+ "07___runner_ad2025_06": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 82.94105456911691,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.6591290232419464,
+  "low_at_c2": 0.19088371592763578,
+  "mid_at_c4": 0.1698235458543254,
+  "name": "07___runner_ad2025_06",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.540617125092087,
+  "worst_cents_error": 1249.820231458343
+ },
+ "07___runner_ad2025_07": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.506827529972252,
+  "brightness_label": "bright",
+  "harmonics": 18.25,
+  "high_at_c4": 0.0061608390793056805,
+  "low_at_c2": 0.7456300869928536,
+  "mid_at_c4": 0.6891057854924264,
+  "name": "07___runner_ad2025_07",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.957775866122716,
+  "worst_cents_error": 1196.9957617575255
+ },
+ "07___runner_ad2025_08": {
+  "algorithm": 5,
+  "attack": 0.000994986793014196,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 7.8742174673262415,
+  "brightness_label": "bright",
+  "harmonics": 35.75,
+  "high_at_c4": 0.10985696106090391,
+  "low_at_c2": 0.9300675184604397,
+  "mid_at_c4": 0.4525865406005915,
+  "name": "07___runner_ad2025_08",
+  "peak_dbfs": -19.053627838863978,
+  "release": 0.03245909745512349,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.206760131419873,
+  "worst_cents_error": 17.046211065858166
+ },
+ "07___runner_ad2025_09": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.296484133405484,
+  "brightness_label": "bright",
+  "harmonics": 16.5,
+  "high_at_c4": 0.0717006990712569,
+  "low_at_c2": 0.5678453766090632,
+  "mid_at_c4": 0.7046566644907091,
+  "name": "07___runner_ad2025_09",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.08863830458899107,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.801586229103094,
+  "worst_cents_error": 25.01037974219713
+ },
+ "07___runner_ad2025_10": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.682769016399392,
+  "brightness_label": "bright",
+  "harmonics": 17.25,
+  "high_at_c4": 0.07822193195634618,
+  "low_at_c2": 0.8043401596030594,
+  "mid_at_c4": 0.39288542385974906,
+  "name": "07___runner_ad2025_10",
+  "peak_dbfs": -19.782213151397478,
+  "release": 0.41947141326621123,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.597202925469375,
+  "worst_cents_error": 1224.0433312620212
+ },
+ "07___runner_ad2025_11": {
+  "algorithm": 5,
+  "attack": 0.04278443209961042,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.601969052422284,
+  "brightness_label": "medium",
+  "harmonics": 36.5,
+  "high_at_c4": 0.0661047233949105,
+  "low_at_c2": 0.9394770462075962,
+  "mid_at_c4": 0.29077708877157055,
+  "name": "07___runner_ad2025_11",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.17103447505199681,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.24411885412226,
+  "worst_cents_error": 3.2662313340687
+ },
+ "07___runner_ad2025_12": {
+  "algorithm": 5,
+  "attack": 0.018656002369016173,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.17477836715582,
+  "brightness_label": "medium",
+  "harmonics": 54.5,
+  "high_at_c4": 0.04583114174078758,
+  "low_at_c2": 0.9813755210925718,
+  "mid_at_c4": 0.0580192440479659,
+  "name": "07___runner_ad2025_12",
+  "peak_dbfs": -18.24394545956142,
+  "release": 0.1360785239464792,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.982268474620085,
+  "worst_cents_error": 1202.0769716808759
+ },
+ "07___runner_ad2025_13": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 33.532455112719134,
+  "brightness_label": "bright",
+  "harmonics": 38.0,
+  "high_at_c4": 0.5269866048267804,
+  "low_at_c2": 0.28783900591442224,
+  "mid_at_c4": 0.4250095507482912,
+  "name": "07___runner_ad2025_13",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.027804042280984,
+  "worst_cents_error": 1273.2098754081312
+ },
+ "07___runner_ad2025_14": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.0646275759726525,
+  "brightness_label": "bright",
+  "harmonics": 9.5,
+  "high_at_c4": 0.5555699942625768,
+  "low_at_c2": 0.5234342335677422,
+  "mid_at_c4": 0.29798958903766526,
+  "name": "07___runner_ad2025_14",
+  "peak_dbfs": -20.518266109552453,
+  "release": 0.19600301155593797,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.741680474745987,
+  "worst_cents_error": 1932.7973177807498
+ },
+ "07___runner_ad2025_15": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 9.763568502309118,
+  "brightness_label": "bright",
+  "harmonics": 23.25,
+  "high_at_c4": 0.519753065172852,
+  "low_at_c2": 0.28136564075372533,
+  "mid_at_c4": 0.4152893694449507,
+  "name": "07___runner_ad2025_15",
+  "peak_dbfs": -18.90514747727984,
+  "release": 0.11485526791812925,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.60643504995737,
+  "worst_cents_error": 2408.753332246426
+ },
+ "07___runner_ad2025_16": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.8641040827691824,
+  "brightness_label": "medium",
+  "harmonics": 2.0,
+  "high_at_c4": 0.2685320450229657,
+  "low_at_c2": 0.0002959966444790105,
+  "mid_at_c4": 0.7299960485464744,
+  "name": "07___runner_ad2025_16",
+  "peak_dbfs": -24.6837849580941,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.597202925469375,
+  "worst_cents_error": 3367.251733499411
+ },
+ "07___runner_ad2025_17": {
+  "algorithm": 5,
+  "attack": 0.007959894344113568,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.11362707693017,
+  "brightness_label": "bright",
+  "harmonics": 22.0,
+  "high_at_c4": 0.11777307792102706,
+  "low_at_c2": 0.8857697724692115,
+  "mid_at_c4": 0.22744528211024018,
+  "name": "07___runner_ad2025_17",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.70348202239649,
+  "worst_cents_error": 14.891109678553905
+ },
+ "07___runner_ad2025_18": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.822512753466779,
+  "brightness_label": "bright",
+  "harmonics": 27.5,
+  "high_at_c4": 0.01892415880092256,
+  "low_at_c2": 0.7534378021573148,
+  "mid_at_c4": 0.46535742789667806,
+  "name": "07___runner_ad2025_18",
+  "peak_dbfs": -21.387579985174256,
+  "release": 0.11485526791812926,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.371582717275594,
+  "worst_cents_error": 1202.1976028721583
+ },
+ "07___runner_ad2025_19": {
+  "algorithm": 4,
+  "attack": 0.001989973586028392,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.3952925172755775,
+  "brightness_label": "medium",
+  "harmonics": 16.0,
+  "high_at_c4": 4.76390896535101e-05,
+  "low_at_c2": 0.9631820192716375,
+  "mid_at_c4": 0.36363353270102944,
+  "name": "07___runner_ad2025_19",
+  "peak_dbfs": -18.615591009907384,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.573307753210504,
+  "worst_cents_error": 1199.6165562053807
+ },
+ "07___runner_ad2025_20": {
+  "algorithm": 5,
+  "attack": 0.015671041989973586,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.342377187876707,
+  "brightness_label": "bright",
+  "harmonics": 29.25,
+  "high_at_c4": 0.02120206983748254,
+  "low_at_c2": 0.850093824734449,
+  "mid_at_c4": 0.5002254834104041,
+  "name": "07___runner_ad2025_20",
+  "peak_dbfs": -18.90514747727984,
+  "release": 0.2034935725071203,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.35524049300401,
+  "worst_cents_error": 1240.5268958728875
+ },
+ "07___runner_ad2025_21": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 134.88607780354204,
+  "brightness_label": "bright",
+  "harmonics": 42.75,
+  "high_at_c4": 0.6718017624694077,
+  "low_at_c2": 0.28573779608560756,
+  "mid_at_c4": 0.10987625317384647,
+  "name": "07___runner_ad2025_21",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.801586229103094,
+  "worst_cents_error": 3445.5100798778403
+ },
+ "08___from_objector_01": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.384894339137325,
+  "brightness_label": "medium",
+  "harmonics": 11.5,
+  "high_at_c4": 0.11160366472507184,
+  "low_at_c2": 0.8696216069096212,
+  "mid_at_c4": 0.4747093112337628,
+  "name": "08___from_objector_01",
+  "peak_dbfs": -17.215843606203865,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.011388166885855,
+  "worst_cents_error": 42.5579693054931
+ },
+ "08___from_objector_02": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.6227871159625327,
+  "brightness_label": "medium",
+  "harmonics": 26.5,
+  "high_at_c4": 0.053054882421948196,
+  "low_at_c2": 0.9288296695849884,
+  "mid_at_c4": 0.260643875215154,
+  "name": "08___from_objector_02",
+  "peak_dbfs": -15.87113837489521,
+  "release": 0.01373269507716763,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.260239909721697,
+  "worst_cents_error": 1209.890084817772
+ },
+ "08___from_objector_03": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.6814124899284075,
+  "brightness_label": "medium",
+  "harmonics": 7.75,
+  "high_at_c4": 6.726775646171734e-05,
+  "low_at_c2": 0.9738695938381474,
+  "mid_at_c4": 0.5877641408166144,
+  "name": "08___from_objector_03",
+  "peak_dbfs": -16.224271953018604,
+  "release": 0.08239617046300578,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.83452644841757,
+  "worst_cents_error": 4.5292229684967245
+ },
+ "08___from_objector_04": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.520458288080762,
+  "brightness_label": "bright",
+  "harmonics": 33.75,
+  "high_at_c4": 0.5032340564199336,
+  "low_at_c2": 0.22319060495067825,
+  "mid_at_c4": 0.4900076993149365,
+  "name": "08___from_objector_04",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.044943365707094056,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 1204.9413277454053
+ },
+ "08___from_objector_05": {
+  "algorithm": 5,
+  "attack": 0.049003099555949156,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.507288957568116,
+  "brightness_label": "bright",
+  "harmonics": 34.75,
+  "high_at_c4": 0.0713251558830314,
+  "low_at_c2": 0.8926594005690336,
+  "mid_at_c4": 0.3205880186180597,
+  "name": "08___from_objector_05",
+  "peak_dbfs": -23.86461280451597,
+  "release": 0.016229548727561743,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.077439286435244,
+  "worst_cents_error": 1307.143791615182
+ },
+ "08___from_objector_06": {
+  "algorithm": 3,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.506827529972252,
+  "brightness_label": "bright",
+  "harmonics": 18.25,
+  "high_at_c4": 0.0061608390793056805,
+  "low_at_c2": 0.7456300869928536,
+  "mid_at_c4": 0.6891057854924264,
+  "name": "08___from_objector_06",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.957775866122716,
+  "worst_cents_error": 1196.9957617575255
+ },
+ "08___from_objector_07": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.20206296433915,
+  "brightness_label": "medium",
+  "harmonics": 27.0,
+  "high_at_c4": 0.0266696017804408,
+  "low_at_c2": 0.7156248066595059,
+  "mid_at_c4": 0.7190994361472971,
+  "name": "08___from_objector_07",
+  "peak_dbfs": -18.711041307132284,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.953749961235783,
+  "worst_cents_error": 6.111652414305998
+ },
+ "08___from_objector_08": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 9.999724519265342,
+  "brightness_label": "bright",
+  "harmonics": 13.25,
+  "high_at_c4": 0.23115990170455575,
+  "low_at_c2": 0.7068568934208053,
+  "mid_at_c4": 0.4838333484592003,
+  "name": "08___from_objector_08",
+  "peak_dbfs": -20.170784188163996,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.644796960376475,
+  "worst_cents_error": 24.552069878158512
+ },
+ "08___from_objector_09": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.5759518318529846,
+  "brightness_label": "medium",
+  "harmonics": 27.0,
+  "high_at_c4": 0.09680021059243664,
+  "low_at_c2": 0.8056643699709758,
+  "mid_at_c4": 0.21657905897479615,
+  "name": "08___from_objector_09",
+  "peak_dbfs": -17.975288281284115,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.90845092078816,
+  "worst_cents_error": 5002.952737806755
+ },
+ "08___from_objector_10": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 0.7293497010553062,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 4.346541570246002e-05,
+  "low_at_c2": 0.9989501227344977,
+  "mid_at_c4": 0.691165276119604,
+  "name": "08___from_objector_10",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.2122325602834997,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.03708879959273,
+  "worst_cents_error": 2403.1514754843374
+ },
+ "08___from_objector_11": {
+  "algorithm": 5,
+  "attack": 0.05795798069307692,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.910248859221897,
+  "brightness_label": "bright",
+  "harmonics": 27.5,
+  "high_at_c4": 0.055840789968094995,
+  "low_at_c2": 0.8885500796720912,
+  "mid_at_c4": 0.30858937149561394,
+  "name": "08___from_objector_11",
+  "peak_dbfs": -23.440826823117213,
+  "release": 0.023720109678744085,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 16.90196080028514,
+  "worst_cents_error": 1252.9657705166342
+ },
+ "08___from_objector_12": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.857584661433834,
+  "brightness_label": "medium",
+  "harmonics": 9.5,
+  "high_at_c4": 0.018364954723901327,
+  "low_at_c2": 0.44540599058130614,
+  "mid_at_c4": 0.6920716808752481,
+  "name": "08___from_objector_12",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 1906.818499710034
+ },
+ "08___from_objector_13": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 38.14282162753237,
+  "brightness_label": "bright",
+  "harmonics": 57.0,
+  "high_at_c4": 0.46426162537956966,
+  "low_at_c2": 0.4100589067844655,
+  "mid_at_c4": 0.48545968629793057,
+  "name": "08___from_objector_13",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.058676060784261685,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 1246.7562000730788
+ },
+ "08___from_objector_14": {
+  "algorithm": 5,
+  "attack": 0.001243733491267745,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.519564295905894,
+  "brightness_label": "medium",
+  "harmonics": 22.75,
+  "high_at_c4": 0.08553863157601445,
+  "low_at_c2": 0.9596907264077681,
+  "mid_at_c4": 0.6161968224790125,
+  "name": "08___from_objector_14",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.031210670629926426,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.599323762896116,
+  "worst_cents_error": 2406.78800032808
+ },
+ "08___from_objector_15": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 10.315543587679063,
+  "brightness_label": "bright",
+  "harmonics": 19.5,
+  "high_at_c4": 0.26575371214946103,
+  "low_at_c2": 0.6815523433944086,
+  "mid_at_c4": 0.6556983077069904,
+  "name": "08___from_objector_15",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.22221997488507617,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.558939032583773,
+  "worst_cents_error": 25.593187070542708
+ },
+ "08___from_objector_16": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 16.50075687474856,
+  "brightness_label": "bright",
+  "harmonics": 28.0,
+  "high_at_c4": 0.6108097437261231,
+  "low_at_c2": 0.1799816491105219,
+  "mid_at_c4": 0.343649230251607,
+  "name": "08___from_objector_16",
+  "peak_dbfs": -22.426972658393467,
+  "release": 0.009987414601576457,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.915814965008884,
+  "worst_cents_error": 79.11168732399943
+ },
+ "08___from_objector_17": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.8946635295401033,
+  "brightness_label": "dark",
+  "harmonics": 37.25,
+  "high_at_c4": 0.007089829865697436,
+  "low_at_c2": 0.9801222642456293,
+  "mid_at_c4": 0.12466722791882806,
+  "name": "08___from_objector_17",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0986257191905675,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 15.246533805560109,
+  "worst_cents_error": 1197.3953612437915
+ },
+ "08___from_objector_18": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.2472135104438027,
+  "brightness_label": "medium",
+  "harmonics": 11.5,
+  "high_at_c4": 0.00499845246898691,
+  "low_at_c2": 0.9869646350019147,
+  "mid_at_c4": 0.11039224927585672,
+  "name": "08___from_objector_18",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.04744021935748817,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.061799739838868,
+  "worst_cents_error": 1203.196568966451
+ },
+ "08___from_objector_19": {
+  "algorithm": 1,
+  "attack": 0.20123607888712114,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.108402310288078,
+  "brightness_label": "bright",
+  "harmonics": 19.5,
+  "high_at_c4": 0.09195613105180031,
+  "low_at_c2": 0.7543294178590352,
+  "mid_at_c4": 0.23880086510797688,
+  "name": "08___from_objector_19",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.0049937073007882285,
+  "roles": [],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.739209733828154,
+  "worst_cents_error": 41.299128684735
+ },
+ "11_________shade_01": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2793480572808011,
+  "brightness_label": "dark",
+  "harmonics": 6.0,
+  "high_at_c4": 0.0016060969778800551,
+  "low_at_c2": 0.9977093105446095,
+  "mid_at_c4": 9.093819564533817e-06,
+  "name": "11_________shade_01",
+  "peak_dbfs": -17.587268397132906,
+  "release": 0.6928768879843666,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.966407680696086,
+  "worst_cents_error": 1200.9176994223294
+ },
+ "11_________shade_02": {
+  "algorithm": 7,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.791003858627018,
+  "brightness_label": "bright",
+  "harmonics": 4.25,
+  "high_at_c4": 0.04305481697932816,
+  "low_at_c2": 0.9467742994845689,
+  "mid_at_c4": 0.0787152654456287,
+  "name": "11_________shade_02",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.6404429613260904,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 16.343507165707006,
+  "worst_cents_error": 4688.4072946993765
+ },
+ "11_________shade_03": {
+  "algorithm": 7,
+  "attack": 0.0014924801895212939,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.215678971047285,
+  "brightness_label": "dark",
+  "harmonics": 3.25,
+  "high_at_c4": 0.002072000784251116,
+  "low_at_c2": 0.9963069399051179,
+  "mid_at_c4": 7.216096770025063e-06,
+  "name": "11_________shade_03",
+  "peak_dbfs": -18.521178236455697,
+  "release": 0.5268361202331581,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.86318970968992,
+  "worst_cents_error": 1199.7320163316092
+ },
+ "11_________shade_04": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2522258205545396,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 0.05231204779332535,
+  "low_at_c2": 0.04129919117448988,
+  "mid_at_c4": 0.9473510125094747,
+  "name": "11_________shade_04",
+  "peak_dbfs": -18.24394545956142,
+  "release": 0.12109740204411454,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.84189205380961,
+  "worst_cents_error": 3604.021634685864
+ },
+ "11_________shade_05": {
+  "algorithm": 5,
+  "attack": 0.021392216049805214,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.776455208417373,
+  "brightness_label": "bright",
+  "harmonics": 1.75,
+  "high_at_c4": 0.7442526939140391,
+  "low_at_c2": 0.15106152295023542,
+  "mid_at_c4": 0.000180778175624879,
+  "name": "11_________shade_05",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.11610369474332631,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.474864429275737,
+  "worst_cents_error": 4565.924288541812
+ },
+ "11_________shade_06": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.704873087719893,
+  "brightness_label": "bright",
+  "harmonics": 17.0,
+  "high_at_c4": 0.016756205004702564,
+  "low_at_c2": 0.7943691921674093,
+  "mid_at_c4": 0.6589770367271722,
+  "name": "11_________shade_06",
+  "peak_dbfs": -16.55485310669798,
+  "release": 0.19100930425514973,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.97489183664985,
+  "worst_cents_error": 1198.9575598596139
+ },
+ "11_________shade_07": {
+  "algorithm": 7,
+  "attack": 0.07586774296733245,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 11.658508109716708,
+  "brightness_label": "bright",
+  "harmonics": 8.75,
+  "high_at_c4": 0.19545800427481808,
+  "low_at_c2": 0.8939911390110815,
+  "mid_at_c4": 0.3708493727825639,
+  "name": "11_________shade_07",
+  "peak_dbfs": -17.095482932423877,
+  "release": 0.4057387181890436,
+  "roles": [
+   "pad"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.206760131419877,
+  "worst_cents_error": 5299.588619361723
+ },
+ "11_________shade_08": {
+  "algorithm": 5,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.064904558219799,
+  "brightness_label": "bright",
+  "harmonics": 29.0,
+  "high_at_c4": 0.055715984470996134,
+  "low_at_c2": 0.8864692796973702,
+  "mid_at_c4": 0.2930482555387337,
+  "name": "11_________shade_08",
+  "peak_dbfs": -24.219188143724605,
+  "release": 0.06117291443465579,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.06179973983887,
+  "worst_cents_error": 1302.976165756003
+ },
+ "11_________shade_09": {
+  "algorithm": 7,
+  "attack": 0.05746048729656982,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 31.987088704238744,
+  "brightness_label": "bright",
+  "harmonics": 18.25,
+  "high_at_c4": 0.23618489917946459,
+  "low_at_c2": 0.7161061704696403,
+  "mid_at_c4": 0.1520477711443137,
+  "name": "11_________shade_09",
+  "peak_dbfs": -18.063920577265613,
+  "release": 0.786508899874146,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 18.973204825994127,
+  "worst_cents_error": 3.453504079834173
+ },
+ "11_________shade_10": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.0704043902798697,
+  "brightness_label": "dark",
+  "harmonics": 3.75,
+  "high_at_c4": 9.514852412730424e-05,
+  "low_at_c2": 0.9310660978145561,
+  "mid_at_c4": 0.9990888455819502,
+  "name": "11_________shade_10",
+  "peak_dbfs": -19.72809528387898,
+  "release": 0.36953434025832893,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.63277971812622,
+  "worst_cents_error": 1206.044821071536
+ },
+ "11_________shade_11": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 0.9999570962660433,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 1.5015083074219524e-05,
+  "low_at_c2": 0.9999811593377541,
+  "mid_at_c4": 5.357577679125469e-06,
+  "name": "11_________shade_11",
+  "peak_dbfs": -23.951908912564974,
+  "release": 0.011235841426773514,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.633836845814265,
+  "worst_cents_error": 3.3992173566623336
+ },
+ "11_________shade_12": {
+  "algorithm": 7,
+  "attack": 0.09377750524158798,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 23.42021083331726,
+  "brightness_label": "bright",
+  "harmonics": 8.75,
+  "high_at_c4": 0.25863051840446416,
+  "low_at_c2": 0.7293579376228712,
+  "mid_at_c4": 0.3235371264657261,
+  "name": "11_________shade_12",
+  "peak_dbfs": -16.667903157718214,
+  "release": 0.2122325602834997,
+  "roles": [
+   "pad"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.290662766677027,
+  "worst_cents_error": 5104.283092270113
+ },
+ "11_________shade_13": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.7890478621122188,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 0.33308010564512885,
+  "low_at_c2": 0.33369444047787333,
+  "mid_at_c4": 0.6659097747981813,
+  "name": "11_________shade_13",
+  "peak_dbfs": -19.053627838863978,
+  "release": 0.07740246316221755,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.389627720217266,
+  "worst_cents_error": 3604.355817536421
+ },
+ "11_________shade_14": {
+  "algorithm": 6,
+  "attack": 0.07686272976034664,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.2848055225047266,
+  "brightness_label": "medium",
+  "harmonics": 12.25,
+  "high_at_c4": 0.0709182582504634,
+  "low_at_c2": 0.819478973805602,
+  "mid_at_c4": 0.034578493273004086,
+  "name": "11_________shade_14",
+  "peak_dbfs": -21.067031076491244,
+  "release": 0.06242134125985285,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.25177544349185,
+  "worst_cents_error": 11.735752542630143
+ },
+ "11_________shade_15": {
+  "algorithm": 0,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.38162628016338,
+  "brightness_label": "medium",
+  "harmonics": 11.5,
+  "high_at_c4": 0.11124324384990127,
+  "low_at_c2": 0.869449280987823,
+  "mid_at_c4": 0.47369559720126775,
+  "name": "11_________shade_15",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.94468484685783,
+  "worst_cents_error": 42.56640721649131
+ },
+ "14___lurk_01": {
+  "algorithm": 7,
+  "attack": 0.06119168777037305,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 16.1018735639782,
+  "brightness_label": "bright",
+  "harmonics": 26.0,
+  "high_at_c4": 0.25813357181009955,
+  "low_at_c2": 0.48234551539156373,
+  "mid_at_c4": 0.429547144797976,
+  "name": "14___lurk_01",
+  "peak_dbfs": -17.01615918807185,
+  "release": 0.0174779755527588,
+  "roles": [],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.7659973869433,
+  "worst_cents_error": 2398.9743160254393
+ },
+ "14___lurk_02": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.6221483110415171,
+  "brightness_label": "dark",
+  "harmonics": 5.0,
+  "high_at_c4": 0.15763168426311858,
+  "low_at_c2": 0.8680141870916971,
+  "mid_at_c4": 0.7067240471416074,
+  "name": "14___lurk_02",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.2334558163118497,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.166721166554908,
+  "worst_cents_error": 2395.5781195742934
+ },
+ "14___lurk_03": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.9918774221169357,
+  "brightness_label": "medium",
+  "harmonics": 6.25,
+  "high_at_c4": 0.40407202246485535,
+  "low_at_c2": 0.5809589179121736,
+  "mid_at_c4": 0.5857286536009911,
+  "name": "14___lurk_03",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.09987414601576457,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 2404.6724906365807
+ },
+ "14___lurk_04": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 18.604652481847573,
+  "brightness_label": "bright",
+  "harmonics": 13.0,
+  "high_at_c4": 0.4600965841614051,
+  "low_at_c2": 0.5468622061951418,
+  "mid_at_c4": 0.14922154079239208,
+  "name": "14___lurk_04",
+  "peak_dbfs": -18.759162702449853,
+  "release": 0.23844952361263794,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.501225267834,
+  "worst_cents_error": 38.270905009435765
+ },
+ "14___lurk_05": {
+  "algorithm": 7,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.3251100230630954,
+  "brightness_label": "dark",
+  "harmonics": 2.25,
+  "high_at_c4": 0.1554918417177519,
+  "low_at_c2": 0.3993973449571171,
+  "mid_at_c4": 0.7415833840072101,
+  "name": "14___lurk_05",
+  "peak_dbfs": -16.081291117225327,
+  "release": 0.2509337918646085,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.555343135352498,
+  "worst_cents_error": 3604.9880758708964
+ },
+ "14___lurk_06": {
+  "algorithm": 6,
+  "attack": 0.001492480189521294,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4817819761280613,
+  "brightness_label": "dark",
+  "harmonics": 0.75,
+  "high_at_c4": 4.8036609696136194e-05,
+  "low_at_c2": 0.2301079404281166,
+  "mid_at_c4": 0.7696961646333125,
+  "name": "14___lurk_06",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.10736470696694692,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.675696635931143,
+  "worst_cents_error": 3100.953698905284
+ },
+ "14___lurk_07": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 17.720973382546784,
+  "brightness_label": "bright",
+  "harmonics": 26.5,
+  "high_at_c4": 0.646096857101219,
+  "low_at_c2": 0.2949486341584873,
+  "mid_at_c4": 0.3062764802796556,
+  "name": "14___lurk_07",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.10986156061734102,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 2406.3014471379893
+ },
+ "14___lurk_08": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.011693170123829,
+  "brightness_label": "medium",
+  "harmonics": 7.5,
+  "high_at_c4": 0.00013944394984285427,
+  "low_at_c2": 0.9998130991920722,
+  "mid_at_c4": 0.12623494157346776,
+  "name": "14___lurk_08",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.058676060784261685,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 16.684173951682613,
+  "worst_cents_error": 1205.0975696133714
+ },
+ "14___lurk_09": {
+  "algorithm": 5,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.59030540787648,
+  "brightness_label": "medium",
+  "harmonics": 19.75,
+  "high_at_c4": 0.11091959661870598,
+  "low_at_c2": 0.7943574095349187,
+  "mid_at_c4": 0.7306601218487283,
+  "name": "14___lurk_09",
+  "peak_dbfs": -17.672009455997998,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.871821311808418,
+  "worst_cents_error": 1197.3645684597
+ },
+ "14___lurk_10": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.510156430326093,
+  "brightness_label": "bright",
+  "harmonics": 60.25,
+  "high_at_c4": 0.05075032703901042,
+  "low_at_c2": 0.9831162365737426,
+  "mid_at_c4": 0.08876961385768589,
+  "name": "14___lurk_10",
+  "peak_dbfs": -20.45937849661683,
+  "release": 0.06616662173544402,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.3257467816839,
+  "worst_cents_error": 1204.7272093790102
+ },
+ "14___lurk_11": {
+  "algorithm": 5,
+  "attack": 0.11044353402457575,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 4.5553131068667145,
+  "brightness_label": "medium",
+  "harmonics": 16.5,
+  "high_at_c4": 0.10189247374466538,
+  "low_at_c2": 0.9154448191765975,
+  "mid_at_c4": 0.6520379536746751,
+  "name": "14___lurk_11",
+  "peak_dbfs": -17.545205895377617,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.618490747055425,
+  "worst_cents_error": 1194.6867809798523
+ },
+ "14___lurk_12": {
+  "algorithm": 5,
+  "attack": 0.009701121231888411,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.476268154282058,
+  "brightness_label": "bright",
+  "harmonics": 29.75,
+  "high_at_c4": 0.09417101138682296,
+  "low_at_c2": 0.9110413992104045,
+  "mid_at_c4": 0.08007281268850999,
+  "name": "14___lurk_12",
+  "peak_dbfs": -18.90514747727984,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.5570832715174,
+  "worst_cents_error": 1194.716042454437
+ },
+ "14___lurk_13": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.8994786600091413,
+  "brightness_label": "medium",
+  "harmonics": 17.75,
+  "high_at_c4": 0.3837923530489718,
+  "low_at_c2": 0.6281613393426547,
+  "mid_at_c4": 0.053723537035512504,
+  "name": "14___lurk_13",
+  "peak_dbfs": -17.461687082294894,
+  "release": 0.08239617046300578,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.583556591730648,
+  "worst_cents_error": 4574.1016978871585
+ },
+ "14___lurk_14": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.503877557581745,
+  "brightness_label": "medium",
+  "harmonics": 26.0,
+  "high_at_c4": 0.05257929580699724,
+  "low_at_c2": 0.9643190844397053,
+  "mid_at_c4": 0.7736585430903206,
+  "name": "14___lurk_14",
+  "peak_dbfs": -21.130201461387838,
+  "release": 0.07240875586142932,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.58128011690748,
+  "worst_cents_error": 1192.310341365847
+ },
+ "14___lurk_15": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.658288078396412,
+  "brightness_label": "bright",
+  "harmonics": 4.75,
+  "high_at_c4": 0.43744894461486494,
+  "low_at_c2": 0.48576351333875495,
+  "mid_at_c4": 1.6342104175527722e-05,
+  "name": "14___lurk_15",
+  "peak_dbfs": -21.720413411558606,
+  "release": 0.5992448760945874,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 18.06179973983887,
+  "worst_cents_error": 4910.637667486289
+ },
+ "17___7th_force_01": {
+  "algorithm": 5,
+  "attack": 0.003731200473803235,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.017082387404137,
+  "brightness_label": "bright",
+  "harmonics": 25.25,
+  "high_at_c4": 0.15497161312446375,
+  "low_at_c2": 0.5166455389136636,
+  "mid_at_c4": 0.5078389384402056,
+  "name": "17___7th_force_01",
+  "peak_dbfs": -16.333073663385736,
+  "release": 0.1273395361700998,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.721894840591357,
+  "worst_cents_error": 7.2576490061735575
+ },
+ "17___7th_force_02": {
+  "algorithm": 6,
+  "attack": 0.000994986793014196,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 10.824842973092604,
+  "brightness_label": "bright",
+  "harmonics": 5.0,
+  "high_at_c4": 0.3900202523612548,
+  "low_at_c2": 0.5493692382921774,
+  "mid_at_c4": 0.10961959242867014,
+  "name": "17___7th_force_02",
+  "peak_dbfs": -17.587268397132906,
+  "release": 0.19600301155593797,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.72981450344964,
+  "worst_cents_error": 4298.123891500247
+ },
+ "17___7th_force_03": {
+  "algorithm": 5,
+  "attack": 0.05870422078783756,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 13.024531451208087,
+  "brightness_label": "bright",
+  "harmonics": 52.0,
+  "high_at_c4": 0.2950280651270967,
+  "low_at_c2": 0.6155582357474667,
+  "mid_at_c4": 0.1860557286615061,
+  "name": "17___7th_force_03",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.024968536503941142,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.256536139493768,
+  "worst_cents_error": 1221.9281741884686
+ },
+ "17___7th_force_04": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.306074220511125,
+  "brightness_label": "bright",
+  "harmonics": 10.75,
+  "high_at_c4": 3.961161381521294e-05,
+  "low_at_c2": 0.7764085435066985,
+  "mid_at_c4": 0.5264450068820463,
+  "name": "17___7th_force_04",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 1197.5854632753967
+ },
+ "17___7th_force_05": {
+  "algorithm": 5,
+  "attack": 0.014427308498705842,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 9.118508144467294,
+  "brightness_label": "bright",
+  "harmonics": 38.25,
+  "high_at_c4": 0.09984180274085541,
+  "low_at_c2": 0.7594872857854962,
+  "mid_at_c4": 0.5922411794298051,
+  "name": "17___7th_force_05",
+  "peak_dbfs": -18.063920577265613,
+  "release": 0.022471682853547028,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.66591853106187,
+  "worst_cents_error": 1231.5371689989167
+ },
+ "17___7th_force_06": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 29.01091259886593,
+  "brightness_label": "bright",
+  "harmonics": 39.0,
+  "high_at_c4": 0.3527375135886135,
+  "low_at_c2": 0.34185416136035573,
+  "mid_at_c4": 0.5547017082631741,
+  "name": "17___7th_force_06",
+  "peak_dbfs": -17.93130899928535,
+  "release": 0.2297105358362585,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.744321677798435,
+  "worst_cents_error": 29.117991605308386
+ },
+ "17___7th_force_07": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.363470883793568,
+  "brightness_label": "medium",
+  "harmonics": 3.5,
+  "high_at_c4": 0.3618485834131891,
+  "low_at_c2": 0.5281202351368296,
+  "mid_at_c4": 0.6374271997265348,
+  "name": "17___7th_force_07",
+  "peak_dbfs": -20.942052090951215,
+  "release": 0.11735212156852337,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.817110611498634,
+  "worst_cents_error": 2404.4152099932853
+ },
+ "17___7th_force_08": {
+  "algorithm": 2,
+  "attack": 0.050246833047216895,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.367608970755244,
+  "brightness_label": "bright",
+  "harmonics": 12.25,
+  "high_at_c4": 0.18024792027556763,
+  "low_at_c2": 0.585540560735224,
+  "mid_at_c4": 0.6138777095206112,
+  "name": "17___7th_force_08",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.11485526791812925,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 25.85445277004652
+ },
+ "17___7th_force_09": {
+  "algorithm": 1,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 21.27396302655403,
+  "brightness_label": "bright",
+  "harmonics": 62.5,
+  "high_at_c4": 0.3853383609831969,
+  "low_at_c2": 0.2320078885291169,
+  "mid_at_c4": 0.5191985592586252,
+  "name": "17___7th_force_09",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.16728919457640568,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.957775866122716,
+  "worst_cents_error": 1243.0598138222974
+ },
+ "17___7th_force_10": {
+  "algorithm": 4,
+  "attack": 0.053231793426259486,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 9.322634856591254,
+  "brightness_label": "bright",
+  "harmonics": 9.75,
+  "high_at_c4": 0.3044810785628482,
+  "low_at_c2": 0.5751918920013804,
+  "mid_at_c4": 0.6766199939530052,
+  "name": "17___7th_force_10",
+  "peak_dbfs": -20.28507385865258,
+  "release": 0.2247168285354703,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.48673670794736,
+  "worst_cents_error": 13.566050311325611
+ },
+ "17___7th_force_11": {
+  "algorithm": 4,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.267007806270959,
+  "brightness_label": "bright",
+  "harmonics": 19.75,
+  "high_at_c4": 0.769603566854941,
+  "low_at_c2": 0.21034625004188254,
+  "mid_at_c4": 0.20425219959545746,
+  "name": "17___7th_force_11",
+  "peak_dbfs": -18.108578205911453,
+  "release": 0.9076063019182605,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "long",
+  "usable": true,
+  "velocity_range_db": 17.72981450344964,
+  "worst_cents_error": 2399.7372358914827
+ },
+ "17___7th_force_12": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.723038191985982,
+  "brightness_label": "bright",
+  "harmonics": 20.5,
+  "high_at_c4": 0.8587846751251215,
+  "low_at_c2": 0.019959768741241876,
+  "mid_at_c4": 0.13401784644544845,
+  "name": "17___7th_force_12",
+  "peak_dbfs": -21.004316799434072,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.754845903015777,
+  "worst_cents_error": 4689.90274602968
+ },
+ "17___7th_force_13": {
+  "algorithm": 4,
+  "attack": 0.053231793426259486,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.695849307882819,
+  "brightness_label": "bright",
+  "harmonics": 4.25,
+  "high_at_c4": 0.5401671158034056,
+  "low_at_c2": 0.4748552566929369,
+  "mid_at_c4": 0.4454409566065774,
+  "name": "17___7th_force_13",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.2272136821858644,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.558939032583773,
+  "worst_cents_error": 2412.7230823824934
+ },
+ "17___7th_force_14": {
+  "algorithm": 4,
+  "attack": 0.003731200473803235,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 44.18805389809013,
+  "brightness_label": "bright",
+  "harmonics": 54.75,
+  "high_at_c4": 0.45472642161563087,
+  "low_at_c2": 0.5061351467053778,
+  "mid_at_c4": 0.5262823103727768,
+  "name": "17___7th_force_14",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.18601559695436148,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.616271845615827,
+  "worst_cents_error": 1233.7718690226525
+ },
+ "17___7th_force_15": {
+  "algorithm": 5,
+  "attack": 0.02039722925679102,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.580601356219212,
+  "brightness_label": "medium",
+  "harmonics": 8.5,
+  "high_at_c4": 0.0868131612310044,
+  "low_at_c2": 0.9416932138176523,
+  "mid_at_c4": 0.8798079921127111,
+  "name": "17___7th_force_15",
+  "peak_dbfs": -21.58574575837924,
+  "release": 0.07116032903623226,
+  "roles": [
+   "bass",
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.038749290891243,
+  "worst_cents_error": 1194.8079659581736
+ },
+ "17___7th_force_16": {
+  "algorithm": 6,
+  "attack": 0.002238720284281941,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 5.635152916575505,
+  "brightness_label": "bright",
+  "harmonics": 19.25,
+  "high_at_c4": 0.07511672855255128,
+  "low_at_c2": 0.9585002583762481,
+  "mid_at_c4": 0.3804771353876015,
+  "name": "17___7th_force_16",
+  "peak_dbfs": -20.227741045620526,
+  "release": null,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "unknown",
+  "usable": true,
+  "velocity_range_db": 17.696910657516895,
+  "worst_cents_error": 9.00264793335168
+ },
+ "17___7th_force_17": {
+  "algorithm": 1,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 50.67416289412533,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.896055756755382,
+  "low_at_c2": 0.05918369311300466,
+  "mid_at_c4": 0.09261300511828409,
+  "name": "17___7th_force_17",
+  "peak_dbfs": -22.426972658393467,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.915814965008884,
+  "worst_cents_error": 1401.6374807010438
+ },
+ "17___7th_force_18": {
+  "algorithm": 0,
+  "attack": 0.03780949813453945,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 0.9999709303599845,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 5.534395623076263e-06,
+  "low_at_c2": 0.9999933093744627,
+  "mid_at_c4": 3.203958170957746e-06,
+  "name": "17___7th_force_18",
+  "peak_dbfs": -15.699813498278981,
+  "release": null,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "unknown",
+  "usable": true,
+  "velocity_range_db": 18.06179973983887,
+  "worst_cents_error": 1204.7294718618828
+ },
+ "17___7th_force_19": {
+  "algorithm": 5,
+  "attack": 0.021392216049805214,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.6829243419697884,
+  "brightness_label": "medium",
+  "harmonics": 33.75,
+  "high_at_c4": 0.06342958123595856,
+  "low_at_c2": 0.9102213875152616,
+  "mid_at_c4": 0.3216447239330569,
+  "name": "17___7th_force_19",
+  "peak_dbfs": -19.567735843562016,
+  "release": 0.07740246316221755,
+  "roles": [
+   "bass",
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.799366193400772,
+  "worst_cents_error": 3.218450188393916
+ },
+ "17___7th_force_20": {
+  "algorithm": 1,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 154.4970270251275,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.8872980185464648,
+  "low_at_c2": 0.025219624868483177,
+  "mid_at_c4": 0.10166203664313747,
+  "name": "17___7th_force_20",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 2338.2747426009164
+ },
+ "17___7th_force_21": {
+  "algorithm": 1,
+  "attack": 0.04999808634896335,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 170.30418408407644,
+  "brightness_label": "bright",
+  "harmonics": 64.0,
+  "high_at_c4": 0.8854370096037886,
+  "low_at_c2": 0.012184618756963552,
+  "mid_at_c4": 0.09946862978555121,
+  "name": "17___7th_force_21",
+  "peak_dbfs": -19.46245104371487,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.94468484685783,
+  "worst_cents_error": 2452.811290493826
+ },
+ "17___7th_force_22": {
+  "algorithm": 1,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 11.557516493053054,
+  "brightness_label": "bright",
+  "harmonics": 28.75,
+  "high_at_c4": 0.903689735155908,
+  "low_at_c2": 0.009194083402224301,
+  "mid_at_c4": 0.09469896820167266,
+  "name": "17___7th_force_22",
+  "peak_dbfs": -23.19613769477698,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.745914396174236,
+  "worst_cents_error": 4446.546346160765
+ },
+ "17___7th_force_23": {
+  "algorithm": 1,
+  "attack": 0.001243733491267745,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 59.684381675538646,
+  "brightness_label": "bright",
+  "harmonics": 57.75,
+  "high_at_c4": 0.7111968090354681,
+  "low_at_c2": 0.11271532040881804,
+  "mid_at_c4": 0.2719671030178367,
+  "name": "17___7th_force_23",
+  "peak_dbfs": -22.426972658393467,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.915814965008884,
+  "worst_cents_error": 1305.4928096059705
+ },
+ "17___7th_force_24": {
+  "algorithm": 5,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 60.976456039455655,
+  "brightness_label": "bright",
+  "harmonics": 26.75,
+  "high_at_c4": 0.9496205949994776,
+  "low_at_c2": 0.0275502070128143,
+  "mid_at_c4": 0.049154535348366946,
+  "name": "17___7th_force_24",
+  "peak_dbfs": -15.699813498278981,
+  "release": null,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "unknown",
+  "usable": true,
+  "velocity_range_db": 17.099278383495,
+  "worst_cents_error": 200.99183021332385
+ },
+ "18___galaxy_desert_01": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.3529576521002076,
+  "brightness_label": "medium",
+  "harmonics": 57.5,
+  "high_at_c4": 0.02558364741221544,
+  "low_at_c2": 0.9249986675118715,
+  "mid_at_c4": 0.17446813492318314,
+  "name": "18___galaxy_desert_01",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.07615403633702049,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 12.075195524117138,
+  "worst_cents_error": 1200.8847825148293
+ },
+ "18___galaxy_desert_02": {
+  "algorithm": 2,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.591365298873738,
+  "brightness_label": "bright",
+  "harmonics": 40.0,
+  "high_at_c4": 0.1283428265282297,
+  "low_at_c2": 0.7903590273612857,
+  "mid_at_c4": 0.7715234010452457,
+  "name": "18___galaxy_desert_02",
+  "peak_dbfs": -23.951908912564974,
+  "release": 0.058676060784261685,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.633836845814265,
+  "worst_cents_error": 4.380664028547886
+ },
+ "18___galaxy_desert_03": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2649337502257418,
+  "brightness_label": "dark",
+  "harmonics": 10.5,
+  "high_at_c4": 0.016192323089095254,
+  "low_at_c2": 0.9423149811424578,
+  "mid_at_c4": 0.06348766075472523,
+  "name": "18___galaxy_desert_03",
+  "peak_dbfs": -18.568256344325246,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.747607387045605,
+  "worst_cents_error": 21.715212224813083
+ },
+ "18___galaxy_desert_04": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 58.30530145365162,
+  "brightness_label": "bright",
+  "harmonics": 25.25,
+  "high_at_c4": 0.29342021876901997,
+  "low_at_c2": 0.4998393234687618,
+  "mid_at_c4": 0.5659943182692357,
+  "name": "18___galaxy_desert_04",
+  "peak_dbfs": -17.93130899928535,
+  "release": 0.218474694409485,
+  "roles": [
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.72199290036543,
+  "worst_cents_error": 1196.6061592723386
+ },
+ "18___galaxy_desert_05": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.408927983795389,
+  "brightness_label": "medium",
+  "harmonics": 8.0,
+  "high_at_c4": 7.795591737803863e-05,
+  "low_at_c2": 0.9983483001982071,
+  "mid_at_c4": 0.2863519440730729,
+  "name": "18___galaxy_desert_05",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.587652743486856,
+  "worst_cents_error": 1198.1413556582818
+ },
+ "18___galaxy_desert_06": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.419388530202318,
+  "brightness_label": "medium",
+  "harmonics": 36.0,
+  "high_at_c4": 0.05233182617416279,
+  "low_at_c2": 0.8650153228781445,
+  "mid_at_c4": 0.11038226284683048,
+  "name": "18___galaxy_desert_06",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.08614145093859694,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 10.23978805700423,
+  "worst_cents_error": 9.433285637740214
+ },
+ "18___galaxy_desert_07": {
+  "algorithm": 5,
+  "attack": 0.000248746698253549,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.531402908711669,
+  "brightness_label": "medium",
+  "harmonics": 47.5,
+  "high_at_c4": 0.052181330740052295,
+  "low_at_c2": 0.916357635252205,
+  "mid_at_c4": 0.7890434877882554,
+  "name": "18___galaxy_desert_07",
+  "peak_dbfs": -18.33537672105109,
+  "release": 0.05368235348347346,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.590312096359,
+  "worst_cents_error": 1198.7819342899706
+ },
+ "18___galaxy_desert_08": {
+  "algorithm": 7,
+  "attack": 0.02984960379042588,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.66511931950793,
+  "brightness_label": "medium",
+  "harmonics": 2.5,
+  "high_at_c4": 5.307875455777714e-05,
+  "low_at_c2": 0.9984868580913103,
+  "mid_at_c4": 0.999249849785805,
+  "name": "18___galaxy_desert_08",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.45170723477128,
+  "worst_cents_error": 5.003794212530827
+ },
+ "18___galaxy_desert_09": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.7769551054731547,
+  "brightness_label": "dark",
+  "harmonics": 4.5,
+  "high_at_c4": 0.1850138805741412,
+  "low_at_c2": 0.8591686926705075,
+  "mid_at_c4": 0.5425898551886108,
+  "name": "18___galaxy_desert_09",
+  "peak_dbfs": -21.387579985174256,
+  "release": 0.24094637726303203,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.66886064180953,
+  "worst_cents_error": 2395.7342591733927
+ },
+ "20___oblivious_past_01": {
+  "algorithm": 1,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.105000893144123,
+  "brightness_label": "dark",
+  "harmonics": 6.75,
+  "high_at_c4": 0.00098500021311789,
+  "low_at_c2": 0.9862459739079685,
+  "mid_at_c4": 0.01825879563907116,
+  "name": "20___oblivious_past_01",
+  "peak_dbfs": -20.227741045620526,
+  "release": 0.0087389877763794,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.01883564743355,
+  "worst_cents_error": 3.2569806899580156
+ },
+ "20___oblivious_past_02": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 3.3009058307212387,
+  "brightness_label": "medium",
+  "harmonics": 52.5,
+  "high_at_c4": 0.01582993782538009,
+  "low_at_c2": 0.9148530323857587,
+  "mid_at_c4": 0.26473045869252015,
+  "name": "20___oblivious_past_02",
+  "peak_dbfs": -15.699813498278981,
+  "release": 0.07615403633702049,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 12.896239434978245,
+  "worst_cents_error": 1201.3564757207641
+ },
+ "20___oblivious_past_03": {
+  "algorithm": 5,
+  "attack": 0.0012437334912677451,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.250393670333594,
+  "brightness_label": "medium",
+  "harmonics": 15.0,
+  "high_at_c4": 0.011371981875043503,
+  "low_at_c2": 0.9045747322395881,
+  "mid_at_c4": 0.5646123064732982,
+  "name": "20___oblivious_past_03",
+  "peak_dbfs": -18.90514747727984,
+  "release": 0.197251438381135,
+  "roles": [
+   "bass",
+   "lead",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 17.35524049300401,
+  "worst_cents_error": 5.105170783272936
+ },
+ "20___oblivious_past_04": {
+  "algorithm": 5,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2649337502257418,
+  "brightness_label": "dark",
+  "harmonics": 10.5,
+  "high_at_c4": 0.016192323089095254,
+  "low_at_c2": 0.9423149811424578,
+  "mid_at_c4": 0.06348766075472523,
+  "name": "20___oblivious_past_04",
+  "peak_dbfs": -18.568256344325246,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.747607387045605,
+  "worst_cents_error": 21.715212224813083
+ },
+ "20___oblivious_past_05": {
+  "algorithm": 5,
+  "attack": 0.0057211740598316265,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 8.077472423501161,
+  "brightness_label": "bright",
+  "harmonics": 3.0,
+  "high_at_c4": 0.2220137219373534,
+  "low_at_c2": 0.7580298034026466,
+  "mid_at_c4": 5.75100217672074e-06,
+  "name": "20___oblivious_past_05",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.07615403633702048,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.63860381242207,
+  "worst_cents_error": 1198.8292113439184
+ },
+ "20___oblivious_past_06": {
+  "algorithm": 5,
+  "attack": 0.005472427361578078,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.5546653210791765,
+  "brightness_label": "dark",
+  "harmonics": 1.75,
+  "high_at_c4": 4.289706715475397e-05,
+  "low_at_c2": 0.9999558559612464,
+  "mid_at_c4": 6.313667932301147e-06,
+  "name": "20___oblivious_past_06",
+  "peak_dbfs": -21.193834637111625,
+  "release": 0.07615403633702048,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.09570614834777,
+  "worst_cents_error": 1199.231318851461
+ },
+ "20___oblivious_past_07": {
+  "algorithm": 7,
+  "attack": 0.0980061991118983,
+  "attack_label": "soft",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 21.45112606906014,
+  "brightness_label": "bright",
+  "harmonics": 14.0,
+  "high_at_c4": 0.16994161442954178,
+  "low_at_c2": 0.8105941146702529,
+  "mid_at_c4": 0.41532811535801656,
+  "name": "20___oblivious_past_07",
+  "peak_dbfs": -16.480295656313114,
+  "release": 0.20599042615751442,
+  "roles": [
+   "pad"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.22265414494715,
+  "worst_cents_error": 7.098319667124452
+ },
+ "20___oblivious_past_08": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.362553007142615,
+  "brightness_label": "bright",
+  "harmonics": 31.0,
+  "high_at_c4": 0.2073158544438523,
+  "low_at_c2": 0.8116839070830144,
+  "mid_at_c4": 0.25609090874216534,
+  "name": "20___oblivious_past_08",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.11984897521891749,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.675696635931143,
+  "worst_cents_error": 13.737710146664755
+ },
+ "20___oblivious_past_09": {
+  "algorithm": 5,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.2504813739779972,
+  "brightness_label": "dark",
+  "harmonics": 2.5,
+  "high_at_c4": 8.059569310408461e-05,
+  "low_at_c2": 0.9999201939932986,
+  "mid_at_c4": 0.02100337355471377,
+  "name": "20___oblivious_past_09",
+  "peak_dbfs": -18.80755218491811,
+  "release": 0.10611628014174986,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 18.53713417899385,
+  "worst_cents_error": 1200.4564671101668
+ },
+ "20___oblivious_past_10": {
+  "algorithm": 6,
+  "attack": 0.0599479542791053,
+  "attack_label": "medium",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.1711473247663347,
+  "brightness_label": "dark",
+  "harmonics": 2.0,
+  "high_at_c4": 4.7512680709590795e-05,
+  "low_at_c2": 0.9999471381026654,
+  "mid_at_c4": 0.7172423384800433,
+  "name": "20___oblivious_past_10",
+  "peak_dbfs": -19.003851830790083,
+  "release": 0.05493078030867051,
+  "roles": [
+   "bass"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.889308319564964,
+  "worst_cents_error": 1204.589001531776
+ },
+ "20___oblivious_past_11": {
+  "algorithm": 7,
+  "attack": 0.000994986793014196,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 2.050696711180797,
+  "brightness_label": "medium",
+  "harmonics": 3.0,
+  "high_at_c4": 0.20579350873528143,
+  "low_at_c2": 0.40495437658137967,
+  "mid_at_c4": 0.6125720177797942,
+  "name": "20___oblivious_past_11",
+  "peak_dbfs": -16.443255559081248,
+  "release": 0.0049937073007882285,
+  "roles": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.538503821357164,
+  "worst_cents_error": 3598.9833945701166
+ },
+ "20___oblivious_past_12": {
+  "algorithm": 4,
+  "attack": 0.0,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 0.7293497010553062,
+  "brightness_label": "dark",
+  "harmonics": 1.0,
+  "high_at_c4": 4.346541570246002e-05,
+  "low_at_c2": 0.9989501227344977,
+  "mid_at_c4": 0.691165276119604,
+  "name": "20___oblivious_past_12",
+  "peak_dbfs": -18.954359448232974,
+  "release": 0.2122325602834997,
+  "roles": [
+   "bass",
+   "harmony"
+  ],
+  "silent_notes": [],
+  "sustain_label": "medium",
+  "usable": true,
+  "velocity_range_db": 18.03708879959273,
+  "worst_cents_error": 2403.1514754843374
+ },
+ "20___oblivious_past_13": {
+  "algorithm": 6,
+  "attack": 0.000746240094760647,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 6.136376194117699,
+  "brightness_label": "bright",
+  "harmonics": 5.0,
+  "high_at_c4": 0.027386677029035314,
+  "low_at_c2": 0.7203067431718231,
+  "mid_at_c4": 0.6012396119258769,
+  "name": "20___oblivious_past_13",
+  "peak_dbfs": -16.406372745113842,
+  "release": 0.007490560951182342,
+  "roles": [
+   "lead",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.586242810907166,
+  "worst_cents_error": 1197.7587232296457
+ },
+ "20___oblivious_past_14": {
+  "algorithm": 6,
+  "attack": 0.001492480189521294,
+  "attack_label": "sharp",
+  "audible_notes": [
+   "C-2",
+   "C-3",
+   "C-4",
+   "C-5"
+  ],
+  "brightness": 1.4822644335644992,
+  "brightness_label": "dark",
+  "harmonics": 0.75,
+  "high_at_c4": 5.656101640852119e-05,
+  "low_at_c2": 0.22976609810310933,
+  "mid_at_c4": 0.7701326188387457,
+  "name": "20___oblivious_past_14",
+  "peak_dbfs": -19.674312513663356,
+  "release": 0.10861313379214396,
+  "roles": [
+   "bass",
+   "pluck"
+  ],
+  "silent_notes": [],
+  "sustain_label": "short",
+  "usable": true,
+  "velocity_range_db": 17.34184667440849,
+  "worst_cents_error": 3100.955203076148
+ },
  "bass": {
   "algorithm": 0,
   "attack": 0.0,
@@ -9,7 +5075,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 2.6595515292246903,
+  "brightness": 2.6594929376719887,
   "brightness_label": "medium",
   "harmonics": 20.5,
   "high_at_c4": 0.03757153334784266,
@@ -27,7 +5093,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.633836845814265,
-  "worst_cents_error": 0.6507482284917596
+  "worst_cents_error": 0.6584268817860538
  },
  "bell_pluck": {
   "algorithm": 4,
@@ -39,9 +5105,9 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 4.3143498118785315,
+  "brightness": 4.364824665297407,
   "brightness_label": "medium",
-  "harmonics": 20.75,
+  "harmonics": 15.0,
   "high_at_c4": 0.02913062173840588,
   "low_at_c2": 0.6095516774487515,
   "mid_at_c4": 0.7305832484986454,
@@ -57,7 +5123,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.97084718482446,
-  "worst_cents_error": 0.5661218409849953
+  "worst_cents_error": 53.03249669080452
  },
  "brass": {
   "algorithm": 2,
@@ -69,9 +5135,9 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 2.808596165262528,
+  "brightness": 2.806855383612789,
   "brightness_label": "medium",
-  "harmonics": 13.0,
+  "harmonics": 12.0,
   "high_at_c4": 0.001927904877331485,
   "low_at_c2": 0.846082914490665,
   "mid_at_c4": 0.5212247109832288,
@@ -87,7 +5153,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 18.06179973983887,
-  "worst_cents_error": 1.2271865277801364
+  "worst_cents_error": 5.028875596288813
  },
  "deep_bass": {
   "algorithm": 4,
@@ -99,7 +5165,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.453741646461644,
+  "brightness": 1.4541183027515583,
   "brightness_label": "dark",
   "harmonics": 5.0,
   "high_at_c4": 5.17369915718743e-05,
@@ -116,7 +5182,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.670647841476164,
-  "worst_cents_error": 1.1320843349087697
+  "worst_cents_error": 0.6601745197548113
  },
  "distorted_lead": {
   "algorithm": 0,
@@ -128,7 +5194,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.4331736482080424,
+  "brightness": 1.4331564311771767,
   "brightness_label": "dark",
   "harmonics": 37.25,
   "high_at_c4": 0.012758558731853987,
@@ -145,7 +5211,7 @@
   "sustain_label": "long",
   "usable": true,
   "velocity_range_db": 17.745914396174236,
-  "worst_cents_error": 3.9163331543719684
+  "worst_cents_error": 4.008170279640137
  },
  "e_piano": {
   "algorithm": 5,
@@ -157,7 +5223,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.3069218296709042,
+  "brightness": 1.3067408456011536,
   "brightness_label": "dark",
   "harmonics": 5.0,
   "high_at_c4": 5.756633573672602e-05,
@@ -174,7 +5240,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.54207265750238,
-  "worst_cents_error": 0.6191857591970209
+  "worst_cents_error": 0.8062156624765849
  },
  "fm_stab": {
   "algorithm": 2,
@@ -186,9 +5252,9 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.065882806315268,
+  "brightness": 1.0679550445583317,
   "brightness_label": "dark",
-  "harmonics": 5.25,
+  "harmonics": 5.5,
   "high_at_c4": 0.0007588895593148268,
   "low_at_c2": 0.9971676476223592,
   "mid_at_c4": 0.045235598144899566,
@@ -203,7 +5269,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.942228082695483,
-  "worst_cents_error": 50.870884254696584
+  "worst_cents_error": 1.5326187530501512
  },
  "hard_pluck": {
   "algorithm": 4,
@@ -215,7 +5281,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.0016985034561445,
+  "brightness": 1.0011979157757587,
   "brightness_label": "dark",
   "harmonics": 3.5,
   "high_at_c4": 4.779921534579502e-05,
@@ -231,7 +5297,7 @@
   "sustain_label": "unknown",
   "usable": true,
   "velocity_range_db": 17.754845903015784,
-  "worst_cents_error": 2.297632430882669
+  "worst_cents_error": 0.6578042400761678
  },
  "jazz_chord_pad": {
   "algorithm": 6,
@@ -243,7 +5309,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 3.293284942913006,
+  "brightness": 3.293231324958912,
   "brightness_label": "medium",
   "harmonics": 12.0,
   "high_at_c4": 0.000576640211115161,
@@ -261,7 +5327,7 @@
   "sustain_label": "medium",
   "usable": true,
   "velocity_range_db": 17.541531092540513,
-  "worst_cents_error": 1.43149883101673
+  "worst_cents_error": 0.8749160908572446
  },
  "metal_stab": {
   "algorithm": 3,
@@ -273,7 +5339,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.0153310926236674,
+  "brightness": 1.0151718578223166,
   "brightness_label": "dark",
   "harmonics": 4.25,
   "high_at_c4": 4.008207244189553e-05,
@@ -290,7 +5356,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.99574702883716,
-  "worst_cents_error": 0.7356113027502319
+  "worst_cents_error": 0.7782756649127257
  },
  "orch_hit": {
   "algorithm": 6,
@@ -302,7 +5368,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.2882102832444895,
+  "brightness": 1.6016160928028262,
   "brightness_label": "dark",
   "harmonics": 5.0,
   "high_at_c4": 0.00845041250676769,
@@ -318,7 +5384,7 @@
   "sustain_label": "unknown",
   "usable": true,
   "velocity_range_db": 13.162348770568993,
-  "worst_cents_error": 1907.56815736005
+  "worst_cents_error": 1903.5159761958312
  },
  "organ": {
   "algorithm": 7,
@@ -330,7 +5396,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.6805345087842745,
+  "brightness": 1.6805447965601634,
   "brightness_label": "dark",
   "harmonics": 4.0,
   "high_at_c4": 5.7534861143713814e-05,
@@ -347,7 +5413,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 16.70185815793665,
-  "worst_cents_error": 0.7058282542356844
+  "worst_cents_error": 0.6173751491259324
  },
  "pluck_guitar": {
   "algorithm": 0,
@@ -359,7 +5425,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.9192850617004718,
+  "brightness": 1.9187230268759794,
   "brightness_label": "dark",
   "harmonics": 15.75,
   "high_at_c4": 0.003181942388623149,
@@ -376,7 +5442,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 18.033180637709897,
-  "worst_cents_error": 1.3252228226935077
+  "worst_cents_error": 2.2183524164217214
  },
  "saw_lead": {
   "algorithm": 7,
@@ -388,7 +5454,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.4278853822386424,
+  "brightness": 1.4278995331279574,
   "brightness_label": "dark",
   "harmonics": 4.0,
   "high_at_c4": 6.238982927751248e-05,
@@ -405,7 +5471,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 16.810689666546047,
-  "worst_cents_error": 1.4896540974183314
+  "worst_cents_error": 1.5388159446842653
  },
  "slap_bass": {
   "algorithm": 4,
@@ -417,7 +5483,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.0332018199191952,
+  "brightness": 1.0335660031487834,
   "brightness_label": "dark",
   "harmonics": 4.75,
   "high_at_c4": 0.0001548404453349427,
@@ -434,7 +5500,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.373623335078488,
-  "worst_cents_error": 2.4239914614711235
+  "worst_cents_error": 0.7924045208446978
  },
  "square_lead": {
   "algorithm": 4,
@@ -446,7 +5512,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 9.960010906682506,
+  "brightness": 9.960176172229634,
   "brightness_label": "bright",
   "harmonics": 60.5,
   "high_at_c4": 0.24067183581863827,
@@ -463,7 +5529,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 15.361018469586359,
-  "worst_cents_error": 0.6552750791365817
+  "worst_cents_error": 0.615668870661614
  },
  "strings": {
   "algorithm": 4,
@@ -475,7 +5541,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.4677230236664993,
+  "brightness": 1.4678096469402317,
   "brightness_label": "dark",
   "harmonics": 6.0,
   "high_at_c4": 3.2043416073445464e-05,
@@ -493,7 +5559,7 @@
   "sustain_label": "long",
   "usable": true,
   "velocity_range_db": 17.775110691355092,
-  "worst_cents_error": 1.224321062830899
+  "worst_cents_error": 0.910482947752842
  },
  "sub_bass": {
   "algorithm": 7,
@@ -505,7 +5571,7 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.0000652209597272,
+  "brightness": 1.0000003906674275,
   "brightness_label": "dark",
   "harmonics": 1.0,
   "high_at_c4": 1.5781358282591417e-05,
@@ -522,7 +5588,7 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.745914396174236,
-  "worst_cents_error": 0.6815741709538659
+  "worst_cents_error": 0.6169027399089123
  },
  "techno_bass": {
   "algorithm": 3,
@@ -534,9 +5600,9 @@
    "C-4",
    "C-5"
   ],
-  "brightness": 1.4939649535192223,
+  "brightness": 1.4944998162483212,
   "brightness_label": "dark",
-  "harmonics": 13.75,
+  "harmonics": 13.5,
   "high_at_c4": 0.00010560372053575125,
   "low_at_c2": 0.9918131744157193,
   "mid_at_c4": 0.11506641986728819,
@@ -551,6 +5617,6 @@
   "sustain_label": "short",
   "usable": true,
   "velocity_range_db": 17.915814965008884,
-  "worst_cents_error": 1.8952223357935896
+  "worst_cents_error": 0.9148939625778854
  }
 }
