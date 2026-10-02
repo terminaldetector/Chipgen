@@ -189,7 +189,8 @@ def _print_human(data: dict):
     print("    python3 python/chipgen.py --brief --chip-target YM2612")
     print("        the whole briefing for one chip — RP2A03 and YM3812 too")
     print("    python3 python/chipgen.py work/song.trk --check --chip-target YM2612")
-    print("    python3 python/chipgen.py work/song.trk -o work/song.wav --vgm work/song.vgm")
+    print("    python3 python/chipgen.py work/song.trk -o work/song.mp3 --vgm work/song.vgz")
+    print("        an MP3 is about a tenth of the WAV and plays anywhere: hand that back")
     print()
     print("  Read next:")
     if os.path.exists(os.path.join(ROOT, "AGENTS.md")):

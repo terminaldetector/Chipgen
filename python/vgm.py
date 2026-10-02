@@ -9,7 +9,10 @@ That difference matters more than it sounds:
     on real hardware through a MegaDrive flashcart;
   * DefleMask and Furnace import VGM, so a track a model composed here can
     be opened in a tracker and edited by a human;
-  * it is a few kilobytes where the WAV is megabytes.
+  * it is kilobytes where the WAV is megabytes — until the chip plays
+    samples. YM2612 DAC drums and NES DMC drums are a register write per
+    sample: 28 seconds is 786 KB and 1.5 MB, and a `.vgz` path (gzip,
+    which every player reads) brings them to 13 and 134 KB.
 
 The recording mechanism is deliberately dumb, and that is the point: the
 writer is attached as the *logger* on the same YM2612 and SN76489 objects

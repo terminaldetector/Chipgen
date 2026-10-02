@@ -135,8 +135,9 @@ def starter(chip: str = None, language: str = "en") -> str:
     lines = [
         f"chipgen is a chiptune engine that drives register-accurate "
         f"emulation of real sound chips: {names}. You write a score in "
-        f"its tracker notation and it renders to WAV and VGM — the VGM is "
-        f"a register log, so what you write is what the hardware does.",
+        f"its tracker notation and it renders to MP3, WAV and VGM — the "
+        f"VGM is a register log, so what you write is what the hardware "
+        f"does.",
         "",
         "1. Run `python3 bridge/bootstrap.py`. It builds the chip cores "
         "and self-tests. No network, no pip.",
@@ -147,7 +148,8 @@ def starter(chip: str = None, language: str = "en") -> str:
         "3. Write the score yourself rather than generating it randomly. "
         "The point is that you are composing into the chip's registers.",
         "4. Render with "
-        "`python3 python/chipgen.py song.trk -o song.wav --vgm song.vgm`.",
+        "`python3 python/chipgen.py song.trk -o song.mp3 --vgm song.vgz`. "
+        "Hand back the MP3: about a tenth of a WAV, and it plays anywhere.",
         "5. Check it with `--levels` and `--profile` before you call it "
         "done. A render that succeeds is not evidence that it sounds "
         "like anything.",
@@ -554,6 +556,13 @@ DELIVERY = {
     "grammar": "Write the score and nothing else.",
 }
 
+#: The last line of an agent's brief: what to hand back. An MP3, because
+#: the file is the most expensive thing in the exchange — a WAV is ten
+#: megabytes a minute, the MP3 a tenth of that and playable anywhere.
+HAND_BACK = ("When it says PLAYABLE: `python3 python/chipgen.py "
+             "work/song.trk -o work/song.mp3`. Hand back the MP3, not a WAV "
+             "— a tenth of the size.")
+
 
 def estimate_tokens(text: str) -> int:
     """About how many tokens a briefing costs. Four characters a token.
@@ -717,6 +726,8 @@ def brief(chip: str = "YM2612", model: str = None, request: dict = None,
         out += ["", *ask]
     out += ["", contract if not profile["repeat_contract"]
             else f"Again: {contract}"]
+    if delivery == "agent":
+        out.append(HAND_BACK)
     return "\n".join(out)
 
 
@@ -775,8 +786,10 @@ def agents_md() -> str:
         "4. `python3 python/chipgen.py work/song.trk --check --chip-target "
         "<CHIP>` — fix what it reports, in the score. Repeat until it says "
         "PLAYABLE.",
-        "5. `python3 python/chipgen.py work/song.trk -o work/song.wav "
-        "--vgm work/song.vgm`",
+        "5. `python3 python/chipgen.py work/song.trk -o work/song.mp3 "
+        "--vgm work/song.vgz` — hand back the MP3: about a tenth of a WAV, "
+        "and it plays anywhere. Cheaper still is the `.trk` itself, a few "
+        "kilobytes.",
         "",
         f"`<CHIP>` is {', '.join(BRIEF_CHIPS)}. The brief is enough to "
         f"write a score; `START_HERE.md` and `bridge/CORE.md` go deeper, "

@@ -253,8 +253,9 @@
     "usage": "python3 python/vgm_import.py song.vgm -o bank.json, then render with --bank bank.json"
   },
   "outputs": {
-    "wav": "16-bit PCM, any sample rate (default 44100)",
-    "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it.",
+    "mp3": "what to hand back: -o song.mp3. About a tenth of the WAV (160 kbps default, --bitrate 128 is 11x smaller) and plays anywhere. LAME when the machine has it, a built-in encoder when it does not",
+    "wav": "16-bit PCM, any sample rate (default 44100) — ten megabytes a minute",
+    "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it — hand that back: DAC and DMC drums are a write per sample, megabytes uncompressed",
     "tracker": "the score written back out as text"
   },
   "instruments": {

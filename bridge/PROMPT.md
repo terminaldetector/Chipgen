@@ -19,8 +19,9 @@ that render successfully and sound wrong.
 > `python3 bridge/bootstrap.py`, then
 > `python3 python/chipgen.py --brief --chip-target YM2612 --family <you>`
 > and follow that briefing. Compose me a track, write it to `work/`,
-> check it with `--check` until it says PLAYABLE, and render it to WAV
-> and VGM. Do not edit any file outside `work/`.
+> check it with `--check` until it says PLAYABLE, and render it with
+> `-o work/song.mp3` — hand me the MP3, not a WAV. Do not edit any file
+> outside `work/`.
 
 `--chip-target` is YM2612 (Genesis), RP2A03 (NES) or YM3812 (OPL2);
 `--family` is your model family (gpt, claude, grok, gemini, llama,
@@ -54,7 +55,7 @@ prints a briefing to paste — notation, lists and rules included — and
 >    tracks>**. Use the FM channels for bass, lead and pads, the PSG for
 >    arpeggios and hats, and the DAC for drums.
 > 4. Render it with
->    `python3 python/chipgen.py song.trk -o song.wav --vgm song.vgm`
+>    `python3 python/chipgen.py song.trk -o song.mp3 --vgm song.vgz`
 >    and give me both files.
 >
 > Write the score yourself rather than generating it randomly — the point
@@ -74,7 +75,7 @@ prints a briefing to paste — notation, lists and rules included — and
 >    настроение, ориентиры>**. FM-каналы — бас, лид и пэды; PSG —
 >    арпеджио и хэты; DAC — барабаны.
 > 4. Отрендери:
->    `python3 python/chipgen.py song.trk -o song.wav --vgm song.vgm`
+>    `python3 python/chipgen.py song.trk -o song.mp3 --vgm song.vgz`
 >    и отдай оба файла.
 >
 > Пиши партитуру сам, а не генерируй случайно — смысл в том, что ты
@@ -122,10 +123,10 @@ cannot fake past `--profile`.
 > Отрендери и измерь:
 >
 > ```
-> python3 python/chipgen.py demo.trk -o demo.wav --vgm demo.vgm --profile
+> python3 python/chipgen.py demo.trk -o demo.mp3 --vgm demo.vgz --profile
 > ```
 >
-> Пришли: `demo.trk`, `demo.wav`, `demo.vgm`, **полный вывод команды** —
+> Пришли: `demo.trk`, `demo.mp3`, `demo.vgz`, **полный вывод команды** —
 > и предупреждения, и таблицу `--profile` по секциям.
 >
 > Приёмка, проверь сам до того, как отдашь:
@@ -133,7 +134,7 @@ cannot fake past `--profile`.
 > - в таблице `--profile` брейкдаун заметно тише main-секции. Если
 >   разница в пределах пары процентов — это не брейкдаун, перепиши
 >   аранжировку и отрендери заново;
-> - `demo.vgm` существует и весит килобайты, а не байты.
+> - `demo.vgz` существует и весит килобайты, а не байты.
 >
 > Если что-то не сошлось — скажи, что именно, и покажи вывод. Не отдавай
 > «примерно нормально».
@@ -168,10 +169,10 @@ cannot fake past `--profile`.
 > Render and measure:
 >
 > ```
-> python3 python/chipgen.py demo.trk -o demo.wav --vgm demo.vgm --profile
+> python3 python/chipgen.py demo.trk -o demo.mp3 --vgm demo.vgz --profile
 > ```
 >
-> Send back `demo.trk`, `demo.wav`, `demo.vgm` and **the complete command
+> Send back `demo.trk`, `demo.mp3`, `demo.vgz` and **the complete command
 > output** — both the warnings and the per-section `--profile` table.
 >
 > Acceptance, check it yourself before handing it over:
@@ -179,7 +180,7 @@ cannot fake past `--profile`.
 > - in the `--profile` table the breakdown is clearly quieter than the
 >   main section. A couple of percent apart is not a breakdown — rewrite
 >   the arrangement and render again;
-> - `demo.vgm` exists and is kilobytes, not bytes.
+> - `demo.vgz` exists and is kilobytes, not bytes.
 >
 > If something does not line up, say what and show the output. Do not
 > hand over "close enough".
@@ -224,11 +225,11 @@ actually exercises the engine instead of leaning on one channel:
 > 4. Используй больше одного FM-канала и больше одного PSG-тон-канала —
 >    не оставляй половину чипа простаивать.
 >
-> Отрендери: `python3 python/chipgen.py song.trk -o song.wav --vgm
-> song.vgm`. Команда сама печатает предупреждения, если партитура
+> Отрендери: `python3 python/chipgen.py song.trk -o song.mp3 --vgm
+> song.vgz`. Команда сама печатает предупреждения, если партитура
 > нарушает пункты 1–4 (`warning: ...` в выводе) — если что-то напечаталось,
 > перепиши партитуру и отрендери заново, пока вывод не станет чистым.
-> Пришли `song.trk`, `song.wav`, `song.vgm` и **сам вывод команды рендера
+> Пришли `song.trk`, `song.mp3`, `song.vgz` и **сам вывод команды рендера
 > целиком**, чтобы было видно, что предупреждений нет.
 
 If warnings still show up in the output the model pastes back, the track
@@ -241,10 +242,17 @@ the whole runtime.
 
 ## What you get back
 
-- **`song.wav`** — plays anywhere.
-- **`song.vgm`** — a few kilobytes, plays in any VGM player, and **imports
-  into DefleMask and Furnace**. That is the part worth caring about: what
-  the model wrote opens in a real tracker and stays editable by hand.
+- **`song.mp3`** — plays anywhere, about a tenth of the size of a WAV
+  (a WAV is ten megabytes a minute; handing one back from a sandbox is
+  often the most expensive thing in the exchange). `-o song.wav` still
+  works when the full-resolution file is wanted.
+- **`song.vgz`** — the register log, gzipped. Every VGM player reads
+  .vgz, and unpacked (`gzip -dc song.vgz > song.vgm`) it **imports into
+  DefleMask and Furnace**. That is the part worth caring about: what the
+  model wrote opens in a real tracker and stays editable by hand. Gzipped
+  because sample playback is a register write per sample: for 28 seconds
+  the plain VGM is 5 KB on OPL2 but 786 KB on Genesis with DAC drums and
+  1.5 MB on NES with DMC drums — 1, 13 and 134 KB as .vgz.
 - **`song.trk`** — the score itself, readable and diffable.
 
 ## Why this works without deploying anything

@@ -95,6 +95,13 @@ rearranging onto another chip:
 Loopback only, and that is the intent: it has no authentication and it
 writes files. It is a tool on your own machine.
 
+`POST /api/render` answers with links to a WAV and a VGM. Add
+`"mp3": true` — or a bitrate, `"mp3": 128` — and it also answers `mp3`, a
+link to an MP3 a tenth of the WAV's size, and `mp3_report` (bytes,
+bitrate, mono or stereo, which encoder ran, how many times smaller). Off
+by default: it adds 10–40% to the render, and a local player is happy
+with WAV. It is for handing a track on.
+
 **Without it** — the whole reference, no Python at all:
 
     python3 studio/make_bundle.py

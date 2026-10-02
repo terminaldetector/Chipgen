@@ -170,6 +170,21 @@ def test_the_agent_brief_forbids_editing_the_engine():
             assert "--check" in text
 
 
+def test_an_agent_hands_back_an_mp3_and_a_chat_model_only_the_score():
+    """The file handed back is often the most expensive thing in the
+    exchange. An agent renders an MP3, a tenth of the WAV; a chat model
+    renders nothing — the score is a few kilobytes and the user's side
+    renders it."""
+    import prompts
+
+    for chip in prompts.BRIEF_CHIPS:
+        agent = prompts.brief(chip, "gpt", delivery="agent")
+        assert agent.endswith(prompts.HAND_BACK)
+        assert agent.count("-o work/song.mp3") == 1
+        assert ".mp3" not in prompts.brief(chip, "gpt")
+    assert "-o work/song.mp3" in prompts.agents_md()
+
+
 def test_the_chat_brief_asks_for_one_fenced_block():
     """Models fence their output however firmly they are told not to.
     Asking for the fence they will write anyway makes extraction exact."""

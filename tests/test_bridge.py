@@ -116,7 +116,10 @@ def test_archive_is_lean_and_reproducible():
         # client, the integrity guard and their tests — 31.9 KB of new
         # files compressed, the largest reply.py at 7.9 KB — plus the
         # generated AGENTS.md and integrity.json (5.4 KB together).
-        assert size < 600 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 630 KB for MP3 delivery: mp3.py, its generated tables,
+        # and its test with the reference decoder — 22 KB compressed, to
+        # stop a render costing ten megabytes a minute to hand back.
+        assert size < 630 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

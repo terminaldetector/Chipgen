@@ -65,6 +65,7 @@ _MIME = {
     ".json": "application/json; charset=utf-8",
     ".svg": "image/svg+xml",
     ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
     ".vgm": "application/octet-stream",
     ".vgz": "application/octet-stream",
 }
@@ -125,11 +126,20 @@ def render_score(payload: dict) -> dict:
     RENDERS.sweep()
     wav_token, wav_path = RENDERS.path_for(".wav")
     vgm_token, vgm_path = RENDERS.path_for(".vgm")
+    # An MP3 on request: a tenth of the WAV, for handing a track on —
+    # `"mp3": true`, or a bitrate in kbps. Not by default, because it adds
+    # 10-40% to the render time and a local player is happy with WAV.
+    mp3_token = mp3_path = None
+    bitrate = payload.get("mp3")
+    if bitrate:
+        mp3_token, mp3_path = RENDERS.path_for(".mp3")
+        bitrate = bitrate if isinstance(bitrate, int) and \
+            not isinstance(bitrate, bool) else None
 
     bank = payload.get("bank") or None
     started = time.time()
     result = chipgen.compose(
-        score, wav=wav_path, vgm=vgm_path,
+        score, wav=wav_path, vgm=vgm_path, mp3=mp3_path, bitrate=bitrate,
         chip_type=payload.get("chip") or "ym2612",
         bank=bank, opl_bank=payload.get("opl_bank") or None,
         normalize=payload.get("peak", 0.89) or None,
@@ -146,6 +156,10 @@ def render_score(payload: dict) -> dict:
         "vgm": f"/render/{vgm_token}",
         "seconds_to_render": round(time.time() - started, 2),
     }
+    if mp3_token:
+        out["mp3"] = f"/render/{mp3_token}"
+        out["mp3_report"] = {key: result.mp3_report[key] for key in
+                             ("bytes", "bitrate", "mode", "encoder", "ratio")}
     if payload.get("profile"):
         import profile as profile_mod
         stats = result.profile()

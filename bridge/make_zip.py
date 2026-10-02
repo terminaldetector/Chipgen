@@ -152,7 +152,7 @@ def _generated(entries):
 WORK_README = """\
 # work/ — your files go here
 
-Scores (`song.trk`), renders (`song.wav`, `song.vgm`) and, if you need an
+Scores (`song.trk`), renders (`song.mp3`, `song.vgz`) and, if you need an
 instrument the bank lacks, a patch file you pass with `--bank`.
 
 Everything outside this directory is the engine. It is checksummed, and

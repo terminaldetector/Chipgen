@@ -70,7 +70,7 @@ F-2  ...  ...  C-5   w1   snare
 class Result:
     """What a render produced: the audio plus where it was written."""
 
-    __slots__ = ("it_path", "it_report",
+    __slots__ = ("it_path", "it_report", "mp3_path", "mp3_report",
                  "audio", "events", "sample_rate", "wav_path", "vgm_path",
                  "warnings", "source_format", "metadata")
 
@@ -78,6 +78,8 @@ class Result:
                  vgm_path=None, warnings=None, source_format="", metadata=None):
         self.audio = audio
         self.events = events
+        self.mp3_path = None
+        self.mp3_report = None
         self.sample_rate = sample_rate
         self.wav_path = wav_path
         self.vgm_path = vgm_path
@@ -103,6 +105,11 @@ class Result:
             parts.append(os.path.basename(self.vgm_path))
         if getattr(self, "it_path", None):
             parts.append(os.path.basename(self.it_path))
+        report = getattr(self, "mp3_report", None)
+        if report:
+            parts.append(f"{os.path.basename(report['path'])} "
+                         f"({report['bytes'] // 1024} KB, {report['mode']}, "
+                         f"{report['ratio']}x smaller than WAV)")
         return ", ".join(parts)
 
     def __repr__(self):
@@ -195,7 +202,7 @@ def to_events(source, ticks_per_second: float = None):
 
 
 def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
-            it: str = None,
+            it: str = None, mp3: str = None, bitrate: int = None,
             bpm: float = None, ticks_per_second: float = None,
             target_rate: int = 44100, title: str = "", author: str = "",
             pal: bool = False, dc_block: bool = True,
@@ -217,6 +224,11 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     Result.warnings rather than raised — a model that got 95% of a pattern
     right should hear the 95%.
     """
+    if mp3:
+        # Before the render, not after it: a rate MP3 cannot carry should
+        # cost nothing, not a whole render and then a traceback.
+        import mp3 as mp3_mod
+        mp3_mod.check(target_rate, bitrate)
     if bank:
         # Merged into the shared bank, so names from an imported set and the
         # built-in ones are referenced the same way in a score. Loading it
@@ -262,6 +274,14 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         buf = mixer.normalize_peak(buf, normalize)
     if wav:
         wavio.write(wav, buf, target_rate)
+    mp3_report = None
+    if mp3:
+        # A tenth of the WAV and playable anywhere — the format to hand
+        # back from a sandbox, where a WAV is often the most expensive
+        # thing in the exchange. See mp3.py.
+        mp3_report = mp3_mod.encode(buf, target_rate, mp3, bitrate=bitrate,
+                                    title=tag.title if tag.title != "chipgen"
+                                    else "", artist=tag.author)
     if tracker_out:
         tracker_mod.dump(events, tracker_out, metadata)
     it_report = None
@@ -274,6 +294,8 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     result = Result(buf, events, target_rate, wav, vgm, warnings,
                     detect_format(source), metadata)
     result.it_path = it
+    result.mp3_report = mp3_report
+    result.mp3_path = mp3_report["path"] if mp3_report else None
     # The last net. Every known cause of a silent render has its own check
     # above; this catches the ones nobody has met yet, because "wrote
     # song.wav" over a file of zeros is the worst thing this can say.
@@ -640,9 +662,16 @@ def info() -> dict:
                      "then render with --bank bank.json",
         },
         "outputs": {
-            "wav": "16-bit PCM, any sample rate (default 44100)",
+            "mp3": "what to hand back: -o song.mp3. About a tenth of the "
+                   "WAV (160 kbps default, --bitrate 128 is 11x smaller) "
+                   "and plays anywhere. LAME when the machine has it, a "
+                   "built-in encoder when it does not",
+            "wav": "16-bit PCM, any sample rate (default 44100) — ten "
+                   "megabytes a minute",
             "vgm": "VGM 1.71 register log; plays in VGM players, imports "
-                   "into DefleMask and Furnace. .vgz gzips it.",
+                   "into DefleMask and Furnace. .vgz gzips it — hand that "
+                   "back: DAC and DMC drums are a write per sample, "
+                   "megabytes uncompressed",
             "tracker": "the score written back out as text",
         },
         "instruments": instruments_mod.describe(),
@@ -738,10 +767,18 @@ def main(argv):
     parser = argparse.ArgumentParser(
         prog="chipgen",
         description="Render a chipgen score (tracker text or JSON events) "
-                    "to WAV and/or VGM.")
+                    "to MP3, WAV and/or VGM.")
     parser.add_argument("source", nargs="?",
                         help="score file; '-' reads stdin")
-    parser.add_argument("-o", "--wav", help="write a WAV here")
+    parser.add_argument("-o", "--wav",
+                        help="write the audio here: a .wav, or a .mp3 — "
+                             "about a tenth of the size and playable "
+                             "anywhere, which is what to hand back from a "
+                             "sandbox")
+    parser.add_argument("--mp3", help="also write an MP3 here")
+    parser.add_argument("--bitrate", type=int,
+                        help="MP3 bitrate in kbps (default 160; 128 is "
+                             "11x smaller than the WAV, 192 7x)")
     parser.add_argument("--vgm", help="write a VGM here (.vgz to compress)")
     parser.add_argument("--tracker", help="write the score back as text here")
     parser.add_argument("--it", metavar="SONG.IT",
@@ -1039,10 +1076,21 @@ def main(argv):
               if args.json else verdict.report())
         return 0 if verdict.ok else 1
 
-    if not (args.wav or args.vgm or args.tracker or args.it):
+    if args.wav and args.wav.lower().endswith(".mp3"):
+        args.mp3, args.wav = args.mp3 or args.wav, None
+    if args.bitrate and not args.mp3:
+        parser.error("--bitrate is for MP3 output: -o song.mp3, or --mp3")
+    if args.mp3:
+        import mp3 as mp3_mod
+        try:
+            mp3_mod.check(args.rate, args.bitrate)
+        except ValueError as error:
+            parser.error(str(error))
+    if not (args.wav or args.vgm or args.tracker or args.it or args.mp3):
         args.wav = "output/chipgen.wav"
 
     result = compose(source, wav=args.wav, vgm=args.vgm, it=args.it,
+                     mp3=args.mp3, bitrate=args.bitrate,
                      opl_bank=args.opl_bank,
                      tracker_out=args.tracker, ticks_per_second=args.ticks,
                      target_rate=args.rate, title=args.title,
@@ -1050,7 +1098,8 @@ def main(argv):
                      dc_block=not args.no_dc_block,
                      chip_type=args.chip, bank=args.bank,
                      normalize=_master_peak(args.peak), quiet=False)
-    for path in (result.wav_path, result.vgm_path, args.tracker, args.it):
+    for path in (result.wav_path, result.vgm_path, args.tracker, args.it,
+                 result.mp3_path):
         if path:
             print(f"wrote {path}")
 

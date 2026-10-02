@@ -62,19 +62,26 @@ A-2  A-4  ...  F-5   w1   snare
 ## 3. Render it
 
 ```bash
-python3 python/chipgen.py song.trk -o song.wav --vgm song.vgm
+python3 python/chipgen.py song.trk -o song.mp3 --vgm song.vgz
 ```
 
-You get `song.wav` (playable anywhere) and `song.vgm` (a register log that
-plays in any VGM player and **imports into DefleMask and Furnace**, so a
-human can open what you wrote in a real tracker and keep editing).
+You get `song.mp3` (plays anywhere, about a tenth of a WAV — hand this
+one back) and `song.vgz` (a gzipped register log that plays in any VGM
+player and, unpacked to `.vgm`, **imports into DefleMask and Furnace**, so
+a human can open what you wrote in a real tracker and keep editing).
+`-o song.wav` writes the full WAV instead, ten megabytes a minute;
+`--bitrate 128` makes the MP3 smaller still. `--vgm song.vgm` writes the
+log uncompressed — fine for FM and OPL2, but sample playback (Genesis DAC
+drums, NES DMC) is a register write per sample: 786 KB and 1.5 MB for 28
+seconds, against 13 and 134 KB gzipped. Cheapest of all to hand back is
+`song.trk` itself: a few kilobytes, and it renders anywhere chipgen runs.
 
 From Python instead:
 
 ```python
 import sys; sys.path.insert(0, "python")
 import chipgen
-chipgen.compose(open("song.trk").read(), wav="song.wav", vgm="song.vgm")
+chipgen.compose(open("song.trk").read(), mp3="song.mp3", vgm="song.vgz")
 ```
 
 ---
