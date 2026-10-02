@@ -79,6 +79,21 @@ def test_panning_silences_the_stereo_warning():
     assert not any("FMPan" in w for w in warnings), warnings
 
 
+def test_the_stereo_warning_is_only_for_scores_with_fm_in_them():
+    """NES and OPL2 have no FM channel to pan; the warning sent models
+    after a control their chip does not have."""
+    import chipgen
+    import prompts
+
+    for chip in prompts.BRIEF_CHIPS:
+        rows = (prompts.EXAMPLES[chip] * 16)[:64]
+        score = "\n".join(prompts.template(chip, {"bpm": 150}) + rows) + "\n"
+        result = chipgen.compose(score)
+        assert len(result.events) > 200, chip
+        warned = any("FMPan" in w for w in result.warnings)
+        assert warned == (chip == "YM2612"), (chip, result.warnings)
+
+
 def test_empty_and_trivial_input_does_not_crash():
     assert sanity.check([End()], 192.0) == []
     assert sanity.check([], 192.0) == []

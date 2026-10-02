@@ -524,7 +524,10 @@ def check(events: List[events_mod.Event],
                 f"channel 6 for drums precisely for this reason), or drop "
                 f"the DAC drums and play them on the noise channel")
 
-    if len(events) > 200 and not any_pan:
+    # Only where there is FM to pan: NES and OPL2 scores have no FM
+    # channel, and telling a model to add FMPan to one sends it after a
+    # control its chip does not have.
+    if len(events) > 200 and not any_pan and any(fm_on_time):
         warnings.append(
             "no FMPan event anywhere — every FM channel defaults to "
             "centre, so the mix has no stereo width at all. Not wrong, "
