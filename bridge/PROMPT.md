@@ -246,8 +246,8 @@ the whole runtime.
   (a WAV is ten megabytes a minute; handing one back from a sandbox is
   often the most expensive thing in the exchange). `-o song.wav` still
   works when the full-resolution file is wanted.
-- **`song.vgz`** — the register log, gzipped. Every VGM player reads
-  .vgz, and unpacked (`gzip -dc song.vgz > song.vgm`) it **imports into
+- **`song.vgz`** — the register log, gzipped. VGM players read .vgz,
+  and unpacked (`gzip -dc song.vgz > song.vgm`) it **imports into
   DefleMask and Furnace**. That is the part worth caring about: what the
   model wrote opens in a real tracker and stays editable by hand. Gzipped
   because sample playback is a register write per sample: for 28 seconds

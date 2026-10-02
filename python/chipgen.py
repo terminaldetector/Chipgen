@@ -770,7 +770,7 @@ def main(argv):
                     "to MP3, WAV and/or VGM.")
     parser.add_argument("source", nargs="?",
                         help="score file; '-' reads stdin")
-    parser.add_argument("-o", "--wav",
+    parser.add_argument("-o", "--wav", metavar="FILE",
                         help="write the audio here: a .wav, or a .mp3 — "
                              "about a tenth of the size and playable "
                              "anywhere, which is what to hand back from a "
@@ -779,7 +779,9 @@ def main(argv):
     parser.add_argument("--bitrate", type=int,
                         help="MP3 bitrate in kbps (default 160; 128 is "
                              "11x smaller than the WAV, 192 7x)")
-    parser.add_argument("--vgm", help="write a VGM here (.vgz to compress)")
+    parser.add_argument("--vgm", help="write a VGM here; a .vgz path gzips "
+                                      "it — hand that one back, DAC and DMC "
+                                      "drums make a plain VGM megabytes")
     parser.add_argument("--tracker", help="write the score back as text here")
     parser.add_argument("--it", metavar="SONG.IT",
                         help="write an Impulse Tracker module here — opens "

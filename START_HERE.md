@@ -66,8 +66,8 @@ python3 python/chipgen.py song.trk -o song.mp3 --vgm song.vgz
 ```
 
 You get `song.mp3` (plays anywhere, about a tenth of a WAV — hand this
-one back) and `song.vgz` (a gzipped register log that plays in any VGM
-player and, unpacked to `.vgm`, **imports into DefleMask and Furnace**, so
+one back) and `song.vgz` (a gzipped register log that plays in VGM players
+and, unpacked to `.vgm`, **imports into DefleMask and Furnace**, so
 a human can open what you wrote in a real tracker and keep editing).
 `-o song.wav` writes the full WAV instead, ten megabytes a minute;
 `--bitrate 128` makes the MP3 smaller still. `--vgm song.vgm` writes the
