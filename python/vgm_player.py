@@ -156,7 +156,10 @@ def render(path_or_bytes, target_rate: int = 44100, max_seconds: float = 600.0,
     opl_rate = 0.0
     if header.get("opl_clock"):
         import opl2
-        opl = opl2.YM3812(clock=float(header["opl_clock"]))
+        # Power-on state, not a driver's: a file that never enables
+        # waveform select plays sines here, as it does on the chip.
+        opl = opl2.YM3812(clock=float(header["opl_clock"]),
+                          wave_select=False)
         opl_rate = opl.native_rate
 
     # Same rule for the NES APU, whose clock lives at header offset 0x84.

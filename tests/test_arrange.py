@@ -716,3 +716,15 @@ def test_a_score_of_parts_refuses_to_become_silence():
         assert "bass" in str(error) and "lead" in str(error), error
     else:
         assert False, "a score of unassigned parts produced events anyway"
+
+
+def test_a_part_moved_onto_the_psg_never_lands_below_a2():
+    """The PSG range here said C-2, and below A-2 the 10-bit divider
+    clamps: C-2 measured +889.6 cents. The arranger was transposing parts
+    into the clamped zone and calling them placed."""
+    import arrange
+
+    channel = next(c for c in arrange.TARGETS["YM2612"]
+                   if c.column == "psg0")
+    assert channel.low == arrange._p("A", 2)
+    assert channel.high == arrange._p("G#", 6)

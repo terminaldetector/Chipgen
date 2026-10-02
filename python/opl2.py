@@ -65,6 +65,14 @@ for _c, (_m, _car) in enumerate(_CHANNEL_OFFSETS):
     _OFFSET_TO_SLOT[_car] = (_c, 1)
 
 REG_TEST = 0x01
+#: Register 0x01 bit 5. Clear at power-on, and while it is clear the chip
+#: behaves as a YM3526: every operator is a sine whatever the waveform
+#: registers say. Every OPL2 driver sets it first. This emulator used to
+#: ignore 0x01 and apply waveforms unconditionally — so its own renders
+#: were right and its VGMs, which never carried the write, played every
+#: non-sine patch as a sine in any accurate player: `opl_saw_lead` replayed
+#: at 0.83 correlation against the direct render.
+WAVE_SELECT_ENABLE = 0x20
 REG_AM_VIB_EGT_KSR_MULT = 0x20
 REG_KSL_TL = 0x40
 REG_AR_DR = 0x60
@@ -362,7 +370,8 @@ class YM3812:
     the renderer caring which one it is talking to.
     """
 
-    def __init__(self, clock: float = NTSC_CLOCK, logger=None):
+    def __init__(self, clock: float = NTSC_CLOCK, logger=None,
+                 wave_select: bool = True):
         self.clock = clock
         self.native_rate = clock / SAMPLE_DIVIDER
         self.logger = logger
@@ -373,6 +382,14 @@ class YM3812:
         #: -1 rather than 0, so the first write of any register is real
         #: even when its value happens to be zero.
         self._shadow = [-1] * 256
+        #: Power-on state: waveform select disabled, all sines.
+        self.wave_select = False
+        if wave_select:
+            # The driver's first write, made as a write so the logger — and
+            # with it the .vgm — carries it. A VGM player builds the chip
+            # with wave_select=False and lets the file decide, as the
+            # hardware would.
+            self.write(REG_TEST, WAVE_SELECT_ENABLE)
 
     def close(self):
         pass
@@ -407,8 +424,11 @@ class YM3812:
             self.tremolo_depth = (value >> 7) & 1
             self.vibrato_depth = (value >> 6) & 1
             return
+        if address == REG_TEST:
+            self.wave_select = bool(value & WAVE_SELECT_ENABLE)
+            return
         if address < 0x20:
-            return                       # test/timer registers: no audio effect
+            return                       # timer registers: no audio effect
 
         if 0xA0 <= address <= 0xA8:
             chan = self.channels[address - 0xA0]
@@ -670,6 +690,7 @@ class YM3812:
         """
         logsin = _LOGSIN
         exp = _EXP
+        wave_select = self.wave_select   # a local: this is the inner loop
         out = []
         append = out.append
 
@@ -722,7 +743,7 @@ class YM3812:
                     slot.previous, slot.out = slot.out, 0
                 else:
                     phase = ((slot.phase >> 9) + feedback) & 0x3FF
-                    wave = slot.wave
+                    wave = slot.wave if wave_select else 0
                     negate = phase & 0x200 if wave == 0 else 0
                     muted = False
                     if wave == 1:
@@ -754,7 +775,7 @@ class YM3812:
                     slot.previous, slot.out = slot.out, 0
                 else:
                     phase = ((slot.phase >> 9) + modulation) & 0x3FF
-                    wave = slot.wave
+                    wave = slot.wave if wave_select else 0
                     negate = phase & 0x200 if wave == 0 else 0
                     muted = False
                     if wave == 1:

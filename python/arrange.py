@@ -149,13 +149,15 @@ TARGETS = {
                 ("harmony", "pad")),
         Channel("fm4", "YM2612", _p("C", 0), _p("C", 8), "melodic",
                 ("pad", "harmony")),
-        Channel("psg0", "SN76489", _p("C", 2), _p("C", 6), "melodic",
+        Channel("psg0", "SN76489", _p("A", 2), _p("G#", 6), "melodic",
                 ("harmony", "lead"), dynamics=ATTENUATOR,
-                note="PSG pitch resolution runs out above about C6 — "
-                     "neighbouring semitones land on the same divisor"),
-        Channel("psg1", "SN76489", _p("C", 2), _p("C", 6), "melodic",
+                note="the PSG floor is A-2: below it the 10-bit divider "
+                     "clamps, and C-2 measured at +889.6 cents — it plays "
+                     "A-2. The top is G#6 (+8.6 cents); A-6 and up drift "
+                     "12-19 cents. Semitones do not collide until C9"),
+        Channel("psg1", "SN76489", _p("A", 2), _p("G#", 6), "melodic",
                 ("harmony",), dynamics=ATTENUATOR),
-        Channel("psg2", "SN76489", _p("C", 2), _p("C", 6), "melodic",
+        Channel("psg2", "SN76489", _p("A", 2), _p("G#", 6), "melodic",
                 ("harmony",), dynamics=ATTENUATOR),
         Channel("noise", "SN76489", 0, 127, "percussion", ("percussion",),
                 dynamics=ATTENUATOR, aliases=("nnoise", "psgnoise")),

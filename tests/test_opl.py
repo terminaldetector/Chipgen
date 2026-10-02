@@ -708,3 +708,59 @@ def test_a_bad_opl_operator_or_field_is_refused_with_the_options():
                 f"{line!r} was refused without saying why: {error}"
         else:
             raise AssertionError(f"{line!r} was accepted")
+
+
+def test_a_vgm_enables_waveform_select_before_anything_else():
+    """Register 0x01 bit 5 is clear at power-on, and while it is clear an
+    OPL2 plays every operator as a sine. The emulator used to ignore 0x01,
+    so its own renders were right — and its VGMs, which never carried the
+    write, played opl_saw_lead as a sine in any accurate player."""
+    import chipgen
+
+    with support.TempDir() as directory:
+        path = os.path.join(directory, "lead.vgm")
+        chipgen.compose("bpm 140\nlpb 4\ninst opl0 opl_saw_lead\ncols opl0\n"
+                        "E-4\n...\n", vgm=path)
+        with open(path, "rb") as handle:
+            data = handle.read()
+    start = 0x34 + int.from_bytes(data[0x34:0x38], "little")
+    first_opl = data.index(b"\x5A", start)
+    assert data[first_opl:first_opl + 3] == b"\x5A\x01\x20", \
+        data[first_opl:first_opl + 3]
+
+
+def test_without_waveform_select_every_operator_is_a_sine():
+    """The hardware rule, modelled: a VGM that never sets the bit plays
+    sines here too, the way it would on the chip."""
+    import audio
+    import copy
+
+    lead = opl_instruments.get("opl_saw_lead")
+    assert any(op.waveform for op in (lead.modulator, lead.carrier)), \
+        "this test needs a patch with a non-sine waveform"
+    sine = copy.deepcopy(lead)
+    sine.modulator.waveform = 0
+    sine.carrier.waveform = 0
+
+    def play(patch, wave_select):
+        chip = opl2.YM3812(wave_select=wave_select)
+        chip.set_instrument(0, patch)
+        chip.note_on(0, "E", 4)
+        out = chip.render(4096)
+        chip.close()
+        return out
+
+    def same(a, b):
+        return audio.rms([(x - y) for x, y in zip(_flat(a), _flat(b))]) < 1e-9
+
+    assert same(play(lead, False), play(sine, False)), \
+        "with waveform select off the waveform registers must be ignored"
+    assert not same(play(lead, True), play(sine, True)), \
+        "with waveform select on the waveforms must apply"
+
+
+def _flat(buffer):
+    import audio
+    if audio.is_fallback(buffer):
+        return list(buffer.data)
+    return [float(v) for v in buffer.reshape(-1)]

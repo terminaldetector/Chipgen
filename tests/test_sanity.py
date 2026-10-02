@@ -387,3 +387,79 @@ def test_two_voices_in_one_octave_are_left_alone():
     # Firing on two would make this noise.
     crowded = _crowding(_stacked(("B-2", "D-3"), BUILT_IN[:2]))
     assert not crowded, f"two voices should not be reported: {crowded}"
+
+
+def test_crowding_is_checked_on_every_chip_not_just_fm():
+    """It was an FM-only check: six OPL2 voices inside one octave, or both
+    NES pulses in unison with the triangle, passed with nothing said."""
+    import chipgen
+
+    def rows(cells, n=96):
+        hold = " ".join("..." for _ in cells.split())
+        return "\n".join(cells if i % 8 == 0 else hold
+                         for i in range(n)) + "\n"
+
+    head = "bpm 140\nlpb 4\n"
+    crowded_opl = (head + "".join(f"inst opl{i} opl_pad\n" for i in range(6))
+                   + "cols opl0 opl1 opl2 opl3 opl4 opl5\n"
+                   + rows("C-4 D-4 E-4 G-4 A-4 B-4"))
+    spread_opl = (head + "".join(f"inst opl{i} opl_pad\n" for i in range(3))
+                  + "cols opl0 opl1 opl2\n" + rows("C-2 E-4 G-5"))
+    unison_nes = head + "cols nes0 nes1 nes2\n" + rows("C-5 C-5 C-5")
+    idiomatic_nes = head + "cols nes0 nes1 nes2\n" + rows("E-5 C-5 A-2")
+
+    def crowded(score):
+        return any("one octave" in w for w in chipgen.compose(score).warnings)
+
+    assert crowded(crowded_opl)
+    assert not crowded(spread_opl)
+    assert crowded(unison_nes)
+    assert not crowded(idiomatic_nes), \
+        "pulses in a third over a triangle bass is the NES's idiom"
+
+
+def test_silent_failures_are_reported_at_any_length():
+    """The 5-second floor exists so a four-row test is not judged as an
+    arrangement; a channel with no instrument is not a judgement."""
+    import sanity
+    import tracker
+
+    events, _ = tracker.loads("bpm 140\nlpb 4\ncols fm0 psg0 nes0\n"
+                              "C-4 C-2 G-1\n... C-5:15 ...\n")
+    rules = {f.rule for f in sanity.silent_failures(events)}
+    assert rules == {"fm_needs_inst", "psg_floor", "psg_15_is_silent",
+                     "nes_pulse_floor"}, rules
+
+
+def test_the_floors_are_where_the_pitch_breaks_measured():
+    """A-2 on the PSG, A-1 on the pulses, A-0 on the triangle: the notes
+    at the floor play true, one semitone under plays sharp."""
+    import sanity
+    import tracker
+
+    at_floor, _ = tracker.loads("bpm 140\nlpb 4\ncols psg0 nes0 nes2\n"
+                                "A-2 A-1 A-0\n")
+    assert not sanity.silent_failures(at_floor)
+    below, _ = tracker.loads("bpm 140\nlpb 4\ncols psg0 nes0 nes2\n"
+                             "G#2 G#1 G#0\n")
+    rules = {f.rule for f in sanity.silent_failures(below)}
+    assert rules == {"psg_floor", "nes_pulse_floor", "nes_triangle_floor"}
+
+
+def test_the_psg_floor_is_measured_not_assumed():
+    """C-2 on the PSG renders at A-2: the 10-bit divider clamps at 1023.
+    Measured +889.6 cents — the reason the floor and the check exist."""
+    import math
+
+    import analysis
+    import chipgen
+
+    result = chipgen.compose("bpm 60\nlpb 1\ncols psg0\nC-2\n...\n")
+    mono = [float(v) for v in analysis.to_mono(result.audio)]
+    rate = result.sample_rate
+    found = analysis.fundamental(mono[int(0.3 * rate):int(1.3 * rate)], rate)
+    found = found[0] if isinstance(found, tuple) else found
+    # The clamped divider is 1023: 109.34 Hz, A-2 less 10 cents. Not the
+    # 65.41 Hz that was written — nearly nine semitones sharp.
+    assert abs(found - 109.34) < 0.5, found
+    assert 1200 * math.log2(found / 65.41) > 850, found
