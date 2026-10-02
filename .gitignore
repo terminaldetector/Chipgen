@@ -6,6 +6,11 @@ core/*.o
 
 # Rendered audio / exported tracks
 output/
+
+# Scores, renders and experiments written by whoever is composing. The
+# bridge archive ships work/README.md so the directory exists on unzip;
+# in a checkout it stays out of the branch.
+work/
 *.pyc
 __pycache__/
 

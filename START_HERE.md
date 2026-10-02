@@ -6,9 +6,17 @@ the **SN76489** (Sega PSG, 3 square channels + noise) — and turns a written
 score into audio through them. Not a synthesiser imitating that sound: the
 same registers, the same protocol, the same timings.
 
-If you are a language model that has just been handed this archive: this
-page is everything you need to *write a score*. Read it, run the two
-commands, compose.
+If you are a language model that has just been handed this archive: the
+shortest complete path is one command —
+
+    python3 python/chipgen.py --brief --chip-target YM2612   (or RP2A03, YM3812)
+
+— which prints everything you need to write a score for that chip in a
+few hundred tokens. Write it in `work/`, check it with
+`python3 python/chipgen.py work/song.trk --check`, and fix what the check
+says **in the score**: never edit `python/`, `core/`, `bridge/` or
+`tests/` (see `AGENTS.md`; the engine is checksummed and a render from an
+edited engine says so). This page is the whole notation, for going deeper.
 
 If you are going to touch the chip below the score layer — designing
 instrument patches, writing register values, building a bank — read

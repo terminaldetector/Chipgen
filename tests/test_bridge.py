@@ -111,7 +111,12 @@ def test_archive_is_lean_and_reproducible():
         # Score->events inverse, and the tracker's missing NES dump half.
         # Verified as source rather than data — the ten largest entries
         # are all .py or .md, the biggest being tracker.py at 17.3 KB.
-        assert size < 540 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 600 KB for the model-facing half: per-family briefings,
+        # reply.py's checker, the GBNF grammar, the OpenAI-compatible
+        # client, the integrity guard and their tests — 31.9 KB of new
+        # files compressed, the largest reply.py at 7.9 KB — plus the
+        # generated AGENTS.md and integrity.json (5.4 KB together).
+        assert size < 600 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()
@@ -218,3 +223,88 @@ def test_cloud_response_parsing_survives_the_usual_model_slips():
     assert cloud_generator._extract_json_array(chatty) == [{"type": "Wait", "ticks": 5}]
 
     assert cloud_generator.strip_fences("```\nrows\n```") == "rows"
+
+
+# --------------------------------------------------------------------------
+# What the archive tells a model before it reads anything, and how it
+# notices when the model has changed the engine anyway.
+# --------------------------------------------------------------------------
+def _built_archive(directory):
+    sys.path.insert(0, BRIDGE)
+    import make_zip
+    return make_zip.build(os.path.join(directory, "bridge.zip"))
+
+
+def test_the_archive_carries_agents_md_and_a_work_directory():
+    """AGENTS.md is what several agent tools read before anything else —
+    the one document a model that skims is sure to see."""
+    import zipfile
+
+    import prompts
+
+    with support.TempDir() as directory:
+        with zipfile.ZipFile(_built_archive(directory)) as archive:
+            agents = archive.read("chipgen/AGENTS.md").decode("utf-8")
+            names = set(archive.namelist())
+    assert agents == prompts.agents_md()
+    assert "Never edit" in agents and "--check" in agents
+    assert "chipgen/work/README.md" in names
+
+
+def test_agents_md_is_not_in_the_repository():
+    """In a checkout an agent is meant to change the engine; a file at
+    the root telling it not to would be wrong there."""
+    assert not os.path.exists(os.path.join(support.ROOT, "AGENTS.md"))
+
+
+def test_the_archive_checksums_the_engine():
+    import json
+    import zipfile
+
+    with support.TempDir() as directory:
+        with zipfile.ZipFile(_built_archive(directory)) as archive:
+            files = json.loads(archive.read(
+                "chipgen/bridge/integrity.json"))["files"]
+            data = archive.read("chipgen/python/tracker.py")
+    import integrity
+    assert files["python/tracker.py"] == integrity.digest(data)
+    assert "core/ym3438.c" in files and "tests/run_tests.py" in files
+    assert not any(name.endswith(".md") for name in files), \
+        "docs are not the engine; editing them changes no render"
+
+
+def test_an_edited_engine_is_named_by_check():
+    """Not refused — refusing invites deleting the checksum next — but
+    named, where the model and the person reading it both see it."""
+    import zipfile
+
+    import integrity
+
+    with support.TempDir() as directory:
+        with zipfile.ZipFile(_built_archive(directory)) as archive:
+            archive.extractall(directory)
+        root = os.path.join(directory, "chipgen")
+        assert integrity.changed(root) == []
+
+        mixer = os.path.join(root, "python", "mixer.py")
+        with open(mixer, "a", encoding="utf-8") as handle:
+            handle.write("\nLOUDER = True  # a model's improvement\n")
+        assert integrity.changed(root) == ["python/mixer.py"]
+
+        score = os.path.join(root, "work", "song.trk")
+        with open(score, "w", encoding="utf-8") as handle:
+            handle.write("bpm 120\nlpb 4\ninst fm0 bass\ncols fm0\nC-4\n")
+        finished = subprocess.run(
+            [sys.executable, "python/chipgen.py", "work/song.trk",
+             "--check"], cwd=root, capture_output=True, text=True,
+            timeout=300)
+    assert finished.returncode == 1, finished.stdout
+    assert "engine_modified" in finished.stdout
+    assert "python/mixer.py" in finished.stdout
+
+
+def test_a_checkout_pays_nothing_for_the_guard():
+    import integrity
+
+    assert integrity.changed() == []
+    assert integrity.warning() == ""

@@ -13,14 +13,32 @@ that render successfully and sound wrong.
 
 ---
 
-## Short version
+## Short version — works for every model family
 
-> This zip is a Sega Genesis chiptune engine. Unzip it, run
-> `python3 bridge/bootstrap.py`, read `START_HERE.md`, then compose me a
-> track in its tracker notation and render it to WAV and VGM.
+> This zip is chipgen, a chiptune engine. Unzip it, run
+> `python3 bridge/bootstrap.py`, then
+> `python3 python/chipgen.py --brief --chip-target YM2612 --family <you>`
+> and follow that briefing. Compose me a track, write it to `work/`,
+> check it with `--check` until it says PLAYABLE, and render it to WAV
+> and VGM. Do not edit any file outside `work/`.
 
-That is genuinely enough. `bootstrap.py` sets everything up and reports
-what it found, and `START_HERE.md` is written for a model to read.
+`--chip-target` is YM2612 (Genesis), RP2A03 (NES) or YM3812 (OPL2);
+`--family` is your model family (gpt, claude, grok, gemini, llama,
+qwen...) and picks how the briefing is pitched. The briefing is a few
+hundred tokens and complete; `AGENTS.md`, which agent tools read on
+their own, says the same thing.
+
+**Why not just "read START_HERE.md".** That was the short version until
+models that skim started following it: START_HERE.md and CORE.md are
+about 12,000 tokens, and a model that keeps only the gist writes
+`C-5:15` on a PSG channel (silence: it is an attenuator) or an FM column
+with no instrument (silence, again) — and, handed an archive full of
+Python, some start improving the engine instead of writing the score.
+
+**No archive, just a chat?** `python3 python/chipgen.py --brief
+--chip-target RP2A03 --family gpt --describe "castle theme" --bars 8`
+prints a briefing to paste — notation, lists and rules included — and
+`--check` reads the reply you get back.
 
 ---
 

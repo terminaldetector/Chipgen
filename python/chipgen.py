@@ -250,6 +250,10 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.title = "chipgen"
 
     warnings = warnings + sanity_mod.check(events, rate)
+    import integrity
+    edited = integrity.warning()
+    if edited:
+        warnings.append(edited)
 
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
@@ -270,6 +274,19 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     result = Result(buf, events, target_rate, wav, vgm, warnings,
                     detect_format(source), metadata)
     result.it_path = it
+    # The last net. Every known cause of a silent render has its own check
+    # above; this catches the ones nobody has met yet, because "wrote
+    # song.wav" over a file of zeros is the worst thing this can say.
+    sounding = (events_mod.FMNoteOn, events_mod.PSGToneOn,
+                events_mod.PSGNoiseOn, events_mod.DACSample,
+                events_mod.OPLNoteOn, events_mod.NESNoteOn,
+                events_mod.NESNoiseOn, events_mod.NESSample)
+    if result.peak == 0.0 and any(isinstance(e, sounding) for e in events):
+        result.warnings.append(
+            "the render is SILENT: there are notes in the score and not "
+            "one non-zero sample in the audio. Look at the warnings above "
+            "for the cause; if there are none, that is a bug worth "
+            "reporting rather than working around")
     result.it_report = it_report
     if not quiet:
         print(result.summary())
@@ -666,6 +683,55 @@ def _master_peak(value):
     return value if value > 0 else None
 
 
+def _delivery() -> str:
+    """Inside the bridge archive the reader of a brief is an agent in a
+    sandbox; anywhere else it is someone about to paste it into a chat."""
+    import integrity
+    shipped = os.path.join(integrity.ROOT, integrity.MANIFEST)
+    return "agent" if os.path.exists(shipped) else "chat"
+
+
+def _generate(args, request) -> int:
+    """--generate: brief a model, check what it writes, render the result."""
+    import re
+
+    import llm
+
+    chip = (args.chip_target or "YM2612").upper()
+    request["chip"] = chip
+    endpoint = llm.Endpoint(args.endpoint, args.model, args.api_key,
+                            grammar_field=args.grammar_field)
+    delivery = args.delivery or "chat"
+    print(f"asking {endpoint.model} at {endpoint.url} for a {chip} score "
+          f"({delivery}, up to {args.rounds} rounds)")
+    result = llm.generate(chip, request, endpoint, family=args.family,
+                          rounds=args.rounds, delivery=delivery, log=print)
+    if args.json:
+        print(json.dumps(result.to_json(), indent=1, ensure_ascii=False))
+    else:
+        print(result.summary())
+    if not result.ok:
+        print("\nnot playable after the last round:")
+        print(result.verdict.feedback(delivery))
+        return 1
+
+    slug = re.sub(r"[^a-z0-9]+", "_", (args.generate or "song").lower())
+    slug = slug.strip("_")[:40] or "song"
+    os.makedirs("work", exist_ok=True)
+    score_path = args.tracker or os.path.join("work", f"{slug}.trk")
+    with open(score_path, "w", encoding="utf-8") as handle:
+        handle.write(result.score)
+    wav = args.wav or os.path.join("work", f"{slug}.wav")
+    rendered = compose(result.score, wav=wav, vgm=args.vgm,
+                       normalize=_master_peak(args.peak), quiet=False,
+                       chip_type=args.chip)
+    print(f"wrote {score_path}")
+    for path in (rendered.wav_path, rendered.vgm_path):
+        if path:
+            print(f"wrote {path}")
+    return 0
+
+
 def main(argv):
     import argparse
 
@@ -758,9 +824,72 @@ def main(argv):
     parser.add_argument("--arrangements", action="store_true",
                         help="list the arrangement targets and every "
                              "channel each one has, as JSON")
+    # -- briefing, checking and generating: the model-facing half --------
+    parser.add_argument("--brief", action="store_true",
+                        help="print a complete, self-contained briefing "
+                             "for --chip-target (YM2612, RP2A03, YM3812), "
+                             "pitched for --family. A few hundred tokens: "
+                             "the notation, the closed lists, the rules "
+                             "and a header to start from")
+    parser.add_argument("--family", metavar="NAME",
+                        help="the model the briefing is for: a family "
+                             "(gpt, claude, grok, gemini, llama, qwen...), "
+                             "a model name (qwen2.5:7b), or a profile "
+                             "(reasoned, contract, compact). Unknown "
+                             "names get the strictest")
+    parser.add_argument("--delivery", choices=("chat", "agent", "grammar"),
+                        help="how the score comes back: one fenced block "
+                             "in a chat reply, a file in an agent's "
+                             "sandbox, or raw under a grammar. Default: "
+                             "agent inside the bridge archive, chat "
+                             "elsewhere")
+    parser.add_argument("--bpm", type=float,
+                        help="tempo for a --brief, --prompt or --generate "
+                             "request")
+    parser.add_argument("--bars", type=int,
+                        help="length in bars for --brief, --check and "
+                             "--generate")
+    parser.add_argument("--key", default="",
+                        help="key for a --brief or --generate request")
+    parser.add_argument("--check", action="store_true",
+                        help="check the source — a score or a model's "
+                             "whole reply, - for stdin — instead of "
+                             "rendering it: extracts the score, repairs "
+                             "what has one meaning, and reports every "
+                             "error with its line and fix. Exit 1 if it "
+                             "is not playable")
+    parser.add_argument("--json", action="store_true",
+                        help="with --check or --generate: JSON output")
+    parser.add_argument("--grammar", action="store_true",
+                        help="print the GBNF grammar for --chip-target: "
+                             "for grammar-constrained decoding on a local "
+                             "server, which makes format errors impossible")
+    parser.add_argument("--generate", metavar="TEXT",
+                        help="ask a model for a score through any "
+                             "OpenAI-compatible endpoint (Ollama, "
+                             "llama.cpp, LM Studio, vLLM, or a cloud API), "
+                             "check it, feed the errors back until it "
+                             "plays, then render")
+    parser.add_argument("--endpoint", metavar="URL",
+                        help="chat-completions base URL (default "
+                             "CHIPGEN_ENDPOINT, else Ollama's "
+                             "http://localhost:11434/v1)")
+    parser.add_argument("--model", metavar="NAME",
+                        help="the model to ask (default CHIPGEN_MODEL)")
+    parser.add_argument("--api-key", metavar="KEY",
+                        help="bearer token (default CHIPGEN_API_KEY or "
+                             "OPENAI_API_KEY); local servers need none")
+    parser.add_argument("--rounds", type=int, default=3,
+                        help="how many tries --generate gets (default 3)")
+    parser.add_argument("--grammar-field", choices=("llama.cpp", "vllm"),
+                        help="send the GBNF grammar in this server's field "
+                             "(with --delivery grammar)")
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
+    # A whole-number tempo prints as one: "144 BPM", not "144.0 BPM".
+    if args.bpm is not None and float(args.bpm).is_integer():
+        args.bpm = int(args.bpm)
 
     # --bank has to land BEFORE the branches that return early. It used
     # to be loaded only inside compose(), so `--cast lead --bank x.json`
@@ -813,10 +942,31 @@ def main(argv):
         if args.describe:
             print(prompts_mod.compose({
                 "chip": args.chip_target, "prompt": args.describe,
-                "bpm": args.bpm, "style": args.title or ""}))
+                "bpm": args.bpm, "bars": args.bars, "key": args.key,
+                "style": args.title or ""}))
         else:
             print(prompts_mod.starter(args.chip_target))
         return 0
+
+    request = {"chip": args.chip_target, "prompt": args.describe or
+               args.generate or "", "bpm": args.bpm, "bars": args.bars,
+               "key": args.key, "style": args.title or ""}
+
+    if args.brief:
+        import prompts as prompts_mod
+        chip = (args.chip_target or "YM2612").upper()
+        print(prompts_mod.brief(chip, args.family, request,
+                                delivery=args.delivery or _delivery()))
+        return 0
+
+    if args.grammar:
+        import grammar as grammar_mod
+        print(grammar_mod.gbnf((args.chip_target or "YM2612").upper(),
+                               request), end="")
+        return 0
+
+    if args.generate:
+        return _generate(args, request)
 
     if args.arrangements:
         import arrange as arrange_mod
@@ -878,6 +1028,16 @@ def main(argv):
         if args.tracker:
             with open(args.tracker, "w", encoding="utf-8") as handle:
                 handle.write(source)
+
+    if args.check:
+        import reply as reply_mod
+        text = source if isinstance(source, str) else ""
+        verdict = reply_mod.check(
+            text, chip=(args.chip_target or "").upper() or None,
+            request={"bars": args.bars} if args.bars else None)
+        print(json.dumps(verdict.to_json(), indent=1, ensure_ascii=False)
+              if args.json else verdict.report())
+        return 0 if verdict.ok else 1
 
     if not (args.wav or args.vgm or args.tracker or args.it):
         args.wav = "output/chipgen.wav"

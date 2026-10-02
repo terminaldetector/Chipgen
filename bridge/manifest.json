@@ -240,14 +240,6 @@
       "notes": "one algorithm bit (FM or additive), not eight. Waves 2 and 3 rectify, so they sound an octave above waves 0 and 1 at the same written note — see the `live_opl2` section. Rhythm mode (register 0xBD) is not implemented."
     }
   },
-  "runtime": {
-    "python": "3.11.15",
-    "platform": "linux",
-    "numpy": true,
-    "scipy": true,
-    "dsp_backend": "scipy",
-    "notes": []
-  },
   "inputs": {
     "tracker": "compact text grid; see python/tracker.py docstring",
     "json": "array of event objects; see events",

@@ -263,3 +263,11 @@ render them on `ym3438`, and compare. The whole engine is in `python/`
 and a measurement is about six lines. Every number in this document was
 produced that way, including the ones that contradicted what the author
 expected.
+
+**Measuring is reading the engine, never changing it.** Write the six
+lines in `work/`, import the engine from there, and leave `python/`,
+`core/`, `bridge/` and `tests/` exactly as shipped. The engine is
+checksummed: every render and every `--check` names an edited file, and a
+score tuned against an edited engine is wrong everywhere else. If the
+engine looks wrong, report it with the measurement — that is the useful
+output, not a patch.

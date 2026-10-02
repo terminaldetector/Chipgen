@@ -158,6 +158,11 @@ python/furnace_import.py      читать .dmp/.tfi/.vgi (Furnace, DefleMask, T
 python/score_model.py         события <-> ноты (Score): общий вид партитуры
 python/arrange.py             подгонка партитуры под другой чип + отчёт о потерях
 python/midi_import.py         .mid -> Score: стык со всем, что вне проекта
+python/prompts.py             брифинги: по чипу и по семейству модели
+python/reply.py               ответ модели -> партитура, или все ошибки разом
+python/grammar.py             GBNF-грамматика на чип — для llama.cpp/vLLM
+python/llm.py                 OpenAI-совместимый клиент + цикл проверки
+python/integrity.py           контрольные суммы движка в архиве
 python/profile.py             RMS/пик по секциям — проверка звука, не событий
 python/audio.py + wavio.py    DSP и WAV; numpy/scipy опциональны
 python/chipgen.py             весь движок за одной функцией + CLI
@@ -587,6 +592,42 @@ MIDI-файл несёт **партии**, а не каналы, поэтому 
 
 Во фронтенде MIDI-файл — второй источник на вкладке **Rearrange**, рядом с
 редактором партитуры.
+
+## Брифинги под семейства моделей и локальная генерация
+
+Разные модели проваливались по-разному, и обе дороги были дырявыми:
+через интерфейс модель не видела нотации вообще, через архив —
+получала ≈12 000 токенов документации и уносила общую идею, а иногда
+начинала «чинить» движок. Подробно, с замерами — в
+[`BLIND_SPOTS.md`](BLIND_SPOTS.md).
+
+```bash
+# брифинг на один чип для одного семейства: нотация, закрытые списки,
+# правила, заголовок, пример — 300–970 токенов вместо 12 000
+python3 python/chipgen.py --brief --chip-target RP2A03 --family gpt \
+    --describe "castle theme" --bars 8
+
+# проверить ответ модели целиком (проза, заборы, <think> — не помеха):
+# все ошибки разом, с номером строки, цитатой и исправлением
+python3 python/chipgen.py reply.txt --check --chip-target RP2A03
+
+# сгенерировать: любой OpenAI-совместимый сервер — Ollama, llama.cpp,
+# LM Studio, vLLM или облако; ошибки возвращаются модели до PLAYABLE
+python3 python/chipgen.py --generate "castle theme" --chip-target RP2A03 \
+    --model qwen2.5:7b --bars 4 -o castle.wav --vgm castle.vgm
+
+# GBNF-грамматика: под llama.cpp ошибки формата невозможны
+python3 python/chipgen.py --grammar --chip-target YM3812 --bars 4
+```
+
+`--family` принимает семейство (gpt, claude, grok, gemini, llama,
+qwen…), имя модели (`qwen2.5:7b` — по размеру ≤14B выбирается
+компактный профиль) или профиль напрямую: `reasoned`, `contract`,
+`compact`. Неизвестное получает самый строгий — `contract`.
+
+В архиве модель первым делом видит `AGENTS.md`: партитуры — в `work/`,
+движок не трогать. Движок в архиве под контрольными суммами: любой
+рендер и `--check` называют изменённый файл.
 
 ## Чего по-прежнему нет
 
