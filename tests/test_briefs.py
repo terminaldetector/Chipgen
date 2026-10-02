@@ -286,3 +286,18 @@ def test_the_contract_carries_every_brief_and_the_family_table():
         assert set(section["briefs"][chip]) == set(prompts.PROFILES)
     assert section["families"]["gpt"] == "contract"
     assert section["unknown_family"] == "contract"
+
+
+def test_the_agent_brief_and_agents_md_forbid_the_same_directories():
+    """Two lists of what not to touch is one list that drifts. The agent
+    brief first left out tests/, which the checksums cover."""
+    import integrity
+    import prompts
+
+    agents = prompts.agents_md()
+    brief = prompts.brief("RP2A03", "contract", delivery="agent")
+    protected = {prefix.rstrip("/") for prefix in integrity.COVERED_PREFIXES}
+    protected.add("bridge")
+    for directory in protected:
+        assert f"`{directory}/`" in agents, directory
+        assert f"`{directory}/`" in brief, directory

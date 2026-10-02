@@ -547,8 +547,9 @@ DELIVERY = {
     "agent": "Write the score to `work/song.trk`, then run "
              "`python3 python/chipgen.py work/song.trk --check` and fix "
              "what it reports IN THE SCORE. You are the composer here, not "
-             "the developer: never edit anything in `python/`, `core/` or "
-             "`bridge/`. If the engine looks wrong, say so and stop — a "
+             "the developer: never edit anything in `python/`, `core/`, "
+             "`bridge/` or `tests/`. If the engine looks wrong, say so and "
+             "stop — a "
              "changed engine is not chipgen, and the render says so.",
     "grammar": "Write the score and nothing else.",
 }
