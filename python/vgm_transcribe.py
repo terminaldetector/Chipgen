@@ -67,6 +67,13 @@ GRID_EQUIVALENCE = 0.02
 #: the off-grid minority every real track has.
 GRID_TOLERANCE = 0.08
 
+#: How far the pitch must have moved for a re-key of a channel that is
+#: already on to count as a new note. Half a semitone: past it the
+#: nearest note is a different one, and short of it the move is
+#: expression — vibrato, which the corpus measures at a median of 18
+#: cents, stays well inside.
+_REKEY_CENTS = 50.0
+
 
 class Note:
     __slots__ = ("time", "channel", "kind", "note", "octave", "velocity",
@@ -113,7 +120,7 @@ def frequency_to_note(frequency: float):
 # --------------------------------------------------------------------------
 class _FMChannel:
     __slots__ = ("fnum", "block", "latch", "on", "total_level", "algorithm",
-                 "keyed_frequency")
+                 "keyed_frequency", "operators")
 
     def __init__(self):
         self.keyed_frequency = 0.0
@@ -121,6 +128,7 @@ class _FMChannel:
         self.block = 0
         self.latch = 0          # 0xA4 is written first and latched
         self.on = False
+        self.operators = 0      # the key-on mask last written, bits 4-7
         self.total_level = [0, 0, 0, 0]
         self.algorithm = 0
 
@@ -239,9 +247,30 @@ def transcribe(path_or_bytes, max_seconds: float = 600.0):
                 continue
             channel = index if index < 3 else index - 1
             state = fm[channel]
-            if data & 0xF0:
+            operators = data & 0xF0
+            rising = operators & ~state.operators
+            state.operators = operators
+            if operators:
+                # Key-on is an edge, not a level. The chip restarts an
+                # envelope only where an operator goes from off to on;
+                # writing "on" to an operator already on does nothing.
+                # Some drivers write it every frame regardless — Super
+                # Fantasy Zone's re-keys a held note sixty times a second,
+                # 2,431 redundant writes against 220 real attacks on one
+                # channel of one cue — and counting each write as a note
+                # turned every held note into a frame-rate machine gun:
+                # 322 "notes" a second, and no tempo grid fitted at all.
+                # A re-key while already on is a new note only when the
+                # pitch has moved to another note: that is legato played
+                # by re-keying, and dropping it would lose the melody.
+                now = state.frequency(ym_clock)
+                moved = (state.on and state.keyed_frequency > 0 and now > 0
+                         and abs(1200.0 * math.log2(now / state.keyed_frequency))
+                         >= _REKEY_CENTS)
+                if not rising and state.on and not moved:
+                    continue
                 state.on = True
-                state.keyed_frequency = state.frequency(ym_clock)
+                state.keyed_frequency = now
                 name, octave, cents = frequency_to_note(state.keyed_frequency)
                 if name:
                     notes.append(Note(elapsed, f"fm{channel}", "on", name,

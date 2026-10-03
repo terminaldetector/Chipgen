@@ -25,8 +25,9 @@ import shutil
 
 
 #: Suffixes that are platform labels rather than part of a game's name.
-_PLATFORM_MARKERS = ("_mega_drive", "_genesis", "_family_computer", "_nes",
-                     "_zyrinx")
+_PLATFORM_MARKERS = ("_sega_mega_drive", "_sega_mega_cd", "_mega_drive",
+                     "_mega_cd", "_genesis", "_32x", "_family_computer",
+                     "_nes", "_zyrinx")
 
 
 def game_of(entry: dict) -> str:

@@ -92,7 +92,14 @@ def soundtrack_of(path: str) -> str:
     stem = os.path.splitext(os.path.basename(path))[0].lower()
     if "__" in stem:
         return stem.split("__")[0]
-    for marker in ("_mega_drive", "_genesis", "_zyrinx", "_family_computer"):
+    # Longest first: `golden_axe_ii_sega_mega_drive` has to lose
+    # `_sega_mega_drive`, not leave "golden_axe_ii_sega" behind; and a
+    # 32X or Mega CD rip names its platform its own way. Without those,
+    # the fallback below filed X-Men under "x" and Stellar Assault under
+    # "stellar".
+    for marker in ("_sega_mega_drive", "_sega_mega_cd", "_mega_drive",
+                   "_mega_cd", "_genesis", "_32x", "_zyrinx",
+                   "_family_computer"):
         if marker in stem:
             return stem.split(marker)[0]
     return stem.split("_")[0] or "unknown"

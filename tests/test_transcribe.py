@@ -415,3 +415,66 @@ def test_bar_phase_finds_the_downbeat():
     scattered = [generator.randrange(0, 128) for _ in range(60)]
     _phase, weak = corpus_digest._bar_phase(scattered, 16)
     assert weak < corpus_digest.PHASE_CONFIDENCE, weak
+
+
+# -- FM key-on is an edge --------------------------------------------------
+def _fm_log(writes, frames_between=1):
+    """A minimal VGM 1.50 of YM2612 writes, one 60 Hz frame apart.
+
+    `writes` is a list of steps; each step is a list of (register, value)
+    pairs written together, then a frame of silence.
+    """
+    import struct
+    body = bytearray()
+    for step in writes:
+        for register, value in step:
+            body += bytes((0x52, register, value))
+        body += b"\x62" * frames_between
+    body += b"\x66"
+    header = bytearray(0x40)
+    header[0:4] = b"Vgm "
+    struct.pack_into("<I", header, 0x04, 0x40 + len(body) - 4)
+    struct.pack_into("<I", header, 0x08, 0x150)
+    struct.pack_into("<I", header, 0x18, 735 * frames_between * len(writes))
+    struct.pack_into("<I", header, 0x2C, 7670453)
+    struct.pack_into("<I", header, 0x34, 0x0C)
+    return bytes(header + body)
+
+
+def _pitch(fnum, block):
+    return [(0xA4, (block << 3) | (fnum >> 8)), (0xA0, fnum & 0xFF)]
+
+
+def test_a_key_on_rewritten_every_frame_is_one_note():
+    """The chip restarts an envelope only where an operator goes from off
+    to on. Super Fantasy Zone's driver writes key-on every frame for a held
+    note; counted as notes, that was 322 a second and no grid at all."""
+    held = [_pitch(1084, 4) + [(0x28, 0xF0)]] + [[(0x28, 0xF0)]] * 30
+    notes, _info = vt.transcribe(_fm_log(held + [[(0x28, 0x00)]]))
+    assert [n.kind for n in notes] == ["on", "off"], \
+        [(round(n.time, 3), n.kind) for n in notes]
+
+
+def test_a_key_off_and_on_in_the_same_frame_is_a_new_note():
+    steps = [_pitch(1084, 4) + [(0x28, 0xF0)], [],
+             [(0x28, 0x00), (0x28, 0xF0)], [], [(0x28, 0x00)]]
+    notes, _info = vt.transcribe(_fm_log(steps))
+    assert [n.kind for n in notes] == ["on", "off", "on", "off"]
+
+
+def test_a_re_key_at_a_new_pitch_is_a_new_note():
+    """Legato played by re-keying without a key-off: the envelope does not
+    restart, but the melody moved, and dropping it would lose a note. A
+    move under half a semitone stays expression."""
+    import opn2
+    steps = [_pitch(1084, 4) + [(0x28, 0xF0)], [],
+             _pitch(1148, 4) + [(0x28, 0xF0)], [],       # ~ +100 cents
+             _pitch(1160, 4) + [(0x28, 0xF0)], [],       # ~ +18 more
+             [(0x28, 0x00)]]
+    notes, _info = vt.transcribe(_fm_log(steps))
+    on = [n for n in notes if n.kind == "on"]
+    assert len(on) == 2, [(n.note, n.octave) for n in on]
+    first, second = (vt.frequency_to_note(opn2.fnum_block_to_freq(f, 4, 7670453))
+                     for f in (1084, 1148))
+    assert (on[0].note, on[0].octave) == first[:2]
+    assert (on[1].note, on[1].octave) == second[:2]
