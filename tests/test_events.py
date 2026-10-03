@@ -25,6 +25,7 @@ def test_every_type_round_trips_through_dict():
         "VolumeSlide": E.VolumeSlide(target="opl4", per_second=-40.0,
                                      floor=16, ceiling=100),
         "Tremolo": E.Tremolo(target="fm3", depth=30.0, speed_hz=4.5),
+        "Arpeggio": E.Arpeggio(target="pulse1", x=4, y=7),
         "OPLInstrumentSelect": E.OPLInstrumentSelect(channel=2,
                                                     instrument="opl_bass"),
         "OPLNoteOn": E.OPLNoteOn(channel=8, note="F#", octave=4, velocity=100),

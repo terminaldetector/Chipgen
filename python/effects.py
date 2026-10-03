@@ -68,7 +68,8 @@ class _Voice:
                  "vibrato_phase", "vibrato_elapsed", "sounding",
                  "volume_rate", "volume_offset", "volume_floor",
                  "volume_ceiling", "tremolo_depth", "tremolo_speed",
-                 "tremolo_phase")
+                 "tremolo_phase", "arpeggio_steps", "arpeggio_rate",
+                 "arpeggio_phase")
 
     def __init__(self):
         self.reset()
@@ -90,11 +91,15 @@ class _Voice:
         self.tremolo_depth = 0.0
         self.tremolo_speed = 0.0
         self.tremolo_phase = 0.0
+        self.arpeggio_steps = ()
+        self.arpeggio_rate = DEFAULT_RATE
+        self.arpeggio_phase = 0.0
 
     def active(self) -> bool:
         return bool(self.portamento_rate or self.vibrato_depth
                     or self.volume_rate or self.tremolo_depth
-                    or self.portamento_cents or self.volume_offset)
+                    or self.portamento_cents or self.volume_offset
+                    or self.arpeggio_steps)
 
     # -- per-tick ----------------------------------------------------------
     def advance(self, dt: float):
@@ -126,8 +131,17 @@ class _Voice:
             self.tremolo_phase = (self.tremolo_phase
                                   + self.tremolo_speed * dt) % 1.0
 
+        if self.arpeggio_steps:
+            # Counted in steps, not wrapped: the step a tick lands on is
+            # the whole number of ticks since the note-on, and a phase
+            # that wrapped would drift against that by float error.
+            self.arpeggio_phase += dt * self.arpeggio_rate
+
     def pitch_cents(self) -> float:
         cents = self.portamento_cents
+        if self.arpeggio_steps:
+            step = int(self.arpeggio_phase + 1e-6) % len(self.arpeggio_steps)
+            cents += 100.0 * self.arpeggio_steps[step]
         if (self.vibrato_depth and self.vibrato_speed
                 and self.vibrato_elapsed >= self.vibrato_delay):
             cents += self.vibrato_depth * math.sin(2 * math.pi
@@ -203,6 +217,22 @@ class EffectEngine:
         if not depth or not speed_hz:
             voice.tremolo_phase = 0.0
 
+    def arpeggio(self, target: str, x: int, y: int):
+        """Root, +x, +y semitones, one step per effect tick; 0, 0 stops it.
+
+        A step per tick of this engine's clock — 60 Hz, the vertical blank
+        the hardware's own drivers run on — which is what a tracker's 0xy
+        does with its tick, and why a C-E-G arpeggio sounds like a chord
+        on these chips rather than like three notes.
+        """
+        voice = self._voice(target)
+        if not x and not y:
+            voice.arpeggio_steps = ()
+            voice.arpeggio_phase = 0.0
+            return
+        voice.arpeggio_steps = (0, int(x), int(y))
+        voice.arpeggio_rate = self.rate
+
     def note_on(self, target: str):
         """A new note restarts the modulators but keeps the slides.
 
@@ -216,6 +246,7 @@ class EffectEngine:
         voice.vibrato_phase = 0.0
         voice.vibrato_elapsed = 0.0
         voice.tremolo_phase = 0.0
+        voice.arpeggio_phase = 0.0          # every note starts on its root
         voice.sounding = True
 
     def note_off(self, target: str):

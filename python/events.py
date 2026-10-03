@@ -354,6 +354,23 @@ class Tremolo(Event):
 
 
 @dataclass
+class Arpeggio(Event):
+    """Cycle a voice through its note, `x` semitones above it and `y`
+    above it — a tracker's 0xy — one step per effect tick.
+
+    The effect clock runs at 60 Hz because that is the vertical blank
+    Mega Drive and NES sound drivers update on, and a step a frame is
+    what makes an arpeggio read as a chord rather than a trill. Restarts
+    on the root at every note-on, persists until changed, and `x = y = 0`
+    turns it off. Works on every voice with a pitch; `noise`, `dac` and
+    `dmc` have none to cycle.
+    """
+    target: str
+    x: int = 0
+    y: int = 0
+
+
+@dataclass
 class DACEnable(Event):
     """Switch FM channel 6 between normal FM and the 8-bit PCM DAC (register 0x2B)."""
     enable: bool = True
@@ -576,6 +593,7 @@ _EVENT_TYPES = {
     "Vibrato": Vibrato,
     "VolumeSlide": VolumeSlide,
     "Tremolo": Tremolo,
+    "Arpeggio": Arpeggio,
     "NESNoteOn": NESNoteOn,
     "NESNoteOff": NESNoteOff,
     "NESVolume": NESVolume,
@@ -624,6 +642,7 @@ SPEC: Dict[str, Dict[str, Any]] = {
     "VolumeSlide":        {"per_second": (-1000, 1000), "floor": (0, 127),
                            "ceiling": (0, 127)},
     "Tremolo":            {"depth": (0, 127), "speed_hz": (0, 40)},
+    "Arpeggio":           {"x": (0, 15), "y": (0, 15)},
     "OPLInstrumentSelect": {"channel": (0, 8)},
     "OPLNoteOn":          {"channel": (0, 8), "octave": (0, 9), "velocity": (1, 127)},
     "OPLNoteOff":         {"channel": (0, 8)},
@@ -652,7 +671,7 @@ TYPE_ALIASES = {
     "dac": "DACSample", "sample": "DACSample",
     "porta": "Portamento", "slide": "Portamento", "bend": "Portamento",
     "vib": "Vibrato", "volslide": "VolumeSlide", "fade": "VolumeSlide",
-    "trem": "Tremolo",
+    "trem": "Tremolo", "arpeggio": "Arpeggio", "arp": "Arpeggio",
     "oplnote": "OPLNoteOn", "oplon": "OPLNoteOn", "oploff": "OPLNoteOff",
     "oplinstrument": "OPLInstrumentSelect", "adlib": "OPLNoteOn",
     "loop": "LoopPoint", "comment": "Marker", "stop": "End", "finish": "End",

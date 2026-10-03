@@ -98,7 +98,7 @@ import re
 import events as events_mod
 import fx
 from events import (
-    DACSample, DACVolume, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
+    Arpeggio, DACSample, DACVolume, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
     FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn, FMOperator, FMPan,
     FMPitch, FMVolume, LoopPoint, Marker, NESDMCLevel, NESDuty,
     NESNoiseOff, NESNoiseOn, NESNoteOff, NESNoteOn, NESSample, NESSweep,
@@ -419,6 +419,50 @@ def loads(text: str):
             events.append(Wait(ticks=base + (1 if step < remainder else 0)))
         return True
 
+    def emit_timed_row(delayed, noise_sounding, lineno, raw):
+        """Spend a row whose cells do not all start on its first tick.
+
+        `Cxx` moves a cell xx ticks into the row. Everything else in the
+        row has already been emitted at tick 0; what remains is a timeline
+        of the delayed cells and, if an `arp` is running, its pitch steps,
+        played in order with the waits between them. The row still lasts
+        exactly one row.
+        """
+        total = meta.ticks_per_row()
+        timeline = []                       # (tick, order, action)
+        active = [ch for ch, offsets in arps.items()
+                  if offsets and fm_sounding[ch]]
+        if active:
+            steps = max(len(arps[ch]) for ch in active)
+            if total >= steps:
+                base, remainder = divmod(total, steps)
+                at = 0
+                for step in range(steps):
+                    pitches = [FMPitch(channel=ch,
+                                       cents=arps[ch][step % len(arps[ch])]
+                                       * 100.0) for ch in active]
+                    timeline.append((at, 0, pitches))
+                    at += base + (1 if step < remainder else 0)
+        for order, (ticks, column, cell) in enumerate(delayed, start=1):
+            timeline.append((ticks, order, (column, cell)))
+        timeline.sort(key=lambda item: (item[0], item[1]))
+
+        now = 0
+        for at, _order, action in timeline:
+            if at > now:
+                events.append(Wait(ticks=at - now))
+                now = at
+            if isinstance(action, list):
+                events.extend(action)
+                continue
+            column, cell = action
+            _apply_cell(column, cell, events, fm_sounding, psg_sounding,
+                        lineno, raw)
+            if column == "noise":
+                noise_sounding = _noise_state(cell, noise_sounding)
+        events.append(Wait(ticks=total - now))
+        return noise_sounding
+
     for lineno, raw in expand_patterns(text):
         line = _COMMENT.split(raw, maxsplit=1)[0].strip()
         if not line or stopped:
@@ -440,12 +484,20 @@ def loads(text: str):
                 f"({' '.join(columns)}). Use ... for an empty cell.\n  {raw.strip()}")
 
         flush_rows()
+        delayed = []          # (ticks into the row, column, cell)
         for column, cell in zip(columns, cells):
+            ticks, cell = _split_delay(cell, meta, lineno, raw)
+            if ticks:
+                delayed.append((ticks, column, cell))
+                continue
             _apply_cell(column, cell, events, fm_sounding, psg_sounding,
                         lineno, raw)
             if column == "noise":
                 noise_sounding = _noise_state(cell, noise_sounding)
-        if not emit_arpeggio_row():
+        if delayed:
+            noise_sounding = emit_timed_row(delayed, noise_sounding,
+                                            lineno, raw)
+        elif not emit_arpeggio_row():
             pending_rows = 1
 
     flush_rows()
@@ -981,6 +1033,44 @@ def resolve_quality(name: str, lineno: int) -> str:
 
 
 
+def _split_delay(cell, meta, lineno, raw):
+    """`A-4/C06/4A3` -> (6, 'A-4/4A3'): a cell's delay, and the cell without it.
+
+    The delay is in the score's own ticks, so it is checked against the
+    row it has to fit in: a delay as long as the row would land the cell
+    in the next one, where it should simply be written.
+    """
+    token, codes = fx.split_cell(cell.strip())
+    ticks = 0
+    kept = []
+    for code in codes:
+        try:
+            value = fx.delay_ticks(code)
+        except fx.FXError as error:
+            raise TrackerError(
+                f"line {lineno}: {error}\n  {raw.strip()}") from None
+        if value is None:
+            kept.append(code)
+            continue
+        if ticks:
+            raise TrackerError(
+                f"line {lineno}: {cell.strip()!r} has two delays; a cell "
+                f"starts once\n  {raw.strip()}")
+        ticks = value
+    if not ticks:
+        return 0, cell if len(kept) == len(codes) else \
+            fx.SEPARATOR.join([token] + kept)
+    total = meta.ticks_per_row()
+    if ticks >= total:
+        raise TrackerError(
+            f"line {lineno}: C{ticks:02X} delays the cell by {ticks} ticks, "
+            f"but a row here is {total} ticks long ({meta.bpm:g} BPM, lpb "
+            f"{meta.lpb}, {meta.ticks_per_second:g} ticks a second), so it "
+            f"would land in a later row. Use C01-C{total - 1:02X}, or write "
+            f"the note in the row where it sounds.\n  {raw.strip()}")
+    return ticks, fx.SEPARATOR.join([token] + kept)
+
+
 def _apply_effects(column, codes, events, lineno, raw):
     """Turn a cell's effect codes into events on that column's voice."""
     for code in codes:
@@ -1265,6 +1355,7 @@ def dumps(events, meta: Metadata = None, columns=None,
     columns = list(columns) if columns else None
 
     rows = {}        # row index -> {column: cell}
+    row_effects = {}      # row index -> {column: [effect codes]}
     row_directives = {}   # row index -> [directive lines to print before it]
     header = []
     used = set()
@@ -1323,6 +1414,14 @@ def dumps(events, meta: Metadata = None, columns=None,
                             if (ev.floor, ev.ceiling) != (0, 127) else ""))
         elif isinstance(ev, Tremolo):
             directive(r, f"trem {ev.target} {ev.depth:g} {ev.speed_hz:g}")
+        elif isinstance(ev, Arpeggio):
+            # Written back as the cell effect it came from — there is no
+            # directive for it, and an arpeggio dropped on the way out
+            # would be a chord turned into a single note.
+            column = _NES_COLUMN.get(ev.target, ev.target)
+            used.add(column)
+            row_effects.setdefault(r, {}).setdefault(column, []).append(
+                f"0{ev.x:X}{ev.y:X}")
         elif isinstance(ev, OPLNoteOn):
             used.add(f"opl{ev.channel}")
             suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
@@ -1399,6 +1498,11 @@ def dumps(events, meta: Metadata = None, columns=None,
         order = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
                  + ("noise", "dac"))
         columns = [c for c in order if c in used] or list(DEFAULT_COLUMNS)
+
+    for r, effects in row_effects.items():
+        cells = rows.setdefault(r, {})
+        for c, codes in effects.items():
+            cells[c] = fx.SEPARATOR.join([cells.get(c, "...")] + codes)
 
     widths = {c: max(len(c), 3) for c in columns}
     for cells in rows.values():

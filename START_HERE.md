@@ -446,6 +446,8 @@ same fidelity the Genesis path gets.
 | `7xy` | tremolo: speed `x`+1 Hz, depth `y` |
 | `8xx` | pan (FM only): `00` left, `80` centre, `FF` right |
 | `Axy` | volume slide, (`x`−`y`) × 16 per second |
+| `0xy` | arpeggio: the note, `x` semitones above, `y` above — a step per 60 Hz frame |
+| `Cxx` | delay the whole cell `xx` ticks into its row |
 
 ```
 A-2:100/1F0      note at velocity 100, sliding up
@@ -462,7 +464,7 @@ adjust; anything past depth `9` reads as a bend, not a vibrato.
 column — `fm0`–`fm5`, `psg0`–`psg2`, `opl0`–`opl8`, `noise` and `dac` —
 but two of them have no pitch to bend:
 
-| column | pitch effects (`1` `2` `3` `4`) | volume effects (`7` `A`) | pan (`8`) |
+| column | pitch effects (`0` `1` `2` `3` `4`) | volume effects (`7` `A`) | pan (`8`) |
 |---|---|---|---|
 | `fm0`–`fm5` | yes | yes | yes |
 | `opl0`–`opl8` | yes | yes | no |
@@ -487,10 +489,23 @@ untouched. And once a drum's own decay has run down to the last few of its
 out. Effects on the DAC shape a hit; they do not fade a sustained sound,
 because there isn't one.
 
-`0xy` (arpeggio) and `Cxx` (note delay) parse and then refuse: both need
-to place events between rows, which the cell layer cannot do yet. Use the
-`arp` directive for arpeggios. They error rather than doing nothing
-quietly, which is the failure that costs you a take.
+An effect stays on its column until you change it; a zero parameter
+turns it off (`400` stops a vibrato, `000` an arpeggio).
+
+**`0xy` — arpeggio.** `C-4/047` plays C, E, G, C, E, G… one step per
+60 Hz frame, which is how the hardware's own drivers did chords on one
+voice; every note-on starts back on its root. It works on every voice
+with a pitch — FM, OPL2, PSG and the NES pulses and triangle — and is
+refused on `noise` and `dac`. The `arp` directive is the other way to do
+it: it divides each ROW into equal steps, so its speed follows the tempo,
+and it reaches FM only.
+
+**`Cxx` — delay.** `C-5/C08` starts that cell 8 ticks into its row: swing,
+flams, a late entry. The tick is the score's own (192 a second by
+default), so a row is `60 / bpm / lpb × 192` ticks — 19 at 150 BPM and
+lpb 4 — and a delay must be shorter than that; a longer one is an error
+that names the row length, because the note belongs in a later row. The
+delay moves everything in the cell, its other effects included.
 
 **Instruments**
 

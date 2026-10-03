@@ -356,6 +356,8 @@ class Sequencer:
                                        ev.ceiling)
         elif isinstance(ev, E.Tremolo):
             state.effects.tremolo(ev.target, ev.depth, ev.speed_hz)
+        elif isinstance(ev, E.Arpeggio):
+            state.effects.arpeggio(ev.target, ev.x, ev.y)
         elif isinstance(ev, E.DACEnable):
             ym.set_dac_enable(ev.enable)
         elif isinstance(ev, E.DACSample):

@@ -18,14 +18,15 @@ So a cell may carry effects:
 Codes follow the tracker convention everyone already knows, one letter or
 digit plus two hex digits:
 
-    0xy   arpeggio, x and y semitones above the note
+    0xy   arpeggio: the note, x semitones above it, y above it, a step
+          per 60 Hz frame
     1xx   pitch slide up          2xx   pitch slide down
     3xx   portamento to the written note
     4xy   vibrato, x speed, y depth
     7xy   tremolo, x speed, y depth
     8xx   pan: 00 left, 80 centre, FF right
     Axy   volume slide, x up, y down
-    Cxx   delay the note by xx ticks
+    Cxx   delay the cell by xx ticks inside its row
 
 ## Turning hex into physical units
 
@@ -75,12 +76,14 @@ SLIDE_LIMIT_CENTS = 2400.0
 CODES = "0123478AC"
 
 #: Codes the parser understands and the cell layer cannot yet realise.
-#: Both need to place events BETWEEN rows, which needs the row emitter to
-#: subdivide a row — not just a different event.
-NOT_IMPLEMENTED = {
-    "0": "arpeggio",
-    "C": "note delay",
-}
+#: Empty now: 0xy became an effect on the 60 Hz clock, and Cxx is placed
+#: inside its row by the tracker's row emitter. Kept, so the day a code
+#: is added before it works it says so rather than doing nothing.
+NOT_IMPLEMENTED = {}
+
+#: The code the row emitter handles itself, because what it changes is
+#: WHEN the cell's events happen rather than which events they are.
+DELAY_CODE = "C"
 
 
 class FXError(ValueError):
@@ -116,8 +119,9 @@ def parse(code: str):
 _VOLUME_ONLY = ("noise", "dac", "dmc")
 
 #: The codes that need a pitch to bend.
-_PITCH_CODES = {"1": "pitch slide up", "2": "pitch slide down",
-                "3": "portamento to note", "4": "vibrato"}
+_PITCH_CODES = {"0": "arpeggio", "1": "pitch slide up",
+                "2": "pitch slide down", "3": "portamento to note",
+                "4": "vibrato"}
 
 #: The codes that need a level to move.
 _VOLUME_CODES = {"7": "tremolo", "A": "volume slide"}
@@ -164,6 +168,17 @@ def to_events(target: str, code: str, note=None, octave=None):
             f"volume slide) do work on {target}; for a pitched noise "
             f"sweep, bend psg2 and use periodic noise at rate 3.")
 
+    if kind == "0":
+        # Root, +x, +y, a step per effect tick, until changed; 000 stops
+        # it. Through the effect clock rather than through row
+        # subdivision, so it runs at the hardware's frame rate whatever
+        # the tempo, and on every voice with a pitch — the `arp`
+        # directive cuts rows into equal parts and only reaches FM.
+        return [E.Arpeggio(target=target, x=high, y=low)]
+    if kind == DELAY_CODE:
+        raise FXError(f"effect {code!r} (note delay) moves the whole cell "
+                      f"inside its row, so the tracker's row emitter "
+                      f"places it — it is not an event on its own")
     if kind == "1":
         return [E.Portamento(target=target,
                              cents_per_second=value * SLIDE_CENTS_PER_UNIT,
@@ -196,9 +211,7 @@ def to_events(target: str, code: str, note=None, octave=None):
     # succeeds, and the effect is simply absent.
     if kind in NOT_IMPLEMENTED:
         raise FXError(f"effect {code!r} ({NOT_IMPLEMENTED[kind]}) is "
-                      f"recognised but not implemented yet — it needs "
-                      f"row-level timing, which the cell layer does not "
-                      f"have. Use the `arp` directive for arpeggios.")
+                      f"recognised but not implemented yet")
     raise FXError(f"effect {code!r} parsed but has no handler")
 
 
@@ -247,9 +260,10 @@ def describe(code: str) -> str:
         rate = (high - low) * VOLUME_PER_UNIT
         return f"volume slide {rate:+.0f} per second"
     if kind == "0":
-        return f"arpeggio 0, +{high}, +{low} semitones"
+        return (f"arpeggio 0, +{high}, +{low} semitones, a step per frame"
+                if value else "arpeggio off")
     if kind == "C":
-        return f"delay the note by {value} ticks"
+        return f"delay the cell by {value} ticks inside its row"
     return code
 
 
@@ -259,8 +273,9 @@ def vocabulary() -> dict:
         "syntax": "NOTE[:velocity][/EFFECT]... e.g. A-2:100/1F0/4A3",
         "separator": SEPARATOR,
         "effects": {
-            "0xy": "arpeggio — PARSED BUT NOT IMPLEMENTED; use the "
-                   "`arp` directive",
+            "0xy": "arpeggio: the note, +x and +y semitones, one step "
+                   "per 60 Hz frame — a chord on one voice. Every voice "
+                   "with a pitch; stays until changed, 000 stops it",
             "1xx": f"pitch slide up, {SLIDE_CENTS_PER_UNIT:.0f} cents/s per unit",
             "2xx": f"pitch slide down, {SLIDE_CENTS_PER_UNIT:.0f} cents/s per unit",
             "3xx": "portamento to the written note",
@@ -268,15 +283,18 @@ def vocabulary() -> dict:
             "7xy": "tremolo, speed x+1 Hz, depth y",
             "8xx": "pan: 00 left, 80 centre, FF right",
             "Axy": f"volume slide, (x-y) x {VOLUME_PER_UNIT:.0f} per second",
-            "Cxx": "note delay — PARSED BUT NOT IMPLEMENTED",
+            "Cxx": "delay the whole cell xx ticks into its row — swing, "
+                   "flams, a late entry. Must be shorter than the row: "
+                   "at 192 ticks a second a row is 60/bpm/lpb*192 ticks",
         },
         "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the "
                        "corpus median of 34 cents at 6 Hz",
         "columns": {
             "all": "every column takes the effect column: fm0-fm5, "
                    "psg0-psg2, opl0-opl8, noise, dac",
-            "pitch_effects": "fm, opl and psg only. `noise` and `dac` "
-                             "REFUSE 1/2/3/4 rather than accept and do "
+            "pitch_effects": "fm, opl, psg and the NES tone voices. "
+                             "`noise` and `dac` "
+                             "REFUSE 0/1/2/3/4 rather than accept and do "
                              "nothing — the noise rate is four discrete "
                              "settings and the DAC's pitch is its feed "
                              "rate, already at the byte ceiling. For a "

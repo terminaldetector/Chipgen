@@ -125,18 +125,165 @@ def test_a_volume_slide_fades_the_note():
     assert tail < head * 0.6, f"A0C faded {head:.3f} to only {tail:.3f}"
 
 
-def test_an_unimplemented_effect_says_so_instead_of_doing_nothing():
-    # A cell that parses and silently does nothing is the worst outcome:
-    # the score looks right, the render succeeds, the effect is absent.
+def _arp_power(cell, column="fm0", header="inst fm0 square_lead", rows=8):
+    """Power at the three arpeggio pitches over a held A-4, relative to
+    the root. A held A-4 alone has nothing at C#5 or E5 — neither is a
+    harmonic of 440 — so energy there is the arpeggio and nothing else."""
+    import chipgen
+    import math
+
+    lines = ["bpm 150", "lpb 4", header, f"cols {column}", cell]
+    lines += ["..."] * (rows - 1) + ["==="]
+    result = chipgen.compose("\n".join(l for l in lines if l) + "\n")
+    mono = _mono(result.audio)
+    rate = result.sample_rate
+    body = mono[rate // 20:rate // 20 + rate // 2]          # skip the attack
+
+    def power(frequency):
+        coefficient = 2 * math.cos(2 * math.pi * frequency / rate)
+        s1 = s2 = 0.0
+        for value in body:
+            s1, s2 = value + coefficient * s1 - s2, s1
+        return s1 * s1 + s2 * s2 - coefficient * s1 * s2
+
+    root = power(440.0)
+    return power(554.37) / root, power(659.26) / root
+
+
+def test_an_arpeggio_steps_once_per_effect_tick():
+    """0xy: root, +x, +y, one step per 60 Hz tick — the frame the hardware's
+    own drivers and a tracker's tick both run on — restarting on the root
+    at every note-on."""
+    import effects
+
+    engine = effects.EffectEngine()
+    engine.arpeggio("fm0", 4, 7)
+    engine.note_on("fm0")
+    seen = [engine.state("fm0")[0]]
+    for _ in range(7):
+        engine.advance(engine.tick_seconds)
+        seen.append(engine.state("fm0")[0])
+    assert [round(c) for c in seen] == [0, 400, 700, 0, 400, 700, 0, 400]
+    engine.note_on("fm0")
+    assert engine.state("fm0")[0] == 0.0
+    engine.arpeggio("fm0", 0, 0)
+    assert not engine.any_active()
+
+
+def test_an_arpeggio_is_heard_as_its_three_notes():
+    plain = _arp_power("A-4")
+    arp = _arp_power("A-4/047")
+    assert max(plain) < 0.05, plain
+    assert min(arp) > 0.1, arp
+
+
+def test_an_arpeggio_runs_on_every_voice_with_a_pitch():
+    for column, cell, header in (("psg0", "A-4:2/047", ""),
+                                 ("opl0", "A-4/047", "inst opl0 opl_organ"),
+                                 ("nes0", "A-4/047", ""),
+                                 ("nes2", "A-4/047", "")):
+        arp = _arp_power(cell, column=column, header=header)
+        assert min(arp) > 0.1, (column, arp)
+
+
+def test_an_arpeggio_stays_until_000_and_restarts_on_each_note():
     import tracker
 
-    for cell in ("A-4/047", "A-4/C06"):
+    events, _ = tracker.loads("cols fm0\nA-4/037\nC-5\n.../000\n")
+    kinds = [type(e).__name__ for e in events]
+    assert kinds.count("Arpeggio") == 2
+    arps = [e for e in events if type(e).__name__ == "Arpeggio"]
+    assert (arps[0].x, arps[0].y) == (3, 7) and (arps[1].x, arps[1].y) == (0, 0)
+
+
+def test_an_arpeggio_round_trips_through_the_text_form():
+    import tracker
+
+    text = "bpm 150\nlpb 4\ncols fm0 psg0\nA-4/047 C-5:3/037\n... ...\n"
+    events, meta = tracker.loads(text)
+    again, _ = tracker.loads(tracker.dumps(events, meta))
+    pick = lambda evs: [(e.target, e.x, e.y) for e in evs
+                        if type(e).__name__ == "Arpeggio"]
+    assert pick(again) == pick(events) == [("fm0", 4, 7), ("psg0", 3, 7)]
+
+
+def test_an_arpeggio_is_refused_where_there_is_no_pitch():
+    import tracker
+
+    for column, cell in (("noise", "w1/047"), ("dac", "kick/047")):
         try:
-            tracker.loads(f"cols fm0\n{cell}\nend\n")
+            tracker.loads(f"cols {column}\n{cell}\n")
         except tracker.TrackerError as error:
-            assert "not implemented" in str(error)
+            assert "arpeggio" in str(error)
         else:
-            raise AssertionError(f"{cell} was silently accepted")
+            raise AssertionError(f"{cell} on {column} was accepted")
+
+
+def test_a_delay_moves_the_cell_inside_its_row():
+    """Cxx: the cell starts xx ticks into the row, the row keeps its
+    length, and the audio onset moves with it."""
+    import chipgen
+    import tracker
+
+    events, meta = tracker.loads("bpm 150\nlpb 4\ncols fm0 fm1\n"
+                                 "A-4 ...\n... C-5/C08\n=== ===\n")
+    ticks = meta.ticks_per_row()
+    clock, onsets = 0, {}
+    for e in events:
+        if type(e).__name__ == "Wait":
+            clock += e.ticks
+        elif type(e).__name__ == "FMNoteOn":
+            onsets[e.channel] = clock
+    assert onsets == {0: 0, 1: ticks + 8}, (onsets, ticks)
+    assert clock == 3 * ticks                   # three rows, three rows long
+
+    def onset(score):
+        result = chipgen.compose(score)
+        mono = [abs(v) for v in _mono(result.audio)]
+        floor = max(mono) * 0.05
+        return next(i for i, v in enumerate(mono) if v > floor) / \
+            result.sample_rate
+    head = "bpm 150\nlpb 4\ninst fm0 square_lead\ncols fm0\n"
+    plain = onset(head + "A-4\n...\n===\n")
+    late = onset(head + "A-4/C0A\n...\n===\n")
+    expected = 10 / meta.ticks_per_second
+    assert abs((late - plain) - expected) < 0.004, (late - plain, expected)
+
+
+def _mono(buf):
+    import analysis
+    return list(analysis.to_mono(buf))
+
+
+def test_a_delay_as_long_as_the_row_is_refused_with_the_row_length():
+    import tracker
+
+    try:
+        tracker.loads("bpm 150\nlpb 4\ncols fm0\nA-4/C13\n")
+    except tracker.TrackerError as error:
+        text = str(error)
+        assert "19 ticks" in text and "C01-C12" in text, text
+    else:
+        raise AssertionError("C13 at 19 ticks a row was accepted")
+
+
+def test_a_delay_carries_the_cell_s_other_effects_and_works_with_arp():
+    import tracker
+
+    events, meta = tracker.loads(
+        "bpm 150\nlpb 4\ncols fm0 fm1\narp fm0 0 4 7\n"
+        "A-4 C-5/C06/4A3\n=== ===\n")
+    clock, seen = 0, []
+    for e in events:
+        name = type(e).__name__
+        if name == "Wait":
+            clock += e.ticks
+        elif name in ("FMNoteOn", "Vibrato", "FMPitch"):
+            seen.append((clock, name))
+    assert (6, "FMNoteOn") in seen and (6, "Vibrato") in seen, seen
+    # the arp's three steps still fall where they did: 0, 7 and 13 ticks
+    assert [t for t, n in seen if n == "FMPitch"][:3] == [0, 7, 13], seen
+    assert clock == 2 * meta.ticks_per_row()
 
 
 def test_a_malformed_effect_names_the_cell():
