@@ -243,24 +243,53 @@ def presets(path: str = PRESETS_PATH) -> list:
 # --------------------------------------------------------------------------
 # Health: what the interface's status bar reports
 # --------------------------------------------------------------------------
-def health() -> dict:
-    """Backend and toolchain state, plus the test count if it is known.
+#: How to fill in the test lines, for an interface — or a model in a
+#: sandbox — that finds them empty. The full suite takes minutes in pure
+#: Python, longer than many sandboxes allow one command, so it is said
+#: how to run it in pieces rather than left to time out.
+TEST_COMMANDS = {
+    "quick": "python3 tests/run_tests.py --quick   (all but the heavy "
+             "renders: nine tenths of the tests in about a minute)",
+    "full": "python3 tests/run_tests.py   (minutes in pure Python)",
+    "in_pieces": "python3 tests/run_tests.py --budget 100, then "
+                 "python3 tests/run_tests.py --resume --budget 100 until "
+                 "it finishes — the same full result, in short windows",
+}
 
-    The test count is read from a file rather than by running the suite:
-    an interface asking "are you healthy" must not trigger two minutes of
-    rendering. It is stamped by tests/run_tests.py.
+
+def health() -> dict:
+    """Backend and toolchain state, plus the test results if they are known.
+
+    Read from files rather than by running anything: an interface asking
+    "are you healthy" must not trigger minutes of rendering. The results
+    are stamped by tests/run_tests.py — the full suite, the quick smoke
+    set, and a run that is part-way through in pieces.
     """
     import core_loader
     import audio as _audio
 
     status = core_loader.status()
-    count = None
-    stamp = os.path.join(os.path.dirname(_HERE), "tests", "last_run.json")
-    try:
-        with open(stamp, encoding="utf-8") as handle:
-            count = json.load(handle)
-    except (OSError, ValueError):
-        pass
+    tests_dir = os.path.join(os.path.dirname(_HERE), "tests")
+
+    def read(name):
+        try:
+            with open(os.path.join(tests_dir, name), encoding="utf-8") as handle:
+                return json.load(handle)
+        except (OSError, ValueError):
+            return None
+
+    in_progress = []
+    for name, flag in (("run_state.json", ""), ("run_state_quick.json",
+                                                 "--quick ")):
+        pieces = read(name)
+        if not pieces:
+            continue
+        results = pieces.get("results", {})
+        in_progress.append({
+            "scope": "quick" if flag else "full",
+            "run": len(results),
+            "failed": sum(1 for r in results.values() if r == "fail"),
+            "continue": f"python3 tests/run_tests.py {flag}--resume"})
     return {
         "python": sys.version.split()[0],
         "numpy": _audio.HAVE_NUMPY,
@@ -269,7 +298,10 @@ def health() -> dict:
         "cores": {"ym2612": status["ym2612"], "sn76489": status["sn76489"],
                   "ym3812": "pure-python", "rp2a03": "pure-python"},
         "notes": status["notes"],
-        "tests": count,
+        "tests": read("last_run.json"),
+        "smoke": read("last_quick.json"),
+        "tests_in_progress": in_progress or None,
+        "how_to_test": TEST_COMMANDS,
     }
 
 

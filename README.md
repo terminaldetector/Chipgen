@@ -28,8 +28,14 @@ Genesis/Mega Drive) и SN76489 (Sega PSG). Не синтезирует «под 
 ```bash
 python3 bridge/bootstrap.py          # соберёт ядра чипов и проверит себя
 python3 python/chipgen.py --demo     # -> output/chipgen_demo.wav + .vgm
-python3 tests/run_tests.py           # 60 тестов, без единой зависимости
+python3 tests/run_tests.py           # ~500 тестов, без единой зависимости
+python3 tests/run_tests.py --quick   # девять десятых из них за минуту
 ```
+
+Полный прогон в чистом Python занимает минуты — дольше, чем многие
+песочницы дают одной команде. `--budget 100` останавливается через 100
+секунд между тестами и запоминает место, `--resume` продолжает; прогон,
+который доходит до конца, отчитывается за все куски как один целый.
 
 `bootstrap.py` находит компилятор и собирает C-ядра; если компилятора нет
 — переключается на pure-Python ядра из `python/fallback/`. numpy и scipy
@@ -173,7 +179,7 @@ python/audio.py + wavio.py    DSP и WAV; numpy/scipy опциональны
 python/chipgen.py             весь движок за одной функцией + CLI
 python/generators/            плагины-бэкенды (облако / локальная сеть / rule-based)
 bridge/                       ZIP-мост: bootstrap, манифест, сборщик архива
-tests/                        60 тестов, запускаются без установки чего-либо
+tests/                        ~500 тестов, запускаются без установки чего-либо
 ```
 
 ## Точка подключения нейросети

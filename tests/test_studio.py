@@ -168,6 +168,75 @@ def test_health_does_not_run_the_test_suite():
     assert got["tests"] is None or isinstance(got["tests"], dict)
 
 
+def test_health_says_how_to_finish_a_run_that_did_not_fit():
+    """Grok's complaint: the full health line needs the full suite, and the
+    full suite did not finish inside a sandbox's window. Health now reports
+    the quick set and a run in pieces as well, and says how to finish."""
+    import os
+    import shutil
+    import tempfile
+
+    import studio
+
+    root = tempfile.mkdtemp(prefix="chipgen-health-")
+    try:
+        os.makedirs(os.path.join(root, "python"))
+        os.makedirs(os.path.join(root, "tests"))
+        with open(os.path.join(root, "tests", "last_quick.json"), "w") as f:
+            json.dump({"passed": 9, "failed": 0, "skipped": 0, "total": 9,
+                       "scope": "quick"}, f)
+        with open(os.path.join(root, "tests", "run_state.json"), "w") as f:
+            json.dump({"pattern": "", "quick": False,
+                       "results": {"a.test_x": "ok", "a.test_y": "fail"}}, f)
+        saved = studio._HERE
+        studio._HERE = os.path.join(root, "python")
+        try:
+            got = studio.health()
+        finally:
+            studio._HERE = saved
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    assert got["tests"] is None
+    assert got["smoke"]["scope"] == "quick"
+    assert got["tests_in_progress"] == [{"scope": "full", "run": 2,
+                                         "failed": 1,
+                                         "continue": "python3 tests/"
+                                                     "run_tests.py --resume"}]
+    assert "--budget" in got["how_to_test"]["in_pieces"]
+
+
+def test_a_run_in_pieces_ends_with_the_whole_result():
+    """`--budget` stops between tests and keeps its place; `--resume`
+    carries on and reports every result, as one uninterrupted run would."""
+    import os
+    import subprocess
+    import sys
+
+    runner = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          "run_tests.py")
+    first = subprocess.run([sys.executable, runner, "test_chips",
+                            "--budget", "0"],
+                           capture_output=True, text=True, timeout=300)
+    assert first.returncode == 3, first.stdout + first.stderr
+    assert "--resume" in first.stdout
+    second = subprocess.run([sys.executable, runner, "test_chips",
+                             "--resume"],
+                            capture_output=True, text=True, timeout=300)
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert " passed, 0 failed" in second.stdout
+    import run_tests
+    assert not os.path.exists(run_tests._state_path("test_chips", False))
+
+
+def test_every_test_the_quick_run_leaves_out_still_exists():
+    """A renamed slow test would quietly move into the quick set. That costs
+    time rather than coverage, but the list should say what it means."""
+    import run_tests
+
+    names = {name for name, _ in run_tests._collect("")}
+    assert run_tests.SLOW <= names, sorted(run_tests.SLOW - names)
+
+
 def test_the_interface_holds_no_facts_of_its_own():
     """The one rule the front end follows, enforced.
 

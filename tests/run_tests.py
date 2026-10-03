@@ -10,10 +10,32 @@ pytest works too (`pytest tests/`) — the test functions are ordinary
 promise is that it runs in a sandbox with no network, and a test suite
 that needed `pip install pytest` before it could tell you whether the
 engine works would undercut that on the first day someone tried it.
+
+## In a sandbox with a short time limit
+
+The full suite renders a great deal of audio and takes minutes in pure
+Python — longer than many sandboxes let one command run. Two ways round
+that, both of which end in the same full result:
+
+    python3 tests/run_tests.py --budget 100      run for 100 s, then stop
+    python3 tests/run_tests.py --resume          and carry on from there
+
+`--budget` stops between tests once the time is spent and saves where it
+got to; `--resume` (with or without its own `--budget`) picks up from that
+point, and the run that finishes the suite reports every result from
+every piece and stamps it exactly as an uninterrupted run would.
+
+    python3 tests/run_tests.py --quick           nine tenths of it, in a minute
+
+`--quick` leaves out the tests that render a lot of audio — a tenth of
+them, nine tenths of the time — and runs the rest: every module, every
+chip. It says that it was quick, and it is never reported as the suite.
 """
 
+import json
 import os
 import sys
+import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,74 +65,233 @@ def _collect(pattern=""):
     return cases
 
 
-def main(argv):
+#: Where an interrupted run keeps its place: one file per kind of run, so
+#: a filtered run started in the middle of a full one in pieces cannot
+#: wipe the full one's place. Per-run, never committed.
+def _state_path(pattern, quick):
+    tag = "_quick" if quick else ""
+    if pattern:
+        tag += "_" + "".join(c if c.isalnum() else "_" for c in pattern)
+    return os.path.join(HERE, f"run_state{tag}.json")
+
+
+#: The tests that render enough audio to take a second or more each,
+#: measured on a pure-Python sandbox: 53 of the suite, and about
+#: nine tenths of its time. `--quick` runs everything else — every module,
+#: every chip, in well under a minute — and says it was the quick set.
+#: test_studio checks that every name here is still a real test.
+SLOW = {
+    "test_analysis.test_envelope_times_separate_a_pad_from_a_stab",
+    "test_analysis.test_pitch_is_accurate_across_the_chips_musical_range",
+    "test_arrange.test_a_score_json_renders_instead_of_producing_silence",
+    "test_arrange.test_the_whole_chain_from_midi_to_audio",
+    "test_bridge.test_cold_unzip_bootstraps_and_renders",
+    "test_briefs.test_the_example_in_every_brief_renders_with_no_warnings",
+    "test_effects.test_a_slide_reaches_exactly_where_it_was_aimed_in_the_render",
+    "test_effects.test_vibrato_actually_moves_the_pitch_in_the_render",
+    "test_examples.test_every_example_renders_with_the_bank_it_needs",
+    "test_fx.test_an_arpeggio_runs_on_every_voice_with_a_pitch",
+    "test_levels.test_an_uncalibrated_bank_is_reported_against_the_bank_reference",
+    "test_levels.test_recalibrating_a_bank_on_disk_matches_calibrating_at_import",
+    "test_levels.test_the_built_in_bank_reports_no_calibration_problem",
+    "test_levels.test_the_dominance_warning_fires_and_clears",
+    "test_livefm.test_a_mid_note_operator_write_changes_the_timbre",
+    "test_local.test_generate_from_the_command_line_writes_a_score_and_a_wav",
+    "test_mp3.test_a_render_hands_back_a_tenth_of_the_wav",
+    "test_mp3.test_the_local_server_offers_an_mp3_when_asked",
+    "test_musical.test_a_voice_never_overlaps_itself",
+    "test_musical.test_corpus_paths_returns_scores_and_not_banks_or_metadata",
+    "test_musical.test_notes_carry_lengths_not_just_onsets",
+    "test_musical.test_patterns_are_transposable",
+    "test_musical.test_rhythm_and_contour_transfer_between_tracks_but_their_fusion_does_not",
+    "test_musical.test_the_voice_called_bass_is_the_lowest_one",
+    "test_nes.test_duty_cycle_changes_the_waveform_not_the_pitch",
+    "test_nes.test_one_nes_voice_never_plays_two_notes_at_once",
+    "test_nes.test_pitch_lands_where_the_timer_says_it_should",
+    "test_nes.test_the_nes_corpus_loads_and_holds_only_nes_voices",
+    "test_nes_score.test_every_nes_voice_survives_a_vgm_round_trip",
+    "test_nes_score.test_sweep_up_raises_the_pitch",
+    "test_nes_score.test_the_dmc_is_enabled_or_a_sample_is_exact_silence",
+    "test_nes_score.test_the_duty_cycle_changes_the_harmonics_and_75_percent_equals_25",
+    "test_nes_score.test_the_low_pulse_octave_is_audible_at_all",
+    "test_opl.test_the_waveform_select_has_no_ym2612_equivalent_and_shifts_the_octave",
+    "test_pcm.test_a_sample_plays_at_the_pitch_it_is_asked_for",
+    "test_profile.test_auto_profile_falls_back_to_bars_without_markers",
+    "test_profile.test_catches_a_note_that_leaked_into_a_quiet_section",
+    "test_render.test_psg_no_longer_buries_the_fm_chip",
+    "test_render.test_pure_python_cores_agree_with_the_native_ones",
+    "test_sanity.test_compose_surfaces_sanity_warnings",
+    "test_sanity.test_crowding_is_checked_on_every_chip_not_just_fm",
+    "test_sanity.test_the_psg_floor_is_measured_not_assumed",
+    "test_sanity.test_the_stereo_warning_is_only_for_scores_with_fm_in_them",
+    "test_selection.test_characteristics_only_measures_what_it_does_not_already_have",
+    "test_selection.test_measuring_an_imported_bank_leaves_the_built_in_cache_alone",
+    "test_transcribe.test_a_corpus_records_what_it_rejected_and_why",
+    "test_transcribe.test_a_transcription_parses_back_as_tracker_text",
+    "test_transcribe.test_the_notes_a_score_played_come_back_out_of_its_vgm",
+    "test_transcribe.test_the_tempo_of_a_known_score_is_recovered",
+    "test_vgm.test_fast_lfo_drifts_between_direct_render_and_vgm_replay",
+    "test_vgm.test_imported_bank_saves_loads_and_is_playable",
+    "test_vgm.test_imported_patches_are_levelled_against_the_built_in_bank",
+    "test_vgm.test_replay_alignment_is_bounded_and_does_not_accumulate",
+}
+
+
+def _options(argv):
     verbose = "-v" in argv
-    pattern = next((a for a in argv if not a.startswith("-")), "")
+    resume = "--resume" in argv
+    quick = "--quick" in argv
+    budget = None
+    pattern = ""
+    skip = False
+    for index, arg in enumerate(argv):
+        if skip:
+            skip = False
+            continue
+        if arg == "--budget":
+            try:
+                budget = float(argv[index + 1])
+            except (IndexError, ValueError):
+                raise SystemExit("--budget wants a number of seconds, "
+                                 "e.g. --budget 100")
+            skip = True
+        elif not arg.startswith("-") and not pattern:
+            pattern = arg
+    return verbose, resume, quick, budget, pattern
+
+
+def _load_state(pattern, quick):
+    try:
+        with open(_state_path(pattern, quick), encoding="utf-8") as handle:
+            state = json.load(handle)
+    except (OSError, ValueError):
+        return None
+    if state.get("pattern") != pattern or state.get("quick") != quick:
+        return None
+    return state
+
+
+def _save_state(state):
+    try:
+        with open(_state_path(state["pattern"], state["quick"]), "w",
+                  encoding="utf-8") as handle:
+            json.dump(state, handle)
+    except OSError:
+        pass                     # a read-only checkout just cannot resume
+
+
+def _forget_state(pattern, quick):
+    try:
+        os.remove(_state_path(pattern, quick))
+    except OSError:
+        pass
+
+
+def main(argv):
+    verbose, resume, quick, budget, pattern = _options(argv)
 
     cases = _collect(pattern)
+    if quick:
+        cases = [case for case in cases if case[0] not in SLOW]
     if not cases:
         print(f"no tests match {pattern!r}")
         return 1
 
     import support
 
-    failures = []
-    skipped = []
+    state = _load_state(pattern, quick) if resume else None
+    if resume and state is None:
+        print("nothing to resume — starting from the beginning")
+    if state is None:
+        _forget_state(pattern, quick)
+        state = {"pattern": pattern, "quick": quick, "results": {},
+                 "traces": {}, "seconds": 0.0}
+    results, traces = state["results"], state["traces"]
+    already = sum(1 for name, _ in cases if name in results)
+    if already:
+        print(f"resuming: {already} of {len(cases)} already run")
+
+    started = time.time()
     for name, function in cases:
+        if name in results:
+            continue
+        if budget is not None and time.time() - started >= budget:
+            state["seconds"] += time.time() - started
+            _save_state(state)
+            done = sum(1 for n, _ in cases if n in results)
+            failed = sum(1 for n, _ in cases if results.get(n) == "fail")
+            print(f"\nstopped at the {budget:g} s budget: {done} of "
+                  f"{len(cases)} run, {failed} failed so far.")
+            print(f"continue with: python3 tests/run_tests.py "
+                  f"{(pattern + ' ') if pattern else ''}"
+                  f"{'--quick ' if quick else ''}--resume --budget "
+                  f"{budget:g}")
+            return 3
         try:
             function()
-            if verbose:
-                print(f"  ok   {name}")
-            else:
-                sys.stdout.write(".")
-                sys.stdout.flush()
+            results[name] = "ok"
+            mark = "ok  "
         except support.Skipped as exc:
-            skipped.append(f"{name}: {exc}")
-            sys.stdout.write("s")
-            sys.stdout.flush()
+            results[name] = "skip"
+            traces[name] = str(exc)
+            mark = "skip"
         except Exception:
-            failures.append((name, traceback.format_exc()))
-            sys.stdout.write("F")
+            results[name] = "fail"
+            traces[name] = traceback.format_exc()
+            mark = "FAIL"
+        if verbose:
+            print(f"  {mark} {name}")
+        else:
+            sys.stdout.write({"ok  ": ".", "skip": "s", "FAIL": "F"}[mark])
             sys.stdout.flush()
+        if budget is not None or resume:
+            _save_state(state)
+    state["seconds"] += time.time() - started
 
     if not verbose:
         print()
-    for name, trace in failures:
-        print(f"\n{'=' * 70}\nFAIL {name}\n{'-' * 70}\n{trace}")
+    names = [name for name, _ in cases]
+    failures = [name for name in names if results.get(name) == "fail"]
+    skipped = [name for name in names if results.get(name) == "skip"]
+    for name in failures:
+        print(f"\n{'=' * 70}\nFAIL {name}\n{'-' * 70}\n{traces[name]}")
     for name in skipped:
-        print(f"skipped: {name}")
+        print(f"skipped: {name}: {traces[name]}")
 
     total = len(cases)
     passed = total - len(failures) - len(skipped)
     print(f"\n{passed} passed, "
           f"{len(failures)} failed"
           + (f", {len(skipped)} skipped" if skipped else "")
-          + f"  ({total} total)")
+          + f"  ({total} total"
+          + (", the quick set" if quick else "") + ")")
 
     # Stamp the result so studio.health() can report it. An interface
     # asking "are you healthy" must not trigger two minutes of rendering,
     # and shelling out to this runner to answer is exactly that.
-    # Only a full run is stamped: a filtered one says nothing about the
-    # suite, and stamping it would report 6/6 OK on a broken tree.
+    # Only a full run is stamped as the suite: a filtered one says nothing
+    # about it, and stamping it would report 6/6 OK on a broken tree. The
+    # quick set is stamped too, under its own name.
     if not pattern:
-        _stamp(passed, len(failures), len(skipped), total)
+        _stamp(passed, len(failures), len(skipped), total,
+               quick=quick, seconds=state["seconds"])
+    _forget_state(pattern, quick)
     return 1 if failures else 0
 
 
-def _stamp(passed, failed, skipped, total):
+def _stamp(passed, failed, skipped, total, quick=False, seconds=None):
     import datetime
-    import json
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        "last_run.json")
+    path = os.path.join(HERE, "last_quick.json" if quick else "last_run.json")
+    record = {"passed": passed, "failed": failed, "skipped": skipped,
+              "total": total, "scope": "quick" if quick else "full",
+              "when": datetime.datetime.now(
+                  datetime.timezone.utc).isoformat(timespec="seconds")}
+    if seconds is not None:
+        record["seconds"] = round(seconds)
     try:
         with open(path, "w", encoding="utf-8") as handle:
-            json.dump({"passed": passed, "failed": failed,
-                       "skipped": skipped, "total": total,
-                       "when": datetime.datetime.now(
-                           datetime.timezone.utc).isoformat(
-                               timespec="seconds")},
-                      handle, indent=1)
+            json.dump(record, handle, indent=1)
     except OSError:
         pass                     # a read-only checkout is not a failure
 
