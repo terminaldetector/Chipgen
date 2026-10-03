@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.schism/
+*.log
+# renders made while experimenting; the demos' own MP3s are kept
+*.wav
+dist/
