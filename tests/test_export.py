@@ -263,6 +263,50 @@ def test_the_sega_preset_wants_one_drum_channel_and_seven_channels():
         raise AssertionError("eight channels went through")
 
 
+def test_a_drum_made_for_the_dac_is_a_drum_to_the_sega_preset_too():
+    head = ("tempo 120\nchannels 3\n"
+            "inst 1 name=Kick wave=kick\ninst 2 name=Snare wave=noise len=0.3\n"
+            "pattern a rows 32\n")
+    tail = "rest 30\nend\norder a\n"
+    dac = {1: {"rate": 11000, "bits": 8}, 2: {"rate": 13300, "bits": 8}}
+    apart = notation.compile_text(
+        head + "C-5 01 v64 ... | ... .. ... ... | ... .. ... ...\n"
+        "... .. ... ... | C-5 02 v64 ... | ... .. ... ...\n" + tail)[0]
+    apart.dac = dac
+    problems = export.over_limits(apart, "sega")
+    assert len(problems) == 1 and "channels 1, 2" in problems[0] \
+        and "one DAC" in problems[0], problems
+    try:
+        export.apply_preset(apart, "sega")
+    except export.ExportError as error:
+        assert error.problems == problems
+    else:
+        raise AssertionError("two DAC drums on two channels went through")
+    # both on one channel is what the console does
+    together = notation.compile_text(
+        head + "C-5 01 v64 ... | ... .. ... ... | ... .. ... ...\n"
+        "C-5 02 v64 ... | ... .. ... ... | ... .. ... ...\n" + tail)[0]
+    together.dac = dac
+    assert export.over_limits(together, "sega") == []
+    export.apply_preset(together, "sega")
+
+
+def test_the_limits_can_be_read_without_changing_the_module():
+    module, _ = notation.compile_text(_channels(5))
+    bits = [s.bits for s in module.samples]
+    assert export.over_limits(module, "schism") == []
+    assert export.over_limits(module, "sega") == []
+    problems = export.over_limits(module, "nes")
+    assert len(problems) == 1 and "5 channels" in problems[0]
+    assert [s.bits for s in module.samples] == bits
+    try:
+        export.over_limits(module, "amiga")
+    except export.ExportError as error:
+        assert "no preset" in str(error)
+    else:
+        raise AssertionError("an unknown preset went through")
+
+
 def test_the_schism_preset_changes_nothing_and_an_unknown_one_is_named():
     module, _ = notation.compile_text(_channels(6))
     bits = [s.bits for s in module.samples]

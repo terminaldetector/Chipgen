@@ -480,6 +480,38 @@ def test_a_chip_drum_becomes_the_rungs_drum_and_plays_as_recorded_on_every_key()
     assert any("percussion kept" in c.text for c in nes.changes)
 
 
+def test_a_module_left_over_the_limits_of_its_rung_is_told_so_and_not_merged():
+    module = notation.compile_text(chip_song())[0]
+    # five channels: three of them drums
+    sega = rearrange.rearrange(module, "sega", fill=False)
+    said = [c.text for c in sega.changes if c.kind == "note"]
+    assert any("over the sega's limits: drums are on channels 2, 3, 4" in t
+               for t in said), said
+    assert any("does not merge channels" in t and "--preset sega" in t
+               for t in said), said
+    assert sega.module.channels_used() == 5          # nothing was merged
+    nes = rearrange.rearrange(module, "nes", fill=False)
+    assert any("over the nes's limits: the module uses 5 channels" in c.text
+               for c in nes.changes)
+    # a rung that has the room says nothing, and the notes are the same
+    schism = rearrange.rearrange(module, "schism", fill=False)
+    assert not any("limits" in c.text for c in schism.changes)
+    assert [export.over_limits(schism.module, "schism")] == [[]]
+    for channel in (1, 2, 3):                        # the drums keep their hits
+        assert notes_of(sega.module, channel) == notes_of(module, channel)
+    # and what the command writes into the sidecar is the same words
+    with tempfile.TemporaryDirectory() as folder:
+        sch = os.path.join(folder, "chip.sch")
+        with open(sch, "w", encoding="utf-8") as handle:
+            handle.write(chip_song())
+        out = os.path.join(folder, "chip.it")
+        code, text, _ = _run("-q", "rearrange", sch, "--to", "sega", "-o", out,
+                             "--peak", "off")
+        assert code == 0 and "over the sega's limits" in text, text
+        notes = json.load(open(out + ".json"))["notes"]
+        assert any("over the sega's limits" in n for n in notes), notes
+
+
 def test_the_peak_of_a_rearranged_module_is_fitted_like_a_build():
     with tempfile.TemporaryDirectory() as folder:
         sch = os.path.join(folder, "chip.sch")

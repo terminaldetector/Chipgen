@@ -399,7 +399,10 @@ decay holds; one whose sustain level is 15 is gone) and as a one-shot if it
 dies away. The operator numbers are kept in the recipe of the instrument and
 written to the **sidecar** (`SONG.it.json`, `"operators"` for an FM voice,
 `"dac"` for a drum), so `build --preset sega` exports the voice and not only
-its PCM.
+its PCM. The preset holds a module to the console's seven channels and to its
+**one** drum channel: a kit counts as a drum for that limit, and so does every
+DAC drum a lift made, so a kick, a snare and a hat on three channels are
+refused (put them on one).
 
 **Rung 3, Schism.** Built from the Mega Drive voice rendered to PCM, not from
 the NES cycle: an octave a sample; a loop on what is held, a one-shot on what is
@@ -468,7 +471,11 @@ Every console has a number of channels, and the pass keeps to it: four on the
 NES, seven on the Mega Drive (six FM voices and a DAC, as `--preset sega` has
 it), sixty-four on Schism. An addition that would not fit is left out and the
 diff says so (`no room to split the arpeggio into a pad: the sega has 7
-channels`). Like `build`, it fits the mix volume to a peak of 0.89 (`--peak
+channels`). A module that comes in over the limits of its rung goes out over
+them: the pass does not merge channels, which would move notes. The diff says
+so in the words `--preset` refuses it in (`over the sega's limits: drums are on
+channels 5, 6, 7; the Genesis plays them through one DAC channel`). Like
+`build`, it fits the mix volume to a peak of 0.89 (`--peak
 off` leaves it), writes `SONG.RUNG.it` and a sidecar with the diff in its
 notes and the operator dumps of the FM voices, and with `--mp3` renders it.
 

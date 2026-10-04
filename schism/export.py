@@ -250,13 +250,21 @@ def _preset_schism(module: M.Module):
     return []
 
 
-def _preset_nes(module: M.Module):
-    problems, notes = [], []
+def _limits_schism(module: M.Module) -> List[str]:
+    return []
+
+
+def _limits_nes(module: M.Module) -> List[str]:
     used = module.channels_used()
     if used > 4:
-        problems.append(
-            f"the module uses {used} channels; the NES has four "
-            f"(two pulses, a triangle and noise)")
+        return [f"the module uses {used} channels; the NES has four "
+                f"(two pulses, a triangle and noise)"]
+    return []
+
+
+def _preset_nes(module: M.Module):
+    notes = []
+    problems = _limits_nes(module)
     if problems:
         raise ExportError(problems)
     count = _eight_bit(module)
@@ -273,23 +281,33 @@ def _preset_nes(module: M.Module):
     return notes
 
 
-def _preset_sega(module: M.Module):
-    problems, notes = [], []
+def _limits_sega(module: M.Module) -> List[str]:
+    problems = []
     used = module.channels_used()
     if used > 7:
         problems.append(
             f"the module uses {used} channels; the Genesis has six FM voices "
             f"and one DAC channel for drums (seven)")
-    kits = {n for n, ins in enumerate(module.instruments, 1) if is_kit(ins)}
+    # a kit, and a drum that `lift-voice` made for the DAC, are both played
+    # through its one channel
+    drums = {n for n, ins in enumerate(module.instruments, 1) if is_kit(ins)}
+    drums |= set(getattr(module, "dac", None) or {})
     drum_channels = sorted(c for c, played in channel_instruments(module).items()
-                           if played & kits)
+                           if played & drums)
     if len(drum_channels) > 1:
         problems.append(
             "drums are on channels "
             + ", ".join(str(c + 1) for c in drum_channels)
             + "; the Genesis plays them through one DAC channel")
+    return problems
+
+
+def _preset_sega(module: M.Module):
+    notes = []
+    problems = _limits_sega(module)
     if problems:
         raise ExportError(problems)
+    kits = {n for n, ins in enumerate(module.instruments, 1) if is_kit(ins)}
     dumps = getattr(module, "fm", None) or {}
     drums = getattr(module, "dac", None) or {}
     for number, ins in enumerate(module.instruments, 1):
@@ -315,6 +333,20 @@ PRESETS = {
     "sega": (_preset_sega, "at most 7 channels and drums on one of them; "
              "operator dumps of lifted voices go into the sidecar"),
 }
+
+
+LIMITS = {"schism": _limits_schism, "nes": _limits_nes, "sega": _limits_sega}
+
+
+def over_limits(module: M.Module, name: str) -> List[str]:
+    """Every limit of a console that `module` is over, in the words
+    `apply_preset` refuses it in, and nothing changed. [] if it fits."""
+    try:
+        function = LIMITS[name]
+    except KeyError:
+        raise ExportError([f"no preset {name!r}; have: "
+                           f"{', '.join(sorted(PRESETS))}"]) from None
+    return function(module)
 
 
 def apply_preset(module: M.Module, name: str) -> List[str]:

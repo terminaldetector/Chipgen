@@ -34,7 +34,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .. import model as M, recipes
 from . import arrangement, ladder, patch as patch_mod
-from ..export import is_kit as export_is_kit
+from ..export import is_kit as export_is_kit, over_limits
 from .family import get_family
 
 TARGETS = ladder.RUNGS
@@ -752,4 +752,16 @@ def rearrange(module: M.Module, to: str, roles: Optional[Dict[str, str]] = None,
             work.instruments[number - 1] = M.Instrument(
                 name="", note_map=[(n, 0) for n in range(120)])
     arrangement.compact_samples(work)
+
+    # -- what the console would still refuse --------------------------------------------------------------------------
+    # a module that came in over the rung's limits goes out over them: the pass
+    # adds nothing that does not fit but does not merge channels either, which
+    # would move notes
+    over = over_limits(work, to)
+    for problem in over:
+        result.add("note", f"over the {to}'s limits: {problem}")
+    if over:
+        result.add("note", f"the pass does not merge channels (that would "
+                   f"move notes), so `build --preset {to}` refuses this "
+                   f"module until they are merged by hand")
     return result
