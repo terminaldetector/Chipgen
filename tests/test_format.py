@@ -307,3 +307,55 @@ def test_libopenmpt_agrees_on_how_long_a_song_lasts():
         with openmpt.Song(w.build(mod)) as theirs:
             assert abs(theirs.duration - mod.seconds()) < 0.01, \
                 (label, theirs.duration, mod.seconds())
+
+
+def test_a_stereo_sample_is_all_of_the_left_then_all_of_the_right():
+    from array import array
+    mod = _module()
+    left = array("h", [100 * i for i in range(32)])
+    right = array("h", [-50 * i for i in range(32)])
+    mod.samples[0].data, mod.samples[0].right = left, right
+    mod.samples[0].loop = (4, 28)
+    blob = it_write.build(mod)
+    n_ord = struct.unpack_from("<H", blob, 0x20)[0]
+    smp_at = struct.unpack_from("<I", blob, 0xC0 + n_ord + 4)[0]
+    assert blob[smp_at + 18] & 4, "the stereo flag"
+    assert struct.unpack_from("<I", blob, smp_at + 48)[0] == 32     # frames
+    at = struct.unpack_from("<I", blob, smp_at + 0x48)[0]
+    got = array("h")
+    got.frombytes(blob[at:at + 128])
+    assert list(got[:32]) == list(left) and list(got[32:]) == list(right)
+    again = it_read.read(blob).samples[0]
+    assert again.data == left and again.right == right
+    assert again.frames == 32 and again.channels == 2
+    assert again == mod.samples[0]
+
+
+def test_the_two_channels_of_a_stereo_sample_must_be_the_same_length():
+    from array import array
+    mod = _module()
+    mod.samples[0].right = array("h", [0] * 5)
+    try:
+        it_write.build(mod)
+    except it_write.ITWriteError as error:
+        assert "right channel" in str(error)
+    else:
+        raise AssertionError("unequal channels were written")
+
+
+def test_samples_that_share_data_share_it_only_if_the_right_channel_is_shared_too():
+    from array import array
+    mod = _module()
+    first = mod.samples[0]
+    twin = M.Sample(**{**first.__dict__})
+    other = M.Sample(**{**first.__dict__})
+    other.right = array("h", [1] * first.frames)
+    mod.samples += [twin, other]
+    plain = len(it_write.build(M.Module(samples=[first, twin],
+                                        instruments=mod.instruments,
+                                        patterns=mod.patterns,
+                                        orders=mod.orders)))
+    both = len(it_write.build(mod))
+    # one more sample: its 4-byte pointer, its 80-byte header, and its two
+    # channels of 16-bit frames; the twin of `first` cost no data at all
+    assert both - plain == 4 + 80 + 2 * first.frames * 2

@@ -61,6 +61,12 @@ def render(text: str, seconds: float = None):
     """-> (frames interleaved stereo array('f'), module). Warnings are
     ignored here; tests that care compile for themselves."""
     module, _ = notation.compile_text(text)
+    return render_module(module, seconds)
+
+
+def render_module(module, seconds: float = None):
+    """The same, for a module built by hand (the notation cannot say a
+    stereo sample or a sustain loop)."""
     blob = it_write.build(module)
     if ENGINE == "schism":
         frames = schismtracker.render(blob, SR, INTERPOLATION)

@@ -96,9 +96,6 @@ def _sample(blob: bytes, whole: bytes, load_data: bool) -> Sample:
     if not flags & 1 or length == 0:
         sample.data = array("h" if sample.bits == 16 else "b")
         return sample
-    if flags & 4:
-        raise ITReadError(f"sample {sample.name!r} is stereo, which this "
-                          f"reader does not read")
     if flags & 8:
         sample.compressed = True            # IT 2.14/2.15 packing
         sample.data = None
@@ -107,18 +104,25 @@ def _sample(blob: bytes, whole: bytes, load_data: bool) -> Sample:
         sample.data = None
         return sample
     width = 2 if sample.bits == 16 else 1
-    raw = whole[pointer:pointer + length * width]
-    if len(raw) != length * width:
+    channels = 2 if flags & 4 else 1       # stereo: all left, then all right
+    raw = whole[pointer:pointer + length * width * channels]
+    if len(raw) != length * width * channels:
         raise ITReadError(f"sample {sample.name!r} runs past the end of "
                           f"the file")
-    pcm = array("h" if width == 2 else "b")
-    pcm.frombytes(raw)
-    if width == 2 and sys.byteorder == "big":
-        pcm.byteswap()
-    if not cvt & 1:                         # unsigned: recentre
-        offset = 32768 if width == 2 else 128
-        pcm = array(pcm.typecode, (v - offset for v in pcm))
-    sample.data = pcm
+    parts = []
+    for channel in range(channels):
+        pcm = array("h" if width == 2 else "b")
+        pcm.frombytes(raw[channel * length * width:
+                          (channel + 1) * length * width])
+        if width == 2 and sys.byteorder == "big":
+            pcm.byteswap()
+        if not cvt & 1:                     # unsigned: recentre
+            offset = 32768 if width == 2 else 128
+            pcm = array(pcm.typecode, (v - offset for v in pcm))
+        parts.append(pcm)
+    sample.data = parts[0]
+    if channels == 2:
+        sample.right = parts[1]
     return sample
 
 

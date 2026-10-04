@@ -566,7 +566,9 @@ class _Compiler:
                 s for _, s in i.note_map)),
             samples=len(m.samples),
             sample_bytes=sum(len(s.data) * (2 if s.bits == 16 else 1)
-                             for s in {id(s.data): s for s in m.samples}.values()),
+                             * s.channels
+                             for s in {(id(s.data), id(s.right)): s
+                                       for s in m.samples}.values()),
             warnings=tuple(self.warnings), mv_set=self.mv_set,
             keymaps=export.kit_lines(m))
         return m, report

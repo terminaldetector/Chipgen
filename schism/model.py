@@ -273,6 +273,11 @@ class Sample:
     name: str = ""
     filename: str = ""
     data: object = None         # array('h') for 16-bit, array('b') for 8-bit
+    #: the right channel of a stereo sample, as long as `data`, which is then
+    #: the left; None for a mono sample. The file stores all of the left and
+    #: then all of the right (measured: libopenmpt and Schism Tracker read
+    #: it that way, and read interleaved frames as noise)
+    right: object = None
     bits: int = 16
     c5speed: int = 44100        # Hz at which note C-5 plays the data unshifted
     volume: int = 64            # default volume 0..64
@@ -293,6 +298,10 @@ class Sample:
     @property
     def frames(self) -> int:
         return 0 if self.data is None else len(self.data)
+
+    @property
+    def channels(self) -> int:
+        return 1 if self.right is None else 2
 
 
 @dataclass

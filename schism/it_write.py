@@ -226,18 +226,32 @@ def instrument_bytes(ins) -> bytes:
 
 
 # -- samples ----------------------------------------------------------------
-def sample_data_bytes(sample) -> bytes:
-    data = sample.data
-    if data is None or len(data) == 0:
-        return b""
-    if sample.bits == 16:
+def _channel_bytes(data, bits: int) -> bytes:
+    if bits == 16:
         pcm = array("h", data)
         if sys.byteorder == "big":
             pcm.byteswap()
         return pcm.tobytes()
-    if sample.bits == 8:
+    if bits == 8:
         return array("b", data).tobytes()
-    raise ITWriteError(f"samples are 8 or 16 bit, not {sample.bits}")
+    raise ITWriteError(f"samples are 8 or 16 bit, not {bits}")
+
+
+def sample_data_bytes(sample) -> bytes:
+    """The sample's bytes. A stereo sample is all of the left channel and
+    then all of the right: both players read that, and neither reads
+    interleaved frames."""
+    data = sample.data
+    if data is None or len(data) == 0:
+        return b""
+    out = _channel_bytes(data, sample.bits)
+    if sample.right is not None:
+        if len(sample.right) != len(data):
+            raise ITWriteError(
+                f"sample {sample.name!r}: the right channel has "
+                f"{len(sample.right)} frames and the left {len(data)}")
+        out += _channel_bytes(sample.right, sample.bits)
+    return out
 
 
 def sample_header_bytes(sample, data_offset: int) -> bytes:
@@ -247,6 +261,8 @@ def sample_header_bytes(sample, data_offset: int) -> bytes:
         flags |= 1
     if sample.bits == 16:
         flags |= 2
+    if sample.right is not None:
+        flags |= 4
     loop = sample.loop or (0, 0)
     sustain = sample.sustain_loop or (0, 0)
     if sample.loop is not None:
@@ -346,7 +362,7 @@ def build(module) -> bytes:
     blobs = []
     shared = {}                       # id of the data -> where it went
     for sample in m.samples:
-        key = (id(sample.data), sample.bits)
+        key = (id(sample.data), id(sample.right), sample.bits)
         if sample.data is not None and key in shared:
             data_at.append(shared[key])      # two headers, one set of bytes
             continue

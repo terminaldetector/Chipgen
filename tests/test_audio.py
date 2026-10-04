@@ -6,6 +6,8 @@ The numbers in the assertions are not guesses. Each was measured first
 drifting if the writer, the synth or libopenmpt changes.
 """
 
+import math
+
 import audio_probe as P
 import support
 from schism import it_write, levels, model as M, notation, openmpt
@@ -343,3 +345,85 @@ def test_a_muted_channel_is_silent_and_levels_names_the_quiet_one():
     with openmpt.Song(levels._muted_but(blob, 5)) as song:
         none = song.render(P.SR, 1.0)
     assert P.peak(none) == 0.0 and P.peak(only_two) > 0.0
+
+
+# -- samples the notation cannot say: stereo and sustain loops --------------------
+def _hand_module(sample, key_off_row=None, rows=48):
+    """One sample, one instrument, one note at C-5 (the sample's own rate),
+    on a centred channel."""
+    module = M.Module(title="hand", mix_volume=48)
+    module.samples.append(sample)
+    ins = M.Instrument(name="hand")
+    ins.use_sample(1)
+    module.instruments.append(ins)
+    pattern = M.Pattern(rows=rows)
+    cell = pattern.cell(0, 0)
+    cell.note, cell.instrument, cell.volume = 61, 1, 64
+    if key_off_row is not None:
+        pattern.cell(key_off_row, 0).note = M.NOTE_OFF
+    module.patterns.append(pattern)
+    module.orders = [0]
+    return module
+
+
+def test_a_stereo_sample_keeps_its_two_channels_apart():
+    _need()
+    from array import array
+    n = 22050
+    left = array("h", [int(12000 * math.sin(2 * math.pi * 441.0 * i / P.SR))
+                       for i in range(n)])
+    right = array("h", [int(12000 * math.sin(2 * math.pi * 1000.0 * i / P.SR))
+                        for i in range(n)])
+    sample = M.Sample(name="st", data=left, right=right, c5speed=P.SR,
+                      loop=(0, n))
+    frames, _ = P.render_module(_hand_module(sample), 1.5)
+    ours = P.window(P.left(frames), 0.2, 1.2)
+    theirs = P.window(P.right(frames), 0.2, 1.2)
+    # the left channel is 441 Hz and only that, the right is 1000 Hz
+    assert abs(P.cents(P.frequency(ours), 441.0)) < 8, P.frequency(ours)
+    assert abs(P.cents(P.frequency(theirs), 1000.0)) < 8, P.frequency(theirs)
+    assert abs(P.rms(ours) / P.rms(theirs) - 1) < 0.03, (P.rms(ours),
+                                                          P.rms(theirs))
+
+
+def test_a_sustain_loop_holds_the_note_and_a_key_off_plays_the_release():
+    _need()
+    from array import array
+    rate, attack, body, release = P.SR, 4400, 8800, 13200
+    # 441 and 882 Hz are whole cycles of 100 and 50 frames, so the loop joins
+    fade_in = [0.5 * math.sin(2 * math.pi * 441.0 * i / rate) * (i / attack)
+               for i in range(attack)]
+    held = [0.5 * math.sin(2 * math.pi * 441.0 * i / rate)
+            for i in range(body)]
+    tail = [0.5 * math.sin(2 * math.pi * 882.0 * i / rate)
+            * math.exp(-i / (0.08 * rate)) for i in range(release)]
+    sample = M.Sample(
+        name="sus", c5speed=rate, sustain_loop=(attack, attack + body),
+        data=array("h", [int(32000 * v) for v in fade_in + held + tail]))
+    frames, _ = P.render_module(_hand_module(sample, key_off_row=10), 3.0)
+    x = P.mono(frames)
+    # held: 441 Hz at a steady level, for much longer than the sample is
+    early = P.window(x, 0.3, 0.4)
+    late = P.window(x, 1.0, 1.1)
+    assert abs(P.cents(P.frequency(late), 441.0)) < 8, P.frequency(late)
+    assert abs(P.rms(late) / P.rms(early) - 1) < 0.03, (P.rms(early),
+                                                          P.rms(late))
+    # key-off at 1.2 s: the rest of the loop, then the 882 Hz release,
+    # fading, then nothing
+    release_part = P.window(x, 1.3, 1.4)
+    assert abs(P.cents(P.frequency(release_part), 882.0)) < 8
+    assert P.rms(release_part) < 0.7 * P.rms(late)
+    assert P.rms(P.window(x, 1.7, 2.9)) < 0.001
+
+
+def test_a_looped_pad_keeps_its_level_for_seconds_without_a_sustain_loop():
+    """A pad is a plain loop, not a one-shot: a note held for eight seconds
+    is as loud at the end as at the start."""
+    _need()
+    for inst in ("inst 1 name=Pad wave=pad oct=3-5 nna=cut",
+                 "inst 1 name=Pad wave=saw oct=3-5 nna=cut"):
+        frames, x, module = _play("C-4 01 v64 ...\n", inst=inst, tempo=60)
+        assert all(s.loop is not None for s in module.samples), inst
+        start = P.rms(P.window(x, 0.5, 1.0))
+        end = P.rms(P.window(x, 6.0, 7.0))
+        assert abs(end / start - 1) < 0.05, (inst, start, end)
