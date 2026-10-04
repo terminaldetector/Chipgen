@@ -53,8 +53,8 @@ measurement made here:
 | Schism modules | "Astra"-like agents |
 | anything below Astra | does not cope with the Chipgen tool |
 
-"Astra" is the owner's name for a tier; this repository does not say which
-model it is. The article should test the table instead of repeating it: the
+"Astra" is an OpenAI model, as the project owner says; which release is not
+recorded here. The article should test the table instead of repeating it: the
 same briefs to each tier, and for each, the share of scores that compile on
 the first try, the rounds to a clean `check`, the warnings left, whether
 every channel is audible (`levels.py`), and the time taken.
