@@ -9,6 +9,10 @@ against the parser, which is what this file does.
 
 import json
 
+#: What the page tests read; the bridge archive does not carry the page.
+_PAGE = ("studio/app.js", "studio/index.html", "studio/style.css",
+         "studio/make_bundle.py")
+
 
 def test_every_directive_in_the_catalogue_actually_parses():
     """An interface copies these literally into a score.
@@ -250,6 +254,8 @@ def test_the_interface_holds_no_facts_of_its_own():
 
     import support
 
+    support.need_files(*_PAGE)
+
     path = os.path.join(support.ROOT, "studio", "app.js")
     with open(path, encoding="utf-8") as handle:
         source = handle.read()
@@ -286,6 +292,8 @@ def test_the_static_bundle_carries_everything_the_page_needs():
 
     import support
 
+    support.need_files(*_PAGE)
+
     sys.path.insert(0, os.path.join(support.ROOT, "studio"))
     import make_bundle
 
@@ -319,6 +327,8 @@ def test_the_page_references_only_files_that_ship():
     import re
 
     import support
+
+    support.need_files(*_PAGE)
 
     studio_dir = os.path.join(support.ROOT, "studio")
     with open(os.path.join(studio_dir, "index.html"), encoding="utf-8") as fh:
@@ -395,6 +405,8 @@ def test_the_interface_and_the_cli_build_the_same_brief():
 
     import prompts
     import support
+
+    support.need_files(*_PAGE)
 
     request = {"chip": "RP2A03", "prompt": "Gothic castle theme",
                "bpm": 144, "key": "D Minor", "style": "Gothic Action",
@@ -483,6 +495,8 @@ def test_the_arrange_route_returns_the_keys_the_page_reads():
 
     import serve
     import support
+
+    support.need_files(*_PAGE)
 
     with open(os.path.join(support.ROOT, "studio", "app.js"),
               encoding="utf-8") as handle:

@@ -11,20 +11,25 @@ import os
 import support
 
 ROOT = support.ROOT
+ALIEN = "alien_soldier_mega_drive_genesis_07_runner_ad2025.trk"
+BATMAN = "batman___return_of_the_joker__nes__02_demo_bgm.json"
+
+
+def _corpus(name):
+    """A score of the corpus, or a skip: the bridge archive carries the
+    engine and its tests, not the corpora some of the tests read."""
+    support.need_files(os.path.join("corpus", "core", "scores", name))
+    return os.path.join(ROOT, "corpus", "core", "scores", name)
 
 
 def _genesis():
     import score_model
-    return score_model.load(os.path.join(
-        ROOT, "corpus", "core", "scores",
-        "alien_soldier_mega_drive_genesis_07_runner_ad2025.trk"))
+    return score_model.load(_corpus(ALIEN))
 
 
 def _nes():
     import score_model
-    return score_model.load(os.path.join(
-        ROOT, "corpus", "core", "scores",
-        "batman___return_of_the_joker__nes__02_demo_bgm.json"))
+    return score_model.load(_corpus(BATMAN))
 
 
 def _score(voices, drums=(), rows=64, bpm=150.0, lpb=4):
@@ -380,8 +385,7 @@ def test_a_score_json_renders_instead_of_producing_silence():
     with "wrote" printed on the way out."""
     import chipgen
 
-    path = os.path.join(ROOT, "corpus", "core", "scores",
-                        "final_fantasy__nes__16_battle.json")
+    path = _corpus("final_fantasy__nes__16_battle.json")
     with open(path, encoding="utf-8") as handle:
         result = chipgen.compose(handle.read())
     assert result.duration > 10.0, result.duration
@@ -426,10 +430,7 @@ def test_arranging_through_the_server_returns_the_report_too():
     show a rearrangement that quietly lost the counter-melody."""
     import serve
 
-    with open(os.path.join(
-            ROOT, "corpus", "core", "scores",
-            "alien_soldier_mega_drive_genesis_07_runner_ad2025.trk"),
-            encoding="utf-8") as handle:
+    with open(_corpus(ALIEN), encoding="utf-8") as handle:
         text = handle.read()
 
     answer = serve.arrange_score({"score": text, "target": "RP2A03"})
@@ -462,10 +463,7 @@ def test_a_genesis_arrangement_has_no_nes_columns_in_it():
     import score_model
     import serve
 
-    with open(os.path.join(
-            ROOT, "corpus", "core", "scores",
-            "batman___return_of_the_joker__nes__02_demo_bgm.json"),
-            encoding="utf-8") as handle:
+    with open(_corpus(BATMAN), encoding="utf-8") as handle:
         answer = serve.arrange_score({"score": handle.read(),
                                       "target": "YM2612"})
     assert answer["ok"], answer
@@ -488,8 +486,7 @@ def test_a_json_score_keeps_its_title_through_an_arrangement():
     score carries one and an event list has nowhere to put it."""
     import score_model
 
-    path = os.path.join(ROOT, "corpus", "core", "scores",
-                        "batman___return_of_the_joker__nes__02_demo_bgm.json")
+    path = _corpus(BATMAN)
     with open(path, encoding="utf-8") as handle:
         score = score_model.loads(handle.read())
     assert score.title == "02 Demo BGM", score.title

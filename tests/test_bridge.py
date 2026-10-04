@@ -261,6 +261,9 @@ def test_the_archive_carries_agents_md_and_a_work_directory():
 def test_agents_md_is_not_in_the_repository():
     """In a checkout an agent is meant to change the engine; a file at
     the root telling it not to would be wrong there."""
+    if os.path.exists(os.path.join(support.ROOT, "bridge", "integrity.json")):
+        support.skip("this is the bridge archive, which carries AGENTS.md "
+                     "by design")
     assert not os.path.exists(os.path.join(support.ROOT, "AGENTS.md"))
 
 
