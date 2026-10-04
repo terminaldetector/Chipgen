@@ -163,12 +163,13 @@ def parse_row(text: str) -> List[M.Cell]:
 
 # -- the compiler ------------------------------------------------------------
 class _Compiler:
-    def __init__(self, text: str):
+    def __init__(self, text: str, base_dir: str = ""):
         self.lines = text.splitlines()
         self.diagnostics: List[Diagnostic] = []
         self.warnings: List[str] = []
         self.module = M.Module()
         self.library = recipes.Library()
+        self.library.base_dir = base_dir
         self.bpm = 125.0
         self.speed_set = None
         self.channels = None
@@ -316,12 +317,22 @@ class _Compiler:
                 raise ValueError(f"flag {word!r}: linear amiga oldfx gxxlink")
 
     # -- sounds ----------------------------------------------------------
+    def d_bank(self, n, rest):
+        """`bank PATH` — a forge bank (python3 -m schism forge run) whose
+        instruments `forge=NAME` and `@NAME` may then name."""
+        from .forge import notation_hook
+        notation_hook.load_bank(self.library, rest.strip())
+
     def d_smp(self, n, rest):
         parts = rest.split()
         if not parts or not NAME.match(parts[0]):
             raise ValueError("`smp NAME wave=... settings` — NAME is letters, "
                              "digits, _ and -")
         options = recipes.split_options(parts[1:])
+        if "forge" in options:
+            self._timing_for_forge()
+            self.library.define_forged(parts[0], options)
+            return
         if "wave" not in options:
             raise recipes.RecipeError(
                 f"smp {parts[0]} needs wave=",
@@ -340,10 +351,21 @@ class _Compiler:
                              f"line {self.inst_lines[number]}")
         self.failed_inst.add(number)      # until it compiles
         options = recipes.split_options(parts[1:])
+        self._timing_for_forge()
         recipes.compile_instrument(number, options, self.library, self.module,
                                    warn=self.warnings.append)
         self.failed_inst.discard(number)
         self.inst_lines[number] = n
+
+    def _timing_for_forge(self):
+        """The tick the score will have, as far as the header has said:
+        what a forged instrument's envelopes are timed in. `_finish` times
+        them again against the final tempo."""
+        try:
+            _, tempo, _ = solve_timing(self.bpm, self.module.rows_per_beat)
+        except ValueError:
+            tempo = 125
+        self.library.tick = 2.5 / tempo
 
     # -- patterns --------------------------------------------------------
     def d_pattern(self, n, parts):
@@ -508,6 +530,10 @@ class _Compiler:
         m.speed, m.tempo = speed, tempo
         m.message = (f"by {self.author}\n" if self.author else "") \
             + self._message
+        if self.library.forged:
+            from .forge import notation_hook
+            notation_hook.retime(m, self.library, 2.5 / tempo)
+            m.forged = notation_hook.forged_of(self.library)
 
         if len(m.samples) > M.IT_MAX_SAMPLES:
             self.warnings.append(
@@ -601,12 +627,14 @@ def _releases(ins: M.Instrument) -> bool:
     return bool(env and env.enabled and env.nodes and env.nodes[-1][1] == 0)
 
 
-def compile_text(text: str):
+def compile_text(text: str, base_dir: str = ""):
     """Score text -> (Module, Report). Raises NotationError listing every
-    problem in the score."""
-    return _Compiler(text).run()
+    problem in the score. `base_dir` is where a relative `bank` path
+    starts."""
+    return _Compiler(text, base_dir).run()
 
 
 def compile_file(path: str):
+    import os
     with open(path, encoding="utf-8") as handle:
-        return compile_text(handle.read())
+        return compile_text(handle.read(), os.path.dirname(os.path.abspath(path)))

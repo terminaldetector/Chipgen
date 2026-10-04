@@ -121,6 +121,7 @@ The three demos rendered by libopenmpt and by Schism Tracker, compared by
 | First Light | 64.00 / 64.00 / 64.10 s | 0.874 / 0.891 | −0.3 | 0.0 | −0.1 | 0.0 | 0.0 | 0.0 | 0.0 | +0.2 | 0.0 | +0.1 |
 | Glass Engine | 97.63 / 97.59 / 97.69 s | 0.895 / 0.887 | −0.2 | 0.0 | −0.2 | −0.3 | 0.0 | +0.1 | +0.2 | +0.1 | 0.0 | −0.1 |
 | Pattern Garden | 92.90 / 92.89 / 92.99 s | 0.885 / 0.886 | −0.1 | 0.0 | −0.1 | 0.0 | +0.1 | +0.1 | 0.0 | +0.3 | +0.3 | 0.0 |
+| Forge Lab | 60.00 / 59.98 / 60.08 s | 0.815 / 0.889 | −3.0 | −0.1 | 0.0 | −0.1 | −0.1 | +0.1 | +0.1 | +0.1 | 0.0 | −0.1 |
 
 - **Length.** Schism stops on the last row, within 0.05% of the arithmetic;
   libopenmpt's render runs about 0.1 s past it. (libopenmpt's own
@@ -130,7 +131,16 @@ The three demos rendered by libopenmpt and by Schism Tracker, compared by
   note is 2.9% louder in Schism (a constant), whatever the instrument,
   envelope or volume.
 - **Spectrum.** Every octave band agrees within ±0.4 dB, under Schism's
-  linear (default), spline and 8-tap interpolation alike.
+  linear (default), spline and 8-tap interpolation alike, with one
+  exception that has a cause (next).
+- **The first millisecond.** Schism ramps a new note in. Soloing the drum
+  channel of Forge Lab, the first kick starts at a quarter of the level
+  libopenmpt gives it, reaches full level after about 58 frames (1.3 ms at
+  44.1 kHz), and from there on the two outputs are equal to four decimals.
+  A hit whose click is shorter than that peaks lower in Schism (Forge Lab:
+  0.815 against 0.889), and the octave band 20–40 Hz, where the step at the
+  start of a kick lives, is 3 dB lower; every other band of that demo
+  agrees within ±0.1 dB.
 - **What does not agree**, and so is not a check: sample-by-sample
   subtraction. Channels with `H` vibrato or a long held note drift out of
   phase between the engines (waveform correlation 0.5–0.9 where it is
@@ -152,6 +162,37 @@ The three demos rendered by libopenmpt and by Schism Tracker, compared by
   bell at 16%).
 - Everything is deterministic: a seed, never the clock.
 
+## The forge
+
+`schism/forge/` makes instruments from a description of how they should
+sound (`docs/FORGE.md`). It uses the same witnesses: every number the forge
+reads about a sound was read from a note that libopenmpt rendered, and a
+forged module is played by both players.
+
+| claim | witness | found |
+|---|---|---|
+| the transform under every loop is right: the FFT is the DFT, a line in a bin returns as a cosine of that amplitude, vibrato sidebands keep the power of the line, a loop joins itself | arithmetic (`tests/test_forge_core.py`) | to float rounding |
+| a forged tone or struck string plays the note it was asked for | libopenmpt, FFT peak of a note on each of five octaves, four sets of genes | within 3 cents (6 where unison voices a bin apart share a main lobe below A2); a drum plays its recorded pitch at its register note, by arithmetic |
+| each of the eleven dials reads what it is named for | libopenmpt, on built sounds with a known answer: a sine, a rise time, a fall, a beat, a tremolo, noise | each reads its own cause; a tremolo reads as motion and not as detune, and a beat as detune and not as motion |
+| asked against heard: 42 archetypes, 382 dials | libopenmpt probe after the closed loop | median error 0.017; 83.5% of the dials within 0.10 and 89.5% within 0.15; the 40 that are not carry `!` in `forge survey`. Per archetype, the weighted rms error has a median of 0.05 for drums, 0.075 for effects, 0.09 for tones and 0.10 for modal sounds (worst 0.14, 0.08, 0.23, 0.25) |
+| the closed loop is better than the first compile | the same probe, first compile against realised | median rms error 0.099 to 0.073, mean 0.115 to 0.087; better in 29 archetypes, within 0.002 in 13, worse in none |
+| instruments come out at one loudness | RMS of the loudest 120 ms of the probe note against 0.030 | 36 of 42 within 1 dB (median −0.04 dB), the piano 2.1 dB under, and five too short to carry the level at full gain (blip −9.1, kalimba −5.5, stab −4.7, pluck −4.5, rim −4.1 dB), which are reported `soft` |
+| a forged module is a module | `verify.compare` after `it_write` and `it_read`, libopenmpt | envelopes, instrument fields and samples read back as written; a bank written and read back is the same instruments, and a patch with an illegal field is refused with the field named |
+| the two players agree on it | libopenmpt and Schism Tracker, whole module | level within 0.0 dB (a three-instrument test module) and 0.1 dB (Forge Lab), octave bands within ±0.1 dB but the first millisecond of a hit (above); the lowest tone sample of Forge Lab is stored at a `c5speed` of 2.1 million and plays alike in both |
+| the arrangement model walks a song as the module does | `Module.seconds()` and libopenmpt | rows and times follow `A`, `T`, `B`, `C` and `SEx` the same way; planted conflicts (two basses an octave apart, two pads in the middle) are named; `--fit` lowers the cost of Forge Lab from 7.2 to 1.4 in three changes and lists the three conflicts it leaves; the repaired Forge Lab opens in both players and plays its 59.98 s |
+
+How long it takes, on one core: a probe is 50 to 300 ms, realising an
+instrument 0.1 to 1 s (all 42 archetypes in 16 s), the starter bank 75 s,
+`fit` on the 13-channel Forge Lab 64 s, the 82 forge tests about a minute.
+
+What the measurements are blind to, so the forge is too: an attack under
+about 15 ms (the level is smoothed over 22 ms); `body` and `decay`, which
+are read off the same fall (a decay longer than about half a second needs a
+body near the top); `detune` and `motion`, which need a note of a second or
+more; the `noise` of band-limited noise (a snare through a narrow filter
+reads 0); the `brightness` of a noisy drum unless its register is high
+enough. The first three are explained under the dials in `docs/FORGE.md`.
+
 ## Not built
 
 - Reading compressed (IT 2.14/2.15) samples, so most modules found on the
@@ -164,3 +205,6 @@ The three demos rendered by libopenmpt and by Schism Tracker, compared by
   checks and warnings but cannot measure what it wrote.
 - The training corpora (`corpus/README.md`) and the article (`docs/ROADMAP.md`).
 - Impulse Tracker itself and the Schism GUI have not been run.
+- A forge anybody has listened to: every claim in the section above is a
+  measurement, and whether a forged bell is a good bell is untested. The
+  archetypes are the author's opinion of what each kind of sound measures.

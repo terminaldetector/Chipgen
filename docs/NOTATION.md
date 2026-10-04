@@ -135,7 +135,10 @@ An instrument is one line of `key=value` pairs with no spaces around the
 | `oct=` | `e.g. 1-6` | octaves a multisample covers, default 1-7 |
 | `wave=` | see the waveform table | what the sound is made of |
 | `sample=` | `text, _ for spaces` | use a sample defined by `smp` |
-| `kit=` | `KEY:sample,KEY:sample,...` | key:sample pairs, one sample per key, all at natural pitch |
+| `kit=` | `KEY:sample,KEY:sample,...` | key:sample pairs, one sample per key, all at natural pitch; a sample written @name is a forged one |
+| `forge=` | `NAME`, `bank:NAME`, `kit:NAME` | a sound the forge makes: an archetype, or an instrument of a bank (`python3 -m schism forge archetypes`) |
+| `dna=` | `axis:value,...` | with forge=, dials to move: axis:value,... (brightness:0.8,decay:0.3) |
+| `reg=` | a note, `A3` | with forge=, the register it is built for, A3; for a drum the pitch it is tuned to |
 <!-- /generated -->
 
 ### Envelopes
@@ -296,7 +299,7 @@ line 3: wave: 'saww' is not one of sine, saw, square, triangle, pulse, fm, pad, 
   inst 1 name=Lead wave=saww
 line 4: bar is not a setting of this instrument
   inst 2 wave=pulse duty=0.3 bar=2
-  fix: settings for any instrument: cutoff, dca, dct, fade, fenv, gain, ienv, name, nna, oct, pan, penv, ppc, pps, res, rp, rv, venv, vib, vol; wave=pulse also takes: duty
+  fix: settings for any instrument: cutoff, dca, dct, dna, fade, fenv, forge, gain, ienv, name, nna, oct, pan, penv, ppc, pps, reg, res, rp, rv, venv, vib, vol; wave=pulse also takes: duty
 ```
 <!-- /generated -->
 

@@ -11,19 +11,24 @@ register-accurate emulation of the Genesis, OPL2 and NES sound chips. Where
 Chipgen's models write the chip's registers, here they write what a tracker
 shows: notes, instruments, volume column and effects, in rows.
 
-**Status: 0.1.** A tested core and three synthetic demo tracks. Corpora and
-the model-facing briefs come next (`docs/ROADMAP.md`).
+**Status: 0.2.** A tested core, four synthetic demo tracks, and the
+instrument forge (`docs/FORGE.md`), which makes instruments from a
+description of how they should sound. Corpora and the model-facing briefs
+come next (`docs/ROADMAP.md`).
 
 ## Try it
 
     python3 -m schism check demos/first_light.sch       # compile; list every problem
     python3 -m schism build demos/first_light.sch --mp3 first_light.mp3
-    python3 tests/run_tests.py                          # 75 tests, under a minute
+    python3 tests/run_tests.py                          # 158 tests, under two minutes
+    python3 -m schism forge survey                      # the forge: every archetype, asked against heard
 
 Python 3.10+ and nothing else is needed to write modules (tested on 3.10,
 3.11, 3.12 and 3.13). To *hear* them, install any of:
 
-- `libopenmpt` (`apt install libopenmpt0`) — the checker and renderer;
+- `libopenmpt` (`apt install libopenmpt0`) — the checker and renderer, and
+  the forge's ear: a sound it makes fresh is rendered and measured with it
+  (the starter bank's instruments, as they are, need nothing);
 - `schism` (`apt install schism`) — the program itself, run headless;
 - `lame` (`apt install lame`) or `ffmpeg` — for MP3.
 
@@ -73,6 +78,17 @@ the most of. The whole language is in `docs/NOTATION.md`.
 - **Who is audible.** `schism/levels.py` solos each channel and reports its
   loudness against the whole, because the usual way to lose an instrument is
   a quiet one, and the render succeeds either way.
+- **Instruments made to a description.** `inst 2 forge=punch_bass`,
+  `forge=bell dna=brightness:0.8`, `forge=kit:tight_kit`: eleven dials
+  (brightness, attack, body, decay, metallicity, detune, motion, bass weight,
+  articulation, noise, punch), each defined by a measurement of a note
+  libopenmpt renders, are compiled into samples and envelopes, rendered, read
+  back and corrected until the sound measures what was asked, then trimmed to
+  one loudness. On top: a search (seed, mutate, probe, validate, score,
+  retain), mixing instruments, drum kits whose drums leave room for each
+  other, and an analysis of a whole module (who masks whom, what to pan, what
+  to change) that can repair it. Four families: tones, struck and plucked
+  sounds, drums, effects. `docs/FORGE.md`.
 
 ## The demos
 
@@ -86,22 +102,28 @@ from a piece.
 | `glass_engine` | 1:38 | 10 | synthwave in A minor: drum kit, filtered bass, detuned pad, pulse lead, pluck, bell, riser |
 | `first_light` | 1:04 | 8 | chip-style: pulse, triangle, noise percussion, arpeggios, a laser |
 | `pattern_garden` | 1:33 | 10 | Euclidean (Bjorklund) rhythms and seeded random-walk melodies in D dorian: kit, bass, FM electric-piano chords, reed lead, bell, toms |
+| `forge_lab` | 1:00 | 13 | A minor, every sound a `forge=` line from the starter bank: drum kit, punch bass, strings, saw lead, harp, bell, stab, riser, impact |
 
 Each has its `.sch` (the source), `.it` (open it in Schism Tracker) and
 `.mp3` (rendered by libopenmpt 0.7.3, encoded by LAME at 192 kbps). The
 `.sch` is the truth; `python3 tools/make_demos.py --build` regenerates
-the other two, setting each module's mix volume so its render peaks near 0.89.
+the other two, setting each module's mix volume so its render peaks near 0.89
+(`python3 tools/make_forge_demo.py --build` does the same for `forge_lab`).
 
 ## Layout
 
     schism/        the package: model, it_write, it_read, synth, recipes,
                    notation, openmpt, schismtracker, verify, levels, render
-    docs/          NOTATION.md (the language), COVERAGE.md (what is checked),
-                   ROADMAP.md
-    demos/         three synthetic tracks
+    schism/forge/  the instrument forge: dials, families, probe, closed loop,
+                   search, banks, mixing, kits, arrangement analysis, CLI,
+                   banks/starter.bank.json
+    docs/          NOTATION.md (the language), FORGE.md (the forge),
+                   COVERAGE.md (what is checked), ROADMAP.md
+    demos/         four synthetic tracks
     tests/         run_tests.py; format, synth, notation, audio, demos,
-                   engines, docs
-    tools/         make_demos.py, make_docs.py, compare_engines.py
+                   engines, docs, forge_core, forge
+    tools/         make_demos.py, make_forge_demo.py, make_docs.py,
+                   compare_engines.py
     corpus/        a note on the corpora that are planned
 
 ## Limits worth knowing

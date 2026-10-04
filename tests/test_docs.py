@@ -26,10 +26,13 @@ def _fences(path):
 
 def test_the_generated_tables_are_what_the_code_says():
     make_docs = _make_docs()
-    with open(make_docs.DOC, encoding="utf-8") as handle:
-        written = handle.read()
-    assert make_docs.render(written) == written, \
-        "docs/NOTATION.md is stale: python3 tools/make_docs.py"
+    for path in make_docs.DOCS:
+        if not os.path.exists(path):
+            continue
+        with open(path, encoding="utf-8") as handle:
+            written = handle.read()
+        assert make_docs.render(written) == written, \
+            f"{os.path.basename(path)} is stale: python3 tools/make_docs.py"
 
 
 def test_every_wave_and_every_setting_is_in_the_manual():

@@ -4,6 +4,8 @@
                             [--engine openmpt|schism]
     python3 -m schism check song.sch
     python3 -m schism info song.it
+    python3 -m schism forge ...        generate instruments, drums and
+                                       effects (python3 -m schism forge -h)
 """
 
 import argparse
@@ -90,6 +92,10 @@ def _info(args) -> int:
 
 
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] == "forge":
+        from .forge import cli
+        return cli.main(argv[1:])
     parser = argparse.ArgumentParser(prog="schism")
     sub = parser.add_subparsers(dest="command", required=True)
     build = sub.add_parser("build", help="score -> .it (and WAV/MP3)")
@@ -109,6 +115,9 @@ def main(argv=None) -> int:
     info = sub.add_parser("info", help="describe a .it file")
     info.add_argument("module")
     info.set_defaults(run=_info)
+    # `forge` was handled above; it is listed so --help says it exists
+    sub.add_parser("forge", help="instruments, drums and effects made to a "
+                                 "description (python3 -m schism forge -h)")
     args = parser.parse_args(argv)
     return args.run(args)
 

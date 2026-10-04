@@ -6,6 +6,8 @@ A score names its sounds instead of attaching them:
     inst 1 name=Bass   wave=saw oct=1-4 nna=cut cutoff=60 res=40 venv=0:64,40:40,160:0
     inst 2 name=Drums  kit=C-2:thump,D-2:snare,F#2:hat
     inst 3 name=Pad    wave=pad voices=5 detune=14 venv=0:0,60:64,... fade=64
+    inst 4 name=Bell   forge=bell dna=brightness:0.8 reg=A4
+    inst 5 name=Kit    kit=C-2:@kick,D-2:@snare,F#2:@hat
 
 `compile_instrument` turns one such line into an `Instrument` and the
 `Sample`s it needs. The vocabulary is a table (`WAVES`, `ENVELOPES`,
@@ -242,7 +244,14 @@ SETTINGS = {
     "oct": (_octaves, "octaves a multisample covers, default 1-7"),
     "wave": (_choice(*WAVES), "what the sound is made of"),
     "sample": (_text, "use a sample defined by `smp`"),
-    "kit": (None, "key:sample pairs, one sample per key, all at natural pitch"),
+    "kit": (None, "key:sample pairs, one sample per key, all at natural "
+            "pitch; a sample written @name is a forged one"),
+    "forge": (None, "a sound the forge makes: an archetype, or an "
+              "instrument of a bank (`python3 -m schism forge archetypes`)"),
+    "dna": (None, "with forge=, dials to move: axis:value,... "
+            "(brightness:0.8,decay:0.3)"),
+    "reg": (None, "with forge=, the register it is built for, A3; for a "
+            "drum the pitch it is tuned to"),
 }
 for _key in ENVELOPES:
     SETTINGS[_key] = (None, ENVELOPES[_key][2] + " envelope, tick:value,...")
@@ -346,6 +355,22 @@ class Library:
     def __init__(self):
         self.named = {}              # name -> (kind, params, volume)
         self._made = {}
+        self.banks = []              # forge banks loaded by `bank`
+        self.base_dir = ""           # where relative bank paths start
+        self.tick = None             # seconds per tick the score will have
+        self.forged = {}             # instrument number -> what the forge made
+
+    def define_forged(self, name: str, options: dict):
+        """`smp NAME forge=... [dna=...] [reg=...] [vol=...]`."""
+        options = dict(options)
+        params = {"spec": options.pop("forge"), "dna": options.pop("dna", ""),
+                  "reg": options.pop("reg", "")}
+        volume = _int(0, 64)(options.pop("vol", "64"))
+        if options:
+            raise RecipeError(
+                f"{', '.join(sorted(options))} are not settings of a forged "
+                f"sample", "a forged sample takes: forge, dna, reg, vol")
+        self.named[name] = ("forge", params, volume)
 
     def define(self, name: str, kind: str, options: dict):
         params = _recipe_params(kind, options)
@@ -360,7 +385,12 @@ class Library:
     def make(self, kind: str, params: dict):
         key = (kind, tuple(sorted(params.items(), key=lambda kv: kv[0])))
         if key not in self._made:
-            self._made[key] = make_sample(kind, dict(params))
+            if kind == "forge":
+                from .forge import notation_hook
+                self._made[key] = notation_hook.forged_samples(
+                    dict(params), self)
+            else:
+                self._made[key] = make_sample(kind, dict(params))
         return self._made[key]
 
 
@@ -374,12 +404,21 @@ def compile_instrument(number: int, options: dict, library: Library,
     given, hears about settings that compile and then play nothing.
     """
     options = dict(options)
-    chosen = [k for k in ("wave", "sample", "kit") if k in options]
+    chosen = [k for k in ("wave", "sample", "kit", "forge") if k in options]
     if len(chosen) != 1:
         raise RecipeError(
-            f"an instrument needs exactly one of wave=, sample=, kit=; "
-            f"this has {len(chosen) or 'none'}",
-            "e.g. wave=saw, or sample=thump, or kit=C-2:thump,D-2:snare")
+            f"an instrument needs exactly one of wave=, sample=, kit=, "
+            f"forge=; this has {len(chosen) or 'none'}",
+            "e.g. wave=saw, or sample=thump, or kit=C-2:thump,D-2:snare, "
+            "or forge=bell")
+    if "forge" in options:
+        from .forge import notation_hook
+        return notation_hook.compile_forged(number, options, library, module,
+                                            warn)
+    if "dna" in options or "reg" in options:
+        raise RecipeError(
+            "dna= and reg= are settings of forge=", "write forge=NAME "
+            "dna=brightness:0.8 reg=A3")
 
     ins = M.Instrument()
     kind = options.pop("wave", None)
@@ -496,12 +535,18 @@ def compile_instrument(number: int, options: dict, library: Library,
                 raise RecipeError(
                     f"{pair!r} is not key:sample",
                     "write the kit as C-2:kick,D-2:snare") from None
-            if smp not in library.named and smp not in WAVES:
+            if smp.startswith("@"):
+                k, params, smp_volume = "forge", {
+                    "spec": smp[1:], "dna": "", "reg": ""}, 64
+            elif smp not in library.named and smp not in WAVES:
                 raise RecipeError(
                     f"kit key {key_text}: no sample or wave named {smp!r}",
                     "built-in one-shots: kick snare hat openhat clap tom "
-                    "rim pluck bell; or define one with `smp`")
-            if smp in library.named:
+                    "rim pluck bell; @name for a forged one; or define one "
+                    "with `smp`")
+            if smp.startswith("@"):
+                pass
+            elif smp in library.named:
                 k, params, smp_volume = library.named[smp]
             else:
                 k, params, smp_volume = smp, _recipe_params(smp, {}), 64
