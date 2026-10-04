@@ -144,6 +144,9 @@ def test_measuring_an_imported_bank_leaves_the_built_in_cache_alone():
     import instruments
     import support
 
+    # the repository ships the built-in bank's measurements; the bridge
+    # archive carries code only, and measures on first use
+    support.need_files("python/bank_audition.json")
     before = json.load(open(audition.CACHE_PATH, encoding="utf-8"))
     original = dict(instruments.BANK)
     with support.TempDir() as tmp:

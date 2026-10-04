@@ -3,7 +3,11 @@
 
 def _corpus():
     import score_model
-    return score_model.load_all(score_model.corpus_paths())
+    import support
+    paths = score_model.corpus_paths()
+    if not paths:
+        support.skip("the corpus is not in this archive")
+    return score_model.load_all(paths)
 
 
 def test_notes_carry_lengths_not_just_onsets():
