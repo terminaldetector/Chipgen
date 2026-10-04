@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from typing import NamedTuple
 
 from . import openmpt, schismtracker
 
@@ -96,25 +97,62 @@ def render_mp3(module_bytes: bytes, mp3_path: str, **kwargs):
     return seconds, peak, encoder
 
 
-def calibrate_mix_volume(module, target: float = 0.89, rounds: int = 3):
-    """Set `module.mix_volume` so the render peaks at `target`.
+class PeakFit(NamedTuple):
+    """What fitting the mix volume to a peak did."""
+    before: float           # peak at the mix volume the module came with
+    after: float            # peak at the one it has now
+    mix_before: int
+    mix_after: int
+    target: float
+    renders: int
 
-    Mix volume is a property of the module, so the loudness it is given
-    here is the loudness it has in Schism: the demo does not depend on the
-    build's normalisation. Needs libopenmpt. -> the peak it ended on.
-    """
+    @property
+    def reached(self) -> bool:
+        return abs(self.after - self.target) / self.target < 0.03
+
+    def text(self) -> str:
+        line = (f"peak {self.before:.2f} -> {self.after:.2f} (mix volume "
+                f"{self.mix_before} -> {self.mix_after}, target "
+                f"{self.target:g})")
+        if not self.reached and self.mix_after in (1, 128):
+            line += (f"; mix volume {self.mix_after} is the limit, so the "
+                     f"peak cannot go {'lower' if self.mix_after == 1 else 'higher'}")
+        return line
+
+
+def _peak_now(module) -> float:
     from . import it_write
-    peak = 0.0
+    with openmpt.Song(it_write.build(module)) as song:
+        return openmpt.peak(song.render(44100))
+
+
+def fit_peak(module, target: float = 0.89, rounds: int = 4,
+             tolerance: float = 0.03) -> PeakFit:
+    """Set `module.mix_volume` so the libopenmpt render peaks at `target`.
+
+    Only the header's mix volume moves: no sample is touched, nothing
+    clips, and the loudness the module is given is the loudness it has in
+    Schism, not something the build does afterwards. Needs libopenmpt.
+    """
+    mix_before = module.mix_volume
+    peak = before = _peak_now(module)
+    if peak <= 0.0:
+        raise RenderError("the module renders as silence; nothing to "
+                          "calibrate")
+    renders = 1
     for _ in range(rounds):
-        blob = it_write.build(module)
-        with openmpt.Song(blob) as song:
-            frames = song.render(44100)
-        peak = openmpt.peak(frames)
-        if peak <= 0.0:
-            raise RenderError("the module renders as silence; nothing to "
-                              "calibrate")
-        if abs(peak - target) / target < 0.03:
+        if abs(peak - target) / target < tolerance:
             break
-        module.mix_volume = max(1, min(128, round(
-            module.mix_volume * target / peak)))
-    return peak
+        wanted = max(1, min(128, round(module.mix_volume * target / peak)))
+        if wanted == module.mix_volume:
+            break                                   # at a limit
+        module.mix_volume = wanted
+        peak = _peak_now(module)
+        renders += 1
+    return PeakFit(before, peak, mix_before, module.mix_volume, target,
+                   renders)
+
+
+def calibrate_mix_volume(module, target: float = 0.89, rounds: int = 3):
+    """`fit_peak`, for the callers that only want the peak it ended on."""
+    return fit_peak(module, target, rounds).after

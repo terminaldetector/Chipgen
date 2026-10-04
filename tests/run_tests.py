@@ -21,8 +21,8 @@ for path in (ROOT, HERE):
         sys.path.insert(0, path)
 
 MODULES = ["test_format", "test_synth", "test_notation", "test_audio",
-           "test_demos", "test_engines", "test_docs", "test_forge_core",
-           "test_forge"]
+           "test_demos", "test_engines", "test_docs", "test_export",
+           "test_forge_core", "test_forge"]
 
 
 def _collect(pattern=""):

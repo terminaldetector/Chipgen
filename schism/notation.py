@@ -25,6 +25,7 @@ is told one mistake per round takes ten rounds to fix a score with ten.
 import re
 from typing import List, NamedTuple, Tuple
 
+from . import export
 from . import model as M
 from . import recipes
 
@@ -82,6 +83,10 @@ class Report(NamedTuple):
     samples: int
     sample_bytes: int
     warnings: Tuple[str, ...]
+    #: did the score say `mv`? (then a build leaves the mix volume alone)
+    mv_set: bool = False
+    #: one line per kit: which key plays which drum
+    keymaps: Tuple[str, ...] = ()
 
     def text(self) -> str:
         lines = [f"{self.title or 'untitled'}: {self.seconds:.1f} s, "
@@ -93,6 +98,7 @@ class Report(NamedTuple):
                  f"(speed {self.speed}, tempo {self.tempo})"
                  + ("" if abs(self.bpm_actual - self.bpm_asked) < 0.01
                     else f", asked {self.bpm_asked:g}")]
+        lines += [f"keys: {k}" for k in self.keymaps]
         lines += [f"warning: {w}" for w in self.warnings]
         return "\n".join(lines)
 
@@ -171,6 +177,7 @@ class _Compiler:
         self.library = recipes.Library()
         self.library.base_dir = base_dir
         self.bpm = 125.0
+        self.mv_set = False
         self.speed_set = None
         self.channels = None
         self.patterns = {}               # name -> (index, line)
@@ -299,6 +306,7 @@ class _Compiler:
 
     def d_mv(self, n, rest):
         self.module.mix_volume = recipes._int(0, 128)(rest)
+        self.mv_set = True
 
     def d_sep(self, n, rest):
         self.module.pan_separation = recipes._int(0, 128)(rest)
@@ -534,6 +542,7 @@ class _Compiler:
             from .forge import notation_hook
             notation_hook.retime(m, self.library, 2.5 / tempo)
             m.forged = notation_hook.forged_of(self.library)
+        m.recipes = dict(self.library.recipes)
 
         if len(m.samples) > M.IT_MAX_SAMPLES:
             self.warnings.append(
@@ -558,7 +567,8 @@ class _Compiler:
             samples=len(m.samples),
             sample_bytes=sum(len(s.data) * (2 if s.bits == 16 else 1)
                              for s in {id(s.data): s for s in m.samples}.values()),
-            warnings=tuple(self.warnings))
+            warnings=tuple(self.warnings), mv_set=self.mv_set,
+            keymaps=export.kit_lines(m))
         return m, report
 
     def _silence_warnings(self):

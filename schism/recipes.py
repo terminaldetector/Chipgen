@@ -359,6 +359,7 @@ class Library:
         self.base_dir = ""           # where relative bank paths start
         self.tick = None             # seconds per tick the score will have
         self.forged = {}             # instrument number -> what the forge made
+        self.recipes = {}            # instrument number -> the recipe it used
 
     def define_forged(self, name: str, options: dict):
         """`smp NAME forge=... [dna=...] [reg=...] [vol=...]`."""
@@ -511,6 +512,8 @@ def compile_instrument(number: int, options: dict, library: Library,
         if kind in _MULTISAMPLED:
             params["_low"] = low_oct * 12 + 1
             params["_high"] = high_oct * 12 + 12
+        library.recipes[number] = {
+            "wave": kind, "params": _plain(params), "octaves": [low_oct, high_oct]}
         entries = add(_library_samples(library, kind, params),
                       f"{ins.name} {kind}")
         for low, high, sample_no in entries:
@@ -522,11 +525,15 @@ def compile_instrument(number: int, options: dict, library: Library,
                 "define it first with `smp NAME wave=...`; defined: "
                 + (", ".join(sorted(library.named)) or "none yet"))
         k, params, smp_volume = library.named[sample_name]
+        library.recipes[number] = {"sample": sample_name, "wave": k,
+                                   "params": _plain(params)}
         entries = add(_library_samples(library, k, params), sample_name,
                       smp_volume)
         for low, high, sample_no in entries:
             ins.use_sample(sample_no, low, high)
     else:
+        kit_recipe = {}
+        library.recipes[number] = {"kit": kit_recipe}
         for pair in kit.split(","):
             try:
                 key_text, smp = pair.split(":")
@@ -550,6 +557,8 @@ def compile_instrument(number: int, options: dict, library: Library,
                 k, params, smp_volume = library.named[smp]
             else:
                 k, params, smp_volume = smp, _recipe_params(smp, {}), 64
+            kit_recipe[key_text] = {"sample": smp, "wave": k,
+                                    "params": _plain(params)}
             entries = add(_library_samples(library, k, params), smp,
                           smp_volume)
             ins.note_map[key - 1] = (60, entries[0][2])  # every key at C-5
@@ -577,6 +586,12 @@ def compile_instrument(number: int, options: dict, library: Library,
         module.instruments.append(M.Instrument(
             name="", note_map=[(n, 0) for n in range(120)]))
     module.instruments[number - 1] = ins
+
+
+def _plain(params: dict) -> dict:
+    """A recipe's parameters as JSON can hold them, without the internal
+    ones (the ones that start with an underscore)."""
+    return {k: v for k, v in params.items() if not k.startswith("_")}
 
 
 def _library_samples(library: Library, kind: str, params: dict):
