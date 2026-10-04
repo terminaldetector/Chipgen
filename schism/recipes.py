@@ -18,6 +18,7 @@ are.
 """
 
 import difflib
+import json
 import math
 
 from . import model as M, synth
@@ -92,6 +93,30 @@ def _text(text):
 
 
 _text.doc = "text, _ for spaces"
+
+
+def _chord(text):
+    from .forge import splice
+    try:
+        splice.parse_chord(text)
+    except splice.SpliceError as error:
+        raise RecipeError(str(error)) from None
+    return text.strip().lower()
+
+
+_chord.doc = "a name (min9) or semitones above the key (0,3,7,10,14)"
+
+
+def _flag(text):
+    word = text.strip().lower()
+    if word in ("1", "on", "yes", "true"):
+        return True
+    if word in ("0", "off", "no", "false"):
+        return False
+    raise RecipeError(f"{text!r} is not on or off")
+
+
+_flag.doc = "on|off"
 
 
 def _octaves(text):
@@ -252,6 +277,18 @@ SETTINGS = {
             "(brightness:0.8,decay:0.3)"),
     "reg": (None, "with forge=, the register it is built for, A3; for a "
             "drum the pitch it is tuned to"),
+    "chord": (_chord, "with forge=, the sample is a chord: a name (maj min "
+              "7 maj7 min7 min9 sus4 ...) or the semitones above the key, "
+              "0,3,7,10,14. Pressing a key plays the chord on it"),
+    "root": (_int(-24, 24), "with chord=, semitones from the key to the "
+             "chord's root: chord=min9 root=-3 plays A minor 9 on C"),
+    "stereo": (_float(0.5, 40), "with forge=, a stereo sample: the sound "
+               "twice, this many cents flat on the left and sharp on the "
+               "right (a loop moves in whole steps of its pitch, so it gets "
+               "the nearest it can hold)"),
+    "rev": (_flag, "with forge=, play the sample backwards (a reverse "
+            "cymbal); a looped sound is played out for a second and a half "
+            "first, and the result does not loop"),
 }
 for _key in ENVELOPES:
     SETTINGS[_key] = (None, ENVELOPES[_key][2] + " envelope, tick:value,...")
@@ -366,11 +403,17 @@ class Library:
         options = dict(options)
         params = {"spec": options.pop("forge"), "dna": options.pop("dna", ""),
                   "reg": options.pop("reg", "")}
+        from .forge import notation_hook
+        edits = notation_hook.take_edits(options)
+        if edits:
+            # a recipe's parameters are hashed to cache its samples
+            params["edits"] = json.dumps(edits, sort_keys=True)
         volume = _int(0, 64)(options.pop("vol", "64"))
         if options:
             raise RecipeError(
                 f"{', '.join(sorted(options))} are not settings of a forged "
-                f"sample", "a forged sample takes: forge, dna, reg, vol")
+                f"sample", "a forged sample takes: forge, dna, reg, vol, "
+                "chord, root, stereo, rev")
         self.named[name] = ("forge", params, volume)
 
     def define(self, name: str, kind: str, options: dict):
@@ -573,7 +616,10 @@ def compile_instrument(number: int, options: dict, library: Library,
         hints = [f"{n} belongs to wave={'/'.join(owners[n])}"
                  for n in names if n in owners and n not in own]
         general = ", ".join(sorted(k for k in SETTINGS
-                                   if k not in ("wave", "sample", "kit")))
+                                   if k not in ("wave", "sample", "kit",
+                                                "forge", "dna", "reg",
+                                                "chord", "root", "stereo",
+                                                "rev")))
         many = len(names) > 1
         raise RecipeError(
             f"{', '.join(names)} {'are' if many else 'is'} not "

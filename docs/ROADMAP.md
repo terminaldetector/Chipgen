@@ -29,7 +29,8 @@ forgiving of the first try:
 - IT 2.14/2.15 sample decompression, so ordinary `.it` files can be read;
 - `.xm`, `.s3m`, `.mod` readers that emit the same `Module` (a score of any
   of them becomes `.sch` text);
-- stereo samples; pattern and channel names (OpenMPT extensions).
+- pattern and channel names (OpenMPT extensions). (Stereo samples are
+  done.)
 
 ## 3. The corpora
 
@@ -78,8 +79,8 @@ give back:
 - **Blind dials.** An attack under 15 ms (read from the raw waveform instead
   of the smoothed envelope), body and decay measured apart, the noise of
   band-limited noise.
-- **More of the file.** Stereo samples and a forged pan envelope (a drum
-  with a spread, a sound that moves), tones as one-shots for `smp`, and a
+- **More of the file.** A forged pan envelope (a sound that moves; a
+  stereo sample is done), tones as one-shots for `smp`, and a
   sample budget: the forge knows what each instrument costs in samples
   against Schism's 235 and could narrow `oct=` itself.
 - **Arrangement.** Choosing *which* instrument plays a part rather than

@@ -41,12 +41,20 @@ class PatchError(ValueError):
 #: family -> fn(params, low, high) -> spectral.Built: the one sample that
 #: serves notes `low`..`high`
 SAMPLERS: Dict[str, Any] = {}
+#: family -> the edits of EDITS its sampler makes itself (a tone builds a
+#: chord or a stereo pair in the spectrum, where a loop can stay a loop)
+HANDLES: Dict[str, tuple] = {}
+#: edits any recipe may ask for, by a key of its params, and made on the
+#: finished sample unless the family makes them: `chord` (semitones above
+#: the key), `stereo` (cents either side), `rev` (backwards)
+EDITS = ("chord", "stereo", "rev")
 _CACHE: Dict[str, Any] = {}
 _CACHE_LIMIT = 256
 
 
-def register_sampler(family: str, fn):
+def register_sampler(family: str, fn, handles: tuple = ()):
     SAMPLERS[family] = fn
+    HANDLES[family] = tuple(handles)
     return fn
 
 
@@ -62,11 +70,69 @@ def make_sample(family: str, params: dict, low: int, high: int):
     except KeyError:
         raise PatchError(f"no sample family {family!r}; have: "
                          f"{', '.join(sorted(SAMPLERS))}") from None
-    made = sampler(params, low, high)
+    asked = [k for k in EDITS if params.get(k)]
+    if asked:
+        made = _edited(family, sampler, params, asked, low, high)
+    else:
+        made = sampler(params, low, high)
     if len(_CACHE) >= _CACHE_LIMIT:
         _CACHE.clear()
     _CACHE[key] = made
     return made
+
+
+def is_pitched(family: str, params: dict) -> bool:
+    """Does a sound of this family and recipe follow the key? A drum does
+    not; a stack follows whatever holds its loop."""
+    if family == "layer":
+        return bool(params.get("pitched", True))
+    from .family import get_family
+    return bool(get_family(family).pitched)
+
+
+def _edited(family, sampler, params, asked, low, high):
+    """The sample with the edits a recipe asks for. What the family does not
+    make itself is done on its finished sample."""
+    from . import splice
+    own = HANDLES.get(family, ())
+    rest = {k: params[k] for k in asked if k not in own}
+    plain = {k: v for k, v in params.items() if k not in EDITS}
+    made = sampler({**plain, **{k: params[k] for k in asked if k in own}},
+                   low, high)
+    if rest:
+        made = splice.finish(made, rest, low, high,
+                             is_pitched(family, params))
+    return made
+
+
+def with_edits(patch: "Patch", edits: dict):
+    """-> (Patch, dB). The patch with a chord, a stereo pair or a reverse
+    written into its recipe, and its instrument gain raised by as much as
+    the edit made it quieter: samples are stored at one peak, so a chord
+    (a sum of notes, a lower RMS for the same peak) is made up for in the
+    gain, where there is room. `dB` is what is still missing when the gain
+    reached its limit, 0.0 normally."""
+    import math
+    from . import splice
+    asked = {k: v for k, v in edits.items() if k in EDITS and v}
+    out = patch.clone()
+    if not asked:
+        return out, 0.0
+    out.params = {**out.params, **asked}
+    lo, hi, per = out.bands
+    mid = (lo + hi) // 2
+    group = next((g for g in groups(out.bands) if g[0] <= mid <= g[1]),
+                 groups(out.bands)[0])
+    plain = make_sample(out.family, patch.params, *group)
+    made = make_sample(out.family, out.params, *group)
+    ratio = splice.level_ratio(plain, made, is_pitched(out.family, out.params),
+                               (group[0] + group[1]) // 2)
+    gain = out.inst.get("gain", 128)
+    wanted = gain * ratio
+    new = max(2, min(128, int(round(wanted / 2.0)) * 2))
+    out.inst["gain"] = new
+    short = 20.0 * math.log10(wanted / new) if wanted > new * 1.03 else 0.0
+    return out, round(short, 1)
 
 
 def groups(bands, want: Optional[Tuple[int, int]] = None):
@@ -340,8 +406,8 @@ def install(patch: Patch, module: M.Module, number: int = 1,
         built = make_sample(patch.family, patch.params, low, high)
         sample = M.Sample(
             name=(built.name or name or patch.family)[:25],
-            data=built.data, c5speed=built.c5speed, loop=built.loop,
-            volume=volume)
+            data=built.data, right=getattr(built, "right", None),
+            c5speed=built.c5speed, loop=built.loop, volume=volume)
         if vib:
             (sample.vibrato_speed, sample.vibrato_depth, sample.vibrato_rate,
              sample.vibrato_wave) = vib
@@ -362,4 +428,5 @@ def built_samples(patch: Patch, want: Optional[Tuple[int, int]] = None):
 
 def sample_bytes(patch: Patch) -> int:
     """How much sample data the patch writes, in bytes (16-bit)."""
-    return sum(2 * len(b.data) for _, _, b in built_samples(patch))
+    return sum(2 * len(b.data) * getattr(b, "channels", 1)
+               for _, _, b in built_samples(patch))

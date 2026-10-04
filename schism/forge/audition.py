@@ -53,7 +53,7 @@ def pattern_for(compiled: Compiled, role: str, register, rows: int = 64):
     """-> a Pattern with the phrase for one instrument on channel 1."""
     family = get_family(compiled.family)
     pattern = M.Pattern(rows=rows)
-    if family.pitched:
+    if compiled.style.get("pitched", family.pitched):
         root = note_of(*register)
         notes = _phrase_pitched(root, role, rows)
         for row, note, length in notes:

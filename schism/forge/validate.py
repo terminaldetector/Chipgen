@@ -96,7 +96,7 @@ def check_patch(patch, built=()):
                             "see docs/FORGE.md for the limits"))
     total = 0
     for low, high, b in built:
-        total += 2 * len(b.data)
+        total += 2 * len(b.data) * getattr(b, "channels", 1)
         data = b.data
         n = len(data)
         if n < 2:

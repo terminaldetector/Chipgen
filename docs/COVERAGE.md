@@ -41,10 +41,10 @@ on the Python standard library alone.
 | patterns: packed, 32..200 rows, repeat flags | yes | yes | 12 random 64-row, 9-channel patterns cell for cell, three ways |
 | instruments (IT 2.x layout, 554 bytes): NNA, DCT, DCA, fadeout, pitch-pan, global volume, default pan, random swing, cutoff/resonance, note map | yes | yes | round trip; libopenmpt |
 | three envelopes (volume, pan, pitch or filter), 25 nodes, loop and sustain loop | yes | yes | round trip; heard: each envelope measured in both players |
-| samples: 8- or 16-bit mono signed PCM, loops, ping-pong, sustain loops, C5 speed, auto-vibrato | yes | yes | round trip; heard |
+| samples: 8- or 16-bit signed PCM, loops, ping-pong, sustain loops, C5 speed, auto-vibrato | yes | yes | round trip; heard (a sustain loop holds in both players: key-off plays the rest of the loop, then the release) |
 | samples that share data share its bytes | yes | — | size test |
 | compressed samples (IT 2.14/2.15) | no | the header only; the data is flagged `compressed` and not unpacked | round trip of the flag |
-| stereo samples | no | refused by name | — |
+| stereo samples (planar: all of the left, then all of the right) | yes | yes | round trip; heard: libopenmpt and Schism Tracker read the same pair (interleaved frames read as noise, measured) |
 | IT 1.x instrument layout (Cmwt < 0x200) | no | refused by name | — |
 | OpenMPT extensions (pattern and channel names, plugins) | no | ignored | — |
 | edit history, timestamps | no | skipped | — |
@@ -196,7 +196,7 @@ enough. The first three are explained under the dials in `docs/FORGE.md`.
 ## Not built
 
 - Reading compressed (IT 2.14/2.15) samples, so most modules found on the
-  internet cannot yet be ingested; stereo samples; IT 1.x instruments.
+  internet cannot yet be ingested; IT 1.x instruments.
 - XM, S3M and MOD (read or write).
 - Notation for MIDI macros, pattern and channel names, the pitch-wheel
   depth, instrument MIDI output.

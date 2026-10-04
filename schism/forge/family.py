@@ -12,6 +12,8 @@ not which hardware but which **way of making the sample**, and each is a
             pianos, marimbas, vibes, bells, glass, kalimbas
     drum    layered percussion: kick, snare, hat, clap, tom, rim, cymbal...
     fx      layered one-shots: riser, impact, zap, swoosh
+    layer   a stack of the above: PCM spliced by role (click, body, noise,
+            sub, tail) instead of dials averaged
 
 A family turns a `Genome` (a DNA plus a few structural choices) into a
 `Patch` (samples-as-recipe plus envelopes plus instrument switches) and
@@ -159,7 +161,7 @@ def _load_builtin():
         return
     _loaded = True
     import importlib
-    for module in ("tone", "modal", "drum", "fx"):
+    for module in ("tone", "modal", "drum", "fx", "layer"):
         try:
             importlib.import_module(f"{__package__}.fam_{module}")
         except ModuleNotFoundError as error:

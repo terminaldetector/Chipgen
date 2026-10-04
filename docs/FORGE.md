@@ -68,6 +68,7 @@ say so in the same words.
 |---|---|---|
 | `drum` | percussion as layers of sine, noise and metal: kick, snare, hat, clap, tom, rim, cymbal, shaker, cowbell (no detune, motion, articulation) | kind: `clap`, `cowbell`, `cymbal`, `hat`, `kick`, `rim`, `shaker`, `snare`, `tom` |
 | `fx` | one-shot effects: riser, impact, zap, swoosh (no detune, motion, articulation) | kind: `impact`, `riser`, `swoosh`, `zap` |
+| `layer` | a stack of other instruments, PCM spliced by role: click, body, noise, sub, tail |  |
 | `modal` | damped partials, each with its own fall: plucked strings, harps, pianos, marimbas, vibes, bells, glass | set: `string`, `tuned`, `bar`, `bell`, `plate` |
 | `tone` | a loop built from a spectrum, with unison, vibrato, noise and an intro: leads, basses, pads, organs, keys, brass | motion_kind: `vibrato`, `tremolo`, `both`; shape: `saw`, `square`, `pulse`, `organ`, `reed`, `vowel`; unison: `3`, `2` |
 <!-- /generated -->
@@ -227,14 +228,118 @@ clipped, the JSON is read through fences, trailing commas and single quotes.
  "mode": "auto"}
 ```
 
-`from` names a bank instrument, `archetype:NAME`, or `recipe:wave=saw ...`.
-**dna** mode averages what the parents *sound like* and compiles afresh, so
-it works across families and for a hand-written recipe; **morph** mode mixes
-the recipes (a tone partial by partial, a modal instrument mode by mode, a
-drum layer by layer, envelopes point by point), which keeps the lumpy,
-specific character of each, and can fail — the result is played and checked,
-and falls back to dna if it is silent, illegal or off pitch. A mix of mixes
-is a tree, evaluated from the leaves, up to six deep.
+`from` names a bank instrument, a starter instrument, an archetype
+(`archetype:NAME` or the bare name), or `recipe:wave=saw ...`. **dna** mode
+averages what the parents *sound like* and compiles afresh, so it works across
+families and for a hand-written recipe, and keeps nothing of either; **morph**
+mode mixes the recipes (a tone partial by partial, a modal instrument mode by
+mode, a drum layer by layer, envelopes point by point), which keeps the
+lumpy, specific character of each, and can fail — the result is played and
+checked, and falls back to dna if it is silent, illegal or off pitch.
+**layer** mode keeps the *samples* (next section), and it is what `auto` does
+when the parts are not the same kind of sound: a tone and a drum, a kick and
+a snare. Two tones, two bells, two kicks are still morphed; `--mode dna` asks
+for the old blend of dials by name. A mix of mixes is a tree, evaluated from
+the leaves, up to six deep.
+
+## Layers: a stack, not an average
+
+A Schism instrument is a stack. Average the dials of an `acid_bass` and a
+`kick_hard` and what comes out is a duller bass with no kick in it, because
+the average keeps neither sample. A **layer** takes the samples and puts each
+where it belongs in time, as PCM:
+
+```text
+python3 -m schism forge layer clap@click snare@body --name crack --out mine.bank.json
+python3 -m schism forge layer kick_hard@click acid_bass@body --stereo 6
+python3 -m schism forge layer snare+clap --roles click,body
+```
+
+A part is `NAME`, `NAME@ROLE` or `NAME@ROLE/ms=40/db=-3`; a name is a bank
+entry, a starter instrument, an archetype or `archetype:NAME`. A part with no
+role gets one from what the sounds are (the one that loops, or the longest
+pitched one, is the body; the shortest of the rest is the click; a noisy drum
+is noise; a low one, sub). `--roles` gives them by position, so Grok's
+`snare+clap --roles click,body` makes the *snare* the click; to put the clap's
+crack on a snare's body, say so with the roles: `clap@click snare@body`.
+
+| role | what it takes from its sound | options (default) |
+|---|---|---|
+| `click` | the first `ms` of it, at a fixed gain, handing over to the body | `ms` (30), `fade` (15) |
+| `body` | all of it; it holds the pitch, the loop and the volume envelope. With a click over it, it comes in at `from` across the hand-over (equal power: the click falls as a cosine, the body rises as a sine) | `from` (20) |
+| `noise` | its top end, high-passed at `hp`, laid over the hit from `at` for `ms` | `hp` (1500 Hz), `ms` (400), `at` (0) |
+| `sub` | its bottom, low-passed at `lp`, laid under the hit | `lp` (150 Hz), `ms` (500), `at` (0) |
+| `tail` | what follows the body, at `level` dB against the body's loudest 120 ms; a tail that loops is the stack's loop | `at` (when the body has fallen to a third), `level` (-9), `ms` (1500) |
+
+Every part also takes `db` (its gain in dB; `weight` in a mix recipe gives the
+same thing as a ratio). The click's 30 ms are the first 30 ms of its sound
+*in real time*: every part is converted to the rate the body plays at, so 30
+ms is 30 ms whatever the sample rate of either is. The stack is one sample for
+each band of keys, like any forged instrument. A drum in a stack is kept at
+its recorded pitch whatever key is pressed (the band's centre plays it as
+recorded, the keys round it transposing it as a sampler does); a pitched part
+follows the key.
+
+What a stack will not do, and says so:
+
+- **One loop.** A sample has one loop, so only one part of a stack can loop:
+  the body, or, if the body is a one-shot, a looped tail (a kick, then a pad).
+  A body that loops keeps its loop whole: the front that plays once is made
+  longer by *whole repeats of the loop* until the click and the rest fit in
+  it, which changes nothing that is heard. Two looped sounds are refused with
+  the reason, and `mix` (same family) is the answer.
+- **One envelope.** The instrument's volume envelope, NNA, filter and
+  switches are the loop-owner's, and its slow attack is the stack's slow
+  attack: a click under a pad that fades in over half a second fades in too.
+  The compiler says so in the notes; write the envelope yourself
+  (`venv=`) or choose a body that starts at once.
+- **Levels** are the parts' own: each is calibrated to the same loudness, so
+  the stack plays at about the level of its loudest part. `db=` moves one.
+
+### Chords, stereo pairs, backwards
+
+Three edits any forged sound may be given, in a score or in a layer. All
+three keep the loudness of the plain sound by raising the instrument gain
+where there is room (a chord is a sum of notes and has a lower RMS for the
+same peak) and say how far it fell short where there is not.
+
+| setting | what it makes |
+|---|---|
+| `chord=min9 root=-3` | a chord kept as one key: each key plays the chord *on that key*, `root` being where the chord's root sits against the key (here A minor 9 on C). A name (`maj min dim aug sus2 sus4 5 6 7 maj7 min7 min9 ...`) or semitones above the root, `0,3,7,10,14`. A tone's lines are put on the chord's notes in the spectrum of a 65536-frame loop (so it loops, and each note is within a few cents of equal temperament: the loop holds the count of cycles that suits the chord best); a struck sound is its notes read faster and slower and summed, and dies away |
+| `stereo=6` | a stereo sample: the sound twice, a little flat on the left and sharp on the right. A struck sound is read slower and faster by 6 cents; a *loop* can only move in whole steps of its pitch (one step is 1/cycles of the pitch, 3 to 40 cents depending on the note), so it gets the nearest it can hold, and says which. Channel pan is not a substitute: this is the width of the sample |
+| `rev=on` | the sample backwards (a reverse cymbal). A looped sound is played out for a second and a half first and does not loop |
+
+In a score they go on an `inst` line, or on an `smp` line for a one-shot:
+
+```sch
+title Layers
+tempo 120
+channels 3
+inst 1 name=Crack forge=layer:clap@click+snare@body
+inst 2 name=KickBass forge=layer:kick_hard@click+acid_bass@body oct=1-3
+inst 3 name=Stab forge=epiano chord=min9 root=-3 stereo=6 oct=3-5
+smp crash forge=cymbal rev=on
+pattern a rows 32
+C-5 01 v64 ... | C-2 02 v64 ... | C-4 03 v50 ...
+rest 31
+end
+order a
+```
+
+In a layer, `chord` goes to the body (a click is not a chord), `rev` to the
+whole stack, and `stereo` to the whole stack if it is a one-shot, or to the
+loop-owner if it loops (and only a tone can be widened and keep its loop).
+In a score the parts of a layer are joined with `+` and an option follows a
+`/`: `forge=layer:clap@click/ms=40/db=-3+snare@body`. A stack made in a score
+or a bank can be named in a kit through `smp`:
+`smp crack forge=layer:clap@click+snare@body`, `inst 4 kit=D-2:crack`. A recipe
+for the mixer, with nested parts:
+
+```json
+{"layer": [{"from": "clap", "role": "click", "ms": 25},
+           {"mix": [{"from": "snare"}, {"from": "tom"}], "role": "body"}],
+ "stereo": 6}
+```
 
 ## Drum kits
 
@@ -326,6 +431,7 @@ run SCENARIO.json         search: seed -> mutate -> probe -> validate ->
 check SCENARIO.json       read a scenario and say what it would do
 template FAMILY           a scenario to start from
 mix A B [C...]            blend instruments (or a recipe tree) into one
+layer A@click B@body      stack instruments: PCM spliced by role, not averaged
 kit NAME --style S        a drum kit whose drums leave room for each other
 show BANK                 read a bank
 play BANK [NAME...]       render the instruments to audio, to listen
@@ -406,16 +512,22 @@ against heard, with `!` where the family could not get within 0.15.
   loop has its own sample so the drift stays within a factor of 1.4.
 - **A `.it` cannot hold more than 235 samples in Schism**, and a long loop is
   64 KB a sample; `oct=` narrows what a forged instrument covers.
-- Stereo samples, the IT compressed sample format and MIDI macros are not
-  written (see COVERAGE.md); `pan` is a channel and instrument setting, and a
-  pan envelope is not forged.
+- The IT compressed sample format and MIDI macros are not written (see
+  COVERAGE.md); `pan` is a channel and instrument setting, and a pan envelope
+  is not forged. Stereo is written and read: planar, all of the left and then
+  all of the right, which both players read (an interleaved frame order
+  plays as noise, measured).
+- **A stack has no dials.** The arrangement fit cannot move a stack's
+  brightness; it moves the parts' (re-forge them) or leaves the stack alone.
 
 ## Files
 
 `schism/forge/`: `dsp.py` (FFT and filters), `spectral.py` (loops from
 lines), `modal.py`, `layers.py`, `tonelib.py` (dial arithmetic), `dna.py`,
 `descriptors.py` (the definitions), `probe.py`, `validate.py`, `score.py`,
-`genome.py`, `patch.py`, `family.py`, `fam_*.py`, `archetypes.py`,
+`genome.py`, `patch.py`, `family.py`, `fam_*.py` (`fam_layer.py` is the
+stack), `splice.py` (PCM cut, joined, chorded, widened, reversed),
+`archetypes.py`,
 `evolve.py` (controller, archive, search), `bank.py`, `mixing.py`,
 `director.py`, `llm.py`, `kits.py`, `arrangement.py`, `audition.py`,
 `notation_hook.py`, `cli.py`, `banks/starter.bank.json`.

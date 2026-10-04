@@ -1017,6 +1017,8 @@ class Arrangement:
 
     def _redo(self, number: int, deltas: dict) -> bool:
         genome, compiled = self.forged[number]
+        if genome.family == "layer":
+            return False         # a stack has no dials; its parts do
         family = get_family(genome.family)
         changed = genome.clone(dna=genome.dna.shifted(deltas),
                                name=genome.name)

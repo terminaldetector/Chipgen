@@ -274,11 +274,17 @@ def test_mixing_two_tones_by_recipe_keeps_both_and_stays_legal():
     assert abs(entry.genome.dna.brightness - dna.blend([(a, 2), (b, 1)]).brightness) < 0.2
 
 
-def test_mixing_across_families_goes_through_the_dials():
+def test_mixing_across_families_stacks_the_samples_and_blends_dials_on_request():
     _need()
+    # different kinds of sound keep what they are: a stack, not an average
     entry = mixing.mix(["archetype:bell", "archetype:pad"], [1, 1], name="x")
-    assert "mixed in dial space" in entry.character
-    assert entry.family in ("modal", "tone")
+    assert entry.family == "layer" and entry.character.startswith("layer:")
+    assert "bell" in entry.character and "pad" in entry.character
+    # and the old blend is still there when it is asked for by name
+    dial = mixing.mix(["archetype:bell", "archetype:pad"], [1, 1],
+                      mode="dna", name="y")
+    assert "mixed in dial space" in dial.character
+    assert dial.family in ("modal", "tone")
 
 
 def test_mixing_a_recipe_from_a_score_line_with_a_forged_instrument():

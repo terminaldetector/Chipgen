@@ -11,6 +11,7 @@
     check SCENARIO.json       read a scenario and say what it would do
     template FAMILY           a scenario to start from
     mix A B [C...]            blend instruments (or a recipe tree) into one
+    layer A@click B@body      stack instruments: PCM spliced by role, not averaged
     kit NAME --style S        a drum kit whose drums leave room for each other
     show BANK                 read a bank
     play BANK [NAME...]       render the instruments to audio, to listen
@@ -29,7 +30,7 @@ import os
 import sys
 import time
 
-from . import archetypes, bank as bank_mod, evolve, mixing
+from . import archetypes, bank as bank_mod, evolve, fam_layer, mixing
 from .dna import AXES, AXIS_DOC, DNA, DNAError
 from .family import families, get_family
 from .genome import Genome, slug
@@ -438,6 +439,68 @@ def cmd_mix(args):
     return 0
 
 
+def cmd_layer(args):
+    """A stack of instruments: the first moments of one, the body of another
+    (`clap@click snare@body`). Parts without an @role take --roles in order,
+    or, with neither, the roles the sounds suggest."""
+    source = bank_mod.Bank.load(args.bank) if args.bank \
+        else bank_mod.Bank("scratch")
+    tokens = [t for arg in args.parts for t in arg.split("+") if t.strip()]
+    if len(tokens) < 2:
+        raise CliError("name at least two parts, e.g. `layer clap@click "
+                       "snare@body` (a part is NAME, NAME@ROLE or "
+                       "NAME@ROLE/ms=40/db=-3; the roles are "
+                       + ", ".join(fam_layer.ROLES) + ")")
+    roles = [r.strip() for r in args.roles.split(",")] if args.roles else []
+    if roles and len(roles) != len(tokens):
+        raise CliError(f"--roles gives {len(roles)} roles for "
+                       f"{len(tokens)} parts; give one for each, in order")
+    parts = []
+    for i, token in enumerate(tokens):
+        name, role, options = fam_layer.parse_part(token)
+        if roles:
+            if role:
+                raise CliError(f"{token!r} names its role, and --roles "
+                               f"names one too")
+            role = roles[i]
+        part = {"from": name}
+        if role:
+            part["role"] = role
+        part.update(options)
+        parts.append(part)
+    recipe = {"layer": parts}
+    if args.chord:
+        recipe["chord"] = args.chord
+        recipe["root"] = args.root
+    elif args.root:
+        raise CliError("--root moves a chord: it needs --chord")
+    if args.stereo:
+        recipe["stereo"] = args.stereo
+    if args.rev:
+        recipe["rev"] = True
+    entry = mixing.run_recipe(recipe, source, slug(args.name or "layer"),
+                              args.role or "")
+    family = get_family(entry.family)
+    print(f"{entry.name}: {entry.character}")
+    print(_table(entry.measured, None, supports=family.supports))
+    for line in entry.compiled.notes:
+        print(f"  - {line}")
+    for issue in entry.issues:
+        print(f"  {issue}")
+    if args.out:
+        out = bank_mod.Bank.load(args.out) if os.path.exists(args.out) \
+            else bank_mod.Bank(slug(os.path.basename(args.out).split(".")[0]))
+        out.add(entry)
+        out.save(args.out)
+        print(f"wrote {args.out}; in a score:\n"
+              f"  bank {os.path.basename(args.out)}\n"
+              f"  inst 1 name={entry.name[:25]} forge={entry.name}")
+    if args.mp3:
+        seconds, peak = _audition(_items_of([entry]), args.mp3)
+        print(f"wrote {args.mp3} ({seconds:.1f} s, peak {peak:.2f})")
+    return 0
+
+
 def cmd_show(args):
     bank = bank_mod.Bank.load(args.bank)
     print(f"{bank.name}: {len(bank.entries)} instruments"
@@ -672,6 +735,27 @@ def build_parser():
     sp.add_argument("--bank")
     sp.add_argument("--recipe")
     sp.add_argument("--family")
+    sp.add_argument("--name")
+    sp.add_argument("--role")
+    sp.add_argument("--out")
+    sp.add_argument("--mp3")
+
+    sp = add("layer", "stack instruments by role: PCM spliced, not averaged",
+             cmd_layer)
+    sp.add_argument("parts", nargs="+",
+                    help="NAME, NAME@ROLE or NAME@ROLE/ms=40/db=-3; a name is "
+                         "a bank entry, a starter instrument, an archetype "
+                         "(or archetype:NAME); join with + or spaces")
+    sp.add_argument("--roles", help="click,body,... one for each part that "
+                                    "has no @ROLE, in order")
+    sp.add_argument("--bank")
+    sp.add_argument("--chord", help="the body is a chord: maj, min7, min9... "
+                                    "or semitones 0,3,7,10")
+    sp.add_argument("--root", type=int, default=0,
+                    help="semitones from the key to the chord's root")
+    sp.add_argument("--stereo", type=float,
+                    help="a stereo sample: this many cents flat and sharp")
+    sp.add_argument("--rev", action="store_true", help="play it backwards")
     sp.add_argument("--name")
     sp.add_argument("--role")
     sp.add_argument("--out")

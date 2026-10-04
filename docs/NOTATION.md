@@ -139,6 +139,10 @@ An instrument is one line of `key=value` pairs with no spaces around the
 | `forge=` | `NAME`, `bank:NAME`, `kit:NAME` | a sound the forge makes: an archetype, or an instrument of a bank (`python3 -m schism forge archetypes`) |
 | `dna=` | `axis:value,...` | with forge=, dials to move: axis:value,... (brightness:0.8,decay:0.3) |
 | `reg=` | a note, `A3` | with forge=, the register it is built for, A3; for a drum the pitch it is tuned to |
+| `chord=` | `a name (min9) or semitones above the key (0,3,7,10,14)` | with forge=, the sample is a chord: a name (maj min 7 maj7 min7 min9 sus4 ...) or the semitones above the key, 0,3,7,10,14. Pressing a key plays the chord on it |
+| `root=` | `-24..24` | with chord=, semitones from the key to the chord's root: chord=min9 root=-3 plays A minor 9 on C |
+| `stereo=` | `0.5..40` | with forge=, a stereo sample: the sound twice, this many cents flat on the left and sharp on the right (a loop moves in whole steps of its pitch, so it gets the nearest it can hold) |
+| `rev=` | `on\|off` | with forge=, play the sample backwards (a reverse cymbal); a looped sound is played out for a second and a half first, and the result does not loop |
 <!-- /generated -->
 
 ### Envelopes
@@ -299,7 +303,7 @@ line 3: wave: 'saww' is not one of sine, saw, square, triangle, pulse, fm, pad, 
   inst 1 name=Lead wave=saww
 line 4: bar is not a setting of this instrument
   inst 2 wave=pulse duty=0.3 bar=2
-  fix: settings for any instrument: cutoff, dca, dct, dna, fade, fenv, forge, gain, ienv, name, nna, oct, pan, penv, ppc, pps, reg, res, rp, rv, venv, vib, vol; wave=pulse also takes: duty
+  fix: settings for any instrument: cutoff, dca, dct, fade, fenv, gain, ienv, name, nna, oct, pan, penv, ppc, pps, res, rp, rv, venv, vib, vol; wave=pulse also takes: duty
 ```
 <!-- /generated -->
 

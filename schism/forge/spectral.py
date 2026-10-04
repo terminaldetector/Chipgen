@@ -54,10 +54,45 @@ def hz_of_note(note: int) -> float:
 
 
 # -- Bessel functions, for the vibrato sidebands -----------------------------
+#: past this the power series loses its digits to cancellation
+SERIES_LIMIT = 12.0
+
+
+def _miller(x: float, nmax: int):
+    """[J_0(x) .. J_nmax(x)] by Miller's backward recurrence, which stays
+    accurate where the power series does not (a high partial under a deep
+    vibrato has a modulation index of tens)."""
+    ax = abs(x)
+    start = int(max(nmax, ax)) + 40
+    start += start % 2
+    values = [0.0] * (start + 2)
+    values[start] = 1e-30
+    for k in range(start, 0, -1):
+        values[k - 1] = 2.0 * k / ax * values[k] - values[k + 1]
+        if abs(values[k - 1]) > 1e200:
+            for i in range(k - 1, start + 2):
+                values[i] *= 1e-200
+    norm = values[0] + 2.0 * sum(values[2:start + 1:2])
+    table = [v / norm for v in values[:nmax + 1]]
+    if x < 0:
+        table = [-v if n % 2 else v for n, v in enumerate(table)]
+    return table
+
+
+def bessel_table(x: float, nmax: int):
+    """[J_0(x) .. J_nmax(x)]."""
+    if abs(x) > SERIES_LIMIT:
+        return _miller(x, nmax)
+    return [bessel_j(n, x) for n in range(nmax + 1)]
+
+
 def bessel_j(n: int, x: float) -> float:
-    """J_n(x) by its power series; right to 1e-12 for |x| < 12."""
+    """J_n(x): its power series, right to 1e-12 for |x| < 12, and past that
+    the backward recurrence."""
     if n < 0:
         return (-1) ** (-n) * bessel_j(-n, x)
+    if abs(x) > SERIES_LIMIT:
+        return _miller(x, n)[n]
     half = x / 2.0
     term = half ** n / math.factorial(n)
     total = term
@@ -175,16 +210,17 @@ def loop_signal(spec: LoopSpec):
                 swing = spec.pm * math.log(2.0) / 1200.0
                 beta = swing * (b / float(lfo))
             jmax = min(14, int(beta + 3.5) + 1) if beta else 1
+            table = bessel_table(beta, jmax + 1) if beta else None
             for j in range(-jmax - 1, jmax + 2):
                 bj = b + j * lfo
                 if bj < 1 or bj > limit:
                     continue
-                gain = _bessel(j, beta, jmax)
+                gain = _bessel(j, table, jmax)
                 if spec.am > 0.0:
                     # (1 + am cos(w t)) x the phase-modulated line: the
                     # carrier's neighbours in the sideband series leak in
-                    gain += 0.5 * spec.am * (_bessel(j - 1, beta, jmax)
-                                             + _bessel(j + 1, beta, jmax))
+                    gain += 0.5 * spec.am * (_bessel(j - 1, table, jmax)
+                                             + _bessel(j + 1, table, jmax))
                 if gain == 0.0:
                     continue
                 bins[bj] += a * gain * scale * complex(
@@ -196,14 +232,16 @@ def loop_signal(spec: LoopSpec):
     return dsp.irfft(bins, n)
 
 
-def _bessel(j: int, beta: float, jmax: int) -> float:
-    """Sideband j of a phase-modulated line (1 for the carrier when the
-    modulation index is zero), nothing past `jmax`."""
+def _bessel(j: int, table, jmax: int) -> float:
+    """Sideband j of a phase-modulated line from its Bessel table (1 for the
+    carrier when the modulation index is zero, `table` None), nothing past
+    `jmax`."""
     if abs(j) > jmax + 1:
         return 0.0
-    if not beta:
+    if table is None:
         return 1.0 if j == 0 else 0.0
-    return bessel_j(j, beta)
+    value = table[abs(j)]
+    return -value if j < 0 and j % 2 else value
 
 
 def _add_noise(bins, spec, rng, limit, level):
@@ -223,13 +261,21 @@ def _add_noise(bins, spec, rng, limit, level):
 
 # -- turning a loop into a sample ---------------------------------------------
 class Built:
-    """What a family hands the module builder for one band of notes."""
+    """What a family hands the module builder for one band of notes.
 
-    def __init__(self, data, c5speed, loop=None, name=""):
+    `right`, when given, is the right channel of a stereo sample, as long as
+    `data` (which is then the left), in the same loop."""
+
+    def __init__(self, data, c5speed, loop=None, name="", right=None):
         self.data = data            # array('h')
         self.c5speed = int(c5speed)
         self.loop = loop            # (start, end) or None
         self.name = name
+        self.right = right          # array('h') or None
+
+    @property
+    def channels(self) -> int:
+        return 1 if self.right is None else 2
 
 
 def intro_samples(loop, count: int, ramp: int, boost=None, boost_decay: int = 0):

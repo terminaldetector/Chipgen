@@ -1,6 +1,6 @@
 """mixing.py — blend instruments into new ones, recursively, on purpose.
 
-Two ways to mix, because there are two things worth preserving:
+Three ways to mix, because there are three things worth preserving:
 
 * **dna** — blend what the instruments *sound like*. The parents' measured
   dials are averaged (weighted), the family and structure of the heavier
@@ -17,6 +17,13 @@ Two ways to mix, because there are two things worth preserving:
   result is played and checked, and falls back to `dna` if it is silent or
   off pitch.
 
+* **layer** — keep the *samples*. A stack takes the first moments of one
+  sound, the body of another, the low end of a third and splices them in
+  PCM (`fam_layer`): a kick's knock over a bass is a kick over a bass, not
+  a duller bass. It is what `auto` does when the parts are not the same kind
+  of sound, because a blend of dials keeps nothing of either parent, and
+  what `--mode layer` or a `{"layer": [...]}` node asks for by name.
+
 A mix of mixes is a tree, evaluated from the leaves, so "two parts bass,
 one part bell, then half of that with brass" is one recipe. Every node is
 measured, so the depth costs one render per node and nothing is guessed.
@@ -27,8 +34,16 @@ Recipes are JSON:
              {"mix": [{"from": "bell"}, {"from": "brass"}], "weight": 1}],
      "mode": "auto"}
 
-`from` names a bank instrument, `archetype:NAME`, or `recipe:wave=saw ...`
-(an `inst` line's settings).
+    {"layer": [{"from": "clap", "role": "click", "ms": 30},
+               {"from": "snare", "role": "body"}],
+     "stereo": 6}
+
+`from` names a bank instrument, a starter instrument, an archetype
+(`archetype:NAME` or the bare name), or `recipe:wave=saw ...` (an `inst`
+line's settings). A part of a layer takes its role (`click`, `body`,
+`noise`, `sub`, `tail`; left out, it is decided from what the sounds are),
+that role's options (`ms`, `from`, `fade`, `hp`, `lp`, `at`, `level`) and
+`db`; the node takes `chord`, `root`, `stereo` and `rev`.
 """
 
 import copy
@@ -37,11 +52,11 @@ import math
 from typing import Optional
 
 from .. import model as M, recipes
-from . import archetypes, evolve, probe as probe_mod, score as score_mod
+from . import archetypes, evolve, fam_layer, probe as probe_mod, score as score_mod
 from .dna import AXES, DNA, blend
 from .family import Compiled, get_family
 from .genome import Genome, slug
-from .patch import Patch
+from .patch import Patch, PatchError
 
 MAX_DEPTH = 6
 
@@ -340,15 +355,102 @@ def _leaf(spec, bank, register):
         return _Node(compiled, g, "leaf", [f"archetype {spec}"])
     if spec.startswith("recipe:"):
         return _recipe_node(spec[7:], register)
-    if bank is not None:
-        for entry in bank.entries:
+    from . import notation_hook
+    for source, label in ((bank, "bank"), (notation_hook.starter(), "starter")):
+        if source is None:
+            continue
+        for entry in source.entries:
             if entry.name == spec:
                 family = get_family(entry.family)
                 compiled = family.from_dict(family.to_dict(entry.compiled))
                 compiled.name = entry.name
-                return _Node(compiled, entry.genome, "leaf", [f"bank {spec}"])
+                return _Node(compiled, entry.genome, "leaf",
+                             [f"{label} {spec}"])
+    if spec in archetypes.names():
+        return _leaf("archetype:" + spec, bank, register)
     raise MixError(f"no instrument {spec!r}: it is not in the bank being "
-                   f"built, not archetype:NAME and not recipe:wave=...")
+                   f"built or the starter bank, not an archetype and not "
+                   f"recipe:wave=...")
+
+
+#: the keys of a layer part that are not options of its role
+_PART_KEYS = ("from", "mix", "layer", "role", "weight", "mode", "name")
+
+
+def _label(part: dict) -> str:
+    if part.get("name"):
+        return str(part["name"])
+    spec = part.get("from")
+    if not isinstance(spec, str):
+        return "mix"
+    if spec.startswith("archetype:"):
+        return spec.split(":", 1)[1]
+    return "recipe" if spec.startswith("recipe:") else spec
+
+
+def edits_of(node: dict) -> dict:
+    """The `chord`, `root`, `stereo` and `rev` of a layer node, in the form
+    a patch is edited with."""
+    from . import splice
+    edits = {}
+    if node.get("chord"):
+        try:
+            splice.parse_chord(node["chord"])
+        except splice.SpliceError as error:
+            raise MixError(str(error)) from None
+        edits["chord"] = {"notes": node["chord"],
+                          "root": int(node.get("root", 0))}
+    elif node.get("root"):
+        raise MixError("root moves a chord: it needs chord")
+    if node.get("stereo"):
+        edits["stereo"] = float(node["stereo"])
+    if node.get("rev"):
+        edits["rev"] = True
+    return edits
+
+
+def _stack(sources, edits, register, notes) -> "_Node":
+    """A stack of the sources, played, levelled and described by what it
+    measures."""
+    try:
+        genome, compiled = fam_layer.build_stack(sources, "layer", edits,
+                                                 register)
+    except PatchError as error:
+        raise MixError(str(error)) from None
+    result = probe_mod.probe(compiled, genome, full=True)
+    evolve.auto_level(get_family("layer"), compiled, result)
+    dna = DNA.clamped(**{a: (result.axes.get(a) or 0.0) for a in AXES})
+    notes.extend(compiled.notes)
+    return _Node(compiled, genome.clone(dna=dna), "layer", notes, dna)
+
+
+def _layer_node(node: dict, bank, register, depth: int) -> "_Node":
+    parts = node["layer"]
+    if not isinstance(parts, list) or len(parts) < 2:
+        raise MixError("a layer needs at least two parts")
+    sources = []
+    for part in parts:
+        child = evaluate(part, bank, register, depth + 1, None)
+        options = {k: v for k, v in part.items() if k not in _PART_KEYS}
+        try:
+            sources.append(fam_layer.Source(
+                _label(part), child.compiled, child.genome, part.get("role"),
+                options, float(part.get("weight", 1.0))))
+        except PatchError as error:
+            raise MixError(str(error)) from None
+    return _stack(sources, edits_of(node), register, [])
+
+
+def _alike(children) -> bool:
+    """Are these the same kind of sound, so that blending them means
+    something? Two tones are; a tone and a drum are not; a kick and a snare
+    are two drums that are not alike."""
+    families = {c.genome.family for c, *_ in children}
+    if len(families) != 1:
+        return False
+    if families <= {"drum", "fx"}:
+        return len({c.compiled.style.get("kind") for c, *_ in children}) == 1
+    return True
 
 
 def evaluate(node: dict, bank=None, register=None, depth: int = 0,
@@ -357,21 +459,41 @@ def evaluate(node: dict, bank=None, register=None, depth: int = 0,
         raise MixError(f"a mix nests more than {MAX_DEPTH} deep")
     if "from" in node:
         return _leaf(str(node["from"]), bank, register)
+    if "layer" in node:
+        return _layer_node(node, bank, register, depth)
     parts = node.get("mix")
     if not parts or len(parts) < 2:
         raise MixError("a mix needs at least two parts")
     children = []
     for part in parts:
         child = evaluate(part, bank, register, depth + 1, family)
-        children.append((child, float(part.get("weight", 1.0))))
-    if any(w <= 0 for _, w in children):
+        children.append((child, float(part.get("weight", 1.0)), part))
+    if any(w <= 0 for _, w, _ in children):
         raise MixError("mix weights must be positive")
     mode = node.get("mode", "auto")
+    if mode == "layer" or (mode == "auto" and family is None
+                           and not _alike(children)):
+        # different sounds keep their samples; averaging their dials keeps
+        # neither (a kick over a bass would come out a duller bass)
+        sources = [fam_layer.Source(_label(part), c.compiled, c.genome,
+                                    part.get("role"),
+                                    {k: v for k, v in part.items()
+                                     if k not in _PART_KEYS}, w)
+                   for c, w, part in children]
+        try:
+            return _stack(sources, edits_of(node), register, [])
+        except MixError as error:
+            if mode == "layer":
+                raise
+            note = f"could not stack them ({error}); mixed by dial"
+    else:
+        note = ""
+    children = [(c, w) for c, w, _ in children]
     target = blend([(c.target, w) for c, w in children])
     heavy = max(children, key=lambda cw: cw[1])[0]
     fam = get_family(family or heavy.genome.family)
     reg = register or heavy.genome.register
-    notes = []
+    notes = [note] if note else []
     if mode in ("morph", "auto"):
         done = _try_morph(children, reg, target, notes)
         if done is not None:
@@ -446,7 +568,8 @@ def run_recipe(recipe, bank, name: str, role: str = "",
     return Entry(name=compiled.name, family=compiled.family, genome=g,
                  compiled=compiled, measured=measured,
                  score=fit * score_mod.quality(result.issues), role=role,
-                 character="mix: " + "; ".join(node.notes) + ". "
+                 character=("layer" if node.mode == "layer" else "mix")
+                 + ": " + "; ".join(node.notes) + ". "
                  + node.target.describe(0.22),
                  issues=[str(i) for i in result.issues])
 
@@ -458,3 +581,11 @@ def mix(items, weights=None, mode: str = "auto", bank=None,
     recipe = {"mix": [{"from": i, "weight": w}
                       for i, w in zip(items, weights)], "mode": mode}
     return run_recipe(recipe, bank, name, family=family)
+
+
+def layer(parts, bank=None, name: str = "layer", edits: Optional[dict] = None):
+    """Convenience: a stack of `parts`, each a dict like
+    {"from": "clap", "role": "click", "ms": 30}. -> Entry."""
+    recipe = {"layer": list(parts)}
+    recipe.update(edits or {})
+    return run_recipe(recipe, bank, name)
