@@ -28,6 +28,10 @@ briefs come next (`docs/ROADMAP.md`).
     python3 -m schism forge lift-voice organ --to schism --demo organ.sch --mp3 organ.mp3   # NES -> Mega Drive -> Schism
     python3 -m schism forge rearrange demos/first_light.sch --to schism --mp3 fl.mp3          # the same notes, other sounds
     python3 -m schism build demos/first_light.sch --strict --preset schism   # --strict fails on a silent note; --preset nes|sega holds it to a console
+    python3 -m schism check demos/first_light.sch --json                      # every problem as a record: line, source, message, fix
+    python3 -m schism explain examples/echo/echo_on_note.sch                  # an instrument as the players run it: envelopes in ms, key-off, NNA
+    python3 -m schism corpus index modules/* -o index.jsonl                   # what a corpus stores and what actually plays (IT/XM/S3M/MOD)
+    python3 examples/echo/make.py out/                                        # a technique from the corpus, as A/B and an etude
 
 Python 3.10+ and nothing else is needed to write modules (tested on 3.10,
 3.11, 3.12 and 3.13). To *hear* them, install any of:
@@ -145,14 +149,17 @@ the other two, setting each module's mix volume so its render peaks near 0.89
                    the NES -> Mega Drive -> Schism ladder, kits, arrangement
                    analysis and rearranging, CLI, banks/starter.bank.json
     docs/          NOTATION.md (the language), FORGE.md (the forge),
-                   COVERAGE.md (what is checked), ROADMAP.md
+                   COVERAGE.md (what is checked), CAPABILITIES.md (the format
+                   against what reaches it), CORPUS.md (reading a corpus),
+                   cards/ (techniques found in one), ROADMAP.md
+    examples/      echo/: a corpus technique rebuilt, with its A/B
     demos/         four synthetic tracks
     tests/         run_tests.py; format, synth, notation, audio, demos,
                    engines, docs, export, forge_core, forge, layers, ladder,
-                   rearrange
+                   rearrange, corpus, programs
     tools/         make_demos.py, make_forge_demo.py, make_docs.py,
                    compare_engines.py
-    corpus/        a note on the corpora that are planned
+    corpus/        how the corpora are kept (the tools are schism/corpus.py)
 
 ## Limits worth knowing
 
@@ -160,5 +167,8 @@ Schism Tracker plays samples 1–235 and loads at most 240 patterns (Impulse
 Tracker 2.14 itself: 99 and 200). A pitched instrument costs one sample per
 octave, so keep `oct=` narrow; the compiler refuses a score past Schism's
 limits and warns past Impulse Tracker's. Compressed samples can be read as
-headers only, so most `.it` files from the internet cannot yet be ingested.
+headers only, so most `.it` files from the internet cannot yet be edited
+(`corpus` reads them, and XM/S3M/MOD, through libopenmpt for analysis; a
+pass that would rewrite such a module refuses it and leaves the file as it
+is).
 Stereo samples are written and read (planar, as both players have it).

@@ -11,6 +11,7 @@
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -135,8 +136,16 @@ def _check(args) -> int:
     try:
         _, report = notation.compile_file(args.score)
     except notation.NotationError as error:
-        print(error, file=sys.stderr)
+        if args.json:
+            print(json.dumps({"ok": False, "problems": [
+                d._asdict() for d in error.diagnostics]}, indent=1))
+        else:
+            print(error, file=sys.stderr)
         return 2
+    if args.json:
+        print(json.dumps({"ok": True, "warnings": list(report.warnings),
+                          "strict_ok": not report.warnings}, indent=1))
+        return 5 if args.strict and report.warnings else 0
     print(report.text())
     if report.warnings:
         count = len(report.warnings)
@@ -165,6 +174,82 @@ def _info(args) -> int:
     for line in export.kit_lines(module):
         print(f"  keys {line}")
     return 0
+
+
+def _explain(args) -> int:
+    """An instrument as the players will run it: envelopes in ticks and in
+    ms at the module's tempo, what a key-off and the next note do."""
+    from .forge import program
+    if args.module.lower().endswith(".it"):
+        module = it_read.read_file(args.module)
+    else:
+        try:
+            module, _ = notation.compile_file(args.module)
+        except notation.NotationError as error:
+            print(error, file=sys.stderr)
+            return 2
+    numbers = [args.instrument] if args.instrument else \
+        [n for n, ins in enumerate(module.instruments, 1) if ins.name]
+    out = [program.explain_instrument(module, n) for n in numbers]
+    if args.json:
+        print(json.dumps(out if len(out) != 1 else out[0], indent=1))
+        return 0
+    for info in out:
+        print(f"inst {info['instrument']:02d} {info['name']} (tempo "
+              f"{info['tempo']}, a tick is {info['tick_ms']:g} ms)")
+        for slot in ("volume", "pan", "pitch_or_filter"):
+            env = info[slot]
+            if env is None:
+                continue
+            nodes = " ".join(f"{n['value']}@{n['ms']:g}ms" for n in
+                             env["nodes"])
+            print(f"  {env['slot']:7s} {nodes}"
+                  + (f"  [{env['held']}]" if env.get("held") else ""))
+        print(f"  nna {info['nna']}, dct {info['dct']}, dca {info['dca']}, "
+              f"fade {info['fadeout']}")
+        for note in info["notes"]:
+            print(f"  - {note}")
+    return 0
+
+
+def _corpus(args) -> int:
+    from . import corpus
+    try:
+        if args.action == "index":
+            manifest = None
+            if args.manifest:
+                with open(args.manifest, encoding="utf-8") as handle:
+                    manifest = json.load(handle)
+            entries = corpus.index(args.files, manifest, limit_s=args.limit)
+            if args.out:
+                corpus.write_index(entries, args.out)
+                print(f"wrote {args.out}: {len(entries)} modules")
+            else:
+                for entry in entries:
+                    print(json.dumps(entry, ensure_ascii=False))
+            return 0
+        if args.action == "trace":
+            with corpus.Module(args.files[0]) as module:
+                stored = corpus.static(module)
+                played = corpus.trace(module, args.limit)
+            summary = {"file": args.files[0], "stored": stored,
+                       "reached": played["reached"],
+                       "rows_played": len(played["rows"]),
+                       "seconds": played["seconds"],
+                       "stopped": played["stopped"]}
+            if args.all_rows:
+                summary["rows"] = played["rows"]
+            print(json.dumps(summary, indent=1))
+            return 0
+        ep = corpus.episode(args.files[0], args.order, args.row, args.rows,
+                            args.context,
+                            [int(c) - 1 for c in args.channels.split(",")]
+                            if args.channels else None)
+        print(json.dumps(ep, indent=1, ensure_ascii=False))
+        return 0
+    except (corpus.CorpusError, OSError) as error:
+        print(f"schism corpus: {error}", file=sys.stderr)
+        return 2
 
 
 def main(argv=None) -> int:
@@ -204,7 +289,35 @@ def main(argv=None) -> int:
     check.add_argument("score")
     check.add_argument("--strict", action="store_true",
                        help="a warning is a failure (exit 5)")
+    check.add_argument("--json", action="store_true",
+                       help="problems and warnings as JSON, each with its "
+                            "line and fix")
     check.set_defaults(run=_check)
+    explain = sub.add_parser("explain", help="an instrument as the players "
+                             "run it: envelopes in ticks and ms, key-off, NNA")
+    explain.add_argument("module", help="a .sch score or a .it module")
+    explain.add_argument("instrument", nargs="?", type=int)
+    explain.add_argument("--json", action="store_true")
+    explain.set_defaults(run=_explain)
+    corp = sub.add_parser("corpus", help="index modules, trace what plays, "
+                          "read an episode (any format libopenmpt plays)")
+    corp.add_argument("action", choices=("index", "trace", "episode"))
+    corp.add_argument("files", nargs="+")
+    corp.add_argument("-o", "--out", help="index: write JSON lines here")
+    corp.add_argument("--manifest", help="index: {file: {author, source, "
+                      "licence...}} carried into each entry")
+    corp.add_argument("--limit", type=float, default=1200.0,
+                      help="seconds of song to trace at most (a song that "
+                           "loops forever stops here)")
+    corp.add_argument("--rows", type=int, default=12,
+                      help="episode: rows to read (4-32)")
+    corp.add_argument("--all-rows", action="store_true",
+                      help="trace: print every row played, in order")
+    corp.add_argument("--order", type=int, default=0)
+    corp.add_argument("--row", type=int, default=0)
+    corp.add_argument("--context", type=int, default=2)
+    corp.add_argument("--channels", help="episode: 1,3,4")
+    corp.set_defaults(run=_corpus)
     info = sub.add_parser("info", help="describe a .it file")
     info.add_argument("module")
     info.set_defaults(run=_info)

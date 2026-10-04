@@ -645,6 +645,28 @@ Every number in the table is an opinion about what that kind of sound
 measures; `python3 -m schism forge survey` renders each and prints asked
 against heard, with `!` where the family could not get within 0.15.
 
+## An instrument explained, a note read in phases
+
+`python3 -m schism explain SCORE [N]` prints an instrument the way the
+players will run it: each envelope node by node in ticks and in ms at the
+module's tempo, the sustain loop, what a key-off does (with no sustain loop
+the envelope plays out the same and the key-off only starts the fade-out)
+and what the next note does (the NNA). `forge/program.py` has the same for a
+forge patch written in seconds: where each node landed on the tick grid, how
+far it moved and which nodes merged into one (the later one wins — said, no
+longer silent). `capabilities()` is the table of what an IT instrument can be
+asked for, with its limits (`docs/CAPABILITIES.md`).
+
+`forge/phases.py` reads one note in phases — attack on a 1 ms grid, body,
+held, release after the key-up — with each phase's level, brightness (the
+power-spectrum centroid over the fundamental) and pitch, a loop seam reading
+on the sample itself, and `null` with the reason where a reading does not
+apply. It is this project's copy of Chipgen's, on its own FFT.
+
+`examples/echo/` is the first technique from the reference corpus rebuilt
+as an A/B (Skaven's echo written into an instrument's envelopes, with this
+project's own numbers and melody; `docs/cards/echo_in_the_envelope.md`).
+
 ## What it does not do
 
 - **Nobody has listened.** The dials are measurements, the tests hold every
@@ -683,4 +705,5 @@ chorded, widened, reversed, driven),
 `archetypes.py`,
 `evolve.py` (controller, archive, search), `bank.py`, `mixing.py`,
 `director.py`, `llm.py`, `kits.py`, `arrangement.py`, `audition.py`,
-`notation_hook.py`, `cli.py`, `banks/starter.bank.json`.
+`notation_hook.py`, `cli.py`, `program.py` (an instrument explained),
+`phases.py` (a note read in phases), `banks/starter.bank.json`.

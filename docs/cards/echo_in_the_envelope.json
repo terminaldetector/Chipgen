@@ -1,0 +1,192 @@
+{
+ "format": "schism-card/1",
+ "id": "echo-in-the-envelope",
+ "kind": "instrument technique",
+ "found": {
+  "module": "Skaven - Fourth Symmetriad",
+  "file": "skaven-fourth_symmetriad.it",
+  "instrument": 10,
+  "instrument_name": "Sine.softecho",
+  "example_address": {
+   "pattern": 20,
+   "row": 0,
+   "channel": 11,
+   "order": 22
+  },
+  "read_from": "instrument header, via the reference corpus audit (corpus_facts.json)",
+  "episode_reread_here": false,
+  "why_not": "the module is not in this repository",
+  "corpus_zip_sha256": "5b2fbc0cd31a6b07489e7c0d23c71cfc42da7ad1542b6e0c4015bb0c1629dd6d"
+ },
+ "native": {
+  "volume": [
+   [
+    64,
+    0
+   ],
+   [
+    13,
+    5
+   ],
+   [
+    0,
+    15
+   ],
+   [
+    30,
+    16
+   ],
+   [
+    7,
+    21
+   ],
+   [
+    0,
+    31
+   ],
+   [
+    15,
+    32
+   ],
+   [
+    5,
+    34
+   ],
+   [
+    0,
+    44
+   ]
+  ],
+  "pan": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    15
+   ],
+   [
+    13,
+    16
+   ],
+   [
+    13,
+    31
+   ],
+   [
+    -13,
+    32
+   ],
+   [
+    -12,
+    59
+   ]
+  ],
+  "filter": [
+   [
+    32,
+    0
+   ],
+   [
+    4,
+    15
+   ],
+   [
+    24,
+    16
+   ],
+   [
+    3,
+    31
+   ],
+   [
+    16,
+    32
+   ],
+   [
+    2,
+    45
+   ]
+  ],
+  "filter_cutoff": 94,
+  "nna": "note off",
+  "units": "[value, tick]"
+ },
+ "interpretation": {
+  "function": "an echo that belongs to the instrument: two quieter repeats 16 ticks apart, panned right then left, each darker",
+  "mechanism": "volume envelope strikes; pan envelope; filter envelope; NNA note off so repeats continue under the next note",
+  "is_interpretation": true
+ },
+ "expected_change_if_removed": "no repeats; the first strike unchanged",
+ "ab": {
+  "rebuild": "examples/echo (own numbers: 12-tick spacing, 64/34/22, pan +-16, filter 44/36/30 of cutoff 100, saw, own melody)",
+  "pairs": [
+   [
+    "echo_on_note",
+    "echo_off_note",
+    "volume envelope repeats only"
+   ],
+   [
+    "echo_on_motif",
+    "echo_off_motif",
+    "volume envelope repeats only"
+   ],
+   [
+    "echo_on_motif",
+    "echo_nna_cut_motif",
+    "NNA only"
+   ],
+   [
+    "etude_echo",
+    "etude_dry",
+    "volume envelope repeats only, in context"
+   ]
+  ]
+ },
+ "measured": {
+  "engine": "libopenmpt, Schism Tracker (Jan 2024 build)",
+  "strikes_db": [
+   -20.71,
+   -26.3,
+   -31.41
+  ],
+  "rise_db": [
+   null,
+   47.25,
+   46.9
+  ],
+  "balance_db": [
+   0.0,
+   9.54,
+   -9.54
+  ],
+  "brightness": [
+   1.101,
+   1.024,
+   1.014
+  ],
+  "dry_first_strike_difference_db": 0.0,
+  "schism_minus_openmpt_db": [
+   0.05,
+   0.09,
+   0.21
+  ],
+  "nna_off_balance_at_next_note_db": [
+   -0.31,
+   -0.58,
+   -0.6,
+   -0.68
+  ],
+  "nna_cut_balance_at_next_note_db": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "confidence": {
+  "mechanism": "high (two players agree within 0.21 dB)",
+  "taste": "none: not listened to for this card"
+ }
+}

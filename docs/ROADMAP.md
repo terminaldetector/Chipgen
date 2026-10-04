@@ -15,7 +15,7 @@ forgiving of the first try:
 - a short **brief** per model family (what to write, with one complete
   example), kept under a token budget and tested against the compiler;
 - `python3 -m schism check --json`: every problem as a record (line, source,
-  message, fix) for a script to feed back verbatim;
+  message, fix) for a script to feed back verbatim (done);
 - a **GBNF grammar** for `.sch`, so a local model cannot produce a line the
   compiler would reject;
 - a **preview mixer in pure Python** (levels per channel, pitch of a note) so
@@ -37,7 +37,11 @@ forgiving of the first try:
 Schism gets its own training corpora, separate from the chip corpora
 (`corpus/README.md`): modules in, text scores out, audited and deduplicated
 by the same discipline as Chipgen's, shipped as archives rather than
-committed.
+committed. The reading tools are built (`docs/CORPUS.md`: index, trace of
+what plays, episodes with their entry state); next are cards from the
+reference corpus itself — read in place, each with its A/B — once that
+corpus is in a session, and a bounded improve loop for IT instruments like
+Chipgen's for the YM2612.
 
 ## 4. The article
 

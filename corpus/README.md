@@ -18,13 +18,24 @@ Nothing is in this directory yet except this note.
    entry.
 4. **Ship** as archives (a zip per corpus with its manifest), not in git.
 
+## The tools (built)
+
+`python3 -m schism corpus index|trace|episode` (`schism/corpus.py`,
+`docs/CORPUS.md`): an index with each file's hash and source record, what it
+stores against what actually plays (traced in libopenmpt, jumps, breaks and
+loops included), candidate windows taken only from what plays, and episodes
+of 8-16 rows with the state the song is in when they start. IT, XM, S3M and
+MOD alike, read-only.
+
 ## What stops it today
 
 - Most modules found in the wild carry **compressed samples** (IT 2.14/2.15);
   the reader keeps their headers but cannot unpack the data. The pattern
   and instrument data read fine, so the text side of a corpus does not need
-  the audio — but the audit's "is this module audible" step does.
-- There is no `.xm`/`.s3m`/`.mod` reader.
+  the audio — but the audit's "is this module audible" step does, and a
+  pass that would rewrite such a module refuses it.
+- There is no `.xm`/`.s3m`/`.mod` reader for editing; `corpus` reads them
+  through libopenmpt for analysis.
 
 ## Rules
 
