@@ -85,7 +85,15 @@ Envelopes and instruments, measured the same way:
 - a volume envelope runs in ticks and in straight lines;
 - a pan envelope runs −32 (left) to +32 (right);
 - a pitch envelope counts **half semitones**: 32 is 16 semitones (±10 cents);
-- a filter envelope opens the filter (more than 2.5 times brighter);
+- a filter envelope scales the instrument's `cutoff` by value/64 (a
+  constant 32 on cutoff 64 sounds like cutoff 32, within 12%; 64 is the
+  cutoff as set), so it can close the filter from the cutoff and never
+  open it past it; swept from low to 64 it opens the filter more than
+  2.5 times and the pitch stays put (±15 cents), in both players. An
+  earlier version wrote the envelope with the *carry* flag (bit 3)
+  instead of the filter flag (bit 7), so a filter envelope played as a
+  pitch sweep in both players; the test that should have noticed
+  measured brightness only, which a rising pitch also raises;
 - `nna=cont` lets the old note ring while the new one sounds; `nna=cut` does not;
 - `~~~` and `===` need `fade=` (or a volume envelope that ends at 0) to end a
   note — without one, the note rings on, in both players;
@@ -111,8 +119,8 @@ The three demos rendered by libopenmpt and by Schism Tracker, compared by
 | demo | length (score / Schism / libopenmpt) | peak | 20 | 40 | 80 | 160 | 320 | 640 | 1.3k | 2.6k | 5.1k | 10k |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | First Light | 64.00 / 64.00 / 64.10 s | 0.874 / 0.891 | −0.3 | 0.0 | −0.1 | 0.0 | 0.0 | 0.0 | 0.0 | +0.2 | 0.0 | +0.1 |
-| Glass Engine | 97.63 / 97.59 / 97.69 s | 0.902 / 0.894 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | +0.1 | +0.2 | +0.1 | −0.1 | −0.1 |
-| Pattern Garden | 92.90 / 92.89 / 92.99 s | 0.893 / 0.895 | 0.0 | 0.0 | −0.1 | 0.0 | +0.1 | +0.1 | 0.0 | +0.3 | +0.3 | 0.0 |
+| Glass Engine | 97.63 / 97.59 / 97.69 s | 0.895 / 0.887 | −0.2 | 0.0 | −0.2 | −0.3 | 0.0 | +0.1 | +0.2 | +0.1 | 0.0 | −0.1 |
+| Pattern Garden | 92.90 / 92.89 / 92.99 s | 0.885 / 0.886 | −0.1 | 0.0 | −0.1 | 0.0 | +0.1 | +0.1 | 0.0 | +0.3 | +0.3 | 0.0 |
 
 - **Length.** Schism stops on the last row, within 0.05% of the arithmetic;
   libopenmpt's render runs about 0.1 s past it. (libopenmpt's own

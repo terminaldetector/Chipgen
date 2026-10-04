@@ -151,7 +151,7 @@ def glass_engine() -> str:
         "smp hat   wave=hat   vol=48",
         "smp ohat  wave=openhat vol=46",
         "inst 1 name=Drum_Kit kit=C-2:kick,D-2:snare,D#2:clap,F#2:hat,A#2:ohat",
-        "inst 2 name=Saw_Bass wave=saw oct=1-3 nna=cut cutoff=40 res=60 "
+        "inst 2 name=Saw_Bass wave=saw oct=1-3 nna=cut cutoff=127 res=60 "
         "fenv=0:8,2:54,12:22,40:12 fade=60 vol=60 gain=51",
         "inst 3 name=Glass_Pad wave=pad voices=5 detune=13 secs=3 base=C-4 "
         "nna=fade fade=36 venv=0:0,36:64 penv=0:-14,180:14 cutoff=80 res=12 "
@@ -400,7 +400,7 @@ def pattern_garden() -> str:
         "smp hat   wave=hat   vol=64",
         "smp ohat  wave=openhat vol=56",
         "inst 1 name=Garden_Kit kit=C-2:kick,D-2:snare,F#2:hat,A#2:ohat",
-        "inst 2 name=Root_Bass wave=square oct=1-3 nna=cut cutoff=50 res=40 "
+        "inst 2 name=Root_Bass wave=square oct=1-3 nna=cut cutoff=127 res=40 "
         "fenv=0:30,3:56,20:22 fade=48 vol=56 gain=51",
         "inst 3 name=Glass_EP wave=fm ratio=1 index=2.2 oct=2-6 nna=cut "
         "venv=0:64,10:40,60:16,150:0 vol=36",

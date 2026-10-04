@@ -152,17 +152,21 @@ seconds.
 | `venv=` | volume | 0..64 | volume 0..64 |
 | `penv=` | pan | -32..32 | panning -32 (left)..32 (right) |
 | `ienv=` | pitch | -32..32 | pitch in half-semitones: 32 is 16 semitones up |
-| `fenv=` | filter | 0..64 | filter cutoff 0..64 |
+| `fenv=` | filter | 0..64 | filter: share of `cutoff` in use, value/64 (64 = as set) |
 <!-- /generated -->
 
 `ienv` and `fenv` share one slot in the file (a flag says which), so an
-instrument may have one of them. A `fenv` switches the filter on.
+instrument may have one of them. A `fenv` multiplies the instrument's
+`cutoff`: the value is the share of it in use, 64 being the cutoff as set.
+So `cutoff=127` lets the envelope be the cutoff (about twice its value),
+and a lower `cutoff` is a ceiling the envelope never rises above. With no
+`cutoff=` a `fenv` sets 127.
 
 ```sch
 title Envelopes
 tempo 120
 channels 1
-inst 1 name=Pluck wave=saw oct=2-5 nna=cut cutoff=30 res=40 fenv=0:8,6:50,40:14 venv=0:64,90:0 fade=64
+inst 1 name=Pluck wave=saw oct=2-5 nna=cut cutoff=127 res=40 fenv=0:8,6:50,40:14 venv=0:64,90:0 fade=64
 inst 2 name=Swell wave=pad voices=5 detune=12 secs=3 base=C-4 nna=fade fade=30 venv=0:0,40:64,200:64s,240:64s penv=0:-20,120:20l,240:-20l
 pattern a rows 32
 C-4 01 v64 ...

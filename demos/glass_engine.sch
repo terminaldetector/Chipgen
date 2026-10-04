@@ -4,7 +4,7 @@ channels 10
 author schism-chipgen (synthetic)
 msg Synthetic demo: every sound is synthesised, every note
 msg is generated from a chord progression. Not a transcription.
-mv 81
+mv 82
 sep 110
 smp kick  wave=kick  len=0.34 vol=64
 smp snare wave=snare len=0.30 vol=64
@@ -12,7 +12,7 @@ smp clap  wave=clap  vol=46
 smp hat   wave=hat   vol=48
 smp ohat  wave=openhat vol=46
 inst 1 name=Drum_Kit kit=C-2:kick,D-2:snare,D#2:clap,F#2:hat,A#2:ohat
-inst 2 name=Saw_Bass wave=saw oct=1-3 nna=cut cutoff=40 res=60 fenv=0:8,2:54,12:22,40:12 fade=60 vol=60 gain=51
+inst 2 name=Saw_Bass wave=saw oct=1-3 nna=cut cutoff=127 res=60 fenv=0:8,2:54,12:22,40:12 fade=60 vol=60 gain=51
 inst 3 name=Glass_Pad wave=pad voices=5 detune=13 secs=3 base=C-4 nna=fade fade=36 venv=0:0,36:64 penv=0:-14,180:14 cutoff=80 res=12 vol=36 gain=90
 inst 4 name=Sharp_Lead wave=pulse duty=0.3 oct=3-7 nna=cut cutoff=100 res=25 venv=0:0,2:64,40:56s,70:56s,95:0 vib=18/5/30/sine fade=48 vol=42 gain=90
 inst 5 name=Glass_Pluck wave=pluck root=C-5 len=1.2 damp=0.996 nna=cont dct=note dca=cut vol=40 gain=100

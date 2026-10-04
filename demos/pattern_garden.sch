@@ -11,7 +11,7 @@ smp snare wave=snare len=0.26 tone=200 vol=64
 smp hat   wave=hat   vol=64
 smp ohat  wave=openhat vol=56
 inst 1 name=Garden_Kit kit=C-2:kick,D-2:snare,F#2:hat,A#2:ohat
-inst 2 name=Root_Bass wave=square oct=1-3 nna=cut cutoff=50 res=40 fenv=0:30,3:56,20:22 fade=48 vol=56 gain=51
+inst 2 name=Root_Bass wave=square oct=1-3 nna=cut cutoff=127 res=40 fenv=0:30,3:56,20:22 fade=48 vol=56 gain=51
 inst 3 name=Glass_EP wave=fm ratio=1 index=2.2 oct=2-6 nna=cut venv=0:64,10:40,60:16,150:0 vol=36
 inst 4 name=Reed_Lead wave=square oct=3-7 nna=cut venv=0:0,2:64,30:50s,60:50s,100:0 vib=16/4/20/sine fade=40 cutoff=110 vol=34
 inst 5 name=Seed_Bell wave=bell len=2.4 nna=cont vol=30 pan=40

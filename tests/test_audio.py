@@ -87,9 +87,9 @@ def test_a_pitch_envelope_counts_half_semitones():
     assert abs(P.cents(start, 440.0)) < 80
 
 
-def test_a_filter_envelope_opens_the_filter():
+def test_a_filter_envelope_opens_the_filter_and_leaves_the_pitch_alone():
     _need()
-    inst = ("inst 1 wave=saw oct=1-7 cutoff=20 res=0 fenv=0:0,100:64 "
+    inst = ("inst 1 wave=saw oct=1-7 cutoff=127 res=0 fenv=0:6,100:64 "
             "fade=200")
     _, x, _ = _play("A-3 01 v64 ...\n", inst=inst, rows=48)
 
@@ -99,6 +99,34 @@ def test_a_filter_envelope_opens_the_filter():
     early = brightness(P.window(x, 0.1, 0.3))
     late = brightness(P.window(x, 2.0, 2.2))
     assert late > 2.5 * early, (early, late)
+    # The test that stood here measured only brightness, and passed for a
+    # year of the project's life while the envelope was being written as a
+    # *pitch* envelope (a rising pitch is brighter too). Pitch is checked.
+    for t in (0.2, 1.0, 2.1):
+        f = P.frequency_acf(P.window(x, t, t + 0.2), 200.0, 240.0)
+        assert abs(P.cents(f, P.hz("A-3"))) < 15, (t, f)
+
+
+def test_a_constant_filter_envelope_scales_the_cutoff():
+    """The envelope's value is the share of `cutoff` that is used: 64 is the
+    cutoff as set, 32 is half of it. Measured as the high-frequency share of
+    looped noise (|difference| / |signal|), which a filter changes and a
+    pitch change does not."""
+    _need()
+
+    def brightness(inst):
+        _, x, _ = _play("C-5 01 v64 ...\n", inst=inst, rows=32)
+        part = P.window(x, 0.4, 1.4)
+        d = [b - a for a, b in zip(part, part[1:])]
+        return P.rms(d) / P.rms(part)
+
+    half = brightness("inst 1 wave=noise cutoff=64 res=0 fenv=0:32,100:32")
+    set_to_half = brightness("inst 1 wave=noise cutoff=32 res=0")
+    full = brightness("inst 1 wave=noise cutoff=64 res=0 fenv=0:64,100:64")
+    plain = brightness("inst 1 wave=noise cutoff=64 res=0")
+    assert abs(half / set_to_half - 1) < 0.12, (half, set_to_half)
+    assert abs(full / plain - 1) < 0.05, (full, plain)
+    assert plain > 1.5 * half, (plain, half)
 
 
 # -- the effect column --------------------------------------------------------

@@ -160,7 +160,7 @@ ENVELOPES = {
     "penv": ("pan", (-32, 32), "panning -32 (left)..32 (right)"),
     "ienv": ("pitch", (-32, 32), "pitch in half-semitones: 32 is 16 "
                                  "semitones up"),
-    "fenv": ("filter", (0, 64), "filter cutoff 0..64"),
+    "fenv": ("filter", (0, 64), "filter: share of `cutoff` in use, value/64 (64 = as set)"),
 }
 
 

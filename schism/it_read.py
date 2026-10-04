@@ -39,7 +39,7 @@ def _envelope(raw: bytes, kind: str):
         return None
     count = min(count, 25)
     nodes = []
-    filt = kind == "pitch" and bool(flags & 8)
+    filt = kind == "pitch" and bool(flags & 0x80)
     for i in range(count):
         value, tick = struct.unpack_from("<bH", raw, 6 + 3 * i)
         if kind == "volume":
