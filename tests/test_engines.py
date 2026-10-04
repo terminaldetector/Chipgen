@@ -74,6 +74,29 @@ def test_both_engines_play_every_demo_at_the_same_loudness_all_the_way_through()
         assert abs(left - right) < 0.6, (path, left, right)   # same balance
 
 
+def test_schism_renders_at_the_rate_it_is_asked_for():
+    """The disk writer's rate is its own config section; with only the
+    audio one it wrote 44100 Hz whatever was asked, and a caller that read
+    the frames as 48000 heard the note 1.5 semitones sharp and short."""
+    _need()
+    import audio_probe as P
+    text = P.score("A-4 01 v64 ...\n", tempo=60,
+                   inst="inst 1 wave=pulse duty=0.25 oct=1-7 fade=200")
+    module, _ = notation.compile_text(text)
+    blob = it_write.build(module)
+    lengths = {}
+    for rate in (22050, 48000):
+        mono = P.mono(schismtracker.render(blob, rate))
+        lengths[rate] = len(mono) / rate
+        sustain = mono[int(0.5 * rate):int(2.5 * rate)]
+        crossings = [i for i in range(1, len(sustain))
+                     if sustain[i - 1] < 0.0 <= sustain[i]]
+        hz = (len(crossings) - 1) * rate / (crossings[-1] - crossings[0])
+        assert abs(P.cents(hz, 440.0)) < 3.0, (rate, hz)
+    # the same song is the same length at either rate
+    assert abs(lengths[22050] - lengths[48000]) < 0.05, lengths
+
+
 def test_a_sustained_note_is_the_same_pitch_in_both_engines():
     _need()
     import audio_probe as P

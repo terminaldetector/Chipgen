@@ -52,8 +52,15 @@ def render(module_bytes: bytes, sample_rate: int = 44100,
     """Play a module through Schism Tracker into memory.
 
     -> interleaved stereo floats as an `array('f')`, like
-    `openmpt.Song.render`. A throwaway home directory holds the config, so
-    the user's own settings are neither read nor changed.
+    `openmpt.Song.render`, at `sample_rate`. A throwaway home directory
+    holds the config, so the user's own settings are neither read nor
+    changed.
+
+    The disk writer takes its rate from the config's `[Diskwriter]` section,
+    not from `[Audio]`: with only the latter it writes 44100 Hz whatever is
+    asked, and frames read as another rate would come out at the wrong pitch
+    and length. The rate in the WAV it writes is checked, and a mismatch is
+    an error rather than a relabel.
     """
     exe = executable()
     if not exe:
@@ -70,7 +77,9 @@ def render(module_bytes: bytes, sample_rate: int = 44100,
                 "buffer_size=1024\nmaster.left=31\nmaster.right=31\n"
                 "[Mixer Settings]\nchannel_limit=128\n"
                 f"interpolation_mode={INTERPOLATION[interpolation]}\n"
-                "no_ramping=0\nsurround_effect=1\n")
+                "no_ramping=0\nsurround_effect=1\n"
+                "[Diskwriter]\n"
+                f"rate={sample_rate}\nbits=16\nchannels=2\n")
         source = os.path.join(home, "in.it")
         target = os.path.join(home, "out.wav")
         with open(source, "wb") as handle:
@@ -87,6 +96,11 @@ def render(module_bytes: bytes, sample_rate: int = 44100,
         with wave.open(target) as handle:
             if handle.getsampwidth() != 2 or handle.getnchannels() != 2:
                 raise SchismError("unexpected diskwrite format")
+            if handle.getframerate() != int(sample_rate):
+                raise SchismError(
+                    f"schismtracker wrote {handle.getframerate()} Hz when "
+                    f"{int(sample_rate)} Hz was asked for; read as the asked "
+                    f"rate it would play at the wrong pitch and length")
             pcm = array.array("h")
             pcm.frombytes(handle.readframes(handle.getnframes()))
     import sys
