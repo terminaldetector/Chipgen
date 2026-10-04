@@ -20,7 +20,7 @@ come next (`docs/ROADMAP.md`).
 
     python3 -m schism check demos/first_light.sch       # compile; list every problem
     python3 -m schism build demos/first_light.sch --mp3 first_light.mp3
-    python3 tests/run_tests.py                          # 158 tests, under two minutes
+    python3 tests/run_tests.py                          # 159 tests, under two minutes
     python3 -m schism forge survey                      # the forge: every archetype, asked against heard
 
 Python 3.10+ and nothing else is needed to write modules (tested on 3.10,

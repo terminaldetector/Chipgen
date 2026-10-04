@@ -123,4 +123,13 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        code = main()
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # `python3 -m schism ... | head`: the reader left early, which is
+        # its right and not our failure. Point stdout at /dev/null so the
+        # flush at exit has nothing to complain about.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        code = 0
+    sys.exit(code)

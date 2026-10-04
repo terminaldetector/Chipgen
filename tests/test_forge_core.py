@@ -527,3 +527,16 @@ def test_what_the_search_writes_does_not_depend_on_the_hash_seed():
     assert outputs[0] == outputs[1] == outputs[2], outputs
     bias = json.loads(outputs[0])[0]["bias"]
     assert list(bias) == sorted(bias), bias
+
+
+def test_a_reader_that_leaves_early_is_not_an_error():
+    """`python3 -m schism forge archetypes | head` is what a model types."""
+    import subprocess
+    import sys
+    for arguments in ("forge archetypes", "forge axes",
+                      "info demos/first_light.it"):
+        done = subprocess.run(
+            f"{sys.executable} -m schism {arguments} | head -n 1",
+            shell=True, cwd=support.ROOT, capture_output=True, text=True)
+        assert done.stdout.strip(), arguments
+        assert "Traceback" not in done.stderr, (arguments, done.stderr)
