@@ -123,7 +123,12 @@ def test_archive_is_lean_and_reproducible():
         # modules and their tests (104 KB compressed), the starter bank of
         # 42 instruments and nine example scenarios (data, ~25 KB), and the
         # guide a model reads before it asks for a sound the bank lacks.
-        assert size < 800 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 860 KB for instrument programs: program.py (what a note
+        # does over time, compiled to register writes with every loss
+        # named), phases.py (a note read phase by phase), improve.py (the
+        # bounded intent -> candidates -> probe -> commit/rollback loop),
+        # their tests and the worked example — 37.6 KB compressed.
+        assert size < 860 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

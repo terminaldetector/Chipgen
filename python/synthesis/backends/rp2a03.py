@@ -323,8 +323,11 @@ class RP2A03Backend(Backend):
                            ticks_per_second, compiled.style.get("gate", 1.0))
 
     def install(self, compiled, character=""):
+        from .. import registry
         compiled.patch.name = compiled.name
         N.add(compiled.patch)
+        # recorded so the placement pass can read the instrument's gate
+        registry.register(self.name, compiled)
         return compiled.name
 
     def reference_level(self):

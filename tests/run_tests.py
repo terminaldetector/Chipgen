@@ -48,7 +48,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program"]
 
 
 def _collect(pattern=""):
@@ -134,6 +134,8 @@ SLOW = {
     "test_vgm.test_imported_bank_saves_loads_and_is_playable",
     "test_vgm.test_imported_patches_are_levelled_against_the_built_in_bank",
     "test_vgm.test_replay_alignment_is_bounded_and_does_not_accumulate",
+    "test_program.test_a_run_keeps_its_budget_and_can_be_undone_exactly",
+    "test_program.test_a_round_of_repeats_stops_the_loop",
     "test_synthesis.test_a_dial_turned_up_reads_higher_on_every_chip",
     "test_synthesis.test_a_director_steers_a_run_and_a_broken_one_cannot_stop_it",
     "test_synthesis.test_a_mix_follows_its_weights_and_a_tree_nests",

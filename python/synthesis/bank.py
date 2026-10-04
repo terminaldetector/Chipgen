@@ -62,6 +62,15 @@ class Entry:
             compiled = backend.from_dict(data["compiled"])
             compiled.name = data["name"]
             problems = backend.validate(compiled)
+            if compiled.style.get("program"):
+                from . import program as program_mod
+                try:
+                    program = program_mod.parse(compiled.style["program"])
+                except program_mod.ProgramError as error:
+                    raise BankError(f"{data['name']}: program: {error}") \
+                        from None
+                if backend.name == "ym2612":
+                    problems += program_mod.check_fm(program, compiled.patch)
             if problems:
                 raise BankError(
                     f"{data['name']} ({backend.name}) is not a legal "
@@ -148,9 +157,13 @@ class Bank:
     # -- use ---------------------------------------------------------------------
     def install(self) -> List[str]:
         """Make every instrument selectable by name in this process."""
+        from . import program as program_mod
         out = []
         for e in self.entries:
-            get_backend(e.backend).install(e.compiled, e.character)
+            # an instrument with a program installs the patch with the
+            # program's settings in it (and on the NES, its macros)
+            get_backend(e.backend).install(program_mod.prepare(e.compiled),
+                                           e.character)
             out.append(e.name)
         return out
 
@@ -164,8 +177,11 @@ class Bank:
         os.makedirs(directory, exist_ok=True)
         stem = stem or slug(self.name)
         written = {}
-        fm = {e.name: e.compiled.patch for e in self.entries
-              if e.backend == "ym2612"}
+        from . import program as program_mod
+        # the patch with a program's settings in it; a program's tracks,
+        # vibrato and legato play only through --forge-bank
+        fm = {e.name: program_mod.prepare(e.compiled).patch
+              for e in self.entries if e.backend == "ym2612"}
         if fm:
             path = os.path.join(directory, f"{stem}.fm.json")
             instruments_mod.save_bank(path, fm)
@@ -176,8 +192,8 @@ class Bank:
             path = os.path.join(directory, f"{stem}.opl.json")
             opl_import.save_bank(opl, path, calibrate=False)
             written["opl2"] = path
-        nes = {e.name: e.compiled.patch for e in self.entries
-               if e.backend == "nes"}
+        nes = {e.name: program_mod.prepare(e.compiled).patch
+               for e in self.entries if e.backend == "nes"}
         if nes:
             path = os.path.join(directory, f"{stem}.nes.json")
             with open(path, "w", encoding="utf-8") as handle:

@@ -31,6 +31,13 @@ All six ship inside the bridge archive, with the two instrument banks
 (and the forge starter bank, under `python/synthesis/banks/`) — the first
 five cost 11.8 KB compressed, less than this file describing them.
 
+`programs/make.py` is not a score: it takes a bass and a lead from the
+forge's starter bank, finds one targeted change for each with the bounded
+loop (`forge.py improve`: "darker sustain" for the bass, "legato" for the
+lead), and writes the A/B of each part alone, a short etude before and after
+(MP3, VGZ and tracker text), the run records and the readings. About a
+minute; see `bridge/SYNTHESIS.md`, "Programs".
+
 `tests/test_examples.py` renders all six on every test run, with the
 banks above, and fails if any of them stops parsing or comes out silent.
 If you add a score here that needs a bank, add it to `BANKS` in that file

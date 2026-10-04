@@ -16,6 +16,19 @@
     nes-inst NAME             write an NES instrument by hand, as macros
     director-prompt SCENARIO  the question a model would be asked
 
+    capabilities              what a program can do on each engine: targets,
+                              units, clock, scope, what resets them
+    program show|explain|set|clear BANK NAME
+                              an instrument's program; one note as the chip
+                              receives it; put one on (checked) or take it off
+    measure BANK NAME         a short note, a held note, a phrase, read phase
+                              by phase (attack, body, held, release)
+    improve BANK NAME --intent "darker sustain"
+                              one local change, measured against the
+                              baseline, bounded (3 candidates x 2 rounds)
+    commit / rollback BANK RUN.json
+                              keep a run's choice / undo it exactly
+
 Everything runs offline. A model is optional and is only ever asked which
 way to push the dials (`run --director llm`) and which finalist to keep.
 """
@@ -699,6 +712,219 @@ def cmd_director_prompt(args):
 
 
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# Programs, measurements and the improve loop
+# --------------------------------------------------------------------------
+def _dump(data):
+    print(json.dumps(data, indent=1, ensure_ascii=False))
+
+
+def cmd_capabilities(args):
+    from . import program as program_mod
+    caps = program_mod.capabilities(args.engine)
+    if args.json:
+        _dump(caps)
+        return 0
+    for engine, cap in caps.items():
+        print(f"{engine}: {cap['clock']}")
+        for t in cap["targets"]:
+            print(f"  {t['name']:8s} {t['units']}")
+            print(f"           native: {t['native']}; scope {t['scope']}; "
+                  f"changes a sounding voice: {t['sounding']}")
+            print(f"           reset: {t['reset']}")
+            print(f"           conflicts: {t['conflicts']}")
+        if cap["settings"]:
+            print("  settings: " + ", ".join(
+                f"{k} {v['range'][0]}-{v['range'][1]}"
+                for k, v in cap["settings"].items()))
+        for note in cap["notes"]:
+            print(f"  - {note}")
+    return 0
+
+
+def cmd_program(args):
+    from . import program as program_mod
+    bank = bank_mod.Bank.load(args.bank)
+    entry = bank.get(args.name)
+    if args.action in ("set", "clear"):
+        if args.action == "set":
+            if not args.file:
+                raise CliError("program set needs a program file")
+            with open(args.file, encoding="utf-8") as handle:
+                program = program_mod.parse(json.load(handle))
+            if program.engine != entry.backend:
+                raise CliError(f"{args.name} is a {entry.backend} instrument "
+                               f"and the program is for {program.engine}")
+            if entry.backend == "ym2612":
+                problems = program_mod.check_fm(program, entry.compiled.patch)
+                if problems:
+                    raise CliError(problems[0])
+            entry.compiled = program_mod.attach(entry.compiled, program)
+        else:
+            entry.compiled = program_mod.attach(entry.compiled, None)
+        out = args.out or args.bank
+        bank.save(out)
+        print(f"{args.name}: program {'set' if args.action == 'set' else 'cleared'}"
+              f"; wrote {out}")
+        return 0
+    program = program_mod.of(entry.compiled)
+    if args.action == "show":
+        if args.json:
+            _dump(program.to_dict() if program else None)
+        else:
+            print(json.dumps(program.to_dict(), indent=1) if program else
+                  f"{args.name} has no program")
+        return 0
+    report = program_mod.explain(entry.compiled, program, hold=args.hold,
+                                 tail=args.tail)
+    if args.json:
+        _dump(report)
+        return 0
+    for line in report.get("problems", []):
+        print(f"problem: {line}")
+    for line in report.get("notes", []):
+        print(f"  {line}")
+    for line in report.get("native", []):
+        print(f"  {line}")
+    for loss in report.get("losses", []):
+        print(f"  loss ({loss['kind']}): {loss['text']}"
+              + (f" (up to {loss['size']:g})" if loss.get("size") else ""))
+    return 0
+
+
+def _phrase_arg(args):
+    from . import improve as improve_mod
+    if not getattr(args, "phrase", None):
+        return None
+    with open(args.phrase, encoding="utf-8") as handle:
+        text = handle.read()
+    if "@PART" not in text:
+        raise CliError(f"{args.phrase}: write @PART where the instrument's "
+                       f"name goes (e.g. `inst {args.part} @PART`)")
+    return improve_mod.Phrase(text=text, part=args.part,
+                              name=os.path.basename(args.phrase))
+
+
+def cmd_measure(args):
+    from . import improve as improve_mod, program as program_mod
+    bank = bank_mod.Bank.load(args.bank)
+    entry = bank.get(args.name)
+    if entry.backend != "ym2612":
+        raise CliError("measure: YM2612 instruments so far")
+    backend = get_backend("ym2612")
+    register = entry.genome.register or backend.default_register
+    semitone = improve_mod._semitone(*register)
+    phrase = _phrase_arg(args) or improve_mod.Phrase.default(
+        semitone, "bass" if entry.role == "bass" else "lead")
+    compiled = program_mod.prepare(entry.compiled)
+    backend.install(compiled, entry.character)
+    renderer = improve_mod.Renderer()
+    readings = improve_mod.read(renderer, entry.name, "measure", semitone,
+                                phrase)
+    # the same held note an octave down and up: how the phases move with
+    # the register (a sampler's would move a lot; a chip's moves less)
+    from . import phases as phases_mod
+    held = []
+    for shift in (-12, 0, 12):
+        mono, rate = renderer.note(entry.name, "measure", semitone + shift,
+                                   10, 5)
+        held.append(phases_mod.note(mono, rate,
+                                    improve_mod._hz(semitone + shift),
+                                    10 * improve_mod.ROW_S))
+    out = {"instrument": entry.name, "register": f"{register[0]}{register[1]}",
+           "summary": improve_mod.summary(readings),
+           "registers": {"notes": ["-12", "0", "+12"],
+                         "spread": phases_mod.spread(held, [
+                             "attack.rise_ms", "phases.body.brightness",
+                             "phases.body.level_db",
+                             "release.ms_to_minus20"])},
+           "renders": renderer.renders,
+           "seconds": round(renderer.seconds, 2)}
+    if args.full:
+        out["readings"] = readings
+    if args.json:
+        _dump(out)
+        return 0
+    print(f"{entry.name} at {out['register']} ({renderer.renders} renders, "
+          f"{renderer.seconds:.1f} s)")
+    for key, value in out["summary"].items():
+        print(f"  {key:22s} {value}")
+    print("  across registers (-12, 0, +12 semitones):")
+    for key, value in out["registers"]["spread"].items():
+        print(f"  {key:30s} {value['values']}  range {value['range']}")
+    return 0
+
+
+def cmd_improve(args):
+    from . import improve as improve_mod
+    bank = bank_mod.Bank.load(args.bank)
+    entry = bank.get(args.name)
+    budget = improve_mod.Budget.parse(args.budget)
+    record = improve_mod.improve(
+        entry, args.intent, budget, _phrase_arg(args), seed=args.seed,
+        pick=args.pick, log=None if args.json else
+        (lambda text: print(f"  {text}")))
+    path = args.record or os.path.splitext(args.bank)[0] + \
+        f".{slug(args.name)}.{slug(args.intent)}.run.json"
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(record, handle, indent=1)
+    committed = None
+    if args.out and args.pick == "auto":
+        committed = improve_mod.commit(bank, record)
+        if committed is not None:
+            bank.save(args.out)
+    summary = {"instrument": entry.name, "intent": args.intent,
+               "hypothesis": record["hypothesis"], "stop": record["stop"],
+               "best": ({k: v for k, v in record["best"].items()
+                         if k != "program"} if record.get("best") else None),
+               "finalists": record.get("finalists", []),
+               "costs": record["costs"], "record": path,
+               "written": args.out if committed is not None else None}
+    if args.json:
+        _dump(summary)
+        return 0
+    print(f"stop: {record['stop']['reason']}; "
+          + (f"best {record['best']['id']} (gain {record['best']['gain']})"
+             if record.get("best") else "finalists listed for a choice"))
+    print(f"cost: {record['costs']['renders']} renders, "
+          f"{record['costs']['wall_seconds']} s; record {path}")
+    if committed is not None:
+        print(f"wrote {args.out}")
+    elif args.pick == "auto" and record.get("best") and \
+            record["best"]["id"] != "baseline":
+        print(f"keep it: python3 python/forge.py commit {args.bank} {path} "
+              f"--out {args.bank}")
+    return 0
+
+
+def cmd_commit(args):
+    from . import improve as improve_mod
+    bank = bank_mod.Bank.load(args.bank)
+    with open(args.record, encoding="utf-8") as handle:
+        record = json.load(handle)
+    entry = improve_mod.commit(bank, record, args.pick)
+    if entry is None:
+        print("the run chose nothing; the bank is unchanged")
+        return 0
+    out = args.out or args.bank
+    bank.save(out)
+    print(f"{entry.name}: program from {args.pick or record['best']['id']}; "
+          f"wrote {out}")
+    return 0
+
+
+def cmd_rollback(args):
+    from . import improve as improve_mod
+    bank = bank_mod.Bank.load(args.bank)
+    with open(args.record, encoding="utf-8") as handle:
+        record = json.load(handle)
+    entry = improve_mod.rollback(bank, record)
+    out = args.out or args.bank
+    bank.save(out)
+    print(f"{entry.name}: back as the run found it; wrote {out}")
+    return 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         prog="forge.py", description=__doc__,
@@ -839,6 +1065,71 @@ def build_parser():
     sp = add("director-prompt", cmd_director_prompt,
              "the steering question a model would be asked")
     sp.add_argument("scenario")
+
+    sp = add("capabilities", cmd_capabilities,
+             "what a program can do on each engine")
+    sp.add_argument("--engine", choices=("ym2612", "nes"))
+    sp.add_argument("--json", action="store_true")
+
+    sp = add("program", cmd_program, "an instrument's program")
+    sp.add_argument("action", choices=("show", "explain", "set", "clear"))
+    sp.add_argument("bank")
+    sp.add_argument("name")
+    sp.add_argument("file", nargs="?", help="set: the program JSON")
+    sp.add_argument("--hold", type=float, default=0.6,
+                    help="explain: seconds the key is down")
+    sp.add_argument("--tail", type=float, default=0.4,
+                    help="explain: seconds after the key-up")
+    sp.add_argument("--out", metavar="BANK.json",
+                    help="set/clear: where to write (default: the bank)")
+    sp.add_argument("--json", action="store_true")
+
+    def phrase_args(sp):
+        sp.add_argument("--phrase", metavar="FILE.trk",
+                        help="tracker text with @PART where the instrument "
+                             "goes (default: two bars against kick, hat "
+                             "and a pad)")
+        sp.add_argument("--part", default="fm0",
+                        help="the phrase's column for the instrument")
+
+    sp = add("measure", cmd_measure,
+             "short note, held note, phrase, read phase by phase")
+    sp.add_argument("bank")
+    sp.add_argument("name")
+    phrase_args(sp)
+    sp.add_argument("--full", action="store_true",
+                    help="every reading, not only the summary")
+    sp.add_argument("--json", action="store_true")
+
+    sp = add("improve", cmd_improve, "one measured local change")
+    sp.add_argument("bank")
+    sp.add_argument("name")
+    sp.add_argument("--intent", required=True,
+                    help="darker sustain | brighter attack | shorter release "
+                         "| longer release | legato | later vibrato")
+    sp.add_argument("--budget", default="3x2",
+                    help="CANDIDATESxROUNDS (default 3x2)")
+    phrase_args(sp)
+    sp.add_argument("--pick", choices=("auto", "list"), default="auto",
+                    help="auto: keep the best; list: leave the choice to a "
+                         "model or a person (`commit --pick ID`)")
+    sp.add_argument("--seed", type=int, default=0)
+    sp.add_argument("--record", metavar="RUN.json")
+    sp.add_argument("--out", metavar="BANK.json",
+                    help="write the bank with the change (may be the bank "
+                         "itself; `rollback` undoes it)")
+    sp.add_argument("--json", action="store_true")
+
+    sp = add("commit", cmd_commit, "keep a run's choice")
+    sp.add_argument("bank")
+    sp.add_argument("record")
+    sp.add_argument("--pick", help="a candidate id from the run's finalists")
+    sp.add_argument("--out", metavar="BANK.json")
+
+    sp = add("rollback", cmd_rollback, "undo a run exactly")
+    sp.add_argument("bank")
+    sp.add_argument("record")
+    sp.add_argument("--out", metavar="BANK.json")
     return p
 
 
@@ -849,6 +1140,8 @@ def main(argv=None):
         return args.fn(args)
     except (CliError, bank_mod.BankError, DNAError, mixing.MixError,
             KeyError, ValueError, OSError) as error:
+        # ProgramError and ImproveError are ValueErrors: their text names
+        # the field or the reason, and the exit code is 2 like the rest
         message = error.args[0] if isinstance(error, KeyError) and error.args \
             else str(error)
         print(f"forge: {message}", file=sys.stderr)

@@ -182,9 +182,11 @@ class FMOperator(Event):
     This is what a live FM part is made of. A patch selected once and left
     alone is a preset; measured on Streets of Rage's title theme, the
     driver changes Total Level 1,657 times against 6,256 key-ons and
-    reshapes the decay rates another 1,300. The value is absolute and the
-    next note-on reloads the patch over it, which is the hardware's
-    behaviour and the reason real drivers rewrite these continuously.
+    reshapes the decay rates another 1,300. The value is absolute and it
+    stays: a key-on does not reload the patch (measured: a bass whose
+    modulators were turned down mid-note was still dark on the next note),
+    only an instrument select does. That is the hardware's behaviour and the
+    reason real drivers write a note's starting values at every key-on.
     """
     channel: int
     operator: int

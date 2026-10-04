@@ -648,7 +648,8 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
         # `nes duty nes0 1` and `nes sweep nes0 3 2 down` — the NES's
         # live register writes, the same job `op` does on the YM2612.
         # Both take effect mid-note and neither is reloaded by the next
-        # note-on, unlike an FM patch.
+        # note-on (an `op` write on the YM2612 is not either: only `inst`
+        # reloads a patch).
         need(2, "a setting and a column, e.g. `nes duty nes0 1` or "
                 "`nes sweep nes0 3 2 down`")
         setting = args[0].lower()

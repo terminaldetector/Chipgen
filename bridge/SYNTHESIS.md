@@ -230,6 +230,103 @@ less, and repeats. The roles come from the score's shape and are soft; a part
 below D3 whose role is a guess is treated as the bass; say `--roles fm0=bass`
 when the shape does not.
 
+## Programs: what a note does over time
+
+The dials describe a sound; a patch keeps it the same from the first
+millisecond to the last. A part played on real hardware is not like that: a
+Mega Drive driver turns a bass's modulators down while the note sounds, so
+the attack is bright and the body dark; it keys a lead once and slides the
+pitch for the next notes, so a phrase is one breath. A **program** is that,
+small enough to write by hand or by a small model
+(`python/synthesis/program.py`):
+
+```json
+{"format": "chipgen-program/1", "engine": "ym2612",
+ "tracks": [{"target": "mod.tl", "points": [[0, 0], [29, 0], [109, 11]]}],
+ "settings": {"car.rr": 10},
+ "vibrato": {"depth_cents": 25, "speed_hz": 5.5, "delay_ms": 350},
+ "articulation": {"mode": "legato", "glide_ms": 40, "gate": 1.0}}
+```
+
+* a **track** is one target over time from the key-on, `linear` or `step`
+  between its points, in ms or 60 Hz frames, with a `loop` (as in an IT
+  envelope, the last held point is where the loop ends) and a `release`
+  point the note jumps to at the key-off. `priority` says who wins when the
+  score writes the same register inside a note (`program` writes its value
+  back right after; `pattern` leaves the register to the score);
+* **settings** change the patch itself (envelope rates of all carriers or
+  all modulators, feedback);
+* **vibrato** is the driver's, per voice, with a delay from each key-on;
+* **articulation**: `legato` keys the first of a run of touching notes and
+  moves the pitch for the rest (the envelope and the program carry on, the
+  detune layer follows); `gate` lets the key up early.
+
+The targets are each engine's own — `forge.py capabilities` lists them with
+units, range, clock, scope, what restarts them and what in a score conflicts
+with them. The YM2612 has `mod.tl`, `op1.tl`..`op4.tl` (modulators only: a
+carrier's level is the note's level), `fb` and `pitch`; the NES has `volume`,
+`duty`, `pitch` and `arp`, which become the instrument's own macros (legato
+is refused there by name: every NES note restarts its macros).
+
+**A key-on does not reload the patch.** Measured: a bass whose modulators
+were turned down mid-note was still dark on the next note (centroid 1938 Hz
+-> 1225 Hz -> 1129 Hz); only `inst` reloads it. So a program writes its
+starting values at every keyed note, and a hand-written `op` line lasts
+until something writes that register again.
+
+`forge.py program explain BANK NAME` prints one note the way the chip
+receives it — every write with its time — and every **loss**: point times
+moved to the 60 Hz frame and to the sequencer's ticks (set `ticks 240` and a
+frame is exactly 4 ticks), values rounded to register steps, offsets clamped
+to 0-127, two writes merged into one tick. Nothing is claimed finer than the
+clock.
+
+### Reading a note phase by phase
+
+`forge.py measure BANK NAME` plays a short note, a held note with its release,
+and a phrase with other parts, and reads each note in phases
+(`python/synthesis/phases.py`): attack (rise time on a 1 ms grid), body, held,
+release (time to fall 20 dB after the key-up), each with its level, its
+brightness and its pitch. Brightness here is the centroid of the *power*
+spectrum over the fundamental: measured on the bass above, the magnitude
+centroid rose while the 2nd and 3rd harmonics fell 22 and 17 dB, because the
+DAC's faint grit weighs as much in magnitudes as the partials that were
+going; the power centroid follows the partials. A reading that does not
+apply is `null` with the reason (a noise has no pitch; a chip has no sample
+loop), never a zero. In the phrase: how far each attack and body stand above
+the other parts, and whether the mix clips.
+
+### One local change, bounded
+
+```
+python3 python/forge.py improve BANK NAME --intent "darker sustain"
+python3 python/forge.py commit BANK RUN.json --out BANK      # keep it
+python3 python/forge.py rollback BANK RUN.json              # undo it exactly
+```
+
+An intent (`darker sustain`, `brighter attack`, `shorter release`, `longer
+release`, `legato`, `later vibrato`) carries its hypothesis: the problem, the
+parameter, the expected effect, the reading that checks it and guards on the
+rest (pitch in the phrase, body level, the attack's edge, clipping). The code
+writes 3 candidate changes, plays each in the three probes, keeps the best
+that passed every guard, and searches around it once more (`--budget 3x2`).
+It stops on the budget, on a round with nothing better, on a round of
+repeats, or at the first error — an error never starts another render. The
+record keeps the baseline, every candidate's change and readings, the seed,
+the versions, the choice and why, and the cost (renders and seconds; a
+model's tokens are the caller's to count). `--pick list` leaves the choice
+to a model or a person: `commit --pick r1c2`.
+
+Measured on the starter bank (`examples/programs/make.py`, 22 renders and
+~22 s a run): `fm_punch_bass` + darker sustain -> `mod.tl` +11 from 109 ms,
+body 24.6 % darker by power centroid, attack kept (12 and 14 steps were
+rejected because the attack lost its edge); `fm_saw_lead` + legato -> one
+key-on per run, glide 39 ms, the joins of touching notes from 4.47 dB to
+0.84 dB (glides of 81 and 102 ms were rejected: the short notes no longer
+landed on pitch). In the etude the legato lead's attacks stand 1.8 dB less
+above the mix, the price of not re-attacking, and the record says so. None
+of this is a judgment of how it sounds; the A/B files are for that.
+
 ## The model's part
 
 Only two places, both optional (`python/synthesis/director.py`):

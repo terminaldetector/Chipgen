@@ -32,5 +32,6 @@ def clear() -> None:
 
 def needs_expansion() -> bool:
     """True when any registered instrument asks for more than a plain
-    instrument select (layers, or a channel setting)."""
-    return any(c.style.get("layers") or c.setup for c in FORGE.values())
+    instrument select (layers, a channel setting, or a program)."""
+    return any(c.style.get("layers") or c.setup or c.style.get("program")
+               for c in FORGE.values())

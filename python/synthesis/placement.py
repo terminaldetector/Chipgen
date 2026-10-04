@@ -17,6 +17,11 @@ know nothing about the forge:
                voice through nes_driver (volume, duty, pitch and arpeggio
                macros as the engine's own NESVolume/NESDuty/Portamento
                events, at the frame rate).
+    programs   a YM2612 instrument with a program (program.py) gets its
+               per-note writes (modulator levels, feedback, pitch) at the
+               60 Hz frame, its vibrato at each key-on, its gate, and, if
+               it is legato, one key-on per run of touching notes with the
+               pitch moved for the rest.
 
 The pass reads the score's own events and leaves them alone except where
 it replaces an NES note; it never moves a note. Where a layer would need a
@@ -30,6 +35,7 @@ from typing import Dict, List, Optional
 import events as E
 
 from . import nes_driver, registry
+from . import program as program_mod
 from .backends import get_backend
 
 #: the label the tracker's `inst nes0 NAME` leaves in the event stream
@@ -50,6 +56,10 @@ class Report:
         self.layered_notes = 0
         self.macro_notes = 0
         self.settings = 0
+        self.program_notes = 0
+        self.legato_notes = 0
+        self.gated_notes = 0
+        self.program_writes = 0
         self.warnings: List[str] = []
 
     def warn(self, text: str):
@@ -58,7 +68,7 @@ class Report:
 
     def __bool__(self):
         return bool(self.layered_notes or self.macro_notes or self.settings
-                    or self.warnings)
+                    or self.program_notes or self.warnings)
 
     def text(self) -> str:
         parts = []
@@ -68,6 +78,14 @@ class Report:
             parts.append(f"{self.layered_notes} notes with a detune layer")
         if self.settings:
             parts.append(f"{self.settings} channel settings")
+        if self.program_notes:
+            parts.append(
+                f"{self.program_notes} notes played from programs "
+                f"({self.program_writes} writes"
+                + (f", {self.legato_notes} legato" if self.legato_notes
+                   else "")
+                + (f", {self.gated_notes} gated" if self.gated_notes else "")
+                + ")")
         return "; ".join(parts + self.warnings) or "nothing to place"
 
 
@@ -168,6 +186,9 @@ def expand(events, meta=None) -> list:
         added.append(_Item(tick, parent.order + 0.001 * offset_order, event,
                            tps_))
 
+    # programs first: a legato note they take the key-on from must not
+    # re-key its detune layer either, and a gated key-off must end the layer
+    _programs(items, total, added, add, report)
     _layers(items, total, added, add, report)
     _nes(items, total, added, add, report)
     if report.layer_voices:
@@ -285,6 +306,8 @@ def _layers(items, total, added, add, report):
                     for c in layer_free:
                         put(parent_volume.copy_with(channel=c))
             elif isinstance(ev, NoteOn):
+                if it.drop:
+                    continue        # a legato note: no new key-on anywhere
                 name = selected.get(ev.channel)
                 compiled = registry.lookup(backend_name, name) if name else None
                 if compiled is None or not compiled.style.get("layers"):
@@ -312,6 +335,239 @@ def _layers(items, total, added, add, report):
                         length):
                     put(extra, it.tick + offset)
                 report.layered_notes += 1
+
+
+# --------------------------------------------------------------------------
+# Programs (YM2612)
+# --------------------------------------------------------------------------
+#: what in a score moves a voice's pitch: the program's pitch track and its
+#: legato both drive the same Portamento, so a channel that has any of these
+#: keeps the score's and the program's are left out there
+_PITCH_EVENTS = (E.Portamento, E.Vibrato, E.Arpeggio)
+
+
+def _pitch_owned(items) -> set:
+    owned = set()
+    for it in items:
+        ev = it.event
+        if isinstance(ev, _PITCH_EVENTS) and ev.target.startswith("fm") \
+                and ev.target[2:].isdigit():
+            owned.add(int(ev.target[2:]))
+        elif isinstance(ev, E.FMPitch):
+            owned.add(ev.channel)
+    return owned
+
+
+def _fm_window(items, index, channel, total):
+    """-> (key-off tick or None, next note-on tick or None, stop tick) of
+    the note items[index] starts: where the key comes up, and where the
+    program stops (the next note, an instrument change, the end)."""
+    key_off = None
+    for later in items[index + 1:]:
+        ev = later.event
+        if later.drop and not isinstance(ev, E.FMNoteOn):
+            continue
+        if isinstance(ev, E.FMNoteOff) and ev.channel == channel:
+            if key_off is None:
+                key_off = later.tick
+        elif isinstance(ev, E.FMNoteOn) and ev.channel == channel:
+            return key_off, later.tick, later.tick
+        elif isinstance(ev, E.FMInstrumentSelect) and ev.channel == channel:
+            return key_off, None, later.tick
+        elif isinstance(ev, E.End):
+            return key_off, None, later.tick
+    return key_off, None, total
+
+
+def _semitones(note: str, octave: int) -> int:
+    return E.NOTE_NAMES.index(note) + 12 * int(octave)
+
+
+def _programs(items, total, added, add, report):
+    """Every note of a YM2612 instrument that carries a program."""
+    if not any(c.style.get("program") for (b, _), c in
+               registry.FORGE.items() if b == "ym2612"):
+        return
+    owned = _pitch_owned(items)
+    used = {it.event.channel for it in items
+            if isinstance(it.event, E.FMNoteOn)}
+    gated_offs: List[_Item] = []
+    selected: Dict[int, str] = {}
+    keyed: Dict[int, bool] = {}
+    #: channel -> the run of touching notes a legato program is playing:
+    #: {"root": semitone, "tick": key-on tick, "offset": cents, "name"}
+    chains: Dict[int, dict] = {}
+    vibrato_on: Dict[int, bool] = {}
+    told = set()
+
+    def warn_once(key, text):
+        if key not in told:
+            told.add(key)
+            report.warn(text)
+
+    for index, it in enumerate(items):
+        ev = it.event
+        if isinstance(ev, E.FMInstrumentSelect):
+            selected[ev.channel] = ev.instrument
+            chain = chains.pop(ev.channel, None)
+            if vibrato_on.pop(ev.channel, False):
+                add(it.tick, it, 1, E.Vibrato(target=f"fm{ev.channel}"),
+                    it.tps)
+            if chain and chain["offset"]:
+                add(it.tick, it, 2, E.Portamento(
+                    target=f"fm{ev.channel}",
+                    cents_per_second=program_mod.JUMP_RATE, to_cents=0.0),
+                    it.tps)
+            continue
+        if isinstance(ev, E.FMNoteOff):
+            keyed[ev.channel] = False
+            continue
+        if not isinstance(ev, E.FMNoteOn):
+            continue
+        channel = ev.channel
+        was_keyed = keyed.get(channel, False)
+        keyed[channel] = True
+        name = selected.get(channel)
+        compiled = registry.lookup("ym2612", name) if name else None
+        program = program_mod.of(compiled) if compiled is not None else None
+        if program is None:
+            chain = chains.pop(channel, None)
+            if chain and chain["offset"]:
+                add(it.tick, it, -0.5, E.Portamento(
+                    target=f"fm{channel}",
+                    cents_per_second=program_mod.JUMP_RATE, to_cents=0.0),
+                    it.tps)
+            continue
+        tps = it.tps
+        key_off, next_on, stop = _fm_window(items, index, channel, total)
+        pitched_ok = channel not in owned
+        if not pitched_ok and (program.articulation.mode == "legato"
+                               or program.track("pitch") or program.vibrato):
+            warn_once(("pitch", channel),
+                      f"fm{channel}: the score moves this channel's pitch "
+                      f"(porta, vib, arp or pitch), so {name}'s pitch track, "
+                      f"vibrato and legato are left out there")
+        semis = _semitones(ev.note, ev.octave)
+        # the detune layers this instrument plays, where they are free
+        layers = [(channel + k, layer) for k, layer in
+                  enumerate(compiled.style.get("layers", ()), 1)]
+        if any(c in used or c >= 6 for c, _ in layers):
+            layers = []
+        chain = chains.get(channel)
+        legato = (program.articulation.mode == "legato" and pitched_ok
+                  and was_keyed and chain is not None
+                  and chain["name"] == name)
+        # the score's own writes to what the program writes, inside the note
+        skip, back = {}, []
+        for later in items[index + 1:]:
+            if later.tick >= stop:
+                break
+            lev = later.event
+            reg = None
+            if isinstance(lev, E.FMOperator) and lev.channel == channel \
+                    and lev.field == "tl":
+                reg = f"op{lev.operator}.tl"
+            elif isinstance(lev, E.FMAlgorithm) and lev.channel == channel \
+                    and lev.feedback is not None:
+                reg = "fb"
+            if reg is None:
+                continue
+            track = _track_for(program, reg)
+            if track is None:
+                continue
+            if track.priority == "pattern":
+                skip.setdefault(reg, later.tick - it.tick)
+            else:
+                back.append((later, reg))
+            warn_once(("conflict", channel, reg),
+                      f"fm{channel}: the score writes {reg} inside a note of "
+                      f"{name}, whose program writes it too; "
+                      + ("the score's value stands until the next note"
+                         if track.priority == "pattern" else
+                         "the program's value is written back after it"))
+        if legato:
+            # no new attack: the pitch moves and the program runs on
+            it.drop = True
+            offset = 100.0 * (semis - chain["root"])
+            glide = program.articulation.glide_ms
+            if glide > 0:
+                rate = max(1.0, abs(offset - chain["offset"])
+                           / (glide / 1000.0))
+            else:
+                rate = program_mod.JUMP_RATE
+            add(it.tick, it, 1, E.Portamento(target=f"fm{channel}",
+                                             cents_per_second=rate,
+                                             to_cents=offset), tps)
+            for c, layer in layers:
+                add(it.tick, it, 1.5, E.Portamento(
+                    target=f"fm{c}", cents_per_second=rate,
+                    to_cents=offset + layer["cents"]), tps)
+            chain["offset"] = offset
+            start_frame = int(round((it.tick - chain["tick"]) / tps
+                                    * program_mod.FRAME_RATE))
+            pitch_base = offset
+            report.legato_notes += 1
+        else:
+            old = chains.get(channel)
+            if old and old["offset"]:
+                add(it.tick, it, -0.5, E.Portamento(
+                    target=f"fm{channel}",
+                    cents_per_second=program_mod.JUMP_RATE, to_cents=0.0),
+                    tps)
+            chain = chains[channel] = {"root": semis, "tick": it.tick,
+                                       "offset": 0.0, "name": name}
+            start_frame = 0
+            pitch_base = 0.0
+            if program.vibrato and pitched_ok:
+                v = program.vibrato
+                for c in [channel] + [c for c, _ in layers]:
+                    add(it.tick, it, 1, E.Vibrato(
+                        target=f"fm{c}", depth_cents=v["depth_cents"],
+                        speed_hz=v["speed_hz"],
+                        delay=v["delay_ms"] / 1000.0), tps)
+                vibrato_on[channel] = True
+        # where the key comes up: the score's key-off, or the gate
+        gate = program.articulation.gate
+        ends_run = key_off is not None or program.articulation.mode != "legato"
+        off = key_off
+        if gate < 1.0 and ends_run:
+            written = (key_off if key_off is not None else
+                       next_on if next_on is not None else stop) - it.tick
+            gated = it.tick + max(1, int(round(written * gate)))
+            if key_off is None or gated < key_off:
+                gated_offs.append(_Item(gated, it.order + 0.05,
+                                        E.FMNoteOff(channel=channel), tps))
+                off = gated
+                report.gated_notes += 1
+        note = program_mod.fm_note(
+            program, compiled.patch, channel, tps,
+            None if off is None else off - it.tick, stop - it.tick,
+            pitch_base=pitch_base, start_frame=start_frame, skip=skip,
+            pitch_allowed=pitched_ok)
+        for tick, order, extra in note.events:
+            add(it.tick + tick, it, 2 + order * 0.01, extra, tps)
+            report.program_writes += 1
+        for later, reg in back:
+            value = program_mod.value_at_tick(note, reg,
+                                              later.tick - it.tick, tps)
+            if value is not None:
+                added.append(_Item(later.tick, later.order + 0.0005,
+                                   program_mod.native_event(channel, reg,
+                                                            value), tps))
+        report.program_notes += 1
+    if gated_offs:
+        # into the timeline, not beside it: the layer pass reads note ends
+        # from the timeline, and a gated note's layer must stop with it
+        items.extend(gated_offs)
+        items.sort(key=lambda it: (it.tick, it.order))
+
+
+def _track_for(program, register):
+    """The program track that writes a native register, or None."""
+    if register == "fb":
+        return program.track("fb")
+    track = program.track(register)
+    return track if track is not None else program.track("mod.tl")
 
 
 _NES_VOICES = ("pulse1", "pulse2", "triangle", "noise")
@@ -383,8 +639,10 @@ def _nes(items, total, added, add, report):
         if playing.layers:
             report.layer_voices.add("pulse2" if voice == "pulse1"
                                     else "pulse1")
+        registered = registry.lookup("nes", inst.name)
+        gate = registered.style.get("gate", 1.0) if registered else 1.0
         for j, (offset, extra) in enumerate(nes_driver.to_events(
                 playing, voice, note, octave, max(1, end - it.tick), velocity,
-                it.tps), 1):
+                it.tps, gate), 1):
             add(it.tick + offset, it, j, extra, it.tps)
         report.macro_notes += 1

@@ -377,9 +377,13 @@ class YM2612:
         d1r, sl with rr — so the other half is read back from the shadow
         and preserved. Writing `mul` alone must not zero the detune.
 
-        The value is absolute, and the next note_on on this channel
-        reloads the patch over it. That is what the hardware does and why
-        real drivers rewrite these every tick rather than once.
+        The value is absolute and it stays until something writes the
+        register again: note_on does not reload the patch (it rewrites the
+        carriers' levels only when the velocity asks for it), so a
+        modulator written mid-note is still there on the next note.
+        set_instrument reloads everything. That is what the hardware does
+        and why real drivers write a note's starting values at every key-on
+        (synthesis/program.py does).
         """
         key = self.OPERATOR_ALIASES.get(field.lower(), field.lower())
         spec = self.OPERATOR_FIELDS.get(key)
