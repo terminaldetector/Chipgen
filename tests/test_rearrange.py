@@ -512,6 +512,28 @@ def test_a_module_left_over_the_limits_of_its_rung_is_told_so_and_not_merged():
         assert any("over the sega's limits" in n for n in notes), notes
 
 
+def test_a_module_with_compressed_samples_is_refused_and_left_as_it_was():
+    import hashlib
+    import struct
+    module = module_of()
+    blob = bytearray(it_write.build(module))
+    n_ord, n_ins = struct.unpack_from("<HH", blob, 0x20)
+    first_sample, = struct.unpack_from("<I", blob, 0xC0 + n_ord + 4 * n_ins)
+    blob[first_sample + 0x12] |= 8                 # IT 2.14 packing
+    with tempfile.TemporaryDirectory() as folder:
+        source = os.path.join(folder, "packed.it")
+        with open(source, "wb") as handle:
+            handle.write(bytes(blob))
+        before = hashlib.sha256(open(source, "rb").read()).hexdigest()
+        out = os.path.join(folder, "out.it")
+        code, _, err = _run("-q", "rearrange", source, "--to", "schism",
+                            "-o", out)
+        assert code == 2 and "compressed" in err and "Nothing was changed" \
+            in err, err
+        assert not os.path.exists(out)
+        assert hashlib.sha256(open(source, "rb").read()).hexdigest() == before
+
+
 def test_the_peak_of_a_rearranged_module_is_fitted_like_a_build():
     with tempfile.TemporaryDirectory() as folder:
         sch = os.path.join(folder, "chip.sch")

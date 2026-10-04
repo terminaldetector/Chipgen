@@ -328,6 +328,16 @@ def build(module) -> bytes:
                                f"and holds {len(pattern.cells)}")
     if m.use_instruments is False and m.instruments:
         raise ITWriteError("instruments given, but the module is in sample mode")
+    for number, sample in enumerate(m.samples, 1):
+        held = getattr(sample, "stored_frames", 0)
+        if sample.data is None and held:
+            why = ("is stored compressed (IT 2.14/2.15 packing), which this "
+                   "reader does not unpack" if sample.compressed else
+                   "was read without its audio (load_data=False)")
+            raise ITWriteError(
+                f"sample {number} {sample.name!r} {why}: writing the module "
+                f"would leave its {held} frames out. Nothing was written; "
+                f"the original file is the only complete copy")
 
     channels = max(1, m.channels_used())
     _check("channels used", channels, 1, MAX_CHANNELS)

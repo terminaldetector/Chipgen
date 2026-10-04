@@ -754,7 +754,19 @@ def cmd_kit(args):
 def _load_module(path):
     from .. import it_read, notation
     if path.lower().endswith(".it"):
-        return it_read.read_file(path), None
+        module = it_read.read_file(path)
+        held = [(n, s) for n, s in enumerate(module.samples, 1)
+                if s.data is None and s.stored_frames]
+        if held:
+            number, sample = held[0]
+            raise CliError(
+                f"{path}: sample {number} {sample.name!r} is stored compressed "
+                f"(IT 2.14/2.15 packing){f' and so are {len(held) - 1} more' if len(held) > 1 else ''}"
+                f"; this program does not unpack it, and a pass over the module "
+                f"would need its audio and could not write it back. Nothing "
+                f"was changed (libopenmpt and Schism Tracker still play the "
+                f"original)")
+        return module, None
     try:
         module, report = notation.compile_file(path)
     except notation.NotationError as error:

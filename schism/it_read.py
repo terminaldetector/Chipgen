@@ -13,8 +13,11 @@ forgiving about data it can skip, and it says which it did:
   * the old instrument layout (Cmwt below 0x200) is refused by name
   * a compressed sample keeps its header and its `compressed` flag; its
     data is not unpacked here (the patterns are the corpus, and a
-    transcription does not need the audio)
-  * stereo samples are refused by name rather than read as mono
+    transcription does not need the audio). `stored_frames` says how much
+    audio stayed in the file, and the writer refuses to write such a module
+    rather than write the sample empty
+  * a stereo sample is read as both channels (the file keeps all of the
+    left, then all of the right)
 """
 
 import struct
@@ -99,9 +102,11 @@ def _sample(blob: bytes, whole: bytes, load_data: bool) -> Sample:
     if flags & 8:
         sample.compressed = True            # IT 2.14/2.15 packing
         sample.data = None
+        sample.stored_frames = length
         return sample
     if not load_data:
         sample.data = None
+        sample.stored_frames = length
         return sample
     width = 2 if sample.bits == 16 else 1
     channels = 2 if flags & 4 else 1       # stereo: all left, then all right

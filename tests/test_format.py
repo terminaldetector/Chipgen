@@ -249,6 +249,30 @@ def test_a_compressed_sample_keeps_its_header_and_says_so():
     sample = it_read.read(bytes(blob)).samples[0]
     assert sample.compressed and sample.data is None
     assert sample.c5speed == 64 * 523 and sample.name == "sine"
+    assert sample.stored_frames == 64
+
+
+def test_a_sample_whose_audio_stayed_in_the_file_is_never_written_empty():
+    """The reader keeps a compressed sample's header and leaves its data
+    packed; the writer used to write such a sample as an empty one, so a
+    pass over somebody's module dropped audio without a word."""
+    blob = bytearray(it_write.build(_module()))
+    smp_at, = struct.unpack_from("<I", blob, 0xC6)
+    blob[smp_at + 0x12] |= 8
+    for module, word in ((it_read.read(bytes(blob)), "compressed"),
+                         (it_read.read(it_write.build(_module()),
+                                       load_data=False), "without its audio")):
+        try:
+            it_write.build(module)
+        except it_write.ITWriteError as error:
+            assert word in str(error) and "64 frames" in str(error) \
+                and "Nothing was written" in str(error), str(error)
+        else:
+            raise AssertionError(f"a sample {word} was written empty")
+    # an empty sample made in code is still an empty sample
+    empty = _module()
+    empty.samples.append(M.Sample(name="nothing"))
+    it_write.build(empty)
 
 
 def test_the_old_instrument_layout_is_refused_by_name():

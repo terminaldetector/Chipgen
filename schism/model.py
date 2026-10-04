@@ -294,6 +294,10 @@ class Sample:
     #: set by the reader when the file stored the data compressed and the
     #: reader did not unpack it (the header is still real)
     compressed: bool = False
+    #: the frames the file holds when the reader left them there (a
+    #: compressed sample, or a read with load_data=False): `data` is None but
+    #: the sample is not empty, and writing it would drop the audio
+    stored_frames: int = 0
 
     @property
     def frames(self) -> int:
