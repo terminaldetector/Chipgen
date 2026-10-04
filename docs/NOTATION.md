@@ -136,7 +136,7 @@ An instrument is one line of `key=value` pairs with no spaces around the
 | `wave=` | see the waveform table | what the sound is made of |
 | `sample=` | `text, _ for spaces` | use a sample defined by `smp` |
 | `kit=` | `KEY:sample,KEY:sample,...` | key:sample pairs, one sample per key, all at natural pitch; a sample written @name is a forged one |
-| `forge=` | `NAME`, `bank:NAME`, `kit:NAME` | a sound the forge makes: an archetype, or an instrument of a bank (`python3 -m schism forge archetypes`) |
+| `forge=` | `NAME`, `bank:NAME`, `kit:NAME`, `layer:A@click+B@body` | a sound the forge makes: an archetype, or an instrument of a bank (`python3 -m schism forge archetypes`); layer:A@click+B@body stacks sounds by role, one a part |
 | `dna=` | `axis:value,...` | with forge=, dials to move: axis:value,... (brightness:0.8,decay:0.3) |
 | `reg=` | a note, `A3` | with forge=, the register it is built for, A3; for a drum the pitch it is tuned to |
 | `chord=` | `a name (min9) or semitones above the key (0,3,7,10,14)` | with forge=, the sample is a chord: a name (maj min 7 maj7 min7 min9 sus4 ...) or the semitones above the key, 0,3,7,10,14. Pressing a key plays the chord on it |

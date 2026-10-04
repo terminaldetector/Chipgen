@@ -222,6 +222,8 @@ class LayerFamily(Family):
         layer_list, length, drive = build(d, f)
         params = {"layers": _rounded(layer_list), "length": round(length, 3),
                   "drive": drive, "reg_note": reg_note, "seed": 1}
+        if g.style.get("dac"):          # played through a console's DAC
+            params["dac"] = dict(g.style["dac"])
         patch = Patch(self.name, params)
         patch.inst["nna"] = "cut"
         patch.inst["gain"] = 128
@@ -265,6 +267,10 @@ class DrumFamily(LayerFamily):
 def layer_sampler(params: dict, low: int, high: int):
     x = L.render(params["layers"], params["length"], L.RATE,
                  params.get("seed", 1), params.get("drive", 0.0))
+    if params.get("dac"):
+        from . import splice
+        x = splice.crush(x, float(params["dac"]["rate"]),
+                         int(params["dac"].get("bits", 8)))
     # the register note plays the data unshifted
     c5 = int(round(L.RATE * 2.0 ** ((61 - params["reg_note"]) / 12.0)))
     return spectral.Built(spectral.to_int16(x, 0.92), c5, None,

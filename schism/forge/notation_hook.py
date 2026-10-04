@@ -474,6 +474,32 @@ def retime(module: M.Module, library, tick: float):
                 ins.cutoff = 127
 
 
+def forged_fm(library) -> dict:
+    """{instrument number: the operator dump} of every instrument whose
+    sound is an FM voice, so that a console export is not only PCM."""
+    out = {}
+    for number, info in library.forged.items():
+        params = info["patch"].params
+        if info["patch"].family == "fm" and params.get("fm"):
+            out[number] = copy.deepcopy(params["fm"])
+    return out
+
+
+def forged_dac(library) -> dict:
+    """{instrument number: how the DAC plays it} for the drums that a
+    console plays through its one DAC channel: a drum with a `dac` in its
+    recipe, or a stack with such a drum in it."""
+    out = {}
+    for number, info in library.forged.items():
+        params = info["patch"].params
+        found = params.get("dac")
+        for part in params.get("parts", []):
+            found = found or part["patch"].get("params", {}).get("dac")
+        if found:
+            out[number] = dict(found)
+    return out
+
+
 def forged_of(library) -> dict:
     """{instrument number: (Genome, Compiled)} for the arrangement model."""
     return {n: (i["genome"], i["compiled"]) for n, i in library.forged.items()}

@@ -17,6 +17,12 @@
     play BANK [NAME...]       render the instruments to audio, to listen
     analyse SCORE             where do the channels of this module sit?
     lift 'wave=saw oct=3-5'   measure an `inst` line and print its DNA
+    rearrange SONG --to schism
+                              rewrite a module for another rung: other
+                              voices, a split arpeggio, an echo, a fill
+    lift-voice NAME --from nes --to sega
+                              one voice up the ladder NES -> Mega Drive ->
+                              Schism: operator numbers, DAC drums, PCM zones
     starter                   rebuild the bank that ships with the forge
     director-prompt SCENARIO  the question a model would be asked
 
@@ -30,7 +36,8 @@ import os
 import sys
 import time
 
-from . import archetypes, bank as bank_mod, evolve, fam_layer, mixing
+from . import (archetypes, bank as bank_mod, evolve, fam_layer, ladder,
+               mixing, rearrange as rearrange_mod)
 from .dna import AXES, AXIS_DOC, DNA, DNAError
 from .family import families, get_family
 from .genome import Genome, slug
@@ -501,6 +508,193 @@ def cmd_layer(args):
     return 0
 
 
+def _ladder_body(kind: str):
+    """The body a DAC drum is stacked on at the Schism rung: the starter
+    bank's drum of that kind, tuned and calibrated."""
+    from . import notation_hook
+    entry = notation_hook.starter().get(kind)
+    family = get_family(entry.family)
+    compiled = family.from_dict(family.to_dict(entry.compiled))
+    return fam_layer.Source(kind + "_body", compiled, entry.genome, "body")
+
+
+def cmd_lift_voice(args):
+    """One voice up the ladder: NES -> Mega Drive -> Schism."""
+    from .. import notation, it_write, render as render_mod
+    start, goal = args.start, args.goal
+    if ladder.RUNGS.index(goal) <= ladder.RUNGS.index(start):
+        raise CliError(f"a voice is lifted up the ladder "
+                       f"({' -> '.join(ladder.RUNGS)}), not from {start} to "
+                       f"{goal}")
+    name = slug(args.name)
+    folder = args.dir or "."
+    path = os.path.join(folder, f"{name}.voice.json")
+    arp = [int(i) for i in args.arp.split(",")] if args.arp else None
+    changed = any(v is not None for v in (args.role, args.duty,
+                                          args.noise_mode, arp))
+    if os.path.exists(path) and not changed:
+        voice = ladder.Voice.load(path)
+    else:
+        if start != "nes" and not os.path.exists(path):
+            raise CliError(f"no voice file at {path}: start with "
+                           f"`lift-voice {args.name} --from nes --to sega`")
+        old = ladder.Voice.load(path) if os.path.exists(path) else None
+        nes = ladder.nes_voice(args.name, args.role or (old.role if old
+                                                        else None),
+                               args.duty, args.noise_mode, arp)
+        voice = ladder.Voice(name, nes.role, nes)
+    nes = voice.nes
+    if start == "sega" and voice.sega is None:
+        raise CliError(f"{path} has no Sega rung yet: "
+                       f"`lift-voice {args.name} --from nes --to sega` first")
+    out = args.bank or os.path.join(folder, f"{name}.bank.json")
+    bank = bank_mod.Bank.load(out) if os.path.exists(out) \
+        else bank_mod.Bank(name)
+
+    def keep(entry):
+        bank.entries = [e for e in bank.entries if e.name != entry.name]
+        bank.add(entry)
+    print(f"{name}: {voice.role} on the NES, {nes.channel}"
+          + (f" at duty {nes.duty:g}" if nes.channel == "pulse" else "")
+          + (f", {nes.noise_mode} noise" if nes.channel == "noise" else "")
+          + (f", arpeggio {nes.arp}" if len(nes.arp) > 1 else ""))
+    print(f"  inst N name={name[:8]} {ladder.nes_line(nes)}")
+    if len(nes.arp) > 1:
+        print("  a chord is an arpeggio here, one step a tick; the pattern:")
+        for row in ladder.arp_rows(nes, "C-4", 1, 4):
+            print("    " + row)
+    sega_name = schism_name = None
+    if goal in ("sega", "schism") and start in ("nes", "sega"):
+        if start == "nes" or voice.sega is None:
+            voice.sega = ladder.lift_to_sega(nes)
+            voice.schism = None
+        sega = voice.sega
+        print(f"\nSega ({'FM' if sega.kind == 'fm' else 'DAC'}):")
+        for line in sega.notes:
+            print(f"  - {line}")
+        if sega.kind == "fm":
+            print("  " + ladder.operator_table(
+                ladder.fm.FmPatch.from_dict(sega.fm)).replace("\n", "\n  "))
+        else:
+            print(f"  DAC: {sega.dac['drum']} at {sega.dac['rate']} Hz, "
+                  f"{sega.dac['bits']} bit")
+        genome = ladder.sega_genome(sega, f"{name}_sega")
+        compiled = get_family(genome.family).compile(genome)
+        entry = ladder.make_entry(f"{name}_sega", genome, compiled,
+                                  voice.role, "Mega Drive rung: "
+                                  + "; ".join(sega.notes))
+        keep(entry)
+        sega_name = entry.name
+        for issue in entry.issues:
+            print(f"  {issue}")
+    if goal == "schism":
+        genome, compiled, notes = ladder.lift_to_schism(
+            voice.sega, f"{name}_schism", _ladder_body)
+        print("\nSchism:")
+        for line in notes:
+            print(f"  - {line}")
+        entry = ladder.make_entry(f"{name}_schism", genome, compiled,
+                                  voice.role, "Schism rung: "
+                                  + "; ".join(notes))
+        keep(entry)
+        schism_name = entry.name
+        voice.schism = {"entry": entry.name, "notes": notes}
+        for issue in entry.issues:
+            print(f"  {issue}")
+    voice.save(path)
+    bank.save(out)
+    print(f"\nwrote {path} and {out}; in a score:\n  bank "
+          f"{os.path.basename(out)}")
+    for number, label, ref in ((2, "Sega", sega_name), (3, "Schism",
+                                                       schism_name)):
+        if ref:
+            print(f"  inst {number} name={label} forge={ref}")
+    if args.demo or args.mp3:
+        text = ladder.demo_score(voice, os.path.basename(out),
+                                 voice.sega and f"{name}_sega",
+                                 voice.schism and f"{name}_schism")
+        if args.demo:
+            with open(args.demo, "w", encoding="utf-8") as handle:
+                handle.write(text)
+            print(f"wrote {args.demo}: the same notes on each rung")
+        if args.mp3:
+            module, _ = notation.compile_text(text, os.path.abspath(folder))
+            try:
+                render_mod.fit_peak(module)
+                render_mod.render_mp3(it_write.build(module), args.mp3)
+            except render_mod.RenderError as error:
+                raise CliError(str(error)) from None
+            print(f"wrote {args.mp3}: NES, then Sega, then Schism")
+    return 0
+
+
+def cmd_rearrange(args):
+    """A second pass that rewrites a module: other voices, a split
+    arpeggio, an echo, a fill; the notes stay."""
+    from .. import export, it_write, render as render_mod
+    module, _ = _load_module(args.score)
+    roles = {}
+    for item in filter(None, (args.roles or "").split(",")):
+        voice, _, role = item.partition("=")
+        roles[voice.strip()] = role.strip()
+    echo = []
+    for spec in args.echo or ():
+        parts = spec.split(":")
+        try:
+            echo.append((int(parts[0]),
+                         int(parts[1]) if len(parts) > 1 else 2,
+                         float(parts[2]) if len(parts) > 2 else -14.0))
+        except ValueError:
+            raise CliError(f"--echo {spec!r} is not CHANNEL[:ROWS[:DB]], "
+                           f"e.g. 1:2:-14") from None
+    try:
+        result = rearrange_mod.rearrange(
+            module, args.to, roles, split=not args.no_split,
+            register=not args.no_register, sub=not args.no_sub, echo=echo,
+            fill=not args.no_fill, every=args.every, kit=args.kit)
+    except rearrange_mod.RearrangeError as error:
+        raise CliError(str(error)) from None
+    out = args.out or os.path.splitext(args.score)[0] + f".{args.to}.it"
+    fit = None
+    if args.peak != "off":
+        try:
+            target = 0.89 if args.peak == "auto" else float(args.peak)
+        except ValueError:
+            raise CliError(f"--peak is auto, off or a number, not "
+                           f"{args.peak!r}") from None
+        try:
+            fit = render_mod.fit_peak(result.module, target)
+        except (render_mod.RenderError, ImportError):
+            pass                    # without a player the volume stays
+    blob = it_write.build(result.module)
+    with open(out, "wb") as handle:
+        handle.write(blob)
+    side = export.sidecar(result.module, os.path.basename(out), peak=fit,
+                          notes=[f"[{c.kind}] {c.text}" for c in result.changes])
+    export.write_sidecar(export.sidecar_path(out), side)
+    wrote = (f"wrote {out} ({len(blob) / 1024:.0f} KB) and "
+             f"{export.sidecar_path(out)}")
+    if args.json:
+        data = result.to_dict()
+        data.update(file=out, peak=None if fit is None else fit.text())
+        print(json.dumps(data, indent=1))
+        print(wrote, file=sys.stderr)
+    else:
+        print(result.text())
+        if fit is not None:
+            print(fit.text())
+        print(wrote)
+    if args.mp3:
+        try:
+            render_mod.fit_peak(result.module)
+            render_mod.render_mp3(it_write.build(result.module), args.mp3)
+        except render_mod.RenderError as error:
+            raise CliError(str(error)) from None
+        print(f"wrote {args.mp3}", file=sys.stderr if args.json
+              else sys.stdout)
+    return 0
+
+
 def cmd_show(args):
     bank = bank_mod.Bank.load(args.bank)
     print(f"{bank.name}: {len(bank.entries)} instruments"
@@ -793,6 +987,55 @@ def build_parser():
 
     sp = add("lift", "measure an `inst` line", cmd_lift)
     sp.add_argument("recipe", help="'wave=saw oct=3-5 fade=60'")
+    sp = add("rearrange", "rewrite a module for another rung: other voices, "
+             "split arpeggios, echoes, fills", cmd_rearrange)
+    sp.add_argument("score", help="a .sch score or a .it module")
+    sp.add_argument("--to", choices=ladder.RUNGS, default="schism")
+    sp.add_argument("-o", "--out", help="the new module (default: "
+                                        "SONG.RUNG.it)")
+    sp.add_argument("--roles", help="ch03=bass,ch04=lead: a channel's job "
+                                    "when its notes do not say")
+    sp.add_argument("--echo", action="append", metavar="CH[:ROWS[:DB]]",
+                    help="copy channel CH to a free one, ROWS later (2), DB "
+                         "quieter (-14); repeatable")
+    sp.add_argument("--kit", help="replace the drum kit by a starter kit "
+                                  "(tight_kit, 808_kit, dark_kit)")
+    sp.add_argument("--every", type=int, default=4,
+                    help="a fill ends every this many patterns (4)")
+    sp.add_argument("--no-split", action="store_true",
+                    help="leave an arpeggio channel as one channel")
+    sp.add_argument("--no-register", action="store_true",
+                    help="leave a high bass where it is")
+    sp.add_argument("--no-sub", action="store_true")
+    sp.add_argument("--no-fill", action="store_true")
+    sp.add_argument("--peak", default="auto", metavar="auto|off|N",
+                    help="fit the mix volume so the loudest moment is N "
+                         "(auto: 0.89), as `build` does")
+    sp.add_argument("--json", action="store_true")
+    sp.add_argument("--mp3")
+
+    sp = add("lift-voice", "one voice up the ladder NES -> Mega Drive -> Schism",
+             cmd_lift_voice)
+    sp.add_argument("name", help="a role (lead bass pad organ stab bell snare "
+                                 "kick hat), an archetype, or a voice you "
+                                 "made")
+    sp.add_argument("--from", dest="start", choices=ladder.RUNGS,
+                    default="nes")
+    sp.add_argument("--to", dest="goal", choices=ladder.RUNGS,
+                    default="sega")
+    sp.add_argument("--role", help="decided from the name when left out: "
+                                   + ", ".join(ladder.ROLES))
+    sp.add_argument("--duty", type=float, help="NES pulse duty: 0.125 0.25 "
+                                               "0.5 0.75")
+    sp.add_argument("--noise-mode", choices=("long", "short"))
+    sp.add_argument("--arp", help="NES arpeggio intervals: 0,4,7")
+    sp.add_argument("--dir", help="where NAME.voice.json and NAME.bank.json "
+                                  "live (default: here)")
+    sp.add_argument("--bank", help="the bank the rungs are put in")
+    sp.add_argument("--demo", help="write a score that plays one note list "
+                                   "on each rung")
+    sp.add_argument("--mp3", help="and render it")
+
     sp = add("starter", "rebuild the bank that ships with the forge",
              cmd_starter)
     sp.add_argument("--out")

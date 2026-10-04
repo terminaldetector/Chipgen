@@ -161,7 +161,7 @@ def _load_builtin():
         return
     _loaded = True
     import importlib
-    for module in ("tone", "modal", "drum", "fx", "layer"):
+    for module in ("tone", "modal", "drum", "fx", "layer", "fm"):
         try:
             importlib.import_module(f"{__package__}.fam_{module}")
         except ModuleNotFoundError as error:

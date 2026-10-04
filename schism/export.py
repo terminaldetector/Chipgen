@@ -148,6 +148,9 @@ def _instrument_dict(module: M.Module, number: int, ins: M.Instrument) -> dict:
     dump = (getattr(module, "fm", None) or {}).get(number)
     if dump:
         out["operators"] = dump
+    dac = (getattr(module, "dac", None) or {}).get(number)
+    if dac:
+        out["dac"] = dac
     return out
 
 
@@ -288,16 +291,19 @@ def _preset_sega(module: M.Module):
     if problems:
         raise ExportError(problems)
     dumps = getattr(module, "fm", None) or {}
+    drums = getattr(module, "dac", None) or {}
     for number, ins in enumerate(module.instruments, 1):
         if number in kits or not (ins.name or key_runs(ins)):
             continue
-        if number not in dumps:
+        if number not in dumps and number not in drums:
             notes.append(f"instrument {number:02d} has no operator dump (it "
                          f"was not made by `forge lift-voice`): the sidecar "
                          f"holds its PCM description only")
     if dumps:
         notes.append(f"{len(dumps)} instruments carry operator dumps in the "
                      f"sidecar")
+    if drums:
+        notes.append(f"{len(drums)} drums are DAC one-shots (sidecar `dac`)")
     return notes
 
 

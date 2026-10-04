@@ -86,3 +86,15 @@ give back:
 - **Arrangement.** Choosing *which* instrument plays a part rather than
   repairing the one it was given, and the conflicts that live in the notes
   (two parts a second apart), which need the score and not the sound.
+  (`forge rearrange` is the first step: it acts on the labels, with fixed
+  rules for each rung; it does not choose.)
+- **The chip, checked.** The FM voices of the ladder are an approximation of
+  the YM2612: the operator numbers are exact, the register-to-seconds scale
+  was set by ear. Chipgen has the real emulator; the same dump rendered by
+  both, and the scale fitted to it, would turn "approximately" into a number.
+  Likewise the NES rung is a band-limited pulse, not the APU.
+- **Stacks with two loops.** A sample has one loop, so a stack of a looped
+  body and a looped tail is refused. Two loops of commensurate length
+  (two tones on one pitch) could be tiled to their common period; a pad
+  under a percussive body wants its slow attack baked into its part of the
+  sample, not left in the one volume envelope.

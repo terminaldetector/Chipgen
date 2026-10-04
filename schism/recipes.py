@@ -272,7 +272,8 @@ SETTINGS = {
     "kit": (None, "key:sample pairs, one sample per key, all at natural "
             "pitch; a sample written @name is a forged one"),
     "forge": (None, "a sound the forge makes: an archetype, or an "
-              "instrument of a bank (`python3 -m schism forge archetypes`)"),
+              "instrument of a bank (`python3 -m schism forge archetypes`); "
+              "layer:A@click+B@body stacks sounds by role, one a part"),
     "dna": (None, "with forge=, dials to move: axis:value,... "
             "(brightness:0.8,decay:0.3)"),
     "reg": (None, "with forge=, the register it is built for, A3; for a "

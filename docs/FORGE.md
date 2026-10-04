@@ -67,6 +67,7 @@ say so in the same words.
 | family | what it is | structure it can choose |
 |---|---|---|
 | `drum` | percussion as layers of sine, noise and metal: kick, snare, hat, clap, tom, rim, cymbal, shaker, cowbell (no detune, motion, articulation) | kind: `clap`, `cowbell`, `cymbal`, `hat`, `kick`, `rim`, `shaker`, `snare`, `tom` |
+| `fm` | a four-operator FM voice with the registers of a YM2612, rendered to PCM at each octave: Mega Drive leads, basses, organs, pads |  |
 | `fx` | one-shot effects: riser, impact, zap, swoosh (no detune, motion, articulation) | kind: `impact`, `riser`, `swoosh`, `zap` |
 | `layer` | a stack of other instruments, PCM spliced by role: click, body, noise, sub, tail |  |
 | `modal` | damped partials, each with its own fall: plucked strings, harps, pianos, marimbas, vibes, bells, glass | set: `string`, `tuned`, `bar`, `bell`, `plate` |
@@ -341,6 +342,142 @@ for the mixer, with nested parts:
  "stereo": 6}
 ```
 
+## The ladder: NES, Mega Drive, Schism
+
+A module made of `wave=square` and `wave=pulse` is heard as an NES expansion
+chip however its notes are arranged, and mixing saw archetypes does not cure
+it: the sound is still a pulse. What cures it is to keep the *voice* and change
+the driver it is played by. `forge lift-voice` pushes one voice up three
+rungs, each a rule written down, none a model:
+
+```text
+python3 -m schism forge lift-voice lead --from nes --to sega
+python3 -m schism forge lift-voice lead --from sega --to schism --demo lead.sch --mp3 lead.mp3
+python3 -m schism forge lift-voice organ --to schism          # both lifts
+```
+
+`NAME` is a role (`lead bass pad organ stab bell snare kick hat`) or an
+archetype (`saw_lead` is a lead, `acid_bass` a bass, `open_hat` a hat). The
+command keeps the voice in `NAME.voice.json` (every rung it has reached), puts
+the Mega Drive and Schism rungs in `NAME.bank.json` as `NAME_sega` and
+`NAME_schism` (`bank NAME.bank.json` and `forge=NAME_sega` in a score), and
+with `--demo` writes a score that plays *one note list* on each rung, one after
+the other: the NES instrument, the Mega Drive voice, the Schism instrument.
+
+**Rung 1, the NES.** A voice is `{duty, noise_mode, arp_intervals}` (and a
+volume envelope in frames): a pulse at 12.5, 25, 50 or 75 % (a 75 % pulse is a
+25 % pulse upside down: the same buzz), a triangle, or the noise channel in its
+long or its metallic short mode. Harmony is an arpeggio, never a chord sample,
+and **there is no pad**: the voice of a pad is `arp_intervals [0, 4, 7]`, and
+the command prints the pattern for it (`C-4 01 v40 J47` on every row: `Jxy`
+steps 0, +x, +y semitones a tick). The rung's instrument is the existing
+`wave=pulse duty=...` recipe; it is the baseline the other two are measured
+against, not an emulation of the chip.
+
+**Rung 2, the Mega Drive.** The YM2612 is six channels of four sine operators,
+and a voice is its registers: an algorithm, a feedback level on operator 1 and,
+for each operator, `MUL DT TL KS AR D1R SL D2R RR` in the chip's own units
+(`fm.py`). FM as FM: nothing here imitates the pulse, what the duty did to
+the spectrum an operator does with its level.
+
+| the NES voice | becomes | because |
+|---|---|---|
+| pulse lead, duty 25 / 50 % | algorithm 4, feedback 5 on operator 1, a detune of +3 and -3 on the carrier pair, a short decay on the modulators | two pairs; the feedback is the pulse's edge, the decays its bite; the narrower the duty, the stronger the modulator (TL 32 / 40) |
+| pulse lead, duty 12.5 % | algorithm 5, feedback 6 | one modulator into three carriers: the brightest |
+| triangle bass | algorithm 0, multiples 1, 1, 2 into a carrier at 1, short decays on the modulators | a chain, low multiples: a clean fundamental with a bite |
+| pad (a pulse arpeggio) | algorithm 4, two carriers detuned a step either way, a slow attack | one held voice instead of an arpeggio |
+| organ | algorithm 7 (all carriers), drawbar multiples 1, 2, 3 and a fourth operator at multiple 6 that attacks at once and falls to nothing in a few milliseconds | the key click; the chip has four operators, so of the usual 1, 2, 3, 4, 6 the 4 is left out |
+| stab | algorithm 5, every envelope falling to nothing | struck, not held |
+| bell | algorithm 4, a high multiple (7) and 3 into two carriers, falling to nothing | |
+| noise snare, kick, hat | **not an FM voice**: a DAC one-shot, 8 bit, 13.3 / 11 / 16 kHz | the console plays drums through one DAC channel |
+
+There are no stereo samples on the console, so the voice's panning is the
+chip's register (`L`, `R`, `LR`, which sets the instrument's default pan). The
+voice is played by an IT instrument all the same: it is rendered to PCM at every
+octave, as a loop that joins itself if it holds (an operator with no second
+decay holds; one whose sustain level is 15 is gone) and as a one-shot if it
+dies away. The operator numbers are kept in the recipe of the instrument and
+written to the **sidecar** (`SONG.it.json`, `"operators"` for an FM voice,
+`"dac"` for a drum), so `build --preset sega` exports the voice and not only
+its PCM.
+
+**Rung 3, Schism.** Built from the Mega Drive voice rendered to PCM, not from
+the NES cycle: an octave a sample; a loop on what is held, a one-shot on what is
+struck; the voice twice, 6 cents flat and 6 sharp, as a stereo sample (not on
+the bass: the low end stays centred); then a post stack, a soft clip, a small
+cabinet, and a chorus **on the organ only**, all applied so that a loop is still
+a loop; NNA by role (`cut` drums, leads and basses, `fade` pads and organs,
+`cont` bells); and a chord on one key for the stab (`chord=min7`). A drum is a
+stack (see Layers): the DAC one-shot as the noise (the crack) over the starter
+bank's drum of that kind as the body.
+
+What it is held to (`tests/test_ladder.py`, which reads samples and, where a
+player is installed, renders):
+
+- **no duty buzz**: the harmonics of a NES pulse follow its duty cycle
+  (`|sin(pi n d)| / n`; the log-amplitude correlation with the rendered pulse is
+  0.99 to 1.00); those of the Mega Drive and Schism rungs correlate at 0.2 to
+  0.3;
+- **the organ has a key click**: at six times its pitch the first 12 ms hold
+  8 to 13 times (Mega Drive) and 3.5 to 4.7 times (Schism, whose drive puts a
+  little of that pitch into the held notes) the energy of the held notes; a NES
+  organ holds the same at the front as behind;
+- **the snare has a noise crack and a body**: the forge reads the DAC snare at
+  `body 0.00` and the Schism snare at `0.12` (the starter snare is `0.16`), with
+  `noise 0.73`; in the samples the crack is at the front (2 to 9 kHz) and the
+  tone under it (120 to 400 Hz) is at least half again as strong as the DAC's.
+
+What it does not do: the FM renderer is an **approximation of the chip, not an
+emulation** — the operator numbers are exact and the register-to-seconds scale
+was set by the published decay tables and by ear; there is no LFO, no SSG-EG and
+no DAC quantisation of the FM output; Chipgen's own YM2612 emulator is where a
+dump is checked against the real thing. A detune is **whole bins of the loop**:
+DT's share of an operator's frequency, rounded, which is a bin or two at A4 and
+A5 and none at A2, where a bin is a quarter of a semitone (so a lead beats in
+its upper octaves and not in its lowest). The stereo Schism rung is big, about
+a megabyte for a held voice, because a loop that can be 6 cents either side is
+65536 frames. Nobody has listened.
+
+## Rearranging: a second pass that rewrites
+
+`analyse` labels the parts of a module. `rearrange` acts on the labels: it takes
+a `.it` or a `.sch` and writes another module, with a diff of roles, that
+plays **the same notes** with other sounds on other channels.
+
+```text
+python3 -m schism forge rearrange song.sch --to schism            # song.schism.it (+ .json)
+python3 -m schism forge rearrange song.it --to sega --roles ch03=bass --echo 1:2:-14
+```
+
+| operation | what it does | flag |
+|---|---|---|
+| **remap** | every melodic part gets the voice its job has on the rung (lead and counter-melody: the lead; harmony and pad: the pad; bass: the bass; arp: a struck bell on Schism, the PSG's pulse on the Mega Drive). Only the instrument number in the cells changes. A one-shot drum on a channel of its own (a `wave=kick`, a looped noise under a dying envelope, played on one or two pitches: *whatever the arrangement calls it by its notes*) becomes the rung's drum of its kind (kick, snare, hat by how it sounds) set to play as recorded on every key, so its notes stay | `--to nes\|sega\|schism` |
+| **register** | a part that is the bass and sits above C-3 drops by octaves into the bass's range, without leaving the keyboard, and a **sub** (the bass voice, an octave under) follows it on a channel of its own. A bass above its instrument's range is a silent note | `--no-register`, `--no-sub`, `--roles ch03=bass` |
+| **split** | an arpeggio channel (the NES does a chord on one) keeps its notes, a little quieter, and gets a **pad** under it: for each window of a measure the chord it plays, its three commonest pitch classes one octave down, held on three added channels panned left, centre and right. On Schism an **echo** of the arp follows, 2 rows later at -14 dB. Not on the NES, which has no channels to spare | `--no-split` |
+| **echo** | channel N copied to a free one, some rows later, some dB quieter, panned to the other side, effects that shape a note (vibrato, slides, arpeggio) copied with it. A copy does not cross the end of its pattern | `--echo N[:ROWS[:DB]]` |
+| **fill** | the last four rows of a drum pattern that ends a phrase (every fourth, and the last) and has no roll get one: snares, then toms high to low, **using only the keys the kit has** (a kit with neither gets none, and the diff says so). The roll goes on the channel of the kit that plays the snare; a pattern played more than once is copied for the one that gets the fill | `--no-fill`, `--every N`, `--kit tight_kit` |
+
+**Notes are the caller's.** The pass changes timbre, the split of channels and
+the register of a bass. The notes of the lead, the counter-melody, the harmony
+and the arpeggio come out exactly as they went in (a test compares them
+note for note); what the pass adds, a sub, a pad, an echo, a fill, is made of
+notes the song had or keys the kit has. It does not write a melody and it is not
+for turning a tune into somebody else's.
+
+Every console has a number of channels, and the pass keeps to it: four on the
+NES, seven on the Mega Drive (six FM voices and a DAC, as `--preset sega` has
+it), sixty-four on Schism. An addition that would not fit is left out and the
+diff says so (`no room to split the arpeggio into a pad: the sega has 7
+channels`). Like `build`, it fits the mix volume to a peak of 0.89 (`--peak
+off` leaves it), writes `SONG.RUNG.it` and a sidecar with the diff in its
+notes and the operator dumps of the FM voices, and with `--mp3` renders it.
+
+What it does not do: the classification is the arrangement's guess from the
+shape of the notes (name a channel's job with `--roles`); a drum kit is kept
+and filled but not rewritten (`--kit` swaps it for a starter kit); the pad of a
+split holds a triad, not the arpeggio's every pitch; voicing, density and the
+choice of which parts to double are the rules above and nothing more.
+
 ## Drum kits
 
 A kit is drums that leave room for each other. Each drum is searched on its
@@ -437,6 +574,12 @@ show BANK                 read a bank
 play BANK [NAME...]       render the instruments to audio, to listen
 analyse SCORE             where do the channels of this module sit?
 lift 'wave=saw oct=3-5'   measure an `inst` line and print its DNA
+rearrange SONG --to schism
+                          rewrite a module for another rung: other
+                          voices, a split arpeggio, an echo, a fill
+lift-voice NAME --from nes --to sega
+                          one voice up the ladder NES -> Mega Drive ->
+                          Schism: operator numbers, DAC drums, PCM zones
 starter                   rebuild the bank that ships with the forge
 director-prompt SCENARIO  the question a model would be asked
 ```
@@ -526,7 +669,10 @@ against heard, with `!` where the family could not get within 0.15.
 lines), `modal.py`, `layers.py`, `tonelib.py` (dial arithmetic), `dna.py`,
 `descriptors.py` (the definitions), `probe.py`, `validate.py`, `score.py`,
 `genome.py`, `patch.py`, `family.py`, `fam_*.py` (`fam_layer.py` is the
-stack), `splice.py` (PCM cut, joined, chorded, widened, reversed),
+stack, `fam_fm.py` the FM voice), `fm.py` (the four-operator renderer),
+`ladder.py` (NES, Mega Drive, Schism), `rearrange.py` (the second
+pass), `splice.py` (PCM cut, joined,
+chorded, widened, reversed, driven),
 `archetypes.py`,
 `evolve.py` (controller, archive, search), `bank.py`, `mixing.py`,
 `director.py`, `llm.py`, `kits.py`, `arrangement.py`, `audition.py`,

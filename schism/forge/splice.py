@@ -360,3 +360,97 @@ def level_ratio(ref, made, pitched: bool, base: int) -> float:
     if r_ref <= 0.0 or r_made <= 0.0:
         return 1.0
     return r_ref / r_made
+
+
+# -- a stack of effects, for samples that loop and samples that do not ----------------------
+def drive(x, amount: float):
+    """A soft clip: tanh, scaled to keep the peak. 0 does nothing."""
+    if amount <= 0.0:
+        return list(x)
+    top = max((abs(v) for v in x), default=0.0) or 1.0
+    k = 1.0 / math.tanh(amount)
+    return [math.tanh(amount * v / top) * k * top for v in x]
+
+
+def cabinet(x, rate: float, low: float = 90.0):
+    """A small speaker cabinet: nothing under `low` Hz (90), a lift at 2.5
+    kHz, little over 6 kHz (two second-order sections each way and a peak)."""
+    y = highpass(x, low, rate)
+    y = lowpass(y, 6000.0, rate)
+    peak_ = dsp.filtered(y, "bp", 2500.0, rate, 0.9)
+    return [a + 0.6 * b for a, b in zip(y, peak_)]
+
+
+def chorus(x, rate: float, period: int, depth_ms: float = 1.6,
+           centre_ms: float = 7.0, mix: float = 0.5, start: int = 0):
+    """The sound with a copy of itself behind it on a delay that swings
+    `depth_ms` either side of `centre_ms` once every `period` frames, the
+    swing's phase counted from frame `start`. Tuned so that a loop of
+    `period` frames, a whole number of swings long, is still a loop."""
+    n = len(x)
+    centre = centre_ms * 0.001 * rate
+    depth = depth_ms * 0.001 * rate
+    out = [0.0] * n
+    two_pi = 2.0 * math.pi
+    for i in range(n):
+        d = centre + depth * math.sin(two_pi * (i - start) / period)
+        pos = i - d
+        k = int(math.floor(pos))
+        f = pos - k
+        a = x[k] if 0 <= k < n else 0.0
+        b = x[k + 1] if 0 <= k + 1 < n else 0.0
+        out[i] = x[i] + mix * (a + f * (b - a))
+    return out
+
+
+def post_stack(x, post: dict, rate: float, period: int = 0, start: int = 0):
+    """drive, then the cabinet, then the chorus, as `post` asks for them."""
+    y = list(x)
+    if post.get("limit"):
+        y = lowpass(y, float(post["limit"]), rate)
+    if post.get("drive"):
+        y = drive(y, float(post["drive"]))
+    if post.get("cabinet"):
+        low = post["cabinet"] if isinstance(post["cabinet"], (int, float)) \
+            and not isinstance(post["cabinet"], bool) else 90.0
+        y = cabinet(y, rate, float(low))
+    if post.get("chorus") and period:
+        spec = post["chorus"]
+        y = chorus(y, rate, period // max(1, int(spec.get("swings", 1))),
+                   spec.get("depth_ms", 1.6), spec.get("centre_ms", 7.0),
+                   spec.get("mix", 0.5), start)
+    return y
+
+
+def post_loop(head, loop, post: dict, rate: float):
+    """The stack applied to a sound with a front and a loop, so that the
+    loop is still a loop: the effects run over the front and the loop played
+    over and over, until they have settled (a tenth of a second and a half),
+    and the last time round is the loop."""
+    n = len(loop)
+    copies = max(2, -(-int(0.15 * rate) // n) + 1)
+    stream = list(head) + list(loop) * copies
+    out = post_stack(stream, post, rate, n, len(head))
+    h = len(head)
+    return out[:h], out[h + (copies - 1) * n:h + copies * n]
+
+
+def crush(x, hz: float, bits: int, rate: float = RATE):
+    """A DAC's sound: band-limited to under `hz`, held for each of its
+    samples, quantised to `bits`."""
+    if hz >= 0.5 * rate:
+        held = list(x)
+    else:
+        y = lowpass(x, 0.45 * hz, rate)
+        step = rate / float(hz)
+        held = []
+        acc = 0.0
+        last = 0.0
+        for i, v in enumerate(y):
+            if i >= acc:
+                last = v
+                acc += step
+            held.append(last)
+    top = max((abs(v) for v in held), default=0.0) or 1.0
+    levels = 2 ** (bits - 1) - 1
+    return [round(v / top * levels) / levels * top for v in held]

@@ -11,17 +11,23 @@ register-accurate emulation of the Genesis, OPL2 and NES sound chips. Where
 Chipgen's models write the chip's registers, here they write what a tracker
 shows: notes, instruments, volume column and effects, in rows.
 
-**Status: 0.2.** A tested core, four synthetic demo tracks, and the
+**Status: 0.3.** A tested core, four synthetic demo tracks, and the
 instrument forge (`docs/FORGE.md`), which makes instruments from a
-description of how they should sound. Corpora and the model-facing briefs
-come next (`docs/ROADMAP.md`).
+description of how they should sound, stacks them by role instead of
+averaging them, lifts a voice from the NES through the Mega Drive to Schism,
+and rewrites a whole module for another rung. Corpora and the model-facing
+briefs come next (`docs/ROADMAP.md`).
 
 ## Try it
 
     python3 -m schism check demos/first_light.sch       # compile; list every problem
     python3 -m schism build demos/first_light.sch --mp3 first_light.mp3
-    python3 tests/run_tests.py                          # 159 tests, under two minutes
+    python3 tests/run_tests.py                          # the suite, about four minutes
     python3 -m schism forge survey                      # the forge: every archetype, asked against heard
+    python3 -m schism forge layer clap@click snare@body --out mine.bank.json   # a stack, not an average
+    python3 -m schism forge lift-voice organ --to schism --demo organ.sch --mp3 organ.mp3   # NES -> Mega Drive -> Schism
+    python3 -m schism forge rearrange demos/first_light.sch --to schism --mp3 fl.mp3          # the same notes, other sounds
+    python3 -m schism build demos/first_light.sch --strict --preset schism   # --strict fails on a silent note; --preset nes|sega holds it to a console
 
 Python 3.10+ and nothing else is needed to write modules (tested on 3.10,
 3.11, 3.12 and 3.13). To *hear* them, install any of:
@@ -87,8 +93,28 @@ the most of. The whole language is in `docs/NOTATION.md`.
   one loudness. On top: a search (seed, mutate, probe, validate, score,
   retain), mixing instruments, drum kits whose drums leave room for each
   other, and an analysis of a whole module (who masks whom, what to pan, what
-  to change) that can repair it. Four families: tones, struck and plucked
-  sounds, drums, effects. `docs/FORGE.md`.
+  to change) that can repair it. Families: tones, struck and plucked
+  sounds, drums, effects, stacks of those, four-operator FM voices.
+  `docs/FORGE.md`.
+- **Stacks, chords, stereo, backwards.** `forge layer` splices PCM by role
+  (the first 30 ms of a clap over the body of a snare; a kick's knock over a
+  bass whose loop stays whole), where a blend of dials keeps neither parent;
+  `chord=min9`, `stereo=6` and `rev=on` on any forged sound make a chord on
+  one key, a stereo pair a few cents apart, a reverse cymbal.
+- **A voice up the ladder.** `forge lift-voice` pushes a voice through three
+  drivers: the NES (`{duty, noise_mode, arp_intervals}`), the Mega Drive
+  (a YM2612 voice in register units, or a DAC drum; the operator numbers go in
+  the sidecar) and Schism (octave zones, loops, a stereo pair, drive, cabinet,
+  chorus on the organ). The duty-cycle buzz is gone by the last rung; the organ
+  has a key click and the snare a crack and a body.
+- **A module rewritten.** `forge rearrange` is the second pass over a `.it`
+  or `.sch`: other voices for each part, a high bass dropped into range with a
+  sub, an arpeggio split into a pad and an arp, an echo channel, a fill from
+  the keys the kit has; the notes stay. `docs/FORGE.md`.
+- **Export.** `build` fits its own mix volume to a peak (0.89), prints a
+  kit's key map, writes `SONG.it.json` (instruments, samples, key maps, loops,
+  operators), can fail on a silent note (`--strict`) and hold a module to a
+  console's limits (`--preset nes|sega|schism`).
 
 ## The demos
 
@@ -115,13 +141,15 @@ the other two, setting each module's mix volume so its render peaks near 0.89
     schism/        the package: model, it_write, it_read, synth, recipes,
                    notation, openmpt, schismtracker, verify, levels, render
     schism/forge/  the instrument forge: dials, families, probe, closed loop,
-                   search, banks, mixing, kits, arrangement analysis, CLI,
-                   banks/starter.bank.json
+                   search, banks, mixing, layers and PCM edits, FM voices,
+                   the NES -> Mega Drive -> Schism ladder, kits, arrangement
+                   analysis and rearranging, CLI, banks/starter.bank.json
     docs/          NOTATION.md (the language), FORGE.md (the forge),
                    COVERAGE.md (what is checked), ROADMAP.md
     demos/         four synthetic tracks
     tests/         run_tests.py; format, synth, notation, audio, demos,
-                   engines, docs, forge_core, forge
+                   engines, docs, export, forge_core, forge, layers, ladder,
+                   rearrange
     tools/         make_demos.py, make_forge_demo.py, make_docs.py,
                    compare_engines.py
     corpus/        a note on the corpora that are planned
@@ -133,3 +161,4 @@ Tracker 2.14 itself: 99 and 200). A pitched instrument costs one sample per
 octave, so keep `oct=` narrow; the compiler refuses a score past Schism's
 limits and warns past Impulse Tracker's. Compressed samples can be read as
 headers only, so most `.it` files from the internet cannot yet be ingested.
+Stereo samples are written and read (planar, as both players have it).

@@ -97,7 +97,7 @@ def settings():
     forms = {
         "vib": "`speed/depth/rate[/wave]`",
         "kit": "`KEY:sample,KEY:sample,...`",
-        "forge": "`NAME`, `bank:NAME`, `kit:NAME`",
+        "forge": "`NAME`, `bank:NAME`, `kit:NAME`, `layer:A@click+B@body`",
         "dna": "`axis:value,...`",
         "reg": "a note, `A3`",
     }

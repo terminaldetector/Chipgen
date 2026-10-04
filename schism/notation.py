@@ -542,6 +542,8 @@ class _Compiler:
             from .forge import notation_hook
             notation_hook.retime(m, self.library, 2.5 / tempo)
             m.forged = notation_hook.forged_of(self.library)
+            m.fm = notation_hook.forged_fm(self.library)
+            m.dac = notation_hook.forged_dac(self.library)
         m.recipes = dict(self.library.recipes)
 
         if len(m.samples) > M.IT_MAX_SAMPLES:
