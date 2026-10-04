@@ -209,6 +209,273 @@
     },
     "cli": "chipgen.py --cast lead --genre hardcore | --palette --genre ambient | --audition PATCH"
   },
+  "forge": {
+    "what": "make new instruments for the YM2612, OPL2 and NES from eleven measured dials, offline; blend existing ones; check how instruments sit together in a score",
+    "dials": {
+      "brightness": {
+        "zero": "dark, close to a sine",
+        "one": "harsh and buzzy",
+        "measured": "spectral centroid / fundamental, 1x -> 0, 16x -> 1 (log)"
+      },
+      "attack": {
+        "zero": "instant",
+        "one": "a slow swell",
+        "measured": "10%-90% rise time of the loudness envelope, log(1 + t / 2 ms): 0 ms -> 0, 400 ms -> 1"
+      },
+      "body": {
+        "zero": "dies away",
+        "one": "holds at full level",
+        "measured": "level 0.6 s into the note (0.25 s after the peak for a slow swell) against the peak, -40 dB -> 0, 0 dB -> 1"
+      },
+      "decay": {
+        "zero": "a short ring",
+        "one": "rings for seconds",
+        "measured": "time for the level to fall 63% of the way from the peak to the body, 30 ms -> 0, 3 s -> 1 (log); 1 when it hardly falls"
+      },
+      "metallicity": {
+        "zero": "smooth, harmonic",
+        "one": "clangorous, hollow, inharmonic",
+        "measured": "inharmonicity of the partials plus roughness among the upper ones"
+      },
+      "detune": {
+        "zero": "one pitch",
+        "one": "a wide ensemble",
+        "measured": "depth of the slow (0.7-3.5 Hz) amplitude beating of the lowest strong partial, read from a second or more of steady note: 4% -> 0, 44% -> 1"
+      },
+      "motion": {
+        "zero": "static",
+        "one": "strong vibrato, tremolo or sweep",
+        "measured": "amplitude and pitch movement of the held note at 3.5 Hz and up"
+      },
+      "bass_weight": {
+        "zero": "thin",
+        "one": "sub-heavy",
+        "measured": "energy at or under 1.5x the fundamental against 1.5-4.5x, 0.2 -> 0, 100 -> 1 (log)"
+      },
+      "articulation": {
+        "zero": "staccato, gated",
+        "one": "legato, rings out after note-off",
+        "measured": "time to fall 20 dB after note-off, 20 ms -> 0, 1 s -> 1 (log); not measured when the note had already died"
+      },
+      "noise": {
+        "zero": "tonal",
+        "one": "noise",
+        "measured": "spectral flatness of the held note, 0.005 -> 0, 0.5 -> 1 (log)"
+      },
+      "punch": {
+        "zero": "none",
+        "one": "a strong attack transient",
+        "measured": "how many octaves higher the spectral centroid of the attack is than that of the body, 3 octaves -> 1"
+      }
+    },
+    "chips": {
+      "nes": {
+        "chip": "RP2A03 (NES / Famicom)",
+        "cannot_express": [
+          "punch"
+        ],
+        "channels": 4
+      },
+      "opl2": {
+        "chip": "YM3812 (OPL2, AdLib / Sound Blaster)",
+        "cannot_express": [
+          "noise"
+        ],
+        "channels": 9
+      },
+      "ym2612": {
+        "chip": "YM2612 (Sega Mega Drive / Genesis)",
+        "cannot_express": [
+          "noise"
+        ],
+        "channels": 6
+      }
+    },
+    "archetypes": {
+      "bell": {
+        "roles": [
+          "lead",
+          "harmony"
+        ],
+        "register": "A4",
+        "what": "a bell: bright, metallic, rings for seconds"
+      },
+      "blip": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "an arcade blip with a chirp"
+      },
+      "brass": {
+        "roles": [
+          "lead",
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a section that leans in after the attack"
+      },
+      "epiano": {
+        "roles": [
+          "harmony",
+          "lead"
+        ],
+        "register": "A3",
+        "what": "an electric piano that rings and fades"
+      },
+      "noise_hat": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A4",
+        "what": "a closed hat"
+      },
+      "noise_kick": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A2",
+        "what": "a noise kick: low period, fast fall"
+      },
+      "noise_snare": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A3",
+        "what": "a snare: noise with a crack"
+      },
+      "organ": {
+        "roles": [
+          "harmony",
+          "pad"
+        ],
+        "register": "A3",
+        "what": "a drawbar organ that holds until the key comes up"
+      },
+      "pad": {
+        "roles": [
+          "pad",
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a slow swelling ensemble pad"
+      },
+      "pluck": {
+        "roles": [
+          "harmony",
+          "lead"
+        ],
+        "register": "A3",
+        "what": "a plucked string"
+      },
+      "punch_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a punchy bass with a bite at the front"
+      },
+      "saw_lead": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "a sawtooth lead with a little ensemble and vibrato"
+      },
+      "slap_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a funk bass: bright attack, clean body"
+      },
+      "square_lead": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "the chiptune square"
+      },
+      "stab": {
+        "roles": [
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a short metallic hit for the off-beat"
+      },
+      "sub_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a pure sine under everything"
+      }
+    },
+    "scenario": {
+      "format": "chipgen-forge-scenario/1",
+      "fields": [
+        "archive",
+        "backend",
+        "format",
+        "generations",
+        "keep",
+        "locked",
+        "max_probes",
+        "min_distance",
+        "mix",
+        "name",
+        "note",
+        "novelty",
+        "objective",
+        "offspring",
+        "prefix",
+        "realise_probes",
+        "register",
+        "role",
+        "seconds",
+        "seed",
+        "seeds",
+        "sigma"
+      ],
+      "example": {
+        "backend": "opl2",
+        "role": "lead",
+        "seeds": [
+          "saw_lead"
+        ],
+        "objective": {
+          "target": {
+            "brightness": 0.7,
+            "attack": 0.05
+          }
+        },
+        "generations": 6,
+        "offspring": 8,
+        "keep": 4
+      },
+      "note": "axes a target does not name are free, not pulled to a default"
+    },
+    "bank": {
+      "format": "chipgen-forge-bank/1",
+      "load": "python3 python/chipgen.py song.trk --forge-bank work/forge/x.bank.json",
+      "in_a_score": "`inst fm0 NAME`, `inst opl0 NAME`, `inst nes0 NAME` (pulse), `inst nes2 NAME` (triangle), `inst nes3 NAME` (noise); a detune layer takes the next channel up and is dropped, with a warning, if the score plays it"
+    },
+    "commands": {
+      "dials": "python3 python/forge.py axes",
+      "try one": "python3 python/forge.py compile opl2 --archetype bell --dna brightness=0.8",
+      "search": "python3 python/forge.py run work/forge/x.json --out work/forge/x.bank.json",
+      "blend": "python3 python/forge.py mix ym2612 slap_bass archetype:bell --weights 2,1",
+      "where it sits": "python3 python/forge.py place work/song.trk --assign fm0=NAME --fit",
+      "listen": "python3 python/forge.py play work/forge/x.bank.json",
+      "NES by hand": "python3 python/forge.py nes-inst NAME --volume \"15 12 | 9 / 4 0\" --duty 2 --out work/forge/x.bank.json"
+    },
+    "model": {
+      "asked": "which way to push the dials, and which finalist to keep; never once per candidate",
+      "reply_format": "JSON: {\"directions\": [{\"axis\": \"brightness\", \"add\": 0.2}]}",
+      "max_directions": 6,
+      "max_step": 0.5
+    }
+  },
   "version": "0.2.0",
   "summary": "Generative chiptune on real YM2612 + SN76489 emulation, driven by a flat event vocabulary any model can emit.",
   "chips": {

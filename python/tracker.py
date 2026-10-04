@@ -512,7 +512,23 @@ def loads(text: str):
     if noise_sounding:
         events.append(PSGNoiseOff())
     events.append(End())
-    return events, meta
+    return _place_forge_instruments(events, meta), meta
+
+
+def _place_forge_instruments(events, meta):
+    """Add what instruments from the synthesis layer need: NES macro notes,
+    detune layers, channel settings. Costs one scan unless the layer is in
+    use (a marker in the score, or a forge bank installed)."""
+    import sys
+    if "synthesis.registry" not in sys.modules and not any(
+            isinstance(e, Marker) and e.label.startswith("forge:")
+            for e in events):
+        return events
+    from synthesis import placement
+    try:
+        return placement.expand(events, meta)
+    except placement.PlacementError as error:
+        raise TrackerError(str(error)) from None
 
 
 def _noise_state(cell: str, current: bool) -> bool:
@@ -546,7 +562,18 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
     elif head == "inst":
         need(2, "a channel and an instrument, e.g. `inst fm0 bass`")
         target = _column(args[0], lineno)
-        if target in _OPL_COLUMNS:
+        if target in _NES_COLUMNS:
+            # The NES has no patches to select: an instrument there is a set
+            # of macros a driver plays (synthesis/nes_driver.py). Leave a
+            # marker; the pass at the end of loads() expands the notes.
+            if _NES_VOICE[target] == "dmc":
+                raise TrackerError(
+                    f"line {lineno}: nes4 plays samples, not instruments; "
+                    f"use the `sample` directive and a sample name in the "
+                    f"cell")
+            events.append(Marker(label=f"forge:nes {_NES_VOICE[target]} "
+                                       f"{args[1]} @{lineno}"))
+        elif target in _OPL_COLUMNS:
             events.append(OPLInstrumentSelect(channel=int(target[3:]),
                                               instrument=args[1]))
         else:

@@ -119,7 +119,11 @@ def test_archive_is_lean_and_reproducible():
         # Then to 630 KB for MP3 delivery: mp3.py, its generated tables,
         # and its test with the reference decoder — 22 KB compressed, to
         # stop a render costing ten megabytes a minute to hand back.
-        assert size < 630 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 800 KB for the instrument/driver synthesis layer: 25
+        # modules and their tests (104 KB compressed), the starter bank of
+        # 42 instruments and nine example scenarios (data, ~25 KB), and the
+        # guide a model reads before it asks for a sound the bank lacks.
+        assert size < 800 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

@@ -201,13 +201,23 @@ def to_events(source, ticks_per_second: float = None):
     return events, [], metadata
 
 
+def _load_forge_banks(paths):
+    """Install instruments made by the synthesis layer (python/forge.py)
+    for all three chips by name. Before the score is parsed, because the
+    tracker places them (detune layers, NES macros) as it reads."""
+    from synthesis import bank as forge_bank_mod
+    for path in ([paths] if isinstance(paths, str) else paths):
+        forge_bank_mod.Bank.load(path).install()
+
+
 def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
             it: str = None, mp3: str = None, bitrate: int = None,
             bpm: float = None, ticks_per_second: float = None,
             target_rate: int = 44100, title: str = "", author: str = "",
             pal: bool = False, dc_block: bool = True,
             chip_type: str = None, bank: str = None, opl_bank: str = None,
-            normalize: float = None, quiet: bool = True):
+            normalize: float = None, quiet: bool = True,
+            forge_bank=None):
     """Render tracker text / JSON events / Event objects to audio.
 
     Everything but `source` is optional; with no output paths it just
@@ -238,6 +248,8 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     if opl_bank:
         import opl_instruments
         opl_instruments.load_bank(opl_bank)
+    if forge_bank:
+        _load_forge_banks(forge_bank)
 
     events, warnings, metadata = to_events(source, ticks_per_second)
 
@@ -348,6 +360,12 @@ def _opl2_fields():
 def _opl2_aliases():
     import opl2
     return opl2.YM3812.OPERATOR_ALIASES
+
+
+def _forge_info() -> dict:
+    """The instrument/driver synthesis layer, for the manifest."""
+    import synthesis
+    return synthesis.info()
 
 
 def info() -> dict:
@@ -589,6 +607,7 @@ def info() -> dict:
             "cli": "chipgen.py --cast lead --genre hardcore | --palette "
                    "--genre ambient | --audition PATCH",
         },
+        "forge": _forge_info(),
         "version": VERSION,
         "summary": "Generative chiptune on real YM2612 + SN76489 emulation, "
                    "driven by a flat event vocabulary any model can emit.",
@@ -799,6 +818,10 @@ def main(argv):
                         help="load extra instruments (see vgm_import.py)")
     parser.add_argument("--opl-bank", metavar="BANK.JSON",
                         help="load extra OPL2 patches (see opl_import.py)")
+    parser.add_argument("--forge-bank", metavar="BANK.JSON", action="append",
+                        help="load instruments made by the synthesis layer "
+                             "(python3 python/forge.py run ...): YM2612, "
+                             "OPL2 and NES in one file; repeatable")
     parser.add_argument("--cast", metavar="ROLE",
                         help="rank the bank for a musical role and exit "
                              "(bass, lead, pad, pluck, harmony, bell, stab)")
@@ -941,6 +964,8 @@ def main(argv):
     if args.opl_bank:
         import opl_instruments
         opl_instruments.load_bank(args.opl_bank)
+    if args.forge_bank:
+        _load_forge_banks(args.forge_bank)
 
     if args.audition:
 
@@ -1093,7 +1118,7 @@ def main(argv):
 
     result = compose(source, wav=args.wav, vgm=args.vgm, it=args.it,
                      mp3=args.mp3, bitrate=args.bitrate,
-                     opl_bank=args.opl_bank,
+                     opl_bank=args.opl_bank, forge_bank=args.forge_bank,
                      tracker_out=args.tracker, ticks_per_second=args.ticks,
                      target_rate=args.rate, title=args.title,
                      author=args.author, pal=args.pal,

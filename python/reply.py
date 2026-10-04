@@ -422,15 +422,25 @@ def check(text: str, chip: str = None, request: dict = None,
         words = tracker_mod._COMMENT.split(raw, maxsplit=1)[0].split()
         if len(words) >= 3 and words[0].lower() == "inst":
             column, name = words[1].lower(), words[2]
-            known = opl_names if column.startswith("opl") else fm_names
+            column = tracker_mod.column_aliases().get(column, column)
+            if column.startswith("nes"):
+                # the NES has no patches: an instrument there is a set of
+                # macros, and only an installed forge bank has any
+                from synthesis import nes_driver
+                known, kind = set(nes_driver.names()), "NES"
+            elif column.startswith("opl"):
+                known, kind = opl_names, "OPL2"
+            else:
+                known, kind = fm_names, "FM"
             if name not in known:
                 close = difflib.get_close_matches(name, sorted(known), n=2)
                 hint = (f" (closest: {', '.join(close)})" if close else "")
-                kind = "OPL2" if column.startswith("opl") else "FM"
+                fix = f"use one of: {', '.join(sorted(known))}" if known \
+                    else ("no NES instrument is loaded; load a bank made by "
+                          "forge.py with --forge-bank before this score")
                 issues.append(Issue(
                     "closed_lists", "error", number,
-                    f"there is no {kind} instrument {name!r}{hint}",
-                    f"use one of: {', '.join(sorted(known))}"))
+                    f"there is no {kind} instrument {name!r}{hint}", fix))
 
     columns_used = []
     for number, raw in enumerate(text_lines, 1):

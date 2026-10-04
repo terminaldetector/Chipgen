@@ -386,8 +386,13 @@ def check(events: List[events_mod.Event],
                 dac_spans.append((dac_span_start, stop))
         dac_span_start = dac_span_end = None
 
+    layers = set()            # channels that double another part (forge)
     for event in events:
         E = events_mod
+        if isinstance(event, E.Marker) \
+                and event.label.startswith("forge:layers "):
+            layers.update(event.label.split()[1:])
+            continue
         if isinstance(event, E.Wait):
             clock += event.ticks / rate
             continue
@@ -402,19 +407,22 @@ def check(events: List[events_mod.Event],
             # sounding channel — see the RETRIGGER_CEILING note above.
             fm_retriggers[event.channel] += 1
             fm_on_since.setdefault(event.channel, clock)
-            fm_pitches.setdefault(event.channel, []).append(
-                _midi(event.note, event.octave))
+            if f"fm{event.channel}" not in layers:
+                fm_pitches.setdefault(event.channel, []).append(
+                    _midi(event.note, event.octave))
         elif isinstance(event, E.OPLNoteOn):
-            opl_pitches.setdefault(f"OPL{event.channel}", []).append(
-                _midi(event.note, event.octave))
+            if f"opl{event.channel}" not in layers:
+                opl_pitches.setdefault(f"OPL{event.channel}", []).append(
+                    _midi(event.note, event.octave))
         elif isinstance(event, E.NESNoteOn):
             column = {"pulse1": "nes0", "pulse2": "nes1",
                       "triangle": "nes2"}.get(event.voice, event.voice)
             # Written pitch is sounding pitch on all three: the engine
             # sets the triangle's timer for its /32 divider (measured,
             # triangle C-4 at 261.36 Hz), so no octave correction here.
-            nes_pitches.setdefault(column, []).append(
-                _midi(event.note, event.octave))
+            if event.voice not in layers:
+                nes_pitches.setdefault(column, []).append(
+                    _midi(event.note, event.octave))
         elif isinstance(event, E.FMInstrumentSelect):
             fm_instrument[event.channel] = event.instrument
         elif isinstance(event, E.FMNoteOff):

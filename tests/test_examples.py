@@ -26,7 +26,39 @@ def _directive_names():
 BANKS = {
     "neon_transit.trk": ("--bank", "examples/neon_transit_bank.json"),
     "dos_transit.trk": ("--opl-bank", "examples/opl_furnace_bank.json"),
+    # made by python/forge.py; NES instruments are macros the tracker
+    # expands as it parses, so this one needs its bank to parse at all
+    "forge_demo.trk": ("--forge-bank",
+                       "python/synthesis/banks/starter.bank.json"),
 }
+
+
+class _ForgeBank:
+    """Install an example's forge bank for the length of a `with`, and take
+    it out again, so nothing it installs outlives the test."""
+
+    def __init__(self, name):
+        flags = BANKS.get(name, ())
+        self.path = flags[1] if flags and flags[0] == "--forge-bank" else None
+
+    def __enter__(self):
+        if self.path is None:
+            return self
+        import instruments
+        import opl_instruments
+        from synthesis import bank, nes_driver, registry
+        self.saved = [(t, dict(t)) for t in (
+            instruments.BANK, instruments.CHARACTER, opl_instruments.BANK,
+            nes_driver.BANK, registry.FORGE)]
+        bank.Bank.load(os.path.join(support.ROOT, self.path)).install()
+        return self
+
+    def __exit__(self, *exc):
+        if self.path is not None:
+            for target, snapshot in self.saved:
+                target.clear()
+                target.update(snapshot)
+        return False
 
 
 def _examples():
@@ -44,7 +76,8 @@ def test_every_example_parses():
         with open(path, encoding="utf-8") as handle:
             text = handle.read()
         try:
-            events, meta = tracker.loads(text)
+            with _ForgeBank(name):
+                events, meta = tracker.loads(text)
         except Exception as error:
             raise AssertionError(
                 f"examples/{name} no longer parses: {error}") from None

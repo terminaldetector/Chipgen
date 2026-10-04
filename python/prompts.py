@@ -772,7 +772,12 @@ def agents_md() -> str:
         "render reports an edited engine file, and a render from an edited "
         "engine is not chipgen.",
         "2. Your files go in `work/`: scores, and — if you need a sound "
-        "the bank lacks — a patch file passed with `--bank work/bank.json`.",
+        "the bank lacks — a patch file passed with `--bank work/bank.json`, "
+        "or a scenario for `python3 python/forge.py run work/forge/x.json "
+        "--out work/forge/x.bank.json` that describes the sound as dials "
+        "(`bridge/SYNTHESIS.md`; the result is passed with `--forge-bank`, "
+        "or `--forge-bank python/synthesis/banks/starter.bank.json` for 42 "
+        "ready ones). Never write operator registers into `python/`.",
         "3. If the engine seems wrong, say so and stop. Do not work around "
         "it.",
         "",

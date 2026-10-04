@@ -48,7 +48,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis"]
 
 
 def _collect(pattern=""):
@@ -134,6 +134,13 @@ SLOW = {
     "test_vgm.test_imported_bank_saves_loads_and_is_playable",
     "test_vgm.test_imported_patches_are_levelled_against_the_built_in_bank",
     "test_vgm.test_replay_alignment_is_bounded_and_does_not_accumulate",
+    "test_synthesis.test_a_dial_turned_up_reads_higher_on_every_chip",
+    "test_synthesis.test_a_director_steers_a_run_and_a_broken_one_cannot_stop_it",
+    "test_synthesis.test_a_mix_follows_its_weights_and_a_tree_nests",
+    "test_synthesis.test_detune_is_graded_on_every_chip_and_reads_zero_when_there_is_none",
+    "test_synthesis.test_fitting_an_arrangement_lowers_its_cost_with_real_renders",
+    "test_synthesis.test_the_probe_and_the_sequencer_agree_about_a_layered_instrument",
+    "test_synthesis.test_the_search_is_deterministic_and_never_returns_an_invalid_instrument",
 }
 
 

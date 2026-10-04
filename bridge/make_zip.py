@@ -36,6 +36,7 @@ INCLUDE_FILES = [
     "bridge/manifest.json",
     "bridge/CORE.md",
     "bridge/NES.md",
+    "bridge/SYNTHESIS.md",
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
     "corpus/STUDY.md",
@@ -45,6 +46,10 @@ INCLUDE_FILES = [
 ]
 INCLUDE_TREES = [
     ("python", (".py",)),
+    # the synthesis layer's data: a starter bank of 42 instruments and the
+    # example scenarios an agent copies into work/
+    ("python/synthesis/banks", (".json",)),
+    ("python/synthesis/scenarios", (".json",)),
     ("core", (".c", ".h")),
     # The .trk scores too, not just the .py drivers. They were missing,
     # so the archive shipped an examples/ directory with no scores in it
