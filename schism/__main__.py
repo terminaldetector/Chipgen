@@ -241,6 +241,8 @@ def _corpus(args) -> int:
                 summary["rows"] = played["rows"]
             print(json.dumps(summary, indent=1))
             return 0
+        if args.action == "ab":
+            return _corpus_ab(args)
         ep = corpus.episode(args.files[0], args.order, args.row, args.rows,
                             args.context,
                             [int(c) - 1 for c in args.channels.split(",")]
@@ -250,6 +252,32 @@ def _corpus(args) -> int:
     except (corpus.CorpusError, OSError) as error:
         print(f"schism corpus: {error}", file=sys.stderr)
         return 2
+
+
+def _corpus_ab(args) -> int:
+    """One mechanism taken out of a copy, measured where the song plays it."""
+    from . import ablate, abtest
+    if not args.change or not args.channels:
+        print("schism corpus ab: give --channels and at least one --change; "
+              "a change is one of:\n" + ablate.GRAMMAR, file=sys.stderr)
+        return 2
+    with open(args.files[0], "rb") as handle:
+        data = handle.read()
+    try:
+        report = abtest.run(data, args.order, args.row, args.seconds,
+                            args.change,
+                            [int(c) for c in args.channels.split(",")],
+                            engines=args.engine.split(","),
+                            pitch=args.pitch)
+    except (ablate.AblateError, abtest.ABError) as error:
+        print(f"schism corpus ab: {error}", file=sys.stderr)
+        return 2
+    if not args.tracks:
+        for engine in report["engines"].values():
+            engine["A"] = engine["summary"]["A"]
+            engine["B"] = engine["summary"]["B"]
+    print(json.dumps(report, indent=1))
+    return 0
 
 
 def main(argv=None) -> int:
@@ -301,7 +329,7 @@ def main(argv=None) -> int:
     explain.set_defaults(run=_explain)
     corp = sub.add_parser("corpus", help="index modules, trace what plays, "
                           "read an episode (any format libopenmpt plays)")
-    corp.add_argument("action", choices=("index", "trace", "episode"))
+    corp.add_argument("action", choices=("index", "trace", "episode", "ab"))
     corp.add_argument("files", nargs="+")
     corp.add_argument("-o", "--out", help="index: write JSON lines here")
     corp.add_argument("--manifest", help="index: {file: {author, source, "
@@ -316,7 +344,20 @@ def main(argv=None) -> int:
     corp.add_argument("--order", type=int, default=0)
     corp.add_argument("--row", type=int, default=0)
     corp.add_argument("--context", type=int, default=2)
-    corp.add_argument("--channels", help="episode: 1,3,4")
+    corp.add_argument("--channels", help="episode, ab: 1,3,4 (from 1)")
+    corp.add_argument("--change", action="append",
+                      help="ab: what B takes out of a copy, e.g. 'inst 2 "
+                           "fenv off', 'cell 52 1 6 effect none' (repeat "
+                           "for several)")
+    corp.add_argument("--seconds", type=float, default=2.0,
+                      help="ab: how long to read from --order/--row")
+    corp.add_argument("--engine", default="openmpt,schism",
+                      help="ab: openmpt, schism or both")
+    corp.add_argument("--pitch", action="store_true",
+                      help="ab: read the pitch over time too")
+    corp.add_argument("--tracks", action="store_true",
+                      help="ab: print the readings over time, not only the "
+                           "summary")
     corp.set_defaults(run=_corpus)
     info = sub.add_parser("info", help="describe a .it file")
     info.add_argument("module")

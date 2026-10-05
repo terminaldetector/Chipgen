@@ -151,7 +151,13 @@ An envelope is `tick:value` nodes separated by commas, 25 at most, the first
 at tick 0 and the ticks rising. A node ending in `s` marks the **sustain**
 loop (the first and last marked nodes; the envelope holds there until the
 note is released), one ending in `l` the **loop**. A tick lasts 2.5/tempo
-seconds.
+seconds. The word `carry` among the nodes (`fenv=0:17,9:59,19:32,carry`)
+sets IT's carry flag: a note that follows a note of the same instrument
+still held on the channel picks the envelope up where that one is, instead
+of starting it again; after a key-off or a note cut, or with another
+instrument, it starts again (measured in both players; Manwe's *New Wind*
+uses it so that only the first note of a phrase sweeps the filter, see
+`docs/cards/reference/filter_carry.md`).
 
 <!-- generated:envelopes -->
 | setting | slot | value range | meaning |

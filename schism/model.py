@@ -230,6 +230,9 @@ class Envelope:
     sustain: Optional[Tuple[int, int]] = None
     enabled: bool = True
     filter: bool = False        # pitch slot only: the envelope moves the filter
+    #: a new note picks the envelope up where the last one left it instead
+    #: of starting it again (IT's "carry", flag bit 3)
+    carry: bool = False
 
 
 @dataclass

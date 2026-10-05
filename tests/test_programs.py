@@ -57,6 +57,72 @@ def test_an_instrument_says_what_a_key_off_and_the_next_note_do():
     assert any("legato" in limit for limit in caps["limits"])
 
 
+_CARRY = """title carry
+tempo 125
+speed 6
+channels 1
+inst 1 name=Tone wave=saw oct=4-6 nna=cut venv=0:64,40:0{carry}
+inst 2 name=Other wave=saw oct=4-6 nna=cut venv=0:64,40:0{carry}
+pattern a rows 32
+C-5 01 ... ...
+rest 1
+{between}
+rest 1
+C-5 0{second} ... ...
+rest 3
+=== .. ... ...
+rest 23
+end
+order a
+"""
+
+
+def _second_note_db(text, engine):
+    from schism import it_write, render as R
+    module, _ = notation.compile_text(text)
+    frames = R.render_frames(it_write.build(module), 44100, 0.8, engine)
+    mono = [(a + b) * 0.5 for a, b in zip(frames[0::2], frames[1::2])]
+    env = phases.envelope(phases.centred(mono, 44100), 44100)
+    def at(ms):
+        return 20.0 * math.log10(max(env[ms + 3:ms + 15]) + 1e-12)
+    return at(480) - at(0), module
+
+
+def test_carry_picks_the_envelope_up_where_the_last_note_left_it():
+    """IT's carry flag (bit 3), measured: the second note, 24 ticks into a
+    64-to-0 fall over 40 ticks, starts at 25.6/64 (-8 dB) of the first when
+    the envelope carries, at the first's level when it does not, and a note
+    of another instrument starts its own envelope either way, and so does a
+    note after a key-off (Manwe's New Wind, read in the corpus, keys its
+    carried filter off between some notes and not others). Schism Tracker
+    plays it the same (0.2 dB), so a card can lean on it."""
+    support.need_openmpt()
+    from schism import it_read, it_write, schismtracker
+    engines = ["openmpt"] + (["schism"] if schismtracker.available() else [])
+    for engine in engines:
+        held = "... .. ... ..."
+        drop, module = _second_note_db(
+            _CARRY.format(carry=",carry", second=1, between=held), engine)
+        assert -8.6 <= drop <= -7.4, (engine, drop)
+        for released in ("=== .. ... ...", "^^^ .. ... ..."):
+            drop, _ = _second_note_db(
+                _CARRY.format(carry=",carry", second=1, between=released),
+                engine)
+            assert abs(drop) <= 0.5, (engine, released, drop)
+        back = it_read.read(it_write.build(module), load_data=False)
+        assert back.instruments[0].volume_envelope.carry
+        info = program.explain_instrument(back, 1)
+        assert info["volume"]["carry"] is True
+        assert any("carry on the volume envelope" in n for n in info["notes"])
+        drop, module = _second_note_db(
+            _CARRY.format(carry="", second=1, between=held), engine)
+        assert abs(drop) <= 0.5, (engine, drop)
+        assert not module.instruments[0].volume_envelope.carry
+        drop, _ = _second_note_db(
+            _CARRY.format(carry=",carry", second=2, between=held), engine)
+        assert abs(drop) <= 0.5, (engine, drop)
+
+
 def test_phases_read_the_attack_on_a_millisecond_grid_and_name_the_rest():
     rate = 44100.0
     x = []

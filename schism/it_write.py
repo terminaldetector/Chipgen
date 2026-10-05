@@ -31,11 +31,13 @@ MIDI_CONFIG_BYTES = (9 + 16 + 128) * 32
 
 #: Bit 7 of a pitch envelope's flags says it moves the filter instead of
 #: the pitch. (Bit 3 is "carry", which is something else: an earlier
-#: version of this writer set it, and a filter envelope played as a pitch
-#: sweep in both libopenmpt and Schism. The test that should have noticed
-#: measured brightness, which a rising pitch also raises; it now measures
-#: pitch too.)
+#: version of this writer set it in place of bit 7, and a filter envelope
+#: played as a pitch sweep in both libopenmpt and Schism. The test that
+#: should have noticed measured brightness, which a rising pitch also
+#: raises; it now measures pitch too.)
 FILTER_FLAG = 0x80
+#: Bit 3: carry. Set only when an envelope asks for it (`carry`).
+CARRY_FLAG = 0x08
 
 #: The byte a note fade (~~~) is stored as. ITTECH gives 120..253 to it,
 #: and libopenmpt reads 121..252 as a fade but 253 as no note at all —
@@ -157,6 +159,8 @@ def _envelope(env, kind: str) -> bytes:
         flags |= 4
     if kind == "pitch" and env.filter:
         flags |= FILTER_FLAG
+    if getattr(env, "carry", False):
+        flags |= CARRY_FLAG
 
     out = bytearray([flags, len(nodes), loop[0], loop[1], sustain[0],
                      sustain[1]])

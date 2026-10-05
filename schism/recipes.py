@@ -196,13 +196,19 @@ def parse_envelope(text: str, kind: str):
 
     Nodes are tick:value. A node ending `s` marks the sustain loop (first
     and last marked), one ending `l` the loop. Ticks are the module's
-    ticks, 2.5/tempo seconds each, and must rise from 0.
+    ticks, 2.5/tempo seconds each, and must rise from 0. The word `carry`
+    among the nodes sets IT's carry flag: a new note picks the envelope up
+    where the last one left it instead of starting it again.
     """
     slot, (low, high), _ = ENVELOPES[kind]
     nodes, sustain, loop = [], [], []
+    carry = False
     for token in text.split(","):
         token = token.strip()
         if not token:
+            continue
+        if token == "carry":
+            carry = True
             continue
         mark = ""
         if token[-1] in "sl":
@@ -238,7 +244,7 @@ def parse_envelope(text: str, kind: str):
         nodes=nodes,
         sustain=(sustain[0], sustain[-1]) if sustain else None,
         loop=(loop[0], loop[-1]) if loop else None,
-        filter=(kind == "fenv"))
+        filter=(kind == "fenv"), carry=carry)
 
 
 # -- instrument settings -----------------------------------------------------

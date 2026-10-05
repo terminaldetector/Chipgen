@@ -38,10 +38,13 @@ Schism gets its own training corpora, separate from the chip corpora
 (`corpus/README.md`): modules in, text scores out, audited and deduplicated
 by the same discipline as Chipgen's, shipped as archives rather than
 committed. The reading tools are built (`docs/CORPUS.md`: index, trace of
-what plays, episodes with their entry state); next are cards from the
-reference corpus itself — read in place, each with its A/B — once that
-corpus is in a session, and a bounded improve loop for IT instruments like
-Chipgen's for the YM2612.
+what plays, episodes with their entry state), and so are A/Bs on the
+modules themselves (`corpus ab`; nine cards from the reference corpus in
+`docs/cards/reference/`, each held in both players). Next: cards for the
+techniques the index's candidate windows point at (only nine addresses are
+read so far), XM and MOD cells in `ablate` (they pack differently from
+S3M), and a bounded improve loop for IT instruments like Chipgen's for the
+YM2612.
 
 ## 4. The article
 

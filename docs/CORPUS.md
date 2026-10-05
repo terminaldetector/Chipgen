@@ -23,7 +23,7 @@ lines; the episode is one JSON object.
 
 | level | what it is | example |
 |---|---|---|
-| native | the cell as its own format writes it, formatted by libopenmpt | `C-5 01 v64 H93` |
+| native | the cell as its own format writes it, formatted by libopenmpt (instrument and volume in hex) | `C-5 01v40 H93` |
 | normalized | libopenmpt's numbers: note, instrument, volume command, effect, parameter | `effect 5, param 0x93` |
 | interpretation | what a card says the cells do, with its confidence | "a delayed vibrato" |
 
@@ -51,6 +51,14 @@ duration; it renders a few frames past it, at the position it would loop
 back to, and those are not counted). A song that loops in a way the end
 detection misses stops at `--limit` seconds and says `"stopped": "limit"`.
 
+Every row in the trace carries the second it starts (`at`, at most 4 ms
+early). That time is the trace's own: libopenmpt plays a tick in a whole
+number of samples, so a song's clock depends a little on the rate — at
+tempo 128 a tick is 156 samples at 8 kHz (19.50 ms) and 861 at 44.1 kHz
+(19.52 ms), and 200 s into *Fourth Symmetriad* the two traces are 0.24 s
+apart. To cut a render at a row, trace at the render's rate; `corpus ab`
+does.
+
 Candidates for reading are only ever taken from what played: windows of 16
 rows in played patterns, ranked by how many kinds of effect and instrument
 they use, not by how many notes they hold (a dense pattern is not a
@@ -73,6 +81,65 @@ memory a given player uses. For an IT module the episode also has the
 instrument headers it uses (envelopes node by node, NNA, filter), from
 `python3 -m schism explain`.
 
+## A/B in the module itself
+
+`schism corpus ab` takes one mechanism out of a copy of a module and
+measures A against B where the song plays it, from the start of the song
+(so every effect memory, tempo change and voice left sounding is the
+song's own), alone and in the mix, in libopenmpt and Schism Tracker:
+
+```text
+python3 -m schism corpus ab skaven-fourth_symmetriad.it --order 22 --row 0 \
+    --seconds 1.85 --channels 11 --change 'inst 10 venv nodes 3'
+python3 -m schism corpus ab isotoxin.s3m --order 44 --row 0 --seconds 0.96 \
+    --channels 6 --change 'cell 52 1 6 effect none' --change 'cell 52 3 6 effect none'
+```
+
+A change is a few bytes (`schism/ablate.py`), and the report lists each:
+offset, old, new, why. What can be changed in place:
+
+| change | format | bytes |
+|---|---|---|
+| `inst N venv\|penv\|ienv\|fenv off` | IT | the envelope's on bit (and, for a filter envelope, its filter mark) |
+| `inst N ... carry\|loop\|sustain off` | IT | one flag bit |
+| `inst N ... nodes K` | IT | the node count: the envelope ends at node K-1 and holds |
+| `inst N nna cut\|cont\|off\|fade`, `fade K`, `filter off` | IT | the instrument header |
+| `cell P R C effect none\|LETTER`, `instrument K`, `volume 0-64` | S3M | the stored byte of that cell |
+
+What is refused, with the reason: IT pattern cells (IT packs a cell with a
+per-channel memory of the last values written, so one stored command can
+be later cells' command too), XM and MOD cells (not yet), a field a cell
+does not store (it cannot be added without moving the pattern), a stored
+S3M volume taken away (the cell's mask says it is there, and libopenmpt
+reads S3M's "none", 255, as 64), an envelope cut inside its own loop.
+
+The original bytes are never written; the report has the original's hash
+before and after.
+
+### What the players do differently (measured on the reference corpus)
+
+- **A muted S3M channel.** libopenmpt plays an S3M as Scream Tracker 3
+  did: a muted (or disabled) channel's commands are not played at all, so
+  its speed, tempo and pattern-delay commands are lost and the song moves —
+  in *Isotoxin*, pattern 52 came 4.6 s early by the 170th second. Schism
+  Tracker still plays a disabled channel's commands. So `corpus ab`
+  isolates an S3M's channels in libopenmpt by setting the others' volume to
+  0 (S3M has no command that sets it back), an IT's by muting them (an IT
+  muted channel's commands are played, and its Mxx would undo a volume of
+  0), and in Schism Tracker by the channels' disabled bits in a copy.
+- **A filter envelope switched off but still marked as a filter.** Schism
+  Tracker still lowers the filter, as if the envelope stood at its middle
+  value (a resonant peak near 820 Hz on *Fourth Symmetriad*'s instrument
+  2); libopenmpt does not. `fenv off` clears the mark too, and then the
+  two agree; `explain` warns about an instrument that has one.
+- **Carry.** Both players continue a carried envelope only while the
+  previous note of the same instrument is held: a key-off or a note cut
+  between the notes starts it again (`tests/test_programs.py`).
+- **Random variation.** IT instruments with random volume or pan
+  (eighteen in *Fourth Symmetriad*) make a mix that is not the same twice;
+  the report lists them, and the readings of a channel alone do not move
+  unless it plays one.
+
 ## What this does not do
 
 - It does not train anything, and it does not recover how a sample was made:
@@ -91,5 +158,8 @@ use it without the module: where it is (file, hash, address, the state on the
 way in), what it is for in the music, what does it (a command, an envelope, a
 sample), what should change if it is taken away, the A/B that takes away
 only that, the measurement, and how sure the card is. `docs/cards/` has the
-first one, the echo written into an instrument's envelopes, with its A/B in
-`examples/echo/`.
+echo rebuilt on this project's own sound (`examples/echo/`), and
+`docs/cards/reference/` nine techniques checked in the reference corpus's
+modules themselves (`examples/reference/make.py` writes them from a run;
+every hypothesis held in both players, four of them only after the
+measurement corrected what was expected).

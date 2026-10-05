@@ -14,9 +14,13 @@
    "order": 22
   },
   "read_from": "instrument header, via the reference corpus audit (corpus_facts.json)",
-  "episode_reread_here": false,
-  "why_not": "the module is not in this repository",
-  "corpus_zip_sha256": "5b2fbc0cd31a6b07489e7c0d23c71cfc42da7ad1542b6e0c4015bb0c1629dd6d"
+  "episode_reread_here": true,
+  "corpus_zip_sha256": "5b2fbc0cd31a6b07489e7c0d23c71cfc42da7ad1542b6e0c4015bb0c1629dd6d",
+  "checked_in_place": {
+   "card": "docs/cards/reference/echo_in_the_envelope.md",
+   "readings": "docs/cards/reference/reference_ab.json",
+   "how": "the module's own header read again (the same nodes); B keeps the volume envelope's first 3 of 9 nodes; after the line stops A goes on striking, right then left of the dry note, B is silent, the first strike the same in both, in libopenmpt and Schism Tracker"
+  }
  },
  "native": {
   "volume": [

@@ -197,13 +197,19 @@ enough. The first three are explained under the dials in `docs/FORGE.md`.
 
 - Reading compressed (IT 2.14/2.15) samples, so most modules found on the
   internet cannot yet be ingested; IT 1.x instruments.
-- XM, S3M and MOD (read or write).
+- XM, S3M and MOD (read or write) as editable modules. They are read
+  through libopenmpt for analysis (`corpus`), and an S3M's cells can be
+  changed in place in a copy for an A/B (`ablate`; `tests/test_ablate.py`
+  builds an S3M by hand and has both players read the change).
 - Notation for MIDI macros, pattern and channel names, the pitch-wheel
   depth, instrument MIDI output.
 - A preview mixer in pure Python, for a machine with neither libopenmpt nor
   Schism. Without one, a model on such a machine gets the compiler's
   checks and warnings but cannot measure what it wrote.
-- The training corpora (`corpus/README.md`) and the article (`docs/ROADMAP.md`).
+- The training corpora (`corpus/README.md`) and the article
+  (`docs/ROADMAP.md`). The reference corpus of 28 modules has been indexed,
+  traced and read in place for nine cards (`docs/cards/reference/`); it is
+  shipped beside the project, not in it.
 - Impulse Tracker itself and the Schism GUI have not been run.
 - A forge anybody has listened to: every claim in the section above is a
   measurement, and whether a forged bell is a good bell is untested. The

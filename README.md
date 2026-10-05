@@ -31,7 +31,9 @@ briefs come next (`docs/ROADMAP.md`).
     python3 -m schism check demos/first_light.sch --json                      # every problem as a record: line, source, message, fix
     python3 -m schism explain examples/echo/echo_on_note.sch                  # an instrument as the players run it: envelopes in ms, key-off, NNA
     python3 -m schism corpus index modules/* -o index.jsonl                   # what a corpus stores and what actually plays (IT/XM/S3M/MOD)
+    python3 -m schism corpus ab song.it --order 22 --row 0 --channels 11 --change 'inst 10 venv nodes 3'   # one mechanism out of a copy, A against B where the song plays it
     python3 examples/echo/make.py out/                                        # a technique from the corpus, as A/B and an etude
+    python3 examples/reference/make.py CORPUS/ out/ --cards=docs/cards/reference   # nine techniques checked in the corpus modules themselves
 
 Python 3.10+ and nothing else is needed to write modules (tested on 3.10,
 3.11, 3.12 and 3.13). To *hear* them, install any of:
@@ -143,7 +145,9 @@ the other two, setting each module's mix volume so its render peaks near 0.89
 ## Layout
 
     schism/        the package: model, it_write, it_read, synth, recipes,
-                   notation, openmpt, schismtracker, verify, levels, render
+                   notation, openmpt, schismtracker, verify, levels, render,
+                   corpus (index, trace, episodes), ablate (one mechanism
+                   out of a copy), abtest (A/B where the song plays it)
     schism/forge/  the instrument forge: dials, families, probe, closed loop,
                    search, banks, mixing, layers and PCM edits, FM voices,
                    the NES -> Mega Drive -> Schism ladder, kits, arrangement
@@ -151,12 +155,15 @@ the other two, setting each module's mix volume so its render peaks near 0.89
     docs/          NOTATION.md (the language), FORGE.md (the forge),
                    COVERAGE.md (what is checked), CAPABILITIES.md (the format
                    against what reaches it), CORPUS.md (reading a corpus),
-                   cards/ (techniques found in one), ROADMAP.md
-    examples/      echo/: a corpus technique rebuilt, with its A/B
+                   cards/ (techniques found in one; cards/reference/: nine
+                   checked in the modules themselves), ROADMAP.md
+    examples/      echo/: a corpus technique rebuilt, with its A/B;
+                   reference/: the reference corpus's techniques, A/B in
+                   place (the corpus is not in the repository)
     demos/         four synthetic tracks
     tests/         run_tests.py; format, synth, notation, audio, demos,
                    engines, docs, export, forge_core, forge, layers, ladder,
-                   rearrange, corpus, programs
+                   rearrange, corpus, programs, ablate
     tools/         make_demos.py, make_forge_demo.py, make_docs.py,
                    compare_engines.py
     corpus/        how the corpora are kept (the tools are schism/corpus.py)

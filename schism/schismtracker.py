@@ -48,7 +48,8 @@ def version() -> str:
 
 
 def render(module_bytes: bytes, sample_rate: int = 44100,
-           interpolation: str = "spline", timeout: float = 300.0):
+           interpolation: str = "spline", timeout: float = 300.0,
+           suffix: str = ".it"):
     """Play a module through Schism Tracker into memory.
 
     -> interleaved stereo floats as an `array('f')`, like
@@ -60,7 +61,8 @@ def render(module_bytes: bytes, sample_rate: int = 44100,
     not from `[Audio]`: with only the latter it writes 44100 Hz whatever is
     asked, and frames read as another rate would come out at the wrong pitch
     and length. The rate in the WAV it writes is checked, and a mismatch is
-    an error rather than a relabel.
+    an error rather than a relabel. `suffix` names the file Schism opens
+    (`.it`, `.s3m`, ...).
     """
     exe = executable()
     if not exe:
@@ -80,7 +82,7 @@ def render(module_bytes: bytes, sample_rate: int = 44100,
                 "no_ramping=0\nsurround_effect=1\n"
                 "[Diskwriter]\n"
                 f"rate={sample_rate}\nbits=16\nchannels=2\n")
-        source = os.path.join(home, "in.it")
+        source = os.path.join(home, "in" + suffix)
         target = os.path.join(home, "out.wav")
         with open(source, "wb") as handle:
             handle.write(module_bytes)

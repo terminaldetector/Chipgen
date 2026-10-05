@@ -43,8 +43,11 @@ _TARGETS = [
     {"target": "venv (volume envelope)", "units": "0..64, multiplies the "
      "note's volume", "nodes": "1-25, tick:value",
      "interp": "linear between nodes, a step a tick",
-     "restart": "every note-on (IT's carry flag would keep it running; this "
-                "writer does not set it)",
+     "restart": "every note-on, unless the envelope carries (`carry`): "
+                "then a note that follows a note of the same instrument "
+                "still held on the channel goes on from where that one "
+                "is; after a key-off or a note cut, or with another "
+                "instrument, it starts again (measured, both players)",
      "key_off": "leaves the sustain loop and runs on through the nodes "
                 "after it; with no sustain loop a key-off changes nothing "
                 "but starts the fade-out",
@@ -53,17 +56,18 @@ _TARGETS = [
                 "(global) multiply on top"},
     {"target": "penv (pan envelope)", "units": "-32 (left)..32 (right), added "
      "to the channel's pan", "nodes": "1-25", "interp": "linear",
-     "restart": "every note-on", "key_off": "as the volume envelope",
+     "restart": "as the volume envelope", "key_off": "as the volume "
+     "envelope",
      "pattern": "Xxx / the volume column's pan set the base it moves around; "
                 "Pxy slides it"},
     {"target": "ienv (pitch envelope)", "units": "-32..32 half-semitones "
      "(32 = 16 semitones)", "nodes": "1-25", "interp": "linear",
-     "restart": "every note-on", "key_off": "as the volume envelope",
+     "restart": "as the volume envelope", "key_off": "as the volume envelope",
      "pattern": "adds to Exx/Fxx/Gxx slides and Hxy vibrato; shares its slot "
                 "with fenv: an instrument has one or the other"},
     {"target": "fenv (filter envelope)", "units": "0..64: the share of the "
      "instrument's cutoff in use (64 = as set)", "nodes": "1-25",
-     "interp": "linear", "restart": "every note-on",
+     "interp": "linear", "restart": "as the volume envelope",
      "key_off": "as the volume envelope",
      "pattern": "Zxx (with IT's default macros) sets the cutoff the envelope "
                 "scales; shares its slot with ienv"},
@@ -127,6 +131,7 @@ def _env(env: Optional[M.Envelope], tick_ms: float, label: str) -> Optional[dict
                      for t, v in env.nodes],
            "sustain": list(env.sustain) if env.sustain else None,
            "loop": list(env.loop) if env.loop else None,
+           "carry": bool(getattr(env, "carry", False)),
            "length_ms": round(env.nodes[-1][0] * tick_ms, 1)
            if env.nodes else 0.0}
     if env.sustain:
@@ -173,6 +178,27 @@ def explain_instrument(module: M.Module, number: int,
         notes.append("NNA cut: the next note on the channel ends this one")
     if pitch_slot == "filter" and ins.cutoff is None:
         notes.append("a filter envelope with the filter off does nothing")
+    slot = ins.pitch_envelope
+    if slot is not None and not slot.enabled and slot.filter:
+        notes.append("the pitch/filter slot holds a filter envelope that is "
+                     "switched off but still marked as a filter: Schism "
+                     "Tracker still lowers the filter, as if the envelope "
+                     "stood at its middle value, and libopenmpt does not "
+                     "(measured) — the two players will not agree")
+    carried = [label for label, env in (("volume", ins.volume_envelope),
+                                        ("pan", ins.pan_envelope),
+                                        (pitch_slot or "pitch",
+                                         ins.pitch_envelope))
+               if env is not None and env.enabled
+               and getattr(env, "carry", False)]
+    if carried:
+        notes.append(
+            f"carry on the {' and '.join(carried)} envelope"
+            f"{'s' if len(carried) > 1 else ''}: a note of this instrument "
+            f"that follows one still held on the channel does not start "
+            f"{'them' if len(carried) > 1 else 'it'} again, it goes on from "
+            f"where that note is; after a key-off or a note cut (or a note "
+            f"of another instrument) it starts again")
     out["notes"] = notes
     samples = sorted({s for _, s in ins.note_map if s})
     out["samples"] = []

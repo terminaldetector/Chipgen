@@ -227,6 +227,99 @@ class Song:
         return out
 
 
+class _Interactive(ctypes.Structure):
+    """libopenmpt_ext's "interactive" interface: a table of functions."""
+    _fields_ = [(name, ctypes.c_void_p) for name in (
+        "set_current_speed", "set_current_tempo", "set_tempo_factor",
+        "get_tempo_factor", "set_pitch_factor", "get_pitch_factor",
+        "set_global_volume", "get_global_volume", "set_channel_volume",
+        "get_channel_volume", "set_channel_mute_status",
+        "get_channel_mute_status", "set_instrument_mute_status",
+        "get_instrument_mute_status", "play_note", "stop_note")]
+
+
+def render_channels(data: bytes, keep, sample_rate: int = 44100,
+                    seconds: float = None, interpolation: int = 8):
+    """Like `Song.render`, with only the channels in `keep` (1-based)
+    heard, through libopenmpt's interactive interface; the file is not
+    touched.
+
+    How the others are silenced depends on the format. libopenmpt plays an
+    S3M as Scream Tracker 3 did, where a muted channel's commands are not
+    played at all: its speed, tempo and pattern-delay commands are lost and
+    the song moves (measured: in Necros's Isotoxin, pattern 52 came 4.6 s
+    early by the 170th second). So an S3M's other channels are set to
+    volume 0 instead (S3M has no command that sets a channel's volume back).
+    Other formats are muted: their muted channels' commands are played, and
+    an IT's Mxx would undo a volume of 0."""
+    if _lib is None:
+        raise OpenMPTError("libopenmpt is not installed")
+    L = _lib
+    P = ctypes.c_void_p
+    if not getattr(L, "_ext_bound", False):
+        L.openmpt_module_ext_create_from_memory.restype = P
+        L.openmpt_module_ext_create_from_memory.argtypes = [
+            ctypes.c_char_p, ctypes.c_size_t, P, P, P, P,
+            ctypes.POINTER(ctypes.c_int), P, P]
+        L.openmpt_module_ext_get_module.restype = P
+        L.openmpt_module_ext_get_module.argtypes = [P]
+        L.openmpt_module_ext_get_interface.restype = ctypes.c_int
+        L.openmpt_module_ext_get_interface.argtypes = [
+            P, ctypes.c_char_p, P, ctypes.c_size_t]
+        L.openmpt_module_ext_destroy.argtypes = [P]
+        L._ext_bound = True
+    blob = bytes(data)
+    error = ctypes.c_int(0)
+    ext = L.openmpt_module_ext_create_from_memory(
+        blob, len(blob), None, None, None, None, ctypes.byref(error), None,
+        None)
+    if not ext:
+        raise OpenMPTError(f"libopenmpt refused the module (error "
+                           f"{error.value})")
+    try:
+        table = _Interactive()
+        if not L.openmpt_module_ext_get_interface(
+                ext, b"interactive", ctypes.byref(table),
+                ctypes.sizeof(table)):
+            raise OpenMPTError("this libopenmpt has no interactive interface")
+        handle = L.openmpt_module_ext_get_module(ext)
+        keep = set(keep)
+        s3m = len(blob) > 0x30 and blob[0x2C:0x30] == b"SCRM"
+        if s3m:
+            silence = ctypes.CFUNCTYPE(
+                ctypes.c_int, P, ctypes.c_int32, ctypes.c_double)(
+                    table.set_channel_volume)
+        else:
+            silence = ctypes.CFUNCTYPE(
+                ctypes.c_int, P, ctypes.c_int32, ctypes.c_int)(
+                    table.set_channel_mute_status)
+        for channel in range(L.openmpt_module_get_num_channels(handle)):
+            heard = channel + 1 in keep
+            if s3m:
+                silence(ext, channel, 1.0 if heard else 0.0)
+            else:
+                silence(ext, channel, 0 if heard else 1)
+        L.openmpt_module_set_repeat_count(handle, 0)
+        L.openmpt_module_set_render_param(handle, RENDER_INTERPOLATION,
+                                          interpolation)
+        limit = None if seconds is None else int(seconds * sample_rate)
+        out = array.array("f")
+        chunk = 8192
+        buf = (ctypes.c_float * (chunk * 2))()
+        done = 0
+        while limit is None or done < limit:
+            want = chunk if limit is None else min(chunk, limit - done)
+            got = L.openmpt_module_read_interleaved_float_stereo(
+                handle, sample_rate, want, buf)
+            if not got:
+                break
+            out.extend(buf[:got * 2])
+            done += got
+        return out
+    finally:
+        L.openmpt_module_ext_destroy(ext)
+
+
 def peak(frames) -> float:
     return max((abs(v) for v in frames), default=0.0)
 

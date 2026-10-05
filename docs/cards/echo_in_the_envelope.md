@@ -10,7 +10,7 @@ does what this card says (measured in two players, below); none about taste
 |---|---|
 | module | Skaven, *Fourth Symmetriad* (`skaven-fourth_symmetriad.it`) |
 | where | instrument 10, "Sine.softecho"; played e.g. in pattern 20, row 0, channel 11 (order 22), as the reference corpus audit gives it |
-| how it was read | from the module's instrument header (the corpus audit's `corpus_facts.json`); the module itself is not in this repository, so the episode with its entry state has not been re-read here |
+| how it was read | first from the module's instrument header as the corpus audit gave it; since then read and checked in the module itself: the same nodes, and an A/B in both players that cuts the repeats (`reference/echo_in_the_envelope.md`) |
 | provenance | the reference corpus `schism_reference_corpus_28_tracks.zip`, SHA-256 `5b2fbc0cd31a6b07489e7c0d23c71cfc42da7ad1542b6e0c4015bb0c1629dd6d` (as the audit records it); authorship as the corpus catalogue gives it |
 
 ## What is written there (native, as read)

@@ -1,0 +1,1407 @@
+{
+ "format": "schism-reference-cards/1",
+ "engines": {
+  "openmpt": "0.7.3+r19618.pkg",
+  "schism": "Schism Tracker built Jan 31 2024 12:56:03"
+ },
+ "rate": 44100,
+ "corpus_zip_sha256": "5b2fbc0cd31a6b07489e7c0d23c71cfc42da7ad1542b6e0c4015bb0c1629dd6d",
+ "cards": [
+  {
+   "id": "filter_sweep_bass",
+   "title": "A resonant filter swept by the instrument over a held note",
+   "kind": "instrument technique (IT)",
+   "file": "Skaven252/skaven-fourth_symmetriad.it",
+   "sha256": "f2a56492733d1ec65ff85da2c503ec3c72f035f361f5cdd168d4288d63762e79",
+   "address": {
+    "order": 1,
+    "pattern": 1,
+    "row": 96,
+    "speed": 4,
+    "tempo": 128,
+    "at": 17.492,
+    "tick_ms": 19.531,
+    "row_ms": 78.125,
+    "song_seconds": 259.86,
+    "seconds": 2.5,
+    "channels": [
+     2
+    ]
+   },
+   "change": {
+    "asked": [
+     "inst 2 fenv off"
+    ],
+    "bytes": [
+     {
+      "offset": 2953,
+      "old": 129,
+      "new": 0,
+      "why": "instrument 2 filter envelope: flags 0x81 -> 0x00"
+     }
+    ]
+   },
+   "check": "The filter envelope moves the instrument's resonant filter over the held note (instrument 1 is the same sample with no filter): in A the upper band (1.2-5 kHz) moves 10 dB or more along the note as the resonant peak comes down through it; in B (the envelope off) every band stays within 1 dB.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "bands": [
+       {
+        "at_s": 0.1,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.5,
+        "high_1200_5000": 13.5,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 0.6,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.8,
+        "high_1200_5000": 20.5,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 1.8,
+        "low_60_300": 36.6,
+        "mid_300_1200": 34.6,
+        "high_1200_5000": 8.8,
+        "peak_hz": 851
+       },
+       {
+        "at_s": 2.3,
+        "low_60_300": 36.7,
+        "mid_300_1200": 37.7,
+        "high_1200_5000": 1.2,
+        "peak_hz": 635
+       }
+      ],
+      "span_db": {
+       "low_60_300": 0.3,
+       "mid_300_1200": 9.2,
+       "high_1200_5000": 19.3
+      },
+      "high_rise_db": 7.0,
+      "high_fall_db": 19.3
+     },
+     "B": {
+      "bands": [
+       {
+        "at_s": 0.1,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 12.9,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 0.6,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.5,
+        "high_1200_5000": 12.9,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 1.8,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 12.9,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 2.3,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 12.9,
+        "peak_hz": 323
+       }
+      ],
+      "span_db": {
+       "low_60_300": 0.0,
+       "mid_300_1200": 0.1,
+       "high_1200_5000": 0.0
+      },
+      "high_rise_db": 0.0,
+      "high_fall_db": 0.0
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "bands": [
+       {
+        "at_s": 0.1,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.5,
+        "high_1200_5000": 14.8,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 0.6,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.8,
+        "high_1200_5000": 20.8,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 1.8,
+        "low_60_300": 36.6,
+        "mid_300_1200": 34.8,
+        "high_1200_5000": 7.6,
+        "peak_hz": 851
+       },
+       {
+        "at_s": 2.3,
+        "low_60_300": 36.6,
+        "mid_300_1200": 38.0,
+        "high_1200_5000": -0.3,
+        "peak_hz": 624
+       }
+      ],
+      "span_db": {
+       "low_60_300": 0.2,
+       "mid_300_1200": 9.5,
+       "high_1200_5000": 21.1
+      },
+      "high_rise_db": 6.0,
+      "high_fall_db": 21.1
+     },
+     "B": {
+      "bands": [
+       {
+        "at_s": 0.1,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 13.3,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 0.6,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 13.3,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 1.8,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 13.3,
+        "peak_hz": 323
+       },
+       {
+        "at_s": 2.3,
+        "low_60_300": 36.4,
+        "mid_300_1200": 28.4,
+        "high_1200_5000": 13.3,
+        "peak_hz": 323
+       }
+      ],
+      "span_db": {
+       "low_60_300": 0.0,
+       "mid_300_1200": 0.0,
+       "high_1200_5000": 0.0
+      },
+      "high_rise_db": 0.0,
+      "high_fall_db": 0.0
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "A: the 1.2-5 kHz band spans 19.3 dB along the note (peak near 851 Hz at 1.8 s, 635 Hz at 2.3 s); B: every band within 0.1 dB",
+    "schism": "A: the 1.2-5 kHz band spans 21.1 dB along the note (peak near 851 Hz at 1.8 s, 624 Hz at 2.3 s); B: every band within 0.0 dB"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -7.67,
+     "in_mix": -13.11
+    },
+    "schism": {
+     "alone": -7.56,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "filter_sweep_bass_alone_A_then_B.mp3",
+    "in_context": "filter_sweep_bass_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "echo_in_the_envelope",
+   "title": "An echo written into the instrument's envelopes (checked in place)",
+   "kind": "instrument technique (IT)",
+   "file": "Skaven252/skaven-fourth_symmetriad.it",
+   "sha256": "f2a56492733d1ec65ff85da2c503ec3c72f035f361f5cdd168d4288d63762e79",
+   "address": {
+    "order": 22,
+    "pattern": 20,
+    "row": 0,
+    "speed": 4,
+    "tempo": 128,
+    "at": 199.922,
+    "tick_ms": 19.531,
+    "row_ms": 78.125,
+    "song_seconds": 259.86,
+    "seconds": 1.85,
+    "channels": [
+     11
+    ]
+   },
+   "change": {
+    "asked": [
+     "inst 10 venv nodes 3"
+    ],
+    "bytes": [
+     {
+      "offset": 7222,
+      "old": 9,
+      "new": 3,
+      "why": "instrument 10 volume envelope: keep the first 3 of 9 nodes"
+     }
+    ]
+   },
+   "check": "The repeats are the envelope's: after the line stops, A goes on striking, right then left of the dry note; B (the envelope cut after its first strike) is silent, and the first strike is the same in both.",
+   "verdict": {
+    "openmpt": {
+     "tail_from_s": 1.3,
+     "tail_level_db": {
+      "A": -32.6,
+      "B": -50.52
+     },
+     "tail_strikes": {
+      "A": [
+       {
+        "ms": 1433,
+        "db": -21.81,
+        "balance_db": -0.97
+       },
+       {
+        "ms": 1570,
+        "db": -29.26,
+        "balance_db": -8.92
+       },
+       {
+        "ms": 1731,
+        "db": -30.34,
+        "balance_db": -10.27
+       }
+      ],
+      "B": 0
+     },
+     "dry_balance_db": -3.86,
+     "first_strike_db": {
+      "A": -19.7,
+      "B": -19.7
+     },
+     "tail_sides_db": [
+      2.89,
+      -5.06,
+      -6.41
+     ],
+     "holds": true
+    },
+    "schism": {
+     "tail_from_s": 1.3,
+     "tail_level_db": {
+      "A": -33.44,
+      "B": -51.56
+     },
+     "tail_strikes": {
+      "A": [
+       {
+        "ms": 1322,
+        "db": -28.22,
+        "balance_db": 0.65
+       },
+       {
+        "ms": 1417,
+        "db": -22.46,
+        "balance_db": -0.5
+       },
+       {
+        "ms": 1537,
+        "db": -35.32,
+        "balance_db": 0.05
+       },
+       {
+        "ms": 1568,
+        "db": -28.81,
+        "balance_db": -7.58
+       },
+       {
+        "ms": 1729,
+        "db": -30.25,
+        "balance_db": -10.3
+       }
+      ],
+      "B": 0
+     },
+     "dry_balance_db": -3.86,
+     "first_strike_db": {
+      "A": -18.43,
+      "B": -18.43
+     },
+     "tail_sides_db": [
+      4.51,
+      3.36,
+      3.91,
+      -3.72,
+      -6.44
+     ],
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "after the line stops, A strikes 3 more times (+2.9, -5.1, -6.4 dB right of the dry note), B none; tail level A -32.6 dB, B -50.52 dB; first strike -19.7 / -19.7 dB",
+    "schism": "after the line stops, A strikes 5 more times (+4.5, +3.4, +3.9, -3.7, -6.4 dB right of the dry note), B none; tail level A -33.44 dB, B -51.56 dB; first strike -18.43 / -18.43 dB"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -6.77,
+     "in_mix": -15.31
+    },
+    "schism": {
+     "alone": -6.78,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "echo_in_the_envelope_alone_A_then_B.mp3",
+    "in_context": "echo_in_the_envelope_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "filter_carry",
+   "title": "A filter envelope that carries across held notes",
+   "kind": "instrument technique (IT)",
+   "file": "Manwe/new_wind_in_syworld.it",
+   "sha256": "a376f29ad52cef738ef38e852091a7bfcd9ca769de9d0b88331ffcf895800436",
+   "address": {
+    "order": 1,
+    "pattern": 6,
+    "row": 0,
+    "speed": 3,
+    "tempo": 120,
+    "at": 7.99,
+    "tick_ms": 20.833,
+    "row_ms": 62.5,
+    "song_seconds": 84.0,
+    "seconds": 4.0,
+    "channels": [
+     5
+    ]
+   },
+   "change": {
+    "asked": [
+     "inst 2 fenv carry off"
+    ],
+    "bytes": [
+     {
+      "offset": 1713,
+      "old": 137,
+      "new": 129,
+      "why": "instrument 2 filter envelope: flags 0x89 -> 0x81"
+     }
+    ]
+   },
+   "check": "With carry the filter envelope is not started again by a note that follows a held note of the same instrument: that note stays as the last one left the filter (no sweep), while a note after a key-off starts it again (the sweep: about 30 dB from dark to open by 200 ms). With carry off (B) every note sweeps, and the notes after a key-off are the same in A and B.",
+   "verdict": {
+    "openmpt": {
+     "notes": [
+      {
+       "row": 12,
+       "after": "key-off",
+       "at_s": 0.75
+      },
+      {
+       "row": 18,
+       "after": "note",
+       "at_s": 1.125
+      },
+      {
+       "row": 44,
+       "after": "key-off",
+       "at_s": 2.75
+      },
+      {
+       "row": 50,
+       "after": "note",
+       "at_s": 3.125
+      }
+     ],
+     "A": {
+      "sweep_db": [
+       29.3,
+       1.2,
+       28.4,
+       0.4
+      ]
+     },
+     "B": {
+      "sweep_db": [
+       29.3,
+       29.1,
+       28.4,
+       28.3
+      ]
+     },
+     "holds": true
+    },
+    "schism": {
+     "notes": [
+      {
+       "row": 12,
+       "after": "key-off",
+       "at_s": 0.75
+      },
+      {
+       "row": 18,
+       "after": "note",
+       "at_s": 1.125
+      },
+      {
+       "row": 44,
+       "after": "key-off",
+       "at_s": 2.75
+      },
+      {
+       "row": 50,
+       "after": "note",
+       "at_s": 3.125
+      }
+     ],
+     "A": {
+      "sweep_db": [
+       30.2,
+       0.9,
+       29.2,
+       -0.3
+      ]
+     },
+     "B": {
+      "sweep_db": [
+       30.2,
+       30.3,
+       29.2,
+       29.2
+      ]
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "upper-band sweep in the first 240 ms — row 12 after a key-off: A +29.3 dB, B +29.3 dB; row 18 after a note: A +1.2 dB, B +29.1 dB; row 44 after a key-off: A +28.4 dB, B +28.4 dB; row 50 after a note: A +0.4 dB, B +28.3 dB",
+    "schism": "upper-band sweep in the first 240 ms — row 12 after a key-off: A +30.2 dB, B +30.2 dB; row 18 after a note: A +0.9 dB, B +30.3 dB; row 44 after a key-off: A +29.2 dB, B +29.2 dB; row 50 after a note: A -0.3 dB, B +29.2 dB"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -2.45,
+     "in_mix": -13.08
+    },
+    "schism": {
+     "alone": -2.41,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "filter_carry_alone_A_then_B.mp3",
+    "in_context": "filter_carry_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "octave_trill_envelope",
+   "title": "An octave trill the instrument plays by itself",
+   "kind": "instrument technique (IT)",
+   "file": "Manwe/new_wind_in_syworld.it",
+   "sha256": "a376f29ad52cef738ef38e852091a7bfcd9ca769de9d0b88331ffcf895800436",
+   "address": {
+    "order": 0,
+    "pattern": 5,
+    "row": 0,
+    "speed": 3,
+    "tempo": 120,
+    "at": 0.0,
+    "tick_ms": 20.833,
+    "row_ms": 62.5,
+    "song_seconds": 84.0,
+    "seconds": 1.0,
+    "channels": [
+     9
+    ]
+   },
+   "change": {
+    "asked": [
+     "inst 15 ienv off"
+    ],
+    "bytes": [
+     {
+      "offset": 8915,
+      "old": 3,
+      "new": 2,
+      "why": "instrument 15 pitch envelope: flags 0x03 -> 0x02"
+     }
+    ]
+   },
+   "check": "The looped pitch envelope throws the note up an octave and back every 6 ticks: A's pitch track spends a good part of the note an octave up; B (the envelope off) stays on the note.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "voiced": 96,
+      "octave_up": 24,
+      "share_up": 0.25
+     },
+     "B": {
+      "voiced": 96,
+      "octave_up": 0,
+      "share_up": 0.0
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "voiced": 96,
+      "octave_up": 24,
+      "share_up": 0.25
+     },
+     "B": {
+      "voiced": 96,
+      "octave_up": 0,
+      "share_up": 0.0
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "A spends 25% of its voiced 10 ms steps an octave up, B 0%",
+    "schism": "A spends 25% of its voiced 10 ms steps an octave up, B 0%"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": 1.94,
+     "in_mix": -9.69
+    },
+    "schism": {
+     "alone": 1.91,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "octave_trill_envelope_alone_A_then_B.mp3",
+    "in_context": "octave_trill_envelope_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "vibrato_memory_under_slides",
+   "title": "A vibrato carried on under volume slides (K after H)",
+   "kind": "pattern technique (S3M)",
+   "file": "FearofDark/dancinginthetube.s3m",
+   "sha256": "fbb5e8c461758d2ae816300ab585727fa0910736dacdd7f4a4538cb936d902bc",
+   "address": {
+    "order": 3,
+    "pattern": 3,
+    "row": 8,
+    "speed": 6,
+    "tempo": 125,
+    "at": 23.997,
+    "tick_ms": 20.0,
+    "row_ms": 120.0,
+    "song_seconds": 291.84,
+    "seconds": 0.96,
+    "channels": [
+     5
+    ]
+   },
+   "change": {
+    "asked": [
+     "cell 3 10 5 effect D",
+     "cell 3 11 5 effect D",
+     "cell 3 12 5 effect D",
+     "cell 3 13 5 effect D"
+    ],
+    "bytes": [
+     {
+      "offset": 3450,
+      "old": 11,
+      "new": 4,
+      "why": "pattern 3 row 10 channel 5: K02 -> D02"
+     },
+     {
+      "offset": 3466,
+      "old": 11,
+      "new": 4,
+      "why": "pattern 3 row 11 channel 5: K03 -> D03"
+     },
+     {
+      "offset": 3480,
+      "old": 11,
+      "new": 4,
+      "why": "pattern 3 row 12 channel 5: K04 -> D04"
+     },
+     {
+      "offset": 3487,
+      "old": 11,
+      "new": 4,
+      "why": "pattern 3 row 13 channel 5: K04 -> D04"
+     }
+    ]
+   },
+   "check": "K is H's vibrato carried on under a volume slide: over the K rows A's pitch wobbles; B (K -> D: the slides kept, the vibrato not) holds still. The H row itself is the same in both.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "voiced": 44,
+      "spread_cents": 27.9,
+      "range_cents": 81.7
+     },
+     "B": {
+      "voiced": 44,
+      "spread_cents": 3.1,
+      "range_cents": 16.2
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "voiced": 43,
+      "spread_cents": 28.6,
+      "range_cents": 83.1
+     },
+     "B": {
+      "voiced": 43,
+      "spread_cents": 2.9,
+      "range_cents": 15.5
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "over the K rows the pitch spreads 27.9 cents in A (range 81.7), 3.1 in B (range 16.2)",
+    "schism": "over the K rows the pitch spreads 28.6 cents in A (range 83.1), 2.9 in B (range 15.5)"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -0.69,
+     "in_mix": -8.75
+    },
+    "schism": {
+     "alone": -0.86,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "vibrato_memory_under_slides_alone_A_then_B.mp3",
+    "in_context": "vibrato_memory_under_slides_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "falling_repeats",
+   "title": "Repeats of one note, each quieter and each sliding down",
+   "kind": "pattern technique (S3M)",
+   "file": "FearofDark/dancinginthetube.s3m",
+   "sha256": "fbb5e8c461758d2ae816300ab585727fa0910736dacdd7f4a4538cb936d902bc",
+   "address": {
+    "order": 3,
+    "pattern": 3,
+    "row": 8,
+    "speed": 6,
+    "tempo": 125,
+    "at": 23.997,
+    "tick_ms": 20.0,
+    "row_ms": 120.0,
+    "song_seconds": 291.84,
+    "seconds": 0.96,
+    "channels": [
+     6
+    ]
+   },
+   "change": {
+    "asked": [
+     "cell 3 9 6 effect none",
+     "cell 3 10 6 effect none",
+     "cell 3 12 6 effect none",
+     "cell 3 13 6 effect none",
+     "cell 3 15 6 effect none"
+    ],
+    "bytes": [
+     {
+      "offset": 3440,
+      "old": 5,
+      "new": 0,
+      "why": "pattern 3 row 9 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3441,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 3 row 9 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3453,
+      "old": 5,
+      "new": 0,
+      "why": "pattern 3 row 10 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3454,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 3 row 10 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3483,
+      "old": 5,
+      "new": 0,
+      "why": "pattern 3 row 12 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3484,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 3 row 12 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3490,
+      "old": 5,
+      "new": 0,
+      "why": "pattern 3 row 13 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3491,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 3 row 13 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3519,
+      "old": 5,
+      "new": 0,
+      "why": "pattern 3 row 15 channel 6: E0F cleared"
+     },
+     {
+      "offset": 3520,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 3 row 15 channel 6: E0F cleared"
+     }
+    ]
+   },
+   "check": "E0F pulls each note down while it sounds: in A the centroid (which follows the pitch for one sample) falls over the slide rows; in B (the E0F cleared) it stays.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "last_over_first": [
+       0.584,
+       0.584
+      ]
+     },
+     "B": {
+      "last_over_first": [
+       1.384,
+       1.384
+      ]
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "last_over_first": [
+       0.6,
+       0.6
+      ]
+     },
+     "B": {
+      "last_over_first": [
+       1.346,
+       1.346
+      ]
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "centroid at the end of each slide over its start: A 0.584, 0.584; B 1.384, 1.384",
+    "schism": "centroid at the end of each slide over its start: A 0.6, 0.6; B 1.346, 1.346"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": 1.19,
+     "in_mix": -8.06
+    },
+    "schism": {
+     "alone": 1.27,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "falling_repeats_alone_A_then_B.mp3",
+    "in_context": "falling_repeats_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "volume_gate",
+   "title": "A held note pulsed by alternating volume slides and resets",
+   "kind": "pattern technique (S3M)",
+   "file": "Necros/isotoxin.s3m",
+   "sha256": "a666b76286bbd062f838a23d288e76534070ff0f2ae3724894463b7dba885ec2",
+   "address": {
+    "order": 44,
+    "pattern": 52,
+    "row": 0,
+    "speed": 3,
+    "tempo": 125,
+    "at": 173.589,
+    "tick_ms": 20.0,
+    "row_ms": 60.0,
+    "song_seconds": 331.04,
+    "seconds": 0.96,
+    "channels": [
+     6
+    ]
+   },
+   "change": {
+    "asked": [
+     "cell 52 1 6 effect none",
+     "cell 52 3 6 effect none",
+     "cell 52 5 6 effect none",
+     "cell 52 7 6 effect none",
+     "cell 52 9 6 effect none",
+     "cell 52 11 6 effect none",
+     "cell 52 13 6 effect none",
+     "cell 52 15 6 effect none"
+    ],
+    "bytes": [
+     {
+      "offset": 33122,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 1 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33123,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 1 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33138,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 3 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33139,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 3 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33169,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 5 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33170,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 5 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33189,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 7 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33190,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 7 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33210,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 9 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33211,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 9 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33234,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 11 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33235,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 11 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33272,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 13 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33273,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 13 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33302,
+      "old": 4,
+      "new": 0,
+      "why": "pattern 52 row 15 channel 6: D0F cleared"
+     },
+     {
+      "offset": 33303,
+      "old": 15,
+      "new": 0,
+      "why": "pattern 52 row 15 channel 6: D0F cleared"
+     }
+    ]
+   },
+   "check": "D0F after each v40 pulls the held note down on the odd rows (64 to 34 over a row of 3 ticks, about -2 dB on the row's average) and v40 puts it back: in A the odd rows are quieter than the even ones by more than they are in B (the D0F cleared), where only the sample's own shape is left.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "row_levels_db": [
+       -22.16,
+       -23.76,
+       -29.71,
+       -25.75,
+       -35.57,
+       -19.58,
+       -23.75,
+       -19.67,
+       -29.68,
+       -27.17,
+       -32.25,
+       -22.34,
+       -28.54,
+       -19.08,
+       -23.75
+      ],
+      "odd_minus_even_db": -5.7
+     },
+     "B": {
+      "row_levels_db": [
+       -19.62,
+       -23.62,
+       -26.34,
+       -25.54,
+       -32.58,
+       -19.56,
+       -22.16,
+       -19.62,
+       -26.95,
+       -27.13,
+       -29.53,
+       -22.33,
+       -23.47,
+       -19.03,
+       -22.51
+      ],
+      "odd_minus_even_db": -2.99
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "row_levels_db": [
+       -23.61,
+       -23.77,
+       -31.34,
+       -25.81,
+       -37.39,
+       -19.43,
+       -25.29,
+       -19.8,
+       -31.52,
+       -27.24,
+       -34.0,
+       -22.35,
+       -29.81,
+       -19.09,
+       -25.49
+      ],
+      "odd_minus_even_db": -7.31
+     },
+     "B": {
+      "row_levels_db": [
+       -19.65,
+       -23.69,
+       -26.33,
+       -25.64,
+       -32.58,
+       -19.42,
+       -22.29,
+       -19.79,
+       -27.08,
+       -27.2,
+       -29.7,
+       -22.33,
+       -23.41,
+       -19.08,
+       -22.58
+      ],
+      "odd_minus_even_db": -3.0
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "odd rows minus even rows: A -5.7 dB, B -2.99 dB",
+    "schism": "odd rows minus even rows: A -7.31 dB, B -3.0 dB"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -12.46,
+     "in_mix": -23.17
+    },
+    "schism": {
+     "alone": -10.31,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "volume_gate_alone_A_then_B.mp3",
+    "in_context": "volume_gate_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "attack_variants",
+   "title": "One pitch struck with three different instruments",
+   "kind": "pattern technique (S3M)",
+   "file": "Necros/isotoxin.s3m",
+   "sha256": "a666b76286bbd062f838a23d288e76534070ff0f2ae3724894463b7dba885ec2",
+   "address": {
+    "order": 44,
+    "pattern": 52,
+    "row": 0,
+    "speed": 3,
+    "tempo": 125,
+    "at": 173.589,
+    "tick_ms": 20.0,
+    "row_ms": 60.0,
+    "song_seconds": 331.04,
+    "seconds": 0.96,
+    "channels": [
+     8
+    ]
+   },
+   "change": {
+    "asked": [
+     "cell 52 4 8 instrument 21",
+     "cell 52 12 8 instrument 21",
+     "cell 52 14 8 instrument 21"
+    ],
+    "bytes": [
+     {
+      "offset": 33152,
+      "old": 22,
+      "new": 21,
+      "why": "pattern 52 row 4 channel 8: instrument 22 -> 21"
+     },
+     {
+      "offset": 33251,
+      "old": 23,
+      "new": 21,
+      "why": "pattern 52 row 12 channel 8: instrument 23 -> 21"
+     },
+     {
+      "offset": 33290,
+      "old": 22,
+      "new": 21,
+      "why": "pattern 52 row 14 channel 8: instrument 22 -> 21"
+     }
+    ]
+   },
+   "check": "Three instruments on one pitch: A's strikes differ in level or brightness by instrument; B (all instrument 21) strikes alike.",
+   "verdict": {
+    "openmpt": {
+     "strikes_at_s": [
+      0.12,
+      0.24,
+      0.36,
+      0.603,
+      0.723,
+      0.843
+     ],
+     "instruments_A": [
+      21,
+      22,
+      21,
+      21,
+      23,
+      22
+     ],
+     "A": [
+      {
+       "level_db": -31.39,
+       "centroid_hz": 8645.1
+      },
+      {
+       "level_db": -27.68,
+       "centroid_hz": 9107.1
+      },
+      {
+       "level_db": -31.4,
+       "centroid_hz": 8645.1
+      },
+      {
+       "level_db": -31.38,
+       "centroid_hz": 8749.0
+      },
+      {
+       "level_db": -26.33,
+       "centroid_hz": 8251.5
+      },
+      {
+       "level_db": -27.5,
+       "centroid_hz": 8979.9
+      }
+     ],
+     "B": [
+      {
+       "level_db": -31.39,
+       "centroid_hz": 8645.1
+      },
+      {
+       "level_db": -31.41,
+       "centroid_hz": 8645.1
+      },
+      {
+       "level_db": -31.41,
+       "centroid_hz": 8645.1
+      },
+      {
+       "level_db": -31.38,
+       "centroid_hz": 8749.0
+      },
+      {
+       "level_db": -31.38,
+       "centroid_hz": 8749.0
+      },
+      {
+       "level_db": -31.38,
+       "centroid_hz": 8749.0
+      }
+     ],
+     "level_range_db": {
+      "A": 5.07,
+      "B": 0.03
+     },
+     "centroid_range_hz": {
+      "A": 855.6,
+      "B": 103.9
+     },
+     "holds": true
+    },
+    "schism": {
+     "strikes_at_s": [
+      0.12,
+      0.24,
+      0.36,
+      0.603,
+      0.723,
+      0.843
+     ],
+     "instruments_A": [
+      21,
+      22,
+      21,
+      21,
+      23,
+      22
+     ],
+     "A": [
+      {
+       "level_db": -31.85,
+       "centroid_hz": 8699.0
+      },
+      {
+       "level_db": -27.85,
+       "centroid_hz": 8993.3
+      },
+      {
+       "level_db": -31.85,
+       "centroid_hz": 8699.0
+      },
+      {
+       "level_db": -32.14,
+       "centroid_hz": 8746.1
+      },
+      {
+       "level_db": -26.53,
+       "centroid_hz": 8134.3
+      },
+      {
+       "level_db": -27.88,
+       "centroid_hz": 8846.7
+      }
+     ],
+     "B": [
+      {
+       "level_db": -31.85,
+       "centroid_hz": 8699.0
+      },
+      {
+       "level_db": -31.86,
+       "centroid_hz": 8699.0
+      },
+      {
+       "level_db": -31.86,
+       "centroid_hz": 8699.0
+      },
+      {
+       "level_db": -32.14,
+       "centroid_hz": 8746.1
+      },
+      {
+       "level_db": -32.14,
+       "centroid_hz": 8746.1
+      },
+      {
+       "level_db": -32.14,
+       "centroid_hz": 8746.1
+      }
+     ],
+     "level_range_db": {
+      "A": 5.61,
+      "B": 0.29
+     },
+     "centroid_range_hz": {
+      "A": 859.0,
+      "B": 47.1
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "strike levels span 5.07 dB in A, 0.03 dB in B; centroids span 855.6 Hz in A, 103.9 Hz in B",
+    "schism": "strike levels span 5.61 dB in A, 0.29 dB in B; centroids span 859.0 Hz in A, 47.1 Hz in B"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": -0.2,
+     "in_mix": -19.32
+    },
+    "schism": {
+     "alone": -0.35,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "attack_variants_alone_A_then_B.mp3",
+    "in_context": "attack_variants_mix_A_then_B.mp3"
+   }
+  },
+  {
+   "id": "ten_node_decay",
+   "title": "A ten-node volume envelope: a note that falls and rises again",
+   "kind": "instrument technique (IT)",
+   "file": "FearofDark/fod_rosethorn.it",
+   "sha256": "449fa710623c14a1fed602aaae5f5dbffa60ca515e1eeb711603522c3ee6aaa7",
+   "address": {
+    "order": 1,
+    "pattern": 1,
+    "row": 0,
+    "speed": 6,
+    "tempo": 157,
+    "at": 2.035,
+    "tick_ms": 15.924,
+    "row_ms": 95.541,
+    "song_seconds": 112.23,
+    "seconds": 1.6,
+    "channels": [
+     1
+    ]
+   },
+   "change": {
+    "asked": [
+     "inst 18 venv off"
+    ],
+    "bytes": [
+     {
+      "offset": 10310,
+      "old": 1,
+      "new": 0,
+      "why": "instrument 18 volume envelope: flags 0x01 -> 0x00"
+     }
+    ]
+   },
+   "check": "The ten-node envelope makes one note fall and rise again (towards ticks 13, 33, 49 and 68) before its long tail: after the attack (the first 150 ms, where the sample's own onset rises too) A's level rises 3 dB or more at least three separate times; B (the envelope off) not once.",
+   "verdict": {
+    "openmpt": {
+     "A": {
+      "rises": [
+       {
+        "ms": 440,
+        "rise_db": 3.0
+       },
+       {
+        "ms": 730,
+        "rise_db": 6.3
+       },
+       {
+        "ms": 1000,
+        "rise_db": 6.4
+       }
+      ]
+     },
+     "B": {
+      "rises": []
+     },
+     "holds": true
+    },
+    "schism": {
+     "A": {
+      "rises": [
+       {
+        "ms": 430,
+        "rise_db": 3.1
+       },
+       {
+        "ms": 720,
+        "rise_db": 6.7
+       },
+       {
+        "ms": 990,
+        "rise_db": 7.2
+       }
+      ]
+     },
+     "B": {
+      "rises": []
+     },
+     "holds": true
+    }
+   },
+   "summary": {
+    "openmpt": "A rises again at 440, 730, 1000 ms (3.0, 6.3, 6.4 dB), B 0 times",
+    "schism": "A rises again at 430, 720, 990 ms (3.1, 6.7, 7.2 dB), B 0 times"
+   },
+   "null_db": {
+    "openmpt": {
+     "alone": 16.12,
+     "in_mix": 12.67
+    },
+    "schism": {
+     "alone": 16.56,
+     "in_mix": null
+    }
+   },
+   "files": {
+    "isolated": "ten_node_decay_alone_A_then_B.mp3",
+    "in_context": "ten_node_decay_mix_A_then_B.mp3"
+   }
+  }
+ ]
+}

@@ -73,6 +73,18 @@ def test_libopenmpts_effect_numbers_are_not_the_letters():
                 number = m.normalized(0, row, 0)["effect"]
                 assert corpus.IT_LETTER[number] == letter, (letter, number)
                 assert m.native(0, row, 0).endswith(f"{letter}12")
+    # libopenmpt prints the instrument and the volume in hex: what reads
+    # `14` and `v40` in an episode is instrument 20 at volume 64
+    pat = M.Pattern(rows=32)
+    _cell(pat, 0, 0, 61, 20)
+    pat.cell(0, 0).volume = 64
+    mod.instruments = mod.instruments * 20
+    mod.patterns = [pat]
+    with tempfile.TemporaryDirectory() as folder:
+        with corpus.Module(_file(folder, mod)) as m:
+            assert m.native(0, 0, 0) == "C-5 14v40 ...", m.native(0, 0, 0)
+            n = m.normalized(0, 0, 0)
+            assert (n["instrument"], n["volume"]) == (20, 64), n
     # the map is one to one, and every number has a name
     assert len(set(corpus.IT_LETTER.values())) == 26
     assert all(n in corpus.EFFECT_NAMES for n in corpus.IT_LETTER)
@@ -89,13 +101,21 @@ def test_what_is_stored_is_not_what_plays():
         assert stored["unlisted_nonempty"] == [4]
         assert played["reached"] == [0, 1, 3], played["reached"]
         assert played["stopped"] == "song end"
+        # the song ends on the last row of pattern 3, not back at the start
+        assert played["rows"][-1][:3] == [3, 3, 31], played["rows"][-1]
         # the loop: rows 0-3 of pattern 3 play three times, the rest once
         visits = {}
-        for order, pattern, row, speed, tempo in played["rows"]:
+        for order, pattern, row, speed, tempo, at in played["rows"]:
             visits[(pattern, row)] = visits.get((pattern, row), 0) + 1
             assert speed == 4 or (pattern, row) == (0, 0)
         assert [visits[(3, r)] for r in range(6)] == [3, 3, 3, 3, 1, 1]
         assert (2, 0) not in visits
+        # each row says when it starts: 32 rows of 4 ticks of 20 ms a pattern
+        times = [r[5] for r in played["rows"]]
+        assert times == sorted(times) and times[0] == 0.0
+        assert abs(corpus.first_time(played["rows"], 1, 0) - 2.56) <= 0.004
+        assert abs(corpus.first_time(played["rows"], 3, 0) - 5.12) <= 0.004
+        assert corpus.first_time(played["rows"], 2, 0) is None
         entry = corpus.index_module(path, {"author": "test"})
         assert entry["played"]["listed_never_played"] == [2]
         assert entry["stored"]["unlisted_nonempty"] == [4]

@@ -36,6 +36,10 @@ def _cstr(raw: bytes) -> str:
     return raw.split(b"\0", 1)[0].decode("ascii", "replace")
 
 
+#: bit 3 of an envelope's flags
+CARRY_FLAG = 0x08
+
+
 def _envelope(raw: bytes, kind: str):
     flags, count, lb, le, slb, sle = raw[:6]
     if not flags & 1 and count == 0:
@@ -53,7 +57,8 @@ def _envelope(raw: bytes, kind: str):
     return Envelope(nodes=nodes,
                     loop=(lb, le) if flags & 2 else None,
                     sustain=(slb, sle) if flags & 4 else None,
-                    enabled=bool(flags & 1), filter=filt)
+                    enabled=bool(flags & 1), filter=filt,
+                    carry=bool(flags & CARRY_FLAG))
 
 
 def _instrument(blob: bytes) -> Instrument:

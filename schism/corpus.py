@@ -73,9 +73,9 @@ FLOW = {12, 14}
 NOTE, INSTRUMENT, VOLCMD, EFFECT, VOLUME, PARAM = range(6)
 
 TRACE_RATE = 8000
-#: frames rendered between position readings: 4 ms at 8 kHz, shorter than
-#: the shortest row a module can have (speed 1 at tempo 255, 9.8 ms)
-TRACE_CHUNK = 32
+#: time rendered between position readings: 4 ms, shorter than the
+#: shortest row a module can have (speed 1 at tempo 255, 9.8 ms)
+TRACE_STEP_S = 0.004
 TRACE_LIMIT_S = 1200.0
 
 
@@ -101,11 +101,15 @@ def _bind():
 class Module:
     """A file as libopenmpt reads it, with its hash."""
 
-    def __init__(self, path: str):
+    def __init__(self, path):
+        """`path` is a file, or the bytes of one."""
         _bind()
-        self.path = path
-        with open(path, "rb") as handle:
-            self.data = handle.read()
+        if isinstance(path, (bytes, bytearray)):
+            self.path, self.data = "<bytes>", bytes(path)
+        else:
+            self.path = path
+            with open(path, "rb") as handle:
+                self.data = handle.read()
         self.sha256 = hashlib.sha256(self.data).hexdigest()
         self.song = openmpt.Song(self.data)
         self.channels = self.song.channels
@@ -168,13 +172,22 @@ def trace(module: Module, limit_s: float = TRACE_LIMIT_S,
           rate: int = TRACE_RATE) -> dict:
     """Play the song once in libopenmpt and write down every row it passes.
 
-    -> {"rows": [[order, pattern, row, speed, tempo], ...] in the order they
-    played (a row played twice is there twice), "reached": patterns that
-    played, "seconds", "stopped": "song end" | "limit"}."""
+    -> {"rows": [[order, pattern, row, speed, tempo, at], ...] in the order
+    they played (a row played twice is there twice; `at` is the second it
+    starts, at most 4 ms early: the trace reads in 4 ms steps), "reached":
+    patterns that played, "seconds", "stopped": "song end" | "limit"}.
+
+    `at` is the time at `rate`. libopenmpt plays a tick in a whole number
+    of samples, so a song's clock depends a little on the rate: at tempo
+    128 a tick is 156 samples at 8 kHz (19.50 ms) and 861 at 44.1 kHz
+    (19.52 ms), and 200 s into the song the two traces are 0.24 s apart
+    (measured). To cut a render at a row, trace at the render's rate
+    (abtest does)."""
     L = _bind()
     h = module.handle
     L.openmpt_module_set_repeat_count(h, 0)
-    buf = (ctypes.c_float * (TRACE_CHUNK * 2))()
+    chunk = max(1, int(round(rate * TRACE_STEP_S)))
+    buf = (ctypes.c_float * (chunk * 2))()
     rows = []
     last = None
     frames = 0
@@ -192,16 +205,25 @@ def trace(module: Module, limit_s: float = TRACE_LIMIT_S,
         speed = L.openmpt_module_get_current_speed(h)
         tempo = L.openmpt_module_get_current_tempo(h)
         got = L.openmpt_module_read_interleaved_float_stereo(
-            h, rate, TRACE_CHUNK, buf)
+            h, rate, chunk, buf)
         if not got or frames >= end:
             break
         if here != last:
-            rows.append([*here, speed, tempo])
+            # the position moves inside the read that renders the row's
+            # first tick, so a row seen now began in the chunk before
+            started = max(0, frames - chunk) if rows else 0
+            rows.append([*here, speed, tempo, round(started / rate, 3)])
             last = here
         frames += got
         if frames >= limit:
             stopped = "limit"
             break
+    # libopenmpt's last few frames are played at the position it would loop
+    # back to (order 0 row 0, measured on Fourth Symmetriad and Diamond in
+    # Your Soul): a jump backwards that nothing follows is the song's end,
+    # not a row of it
+    if stopped == "song end" and len(rows) >= 2 and rows[-1][0] < rows[-2][0]:
+        rows.pop()
     reached = sorted({r[1] for r in rows if 0 <= r[1] < module.n_patterns})
     return {"rows": rows, "reached": reached,
             "seconds": round(min(frames, end) / rate, 2), "stopped": stopped,
@@ -209,10 +231,16 @@ def trace(module: Module, limit_s: float = TRACE_LIMIT_S,
 
 
 def _first_visit(rows, order, row):
-    for i, (o, _, r, _, _) in enumerate(rows):
-        if o == order and r == row:
+    for i, played in enumerate(rows):
+        if played[0] == order and played[2] == row:
             return i
     return None
+
+
+def first_time(rows, order: int, row: int) -> Optional[float]:
+    """The second the song first plays (order, row), from a trace's rows."""
+    i = _first_visit(rows, order, row)
+    return None if i is None else rows[i][5]
 
 
 def entry_state(module: Module, rows, upto: int) -> dict:
@@ -221,7 +249,7 @@ def entry_state(module: Module, rows, upto: int) -> dict:
     each effect (by libopenmpt's numbering, with its name). Replayed from
     the cells of the rows played before it."""
     channels = {}
-    for o, pattern, row, _, _ in rows[:upto]:
+    for o, pattern, row, *_ in rows[:upto]:
         if not 0 <= pattern < module.n_patterns:
             continue
         for ch in range(module.channels):
@@ -272,7 +300,7 @@ def episode(path: str, order: int, row: int, rows: int = 12,
         hi = min(len(played), start + rows + context)
         used = set()
         for i in range(lo, hi):
-            o, p, r, speed, tempo = played[i]
+            o, p, r, speed, tempo, at = played[i]
             cells = []
             for ch in want:
                 n = module.normalized(p, r, ch)
@@ -286,7 +314,7 @@ def episode(path: str, order: int, row: int, rows: int = 12,
                                   n, effect_name=EFFECT_NAMES.get(n["effect"])
                                   if n["effect"] else None)})
             lines.append({"order": o, "pattern": p, "row": r,
-                          "speed": speed, "tempo": tempo,
+                          "speed": speed, "tempo": tempo, "at": at,
                           "context": not start <= i < start + rows,
                           "cells": cells})
         state = entry_state(module, played, start)
@@ -298,10 +326,13 @@ def episode(path: str, order: int, row: int, rows: int = 12,
                            "rows": rows, "channels": [c + 1 for c in want]},
                "entry_state": state, "lines": lines,
                "instruments": {str(k): v for k, v in names.items()},
-               "kept_apart": "native = the format's own text; normalized = "
-                             "libopenmpt's numbers (its effect numbering, "
-                             "named in effect_name); an interpretation "
-                             "belongs on a card"}
+               "kept_apart": "native = the format's own text, as "
+                             "libopenmpt prints it (instrument and volume "
+                             "in hex: `14` is instrument 20, `v40` is "
+                             "volume 64); normalized = libopenmpt's numbers "
+                             "(decimal; its effect numbering, named in "
+                             "effect_name); an interpretation belongs on a "
+                             "card"}
         if module.data[:4] == b"IMPM":
             out["it_instruments"] = _it_headers(module.data, used)
         return out
@@ -354,7 +385,7 @@ def index_module(path: str, source: Optional[dict] = None,
         stored = static(module)
         played = trace(module, limit_s)
         first = {}
-        for o, p, r, _, _ in played["rows"]:
+        for o, p, r, *_ in played["rows"]:
             first.setdefault((p, r), o)
         windows = []
         for p in played["reached"]:
