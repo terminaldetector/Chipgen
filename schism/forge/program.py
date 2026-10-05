@@ -201,9 +201,17 @@ def explain_instrument(module: M.Module, number: int,
             f"of another instrument) it starts again")
     out["notes"] = notes
     samples = sorted({s for _, s in ins.note_map if s})
+    missing = [s for s in samples if s > len(module.samples)]
+    if missing:
+        notes.append(f"the note map names sample"
+                     f"{'s' if len(missing) > 1 else ''} "
+                     f"{', '.join(map(str, missing))}, which the module does "
+                     f"not have: those notes play nothing")
     out["samples"] = []
     from . import phases
     for s in samples:
+        if s in missing:
+            continue
         smp = module.samples[s - 1]
         row = {"sample": s, "frames": smp.frames,
                "loop": list(smp.loop) if smp.loop else None,

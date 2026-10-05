@@ -13,18 +13,7 @@
 
 ## What is written there
 
-
-The channel at the address (libopenmpt's text; instrument and volume in hex):
-
-```text
-row   0  ... .. .. S82
-row   2  G#6 15 .. ...
-row   4  G#6 16 .. ...
-row   6  G#6 15 .. ...
-row  10  G#6 15 .. ...
-row  12  G#6 17 .. ...
-row  14  G#6 16 .. ...
-```
+The cells at the address are not copied here (this repository holds no one else's music). The training archive has them: its episode for Necros/isotoxin.s3m, order 44, row 0 (`episodes/INDEX.jsonl`), with the state the song is in when they start.
 
 ## What it is for (interpretation)
 

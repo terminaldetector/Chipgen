@@ -5,12 +5,15 @@ song plays it, alone and in the mix, in libopenmpt and Schism Tracker.
 The addresses are the ones the corpus audit gave (Skaven, Manwe, FearofDark
 and Necros; see docs/cards/). The modules are not in this repository:
 
-    python3 examples/reference/make.py CORPUS_DIR OUT_DIR [CARD ...] [--cards=DIR]
+    python3 examples/reference/make.py CORPUS_DIR OUT_DIR [CARD ...] [--cards=DIR [--cells]]
+    python3 examples/reference/make.py CORPUS_DIR --from=OUT_DIR/report.json --cards=DIR [--cells]
 
 where CORPUS_DIR holds `modules/<author>/<file>` as the reference corpus
 zip unpacks; `--cards=DIR` also writes one Markdown card per technique and
 `reference_ab.json` there (docs/cards/reference/ is that, for this
-project's run). OUT_DIR gets `report.json` (every reading, every byte changed,
+project's run), `--cells` with the cells of each address quoted (the
+training archive's copy; this repository's leaves them out), and `--from`
+writes the cards from a report already made. OUT_DIR gets `report.json` (every reading, every byte changed,
 the hashes that show the originals untouched) and, per pair, an MP3 of A
 then B alone and one of A then B in the mix. Nothing here says which side
 sounds better; each card states what should change if the mechanism does
@@ -622,9 +625,12 @@ def _summary_line(card_id, verdict):
     return out
 
 
-def _native(card, data, address):
+def _native(card, data, address, cells=True):
     """What the module writes there: the instrument as the players run it,
-    or the card's channels' cells, as libopenmpt prints them."""
+    and (with `cells`) the card's channels' cells, as libopenmpt prints
+    them. This repository holds no one else's music, so its copy of the
+    cards leaves the cells out and points to the training archive's
+    episode, which has them with the state the song is in."""
     narrative = NARRATIVE[card["id"]]
     lines = []
     if narrative.get("instrument"):
@@ -654,6 +660,16 @@ def _native(card, data, address):
         lines.append("")
         lines.append(f"NNA {info['nna']}, fade-out {info['fadeout']}, cutoff "
                      f"{info['cutoff']}, resonance {info['resonance']}.")
+    if not cells:
+        if lines:
+            lines.append("")
+        lines.append(f"The cells at the address are not copied here (this "
+                     f"repository holds no one else's music). The training "
+                     f"archive has them: its episode for {card['file']}, "
+                     f"order {address['order']}, row {address['row']} "
+                     f"(`episodes/INDEX.jsonl`), with the state the song is "
+                     f"in when they start.")
+        return "\n".join(lines)
     with corpus.Module(data) as module:
         rows = card.get("cells_rows", 8)
         lines.append("")
@@ -674,7 +690,7 @@ def _native(card, data, address):
     return "\n".join(lines)
 
 
-def write_cards(report, corpus_dir, out_dir, zip_sha256=None):
+def write_cards(report, corpus_dir, out_dir, zip_sha256=None, cells=True):
     """One Markdown card per technique and `reference_ab.json`, the readings
     without their tracks."""
     os.makedirs(out_dir, exist_ok=True)
@@ -719,7 +735,7 @@ def write_cards(report, corpus_dir, out_dir, zip_sha256=None):
                   + "; authorship and licence as its catalogue gives them "
                     "(Mod Archive Distribution license: personal study) |",
                   "", "## What is written there", "",
-                  _native(card, data, address), "",
+                  _native(card, data, address, cells), "",
                   "## What it is for (interpretation)", "",
                   narrative["purpose"], "",
                   "## The A/B", "",
@@ -845,17 +861,23 @@ def main(corpus_dir, out_dir, only=None):
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if not a.startswith("--cards=")]
-    cards = [a.split("=", 1)[1] for a in sys.argv[1:]
-             if a.startswith("--cards=")]
-    if len(args) < 2:
+    flags = {a.split("=", 1)[0]: a.split("=", 1)[1] if "=" in a else True
+             for a in sys.argv[1:] if a.startswith("--")}
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if len(args) < 2 and not ("--from" in flags and args):
         print(__doc__)
         sys.exit(2)
-    result = main(args[0], args[1], args[2:] or None)
-    if cards:
+    if "--from" in flags:
+        # cards from a report already made: CORPUS_DIR only
+        with open(flags["--from"]) as handle:
+            result = json.load(handle)
+    else:
+        result = main(args[0], args[1], args[2:] or None)
+    if "--cards" in flags:
         import hashlib
         zips = [os.path.join(args[0], n) for n in os.listdir(args[0])
                 if n.endswith(".zip")]
         digest = (hashlib.sha256(open(zips[0], "rb").read()).hexdigest()
                   if zips else os.environ.get("CORPUS_ZIP_SHA256"))
-        write_cards(result, args[0], cards[0], digest)
+        write_cards(result, args[0], flags["--cards"], digest,
+                    cells=bool(flags.get("--cells")))

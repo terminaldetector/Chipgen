@@ -13,19 +13,7 @@
 
 ## What is written there
 
-
-The channel at the address (libopenmpt's text; instrument and volume in hex):
-
-```text
-row   8  A#5 09 .. ...
-row   9  ... .. .. H93
-row  10  ... .. .. K02
-row  11  ... .. .. K03
-row  12  ... .. .. K04
-row  13  ... .. .. K04
-row  14  G#5 08 .. ...
-row  15  G#5 08v11 ...
-```
+The cells at the address are not copied here (this repository holds no one else's music). The training archive has them: its episode for FearofDark/dancinginthetube.s3m, order 3, row 8 (`episodes/INDEX.jsonl`), with the state the song is in when they start.
 
 ## What it is for (interpretation)
 

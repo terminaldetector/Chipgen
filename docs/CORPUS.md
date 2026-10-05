@@ -140,6 +140,35 @@ before and after.
   the report lists them, and the readings of a channel alone do not move
   unless it plays one.
 
+## The shape of a module, and splits that do not leak
+
+`schism/structure.py` keeps what a seed library needs instead of the notes:
+the form (patterns lettered by content, in the order they play, with the
+rows, seconds, speed and tempo of each visit), the transitions (a jump, a
+break, a step back, a tempo change, a busier tail as a guessed fill), each
+channel's density, instruments, written register, commands and a role
+guessed by a stated rule (percussion, bass, chords / pad, melodic, sparse),
+notes per row and per second, the commands by name, and the tempo map.
+Note numbers are the written register, not the heard one, and a role is a
+guess; each says so.
+
+`fingerprints` cuts patterns into 8-row windows and keeps each window with
+eight notes or more as row, channel and interval to its first note (the
+reference corpus's own measure), and `splits` puts whole groups (an
+author's compositions) into test, validation and train in an order fixed
+by a hash, so the split is the same everywhere; `leaks` lists any
+fingerprint found in two splits.
+
+`examples/reference/pack.py CORPUS_ZIP OUT_DIR` builds all of it for the
+reference corpus: the original zip copied unchanged (hash checked), the
+index, the three kinds of recommendation side by side (the corpus's own,
+the audit's static ones, the trace's), 28 structures, 91 episodes (three
+trace candidates a module and the audit's addresses, each with its split),
+and the split by author. On that corpus: every hash matches the manifest,
+the split is 19 / 5 / 4 modules (train / validation / test) and no
+fingerprint crosses it, and the corpus's claim of 6385 fragments, 5130 of
+them distinct (80.34 %), recounts as 6384 and 5129 (80.34 %).
+
 ## What this does not do
 
 - It does not train anything, and it does not recover how a sample was made:

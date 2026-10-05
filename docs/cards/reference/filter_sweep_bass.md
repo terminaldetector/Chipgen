@@ -22,11 +22,7 @@ instrument 2 "ChipBass.sweep", at tempo 128 (a tick is 19.531 ms):
 
 NNA note off, fade-out 0, cutoff 127, resonance 115.
 
-The channel at the address (libopenmpt's text; instrument and volume in hex):
-
-```text
-row  96  D-4 02v28 S88
-```
+The cells at the address are not copied here (this repository holds no one else's music). The training archive has them: its episode for Skaven252/skaven-fourth_symmetriad.it, order 1, row 96 (`episodes/INDEX.jsonl`), with the state the song is in when they start.
 
 ## What it is for (interpretation)
 

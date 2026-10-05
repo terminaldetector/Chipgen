@@ -22,14 +22,7 @@ instrument 15 "Sin", at tempo 120 (a tick is 20.833 ms):
 
 NNA note off, fade-out 0, cutoff None, resonance None.
 
-The channel at the address (libopenmpt's text; instrument and volume in hex):
-
-```text
-row   0  G-5 0Fv2C S84
-row   8  C-5 0F .. M3C
-row  10  === .. .. ...
-row  12  G-5 0F .. ...
-```
+The cells at the address are not copied here (this repository holds no one else's music). The training archive has them: its episode for Manwe/new_wind_in_syworld.it, order 0, row 0 (`episodes/INDEX.jsonl`), with the state the song is in when they start.
 
 ## What it is for (interpretation)
 

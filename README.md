@@ -147,7 +147,9 @@ the other two, setting each module's mix volume so its render peaks near 0.89
     schism/        the package: model, it_write, it_read, synth, recipes,
                    notation, openmpt, schismtracker, verify, levels, render,
                    corpus (index, trace, episodes), ablate (one mechanism
-                   out of a copy), abtest (A/B where the song plays it)
+                   out of a copy), abtest (A/B where the song plays it),
+                   structure (form, roles, density; splits that do not
+                   leak)
     schism/forge/  the instrument forge: dials, families, probe, closed loop,
                    search, banks, mixing, layers and PCM edits, FM voices,
                    the NES -> Mega Drive -> Schism ladder, kits, arrangement
@@ -159,11 +161,13 @@ the other two, setting each module's mix volume so its render peaks near 0.89
                    checked in the modules themselves), ROADMAP.md
     examples/      echo/: a corpus technique rebuilt, with its A/B;
                    reference/: the reference corpus's techniques, A/B in
-                   place (the corpus is not in the repository)
+                   place, and pack.py, which reads the corpus into an index,
+                   structures, episodes and splits (the corpus is not in the
+                   repository)
     demos/         four synthetic tracks
     tests/         run_tests.py; format, synth, notation, audio, demos,
                    engines, docs, export, forge_core, forge, layers, ladder,
-                   rearrange, corpus, programs, ablate
+                   rearrange, corpus, programs, ablate, structure
     tools/         make_demos.py, make_forge_demo.py, make_docs.py,
                    compare_engines.py
     corpus/        how the corpora are kept (the tools are schism/corpus.py)

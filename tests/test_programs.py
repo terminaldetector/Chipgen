@@ -123,6 +123,18 @@ def test_carry_picks_the_envelope_up_where_the_last_note_left_it():
         assert abs(drop) <= 0.5, (engine, drop)
 
 
+def test_a_note_map_that_names_a_missing_sample_is_said_not_fatal():
+    """Real modules carry note maps that point past their last sample (an
+    instrument edited after its samples were deleted); explaining one must
+    say so, not fail."""
+    module, _ = notation.compile_file(os.path.join(ECHO, "echo_on_note.sch"))
+    ins = module.instruments[0]
+    ins.note_map = [(n, 9 if n == 60 else s) for n, s in ins.note_map]
+    info = program.explain_instrument(module, 1)
+    assert any("sample 9" in n and "play nothing" in n for n in info["notes"])
+    assert all(row["sample"] != 9 for row in info["samples"])
+
+
 def test_phases_read_the_attack_on_a_millisecond_grid_and_name_the_rest():
     rate = 44100.0
     x = []

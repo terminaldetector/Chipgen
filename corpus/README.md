@@ -27,6 +27,16 @@ loops included), candidate windows taken only from what plays, and episodes
 of 8-16 rows with the state the song is in when they start. IT, XM, S3M and
 MOD alike, read-only.
 
+## The reference corpus
+
+The 28-module reference corpus (`schism_reference_corpus_28_tracks.zip`,
+Mod Archive Distribution license: personal study) is read by
+`examples/reference/pack.py` into an index, structures, episodes and a
+split by author, and nine of its techniques are checked in place
+(`docs/cards/reference/`). Neither the zip nor what is read from it is in
+this repository: they travel in a separate archive, with the original zip
+unchanged beside them.
+
 ## What stops it today
 
 - Most modules found in the wild carry **compressed samples** (IT 2.14/2.15);

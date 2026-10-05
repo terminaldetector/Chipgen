@@ -21,18 +21,7 @@ instrument 18 "", at tempo 157 (a tick is 15.924 ms):
 
 NNA cut, fade-out 8, cutoff None, resonance None.
 
-The channel at the address (libopenmpt's text; instrument and volume in hex):
-
-```text
-row   0  G-4 12 .. A06
-row   1  ... .. .. A06
-row   2  ... .. .. A06
-row   3  ... .. .. A05
-row   4  ... .. .. A06
-row   5  ... .. .. A05
-row   6  ... .. .. A06
-row   7  ... .. .. A05
-```
+The cells at the address are not copied here (this repository holds no one else's music). The training archive has them: its episode for FearofDark/fod_rosethorn.it, order 1, row 0 (`episodes/INDEX.jsonl`), with the state the song is in when they start.
 
 ## What it is for (interpretation)
 
