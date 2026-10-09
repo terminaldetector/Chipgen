@@ -25,6 +25,7 @@ pretend.
 
 import math
 
+import analysis
 import nes_apu
 import events as E
 
@@ -251,7 +252,12 @@ class RP2A03Backend(Backend):
             n = int(owed)
             owed -= n
             if n:
-                out.extend(apu.render(n).data[0::2])
+                # the left channel (the NES is mono: both carry it), read
+                # through analysis so numpy's (n, 2) array and the
+                # pure-Python Buffer give the same list
+                left = analysis.split_stereo(apu.render(n))[0]
+                out.extend(left.tolist() if hasattr(left, "tolist")
+                           else left)
         return _remove_dc(out, int(apu.native_rate * 0.025)), apu.native_rate
 
     @staticmethod
