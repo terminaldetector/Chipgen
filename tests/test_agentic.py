@@ -484,3 +484,105 @@ def test_memory_makes_a_similar_task_cheaper_and_is_checked_again():
     assert m["cost"]["candidates"] < w["cost"]["candidates"]
     assert m["cost"]["renders"] < w["cost"]["renders"]
     shutil.rmtree(base)
+
+
+# -- instruments from a forge bank ---------------------------------------------------
+class _Banks:
+    """Whatever a test installs into the engine's banks is gone after."""
+
+    def __enter__(self):
+        import instruments
+        from synthesis import registry
+        self.saved = [(instruments.BANK, dict(instruments.BANK)),
+                      (instruments.CHARACTER, dict(instruments.CHARACTER)),
+                      (registry.FORGE, dict(registry.FORGE))]
+        return self
+
+    def __exit__(self, *exc):
+        for target, snapshot in self.saved:
+            target.clear()
+            target.update(snapshot)
+        return False
+
+
+def test_a_forge_instrument_plays_in_its_voice_with_its_layer():
+    import instruments
+    from synthesis import registry
+    from agentic import banks, fixtures, patch as P, render as R
+    from agentic import state as S, timeline as T
+    starter = os.path.join(support.ROOT, "python", "synthesis", "banks",
+                           "starter.bank.json")
+    with _Banks():
+        p = _project(fixtures.masked_lead())
+        got = banks.add(p, starter, "forge")
+        layered = {x["name"]: x["layers"] for x in got["for_megadrive"]}
+        assert layered["fm_saw_lead"] == 1 and got["not_for_megadrive"]
+        assert os.path.exists(os.path.join(p.root, got["bank"]["path"]))
+        c = S.content(p.state)
+        # on fm1 the layer would sound on fm2, where the pad plays: dropped
+        _new, d = P.instrument(c, "lead", "fm_saw_lead")
+        assert d["layers_on"] == []
+        # the lead on fm2 and the pad on fm1: the layer takes silent fm3
+        for section in c["sections"]:
+            for row in section["rows"]:
+                row[1], row[2] = row[2], row[1]
+        c["instruments"]["lead"]["channel"] = "fm2"
+        c["instruments"]["pad"]["channel"] = "fm1"
+        c, d = P.instrument(c, "lead", "fm_saw_lead")
+        assert d["layers_on"] == ["fm3"]
+        p.commit(c, {"kind": "test"})
+        tl = T.build(S.content(p.state))
+        assert "fm3" not in tl.voices()
+        rng, cache = tl.range("all"), R.Cache()
+        voice = R.rms_db(R.render_range(tl, rng, voices=["lead"],
+                                        cache=cache).in_range())
+        alone = R.rms_db(R.render_range(tl, rng, voices=["fm2"],
+                                        cache=cache).in_range())
+        layer = R.rms_db(R.render_range(tl, rng, voices=["fm3"],
+                                        cache=cache).in_range())
+        # the layer sounds (fm_saw_lead's sits 17.2 dB under its voice, so
+        # it adds about 0.3 dB) and it is in the voice's stem
+        assert layer > -60.0, layer
+        assert voice > alone + 0.1, (voice, alone)
+        background = R.render_range(tl, rng, exclude=["lead"], cache=cache)
+        others = R.render_range(tl, rng, voices=["bass", "pad"], cache=cache)
+        assert abs(R.rms_db(background.in_range())
+                   - R.rms_db(others.in_range())) < 0.05
+        # a project installs its banks when it is opened again
+        registry.FORGE.clear()
+        instruments.BANK.pop("fm_saw_lead", None)
+        q = S.Project.open(p.root)
+        assert "fm_saw_lead" in instruments.BANK
+        bad = S.content(q.state)
+        bad["instruments"]["bass"]["patch"] = "no_such_patch"
+        try:
+            q.commit(bad, {})
+            assert False, "a patch no bank has was committed"
+        except S.AgenticError as error:
+            assert error.code == "bad_content"
+            assert "no_such_patch" in str(error)
+        shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_the_facade_loads_a_bank_and_puts_a_voice_on_its_instrument():
+    from agent import Agent
+    starter = os.path.join(support.ROOT, "python", "synthesis", "banks",
+                           "starter.bank.json")
+    with _Banks():
+        root = _tmp()
+        a = Agent(root)
+        r = a.call("create_musical_state", preset="masked_lead",
+                   project_id="f", banks=[starter])
+        assert "fm_saw_lead" in r["banks"][0]["for_megadrive"]
+        assert r["card"]["banks"] == ["banks/starter.bank.json"]
+        r = a.call("commit_patch", project_id="f", check=False,
+                   patch={"op": "instrument", "voice": "lead",
+                          "patch": "fm_square_lead"})
+        assert r["deltas"][0]["to"] == "fm_square_lead", r
+        r = a.call("commit_patch", project_id="f", check=False,
+                   patch={"op": "instrument", "voice": "lead",
+                          "patch": "nothing_like_it"})
+        assert r["error"] == "unknown_patch"
+        r = a.call("load_bank", project_id="f", path="/no/such/bank.json")
+        assert r["error"] == "no_file"
+        shutil.rmtree(root)

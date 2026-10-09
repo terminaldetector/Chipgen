@@ -196,6 +196,22 @@ def check_content(c: dict) -> List[dict]:
     return problems
 
 
+def check_patches(c: dict) -> List[dict]:
+    """FM voices whose patch no installed bank has (the built-in one, or a
+    bank the project loaded): the score would not play."""
+    import instruments
+    out = []
+    for voice, ins in c.get("instruments", {}).items():
+        patch = ins.get("patch")
+        if patch and ins.get("channel", "").startswith("fm") and \
+                patch not in instruments.BANK:
+            out.append({"code": "unknown_patch", "where": voice,
+                        "message": f"{voice} plays {patch!r}, which no "
+                                   f"installed bank has; load the bank "
+                                   f"that has it (load_bank)"})
+    return out
+
+
 # -- the project folder ---------------------------------------------------------
 class Project:
     """A MusicalState on disk: state.json, revisions/, renders/, out/."""
@@ -229,6 +245,8 @@ class Project:
         state = migrate(state)
         project = cls(root, state)
         project._repair()
+        from . import banks
+        banks.install(root, project.state["structure"])
         return project
 
     def _repair(self):
@@ -304,7 +322,7 @@ class Project:
     def commit(self, new_content: dict, why: dict) -> int:
         """Make `new_content` the next revision. Refuses content whose
         shape is wrong; the caller checks that it plays (timeline)."""
-        problems = check_content(new_content)
+        problems = check_content(new_content) + check_patches(new_content)
         if problems:
             raise AgenticError("bad_content", problems[0]["message"],
                                problems=problems)

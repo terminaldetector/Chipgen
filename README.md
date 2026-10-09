@@ -823,7 +823,10 @@ python3 python/agent.py continue_composition project_id=e seed=7 correct=true
 analysed the render… nothing was listened to»). Native/Hybrid включаются
 только для аудиомодели, прошедшей пробы (сколько тонов, выше или ниже), —
 имя модели ничего не доказывает. Цикл работает на Mega Drive; NES, OPL2 и
-Schism для него честно Unsupported. Подробно, с матрицей аудита,
+Schism для него честно Unsupported. Инструменты из forge-банка
+подключаются к проекту (`load_bank`, затем правка `instrument`); их
+detune-слой занимает следующий FM-канал и измеряется как часть своего
+голоса. Подробно, с матрицей аудита,
 замерами и ограничениями: [bridge/AGENTIC.md](bridge/AGENTIC.md); примеры —
 `examples/agentic/` (сделаны скриптом `make_examples.py`, руками ничего).
 

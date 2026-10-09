@@ -226,7 +226,11 @@ def build(content: dict, title: str = "") -> Timeline:
                 hi = mid - 1
         return out_rows[lo]
 
-    # notes per voice, with the instrument each sounded with
+    # notes per voice, with the instrument each sounded with; a forge
+    # instrument's detune layer plays its voice's notes on another channel,
+    # and is not a voice of its own (agentic/banks.py)
+    from . import banks
+    layer_of = banks.layers(content)
     instrument = {}
     voice_name = {ins["channel"]: voice
                   for voice, ins in content["instruments"].items()}
@@ -249,7 +253,7 @@ def build(content: dict, title: str = "") -> Timeline:
             instrument[f"fm{ev.channel}"] = ev.instrument
             continue
         column = levels._voice_of(ev)
-        if column is None:
+        if column is None or column in layer_of:
             continue
         if isinstance(ev, _OFFS):
             close(column, index)

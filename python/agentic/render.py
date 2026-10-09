@@ -107,11 +107,14 @@ def _columns(timeline, voices: Optional[Iterable[str]]):
     """Voice names (or columns) -> the columns levels.py isolates by."""
     if voices is None:
         return None
+    from . import banks
     by_voice = {v: ins["channel"]
                 for v, ins in timeline.content["instruments"].items()}
     out = set()
     for v in voices:
         out.add(by_voice.get(v, v))
+        # a forge instrument's detune layer is part of its voice
+        out.update(banks.layer_columns(timeline.content, v))
     return out
 
 

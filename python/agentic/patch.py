@@ -17,6 +17,9 @@ tracker cells and directives the piece is kept in:
                 the bank patch (opn2.note_on), so an override there would
                 come and go with the dynamics — use `level` for loudness
     vol         the channel's `vol` from one row to another, restored after
+    instrument  the patch an FM voice plays, for the whole piece (from the
+                built-in bank or a bank the project loaded; a forge
+                instrument's detune layer comes with it)
 
 The realised change is reported next to the asked one: the steps the chip
 has, the cells that could not move (a velocity already at 127, a PSG
@@ -385,7 +388,40 @@ def vol(content: dict, voice: str, rng: dict, value: int,
                  "scope": scope, "copies": notes, "placed": placed}
 
 
-OPS = {"level": level, "transpose": transpose, "param": param, "vol": vol}
+def instrument(content: dict, voice: str, patch: str) -> Tuple[dict, dict]:
+    """`voice` plays `patch` for the whole piece (an FM voice; the patch
+    must be in an installed bank — the built-in one or one the project
+    loaded). The voice's operator overrides belonged to the old patch and
+    are dropped, and the report lists them."""
+    import instruments
+    new = copy.deepcopy(content)
+    ins = new["instruments"].get(voice)
+    if ins is None:
+        raise AgenticError("no_voice", f"no voice {voice!r} in this piece",
+                           voice=voice)
+    if not ins["channel"].startswith("fm"):
+        raise AgenticError("not_fm", f"{voice} plays {ins['channel']}, "
+                           f"which has no patches to choose", voice=voice)
+    if patch not in instruments.BANK:
+        raise AgenticError("unknown_patch", f"no installed bank has "
+                           f"{patch!r}; load the bank that has it "
+                           f"(load_bank)", patch=patch)
+    old = ins.get("patch")
+    if old == patch:
+        raise AgenticError("nothing_to_change", f"{voice} already plays "
+                           f"{patch}", voice=voice)
+    dropped = ins.pop("overrides", None) or {}
+    ins["patch"] = patch
+    from . import banks
+    return new, {"op": "instrument", "voice": voice, "from": old,
+                 "to": patch, "overrides_dropped": dropped,
+                 "layers_on": banks.layer_columns(new, voice),
+                 "scope": "piece (every note of this voice)",
+                 "native": f"inst {ins['channel']} {patch}"}
+
+
+OPS = {"level": level, "transpose": transpose, "param": param, "vol": vol,
+       "instrument": instrument}
 
 
 def apply(content: dict, spec: dict, timeline=None) -> Tuple[dict, dict]:

@@ -92,6 +92,17 @@ _MD = {
                         "and long notes, voice-led pad, walking bass, drum "
                         "fills; deterministic per seed", "milliseconds",
                         "compose.harmony_check, motif.analyse"),
+    "instruments.forge": ("Supported", "Native",
+                           "YM2612 instruments from a forge bank (or an "
+                           "FM bank file) loaded into the project "
+                           "(load_bank): copied into banks/, recorded in "
+                           "the structure, installed when the project "
+                           "opens. A detune layer takes the next FM "
+                           "channel when no note plays there and is "
+                           "measured as part of its voice; the forge's "
+                           "NES and OPL2 instruments are not for this "
+                           "target", "none until rendered",
+                           "banks.layer_columns, check_patches"),
     "compose.agent_rows": ("Supported", "Native",
                            "rows written by the agent, parsed by the "
                            "tracker; the same checks run", "none",

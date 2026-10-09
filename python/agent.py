@@ -29,6 +29,7 @@ Operations (the spec's facade, plus `improve`, `trace` and `export`):
     improve                project_id, observation_id   the whole loop, 3x2
     continue_composition   project_id, goal, sections   compose on, resumable
     learn_recipe           project_id, decision_id      a LearningRecord
+    load_bank              project_id, path, kind       forge or FM patches
     export                 project_id, format           trk vgm wav mp3 it
 
 Every reply is compact JSON: what was done, the ids to ask about next,
@@ -49,6 +50,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
+from agentic import banks as BANKS               # noqa: E402
 from agentic import capabilities as CAP          # noqa: E402
 from agentic import compose as COMP              # noqa: E402
 from agentic import diagnose as D                # noqa: E402
@@ -151,7 +153,7 @@ class Agent:
                                 project_id: str = None, key: str = "",
                                 bpm: float = 140.0, plan=None,
                                 instruments=None, columns=None,
-                                constraints=None) -> dict:
+                                constraints=None, banks=None) -> dict:
         if preset:
             if preset not in PRESETS:
                 raise AgenticError("unknown_preset", f"preset is one of "
@@ -170,7 +172,18 @@ class Agent:
             st["identity"]["id"] = project_id
         pid = st["identity"]["id"]
         S.Project.create(os.path.join(self.root, pid), st)
-        return {"project_id": pid, "card": self._card(self._project(pid))}
+        loaded = []
+        for b in banks or []:
+            spec = b if isinstance(b, dict) else {"path": b}
+            got = BANKS.add(self._project(pid), spec["path"],
+                            spec.get("kind", "forge"))
+            loaded.append({"bank": got["bank"]["path"],
+                           "for_megadrive": [x["name"] for x in
+                                             got["for_megadrive"]]})
+        out = {"project_id": pid, "card": self._card(self._project(pid))}
+        if loaded:
+            out["banks"] = loaded
+        return out
 
     def _card(self, p) -> dict:
         st = p.state
@@ -188,6 +201,8 @@ class Agent:
                                ("channel", "patch", "role", "register")}
                            for v, ins in st["instruments"].items()},
                 "duration_s": _r(tl.duration) if st["sections"] else 0.0,
+                "banks": [b["path"] for b in
+                          st["structure"].get("banks", []) or []],
                 "head": st["head"], "revisions": len(st["revisions"]),
                 "observations": len(st["observations"]),
                 "decisions": len(st["decisions"]),
@@ -195,6 +210,12 @@ class Agent:
                 "composition": {k: v for k, v in
                                 (st.get("composition") or {}).items()
                                 if k != "log"}}
+
+    def op_load_bank(self, project_id: str, path: str,
+                     kind: str = "forge") -> dict:
+        """A forge bank (python/forge.py) or an FM bank file, copied into
+        the project, installed, recorded as a revision."""
+        return BANKS.add(self._project(project_id), path, kind)
 
     def op_inspect_musical_state(self, project_id: str,
                                  scope: str = "card") -> dict:

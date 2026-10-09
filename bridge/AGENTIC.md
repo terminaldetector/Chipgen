@@ -70,6 +70,7 @@ under that root.
 | `improve` | project_id, observation_id, budget 3x2, memory | the whole correction loop |
 | `continue_composition` | project_id, goal?, sections?, seed, correct? | compose the plan on from the cursor; resumable |
 | `learn_recipe` | project_id, decision_id | the decision's LearningRecord |
+| `load_bank` | project_id, path, kind forge/fm | a forge bank (`python/forge.py`) or an FM bank file, copied into the project and installed whenever it opens; then `commit_patch` with `{"op": "instrument", "voice": ..., "patch": ...}` puts a voice on one of its instruments |
 | `export` | project_id, format | trk, vgm, wav, mp3, it; others refused by name |
 
 ## Audit: capability, adapter, agent access, test, limit
@@ -86,7 +87,8 @@ under that root.
 | Native ear, honest detection (§5.1) | `OpenAIAudioAdapter` (`input_audio` part), `verify` (three probes answerable only from the audio) | `hear_range mode=native`, `--audio-endpoint` | `test_an_ear_is_native_only_when_it_answers_from_the_audio` | not run against a real audio model here (none reachable from this sandbox); the plumbing is tested with a stand-in that reads the WAV |
 | Hybrid ear (§5.3) | `HybridEar`: each auditory observation cross-checked (confirmed / not confirmed / not measurable) | `hear_range mode=hybrid` (auto picks it only with a verified adapter) | `test_hybrid_checks_what_was_heard_against_what_was_measured` | four kinds have a measured counterpart (buried, too_quiet, too_loud, muddy); others are "not measurable" |
 | diagnosis: established cause / plausible hypothesis / auditory opinion kept apart (§6) | `agentic/diagnose.py` | `diagnose_range`, `propose_patch` | test A | hypotheses are arrangement, level and timbre; never notes, rhythm or harmony |
-| patches addressed `section/bars -> voice -> instrument -> parameter -> time` with realised change and units (§10) | `agentic/patch.py`: level (FM velocity, 0.75 dB steps; PSG 2 dB; DAC volume), transpose, param (modulators, piece or range), vol | `commit_patch` | `test_a_patch_reports_what_it_realised_and_refuses_what_the_chip_cannot` | carrier TL refused (rewritten at key-on); PSG below A-2 refused |
+| patches addressed `section/bars -> voice -> instrument -> parameter -> time` with realised change and units (§10) | `agentic/patch.py`: level (FM velocity, 0.75 dB steps; PSG 2 dB; DAC volume), transpose, param (modulators, piece or range), vol, instrument | `commit_patch` | `test_a_patch_reports_what_it_realised_and_refuses_what_the_chip_cannot` | carrier TL refused (rewritten at key-on); PSG below A-2 refused |
+| instruments from outside the built-in bank (forge, FM bank files) | `agentic/banks.py` (copied into the project, recorded in the structure, installed on open; a detune layer measured as part of its voice) | `load_bank`, `commit_patch` op `instrument` | `test_a_forge_instrument_plays_in_its_voice_with_its_layer` | YM2612 instruments only; the facade loads banks, the forge designs them |
 | recursive local correction, 3 x 2, guards, A/B at matched loudness, commit/rollback (§10) | `agentic/loop.py` | `improve`, `compare_versions` | `test_a_local_correction_is_measured_guarded_committed_and_undone` | RMS matching, not LUFS; the guards are listed below |
 | motif graph and its transformations (§7) | `agentic/motif.py` (diatonic shift, transposition, inversion, retrograde, augmentation, diminution, fragment; recognition from the rows) | `inspect_musical_state scope=motifs` | `test_motif_transformations_are_recognised_from_the_notes` | one voice per motif; a rhythm-only motif is not a kind |
 | continuous composition with a sliding context: previous section, this one, the next (§7) | `agentic/compose.py` | `continue_composition`, `compose_range` | `test_a_variation_develops_the_theme_and_the_harmony_holds` (test B) | the built-in composer is plain rules; an agent's rows are checked the same way |
@@ -99,7 +101,7 @@ under that root.
 
 - `README.md` listed `instruments.py` as a bank of 14 FM patches; the bank
   holds 19 (the same README says 19 further down). Fixed.
-- `README.md` said the test suite is ~550 tests; it is 585 with this layer.
+- `README.md` said the test suite is ~550 tests; it is 587 with this layer.
 - `README.md` said generation is batch only. Still true of realtime audio,
   but composition is now incremental by sections with checkpoints; the
   note says both.
@@ -128,6 +130,7 @@ under that root.
 | | `python/chipgen.py`, `mp3.py`, `wavio.py` | export and the A/B files |
 | | `python/llm.py` | the endpoint the audio adapter calls |
 | fixed | `python/tracker.py` | `loads(text, rows=...)` records each grid row's line, tick and first event (the event list is unchanged) |
+| | `python/synthesis/backends/rp2a03.py` | the NES probe read a render's bytes as the pure-Python buffer does (`.data[0::2]`); with numpy installed that is a 2-D memoryview and raised. It reads the left channel through `analysis.split_stereo` now. Found by a reviewer who ran the suite with numpy; the whole suite now runs both ways |
 | | `README.md` | stale numbers and the batch note (above) |
 | added | `python/agentic/state.py` | MusicalState, project folder, revisions, rollback, repair, migrations |
 | | `python/agentic/timeline.py` | the one clock, ranges, notes with source lines |
@@ -141,9 +144,10 @@ under that root.
 | | `python/agentic/compose.py` | built-in composer, context window, transitions, harmony check, the composition loop |
 | | `python/agentic/memory.py` | LearningRecords and recall |
 | | `python/agentic/capabilities.py` | the backend manifest and export |
+| | `python/agentic/banks.py` | forge and FM banks in a project; a detune layer belongs to its voice |
 | | `python/agentic/fixtures.py` | `masked_lead`, `masked_lead_b`, `etude` |
 | | `python/agent.py` | the facade and its CLI |
-| | `tests/test_agentic.py` | the spec's tests A-F and their foundations (15 tests) |
+| | `tests/test_agentic.py` | the spec's tests A-F and their foundations (17 tests) |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
 
@@ -228,9 +232,11 @@ The étude's draft (same plan and seed, no ear) is beside it for the A/B.
   span, no modulation, rhythm templates for 16-row bars (others scaled).
   It writes a coherent étude, not good music by itself; an agent's rows
   go through the same checks.
-- The loop plays the bank's patches and changes their operator fields;
-  making a new instrument is the forge's job (`python/forge.py`,
-  `bridge/SYNTHESIS.md`), and the facade does not load a forge bank yet.
+- New instruments are the forge's job (`python/forge.py`,
+  `bridge/SYNTHESIS.md`); the loop plays them once a bank is loaded
+  (`load_bank`) but does not design them. Only YM2612 forge instruments
+  play on a Mega Drive project; a detune layer needs the next FM channel
+  free of notes, or the placement pass drops it.
 - Recall matches by role, patch and starting margin. A record is one
   measured case in one arrangement; it is re-rendered and re-guarded
   before it is kept, and never declared a rule.
