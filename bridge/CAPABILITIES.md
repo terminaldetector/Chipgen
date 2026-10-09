@@ -53,6 +53,7 @@ channel.
 | a register log a person can reopen | VGM / VGZ | `--vgm song.vgz` (opens in Furnace and DefleMask) | test_vgm | — |
 | a note read phase by phase | `synthesis/phases.py` | `forge.py measure` | test_program | brightness and pitch read on the main voice; a detune layer's beat is read by the dials, not here |
 | one bounded change, measured, kept or undone | `synthesis/improve.py` | `forge.py improve / commit / rollback` | test_program (budget, repeats, rollback exact, an unknown intent costs no render) | intents for the YM2612 only; no model was in the loop when it was measured, so nothing here says what a small model saves |
+| a piece kept outside the model, heard, corrected in place, continued, remembered | `agentic/` (state, range render, trace, Tool/Native/Hybrid ear, diagnose, loop, compose, memory) | `python/agent.py` (see `bridge/AGENTIC.md`) | test_agentic (the spec's tests A-F) | Mega Drive only; the Tool ear measures and does not listen; the Native ear needs an adapter that passes the probes |
 
 ## Where the numbers come from
 

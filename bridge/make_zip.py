@@ -39,8 +39,10 @@ INCLUDE_FILES = [
     "bridge/SYNTHESIS.md",
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
+    "bridge/AGENTIC.md",
     "corpus/STUDY.md",
     "examples/README.md",
+    "examples/agentic/README.md",
     "core/README.md",
     "core/NUKED_OPN2_LICENSE",
 ]
@@ -61,7 +63,9 @@ INCLUDE_TREES = [
     ("tests", (".py",)),
 ]
 BINARY_EXTENSIONS = (".so", ".dylib", ".dll")
-SKIP_DIRECTORIES = {"__pycache__", ".git", ".pytest_cache"}
+#: `_work` is examples/agentic/make_examples.py's scratch (renders and
+#: revisions), left behind only by an interrupted run.
+SKIP_DIRECTORIES = {"__pycache__", ".git", ".pytest_cache", "_work"}
 
 
 def _walk(directory, extensions):

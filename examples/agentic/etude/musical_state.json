@@ -1,0 +1,3436 @@
+{
+ "format": "chipgen-musical-state/1",
+ "identity": {
+  "id": "etude",
+  "prompt": "a short étude in A minor: a theme, its variation, a development and a cadence",
+  "intent": "a short étude in A minor: a theme, its variation, a development and a cadence",
+  "target": "megadrive",
+  "style": [],
+  "constraints": [
+   "develop the theme, do not copy it"
+  ],
+  "duration_s": null,
+  "done_when": []
+ },
+ "structure": {
+  "bpm": 140.0,
+  "lpb": 4,
+  "ticks": 224.0,
+  "beats_per_bar": 4,
+  "key": "A minor",
+  "plan": [
+   {
+    "id": "A",
+    "function": "statement",
+    "bars": 2,
+    "energy": 0.6,
+    "harmony": [
+     "Am",
+     "F",
+     "C",
+     "G"
+    ]
+   },
+   {
+    "id": "A2",
+    "function": "variation",
+    "bars": 2,
+    "energy": 0.7,
+    "harmony": [
+     "Am",
+     "F",
+     "C",
+     "G"
+    ]
+   },
+   {
+    "id": "B",
+    "function": "development",
+    "bars": 2,
+    "energy": 0.8,
+    "harmony": [
+     "Dm",
+     "Em",
+     "F",
+     "G"
+    ]
+   },
+   {
+    "id": "C",
+    "function": "cadence",
+    "bars": 2,
+    "energy": 0.5,
+    "harmony": [
+     "F",
+     "G",
+     "E",
+     "Am"
+    ]
+   }
+  ],
+  "harmony": {},
+  "dynamics": [],
+  "climax": null,
+  "dependencies": [],
+  "form": "A A' B C"
+ },
+ "instruments": {
+  "bass": {
+   "channel": "fm0",
+   "patch": "slap_bass",
+   "role": "bass",
+   "register": [
+    33,
+    52
+   ]
+  },
+  "lead": {
+   "channel": "fm1",
+   "patch": "square_lead",
+   "role": "lead",
+   "register": [
+    57,
+    79
+   ]
+  },
+  "pad": {
+   "channel": "fm2",
+   "patch": "strings",
+   "role": "pad",
+   "register": [
+    52,
+    67
+   ]
+  },
+  "hats": {
+   "channel": "noise",
+   "role": "hats"
+  },
+  "drums": {
+   "channel": "dac",
+   "role": "drums"
+  }
+ },
+ "sections": [
+  {
+   "id": "A",
+   "name": "statement",
+   "rows": [
+    [
+     "A-3:108",
+     "E-5:127",
+     "C-5:52",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:108",
+     "G-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:108",
+     "E-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:108",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:108",
+     "F-5:127",
+     "C-5:52",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:108",
+     "A-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:108",
+     "F-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "D-3:108",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:108",
+     "C-5:127",
+     "E-5:52",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:108",
+     "F-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:108",
+     "C-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:108",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:108",
+     "D-5:127",
+     "D-5:52",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:108",
+     "G-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:108",
+     "D-5:127",
+     "...",
+     "w1:3",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:108",
+     "...",
+     "...",
+     "w1:6",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ]
+   ],
+   "directives": [],
+   "harmony": [
+    "Am",
+    "F",
+    "C",
+    "G"
+   ],
+   "intent": {
+    "function": "statement",
+    "energy": 0.6
+   },
+   "composed_by": "builtin",
+   "context": {
+    "previous": null,
+    "next": "A2"
+   }
+  },
+  {
+   "id": "A2",
+   "name": "variation",
+   "rows": [
+    [
+     "A-3:112",
+     "C-5:127",
+     "C-5:55",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:112",
+     "E-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:112",
+     "C-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:112",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:112",
+     "C-5:127",
+     "C-5:55",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:112",
+     "F-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:112",
+     "C-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "D-3:112",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:112",
+     "C-5:127",
+     "E-5:55",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:112",
+     "D-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "C-3:112",
+     "C-5:127",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:112",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:112",
+     "B-4:127",
+     "D-5:55",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:112",
+     "E-5:127",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:112",
+     "B-4:127",
+     "...",
+     "w1:3",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:112",
+     "...",
+     "...",
+     "w1:6",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ]
+   ],
+   "directives": [],
+   "harmony": [
+    "Am",
+    "F",
+    "C",
+    "G"
+   ],
+   "intent": {
+    "function": "variation",
+    "energy": 0.7
+   },
+   "composed_by": "builtin",
+   "context": {
+    "previous": "A",
+    "next": "B"
+   }
+  },
+  {
+   "id": "B",
+   "name": "development",
+   "rows": [
+    [
+     "D-3:117",
+     "F-5:117",
+     "F-5:87",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "D-4:117",
+     "G-5:117",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "D-3:117",
+     "F-5:117",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "D-3:117",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:117",
+     "E-5:117",
+     "G-5:87",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-4:117",
+     "A-5:117",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:117",
+     "E-5:117",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:117",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:117",
+     "F-5:117",
+     "C-5:87",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:117",
+     "B-5:117",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:117",
+     "F-5:117",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:117",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:117",
+     "G-5:117",
+     "B-4:87",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:117",
+     "C-6:117",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:117",
+     "G-5:117",
+     "...",
+     "w1:3",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:117",
+     "...",
+     "...",
+     "w1:6",
+     "snare:0.7"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ]
+   ],
+   "directives": [],
+   "harmony": [
+    "Dm",
+    "Em",
+    "F",
+    "G"
+   ],
+   "intent": {
+    "function": "development",
+    "energy": 0.8
+   },
+   "composed_by": "builtin",
+   "context": {
+    "previous": "A2",
+    "next": "C"
+   }
+  },
+  {
+   "id": "C",
+   "name": "cadence",
+   "rows": [
+    [
+     "F-3:103",
+     "F-5:103",
+     "C-5:73",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:103",
+     "G-5:103",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:103",
+     "F-5:103",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:103",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:103",
+     "G-5:103",
+     "B-4:73",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:103",
+     "A-5:103",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:103",
+     "G-5:103",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "F-3:103",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:103",
+     "E-5:103",
+     "B-4:73",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:103",
+     "G-5:103",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "E-3:103",
+     "E-5:103",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "G-3:103",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:103",
+     "...",
+     "C-5:73",
+     "w1:3",
+     "kick"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:103",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:103",
+     "...",
+     "...",
+     "w1:3",
+     "snare:0.8"
+    ],
+    [
+     "===",
+     "...",
+     "...",
+     "===",
+     "..."
+    ],
+    [
+     "A-3:103",
+     "...",
+     "...",
+     "w1:6",
+     "..."
+    ],
+    [
+     "===",
+     "===",
+     "===",
+     "===",
+     "..."
+    ]
+   ],
+   "directives": [],
+   "harmony": [
+    "F",
+    "G",
+    "E",
+    "Am"
+   ],
+   "intent": {
+    "function": "cadence",
+    "energy": 0.5
+   },
+   "composed_by": "builtin",
+   "context": {
+    "previous": "B",
+    "next": null
+   }
+  }
+ ],
+ "order": [
+  "A",
+  "A2",
+  "B",
+  "C"
+ ],
+ "columns": [
+  "fm0",
+  "fm1",
+  "fm2",
+  "noise",
+  "dac"
+ ],
+ "motifs": {
+  "motifs": {
+   "m1": {
+    "id": "m1",
+    "voice": "lead",
+    "notes": [
+     [
+      0,
+      64,
+      2
+     ],
+     [
+      2,
+      67,
+      2
+     ],
+     [
+      4,
+      64,
+      4
+     ],
+     [
+      8,
+      65,
+      2
+     ],
+     [
+      10,
+      69,
+      2
+     ],
+     [
+      12,
+      65,
+      4
+     ]
+    ],
+    "key": "A minor",
+    "length_rows": 16,
+    "origin": {
+     "section": "A",
+     "row": 0
+    }
+   }
+  },
+  "instances": [
+   {
+    "motif": "m1",
+    "section": "A",
+    "voice": "lead",
+    "row": 0,
+    "transform": [],
+    "role": "statement",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "A",
+    "voice": "lead",
+    "row": 16,
+    "transform": [
+     {
+      "op": "shift",
+      "degrees": -1
+     }
+    ],
+    "role": "statement",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "A2",
+    "voice": "lead",
+    "row": 0,
+    "transform": [
+     {
+      "op": "shift",
+      "degrees": -2
+     }
+    ],
+    "role": "variation",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "A2",
+    "voice": "lead",
+    "row": 16,
+    "transform": [
+     {
+      "op": "shift",
+      "degrees": -3
+     }
+    ],
+    "role": "variation",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "B",
+    "voice": "lead",
+    "row": 0,
+    "transform": [
+     {
+      "op": "fragment",
+      "start": 0,
+      "count": 3
+     }
+    ],
+    "role": "development",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "B",
+    "voice": "lead",
+    "row": 8,
+    "transform": [
+     {
+      "op": "fragment",
+      "start": 0,
+      "count": 3
+     },
+     {
+      "op": "shift",
+      "degrees": 1
+     }
+    ],
+    "role": "development",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "B",
+    "voice": "lead",
+    "row": 16,
+    "transform": [
+     {
+      "op": "fragment",
+      "start": 0,
+      "count": 3
+     },
+     {
+      "op": "shift",
+      "degrees": 2
+     }
+    ],
+    "role": "development",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "B",
+    "voice": "lead",
+    "row": 24,
+    "transform": [
+     {
+      "op": "fragment",
+      "start": 0,
+      "count": 3
+     },
+     {
+      "op": "shift",
+      "degrees": 3
+     }
+    ],
+    "role": "development",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "C",
+    "voice": "lead",
+    "row": 0,
+    "transform": [],
+    "role": "cadence",
+    "match": null
+   },
+   {
+    "motif": "m1",
+    "section": "C",
+    "voice": "lead",
+    "row": 16,
+    "transform": [
+     {
+      "op": "fragment",
+      "start": 0,
+      "count": 3
+     }
+    ],
+    "role": "cadence",
+    "match": null
+   }
+  ],
+  "open": []
+ },
+ "observations": [
+  {
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "where": {
+    "t0": 0.0,
+    "t1": 3.4286,
+    "rows": [
+     0,
+     31
+    ],
+    "bars": [
+     1,
+     2
+    ],
+    "sections": [
+     "A"
+    ]
+   },
+   "statement": "lead sits 3.9 dB under the rest of the mix in its own band",
+   "evidence": {
+    "band_margin_db": -3.93,
+    "band_share": {
+     "hats": 0.638,
+     "pad": 0.326,
+     "bass": 0.036
+    },
+    "broadband_body_margin_db": -4.23,
+    "attack_margin_db": -7.44,
+    "method": "each note's body (40-240 ms) alone against all other voices together, energy between 0.8x and 6x its fundamental, median over notes; band_share splits the background by voice"
+   },
+   "basis": "measured",
+   "confidence": 0.8,
+   "severity": "high",
+   "id": "o1",
+   "rev": 1,
+   "at": "2026-10-08T16:48:21Z"
+  },
+  {
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "where": {
+    "t0": 0.0,
+    "t1": 3.4286,
+    "rows": [
+     0,
+     31
+    ],
+    "bars": [
+     1,
+     2
+    ],
+    "sections": [
+     "A"
+    ]
+   },
+   "statement": "lead sits 3.9 dB under the rest of the mix in its own band",
+   "evidence": {
+    "band_margin_db": -3.93,
+    "band_share": {
+     "hats": 0.638,
+     "pad": 0.326,
+     "bass": 0.036
+    },
+    "broadband_body_margin_db": -4.23,
+    "attack_margin_db": -7.44,
+    "method": "each note's body (40-240 ms) alone against all other voices together, energy between 0.8x and 6x its fundamental, median over notes; band_share splits the background by voice"
+   },
+   "basis": "measured",
+   "confidence": 0.8,
+   "severity": "high",
+   "rev": 1,
+   "from_observation": "o1",
+   "scope": "rows 0-31 (heard over rows 0-31)",
+   "id": "o2",
+   "at": "2026-10-08T16:48:21Z"
+  },
+  {
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "where": {
+    "t0": 1.7143,
+    "t1": 6.8571,
+    "rows": [
+     16,
+     63
+    ],
+    "bars": [
+     2,
+     4
+    ],
+    "sections": [
+     "A",
+     "A2"
+    ]
+   },
+   "statement": "lead sits 3.4 dB under the rest of the mix in its own band",
+   "evidence": {
+    "band_margin_db": -3.4,
+    "band_share": {
+     "hats": 0.608,
+     "pad": 0.35,
+     "bass": 0.042
+    },
+    "broadband_body_margin_db": -2.94,
+    "attack_margin_db": -7.09,
+    "method": "each note's body (40-240 ms) alone against all other voices together, energy between 0.8x and 6x its fundamental, median over notes; band_share splits the background by voice"
+   },
+   "basis": "measured",
+   "confidence": 0.8,
+   "severity": "high",
+   "id": "o3",
+   "rev": 3,
+   "at": "2026-10-08T16:48:57Z"
+  },
+  {
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "where": {
+    "t0": 3.4286,
+    "t1": 6.8571,
+    "rows": [
+     32,
+     63
+    ],
+    "bars": [
+     3,
+     4
+    ],
+    "sections": [
+     "A2"
+    ]
+   },
+   "statement": "lead sits 3.4 dB under the rest of the mix in its own band",
+   "evidence": {
+    "band_margin_db": -3.4,
+    "band_share": {
+     "hats": 0.608,
+     "pad": 0.35,
+     "bass": 0.042
+    },
+    "broadband_body_margin_db": -2.94,
+    "attack_margin_db": -7.09,
+    "method": "each note's body (40-240 ms) alone against all other voices together, energy between 0.8x and 6x its fundamental, median over notes; band_share splits the background by voice"
+   },
+   "basis": "measured",
+   "confidence": 0.8,
+   "severity": "high",
+   "rev": 3,
+   "from_observation": "o3",
+   "scope": "rows 32-63 (heard over rows 16-63)",
+   "id": "o4",
+   "at": "2026-10-08T16:48:57Z"
+  }
+ ],
+ "decisions": [
+  {
+   "observation": "o2",
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "range": {
+    "spec": "rows 0-31",
+    "t0": 0.0,
+    "t1": 3.428571,
+    "bars": [
+     1,
+     2
+    ],
+    "sections": [
+     "A"
+    ]
+   },
+   "ear": {
+    "mode": "tool",
+    "statement": "technically analysed the render with the engine's own measurements; nothing was listened to"
+   },
+   "base_rev": 1,
+   "base_hash": "5577d040a8a9d7d9",
+   "budget": {
+    "candidates": 3,
+    "rounds": 2,
+    "max_renders": 80
+   },
+   "card": {
+    "observation": "o2",
+    "kind": "buried",
+    "statement": "lead sits 3.9 dB under the rest of the mix in its own band",
+    "basis": "measured",
+    "located": {
+     "range": {
+      "spec": "rows 0-31",
+      "t0": 0.0,
+      "t1": 3.428571,
+      "bars": [
+       1,
+       2
+      ],
+      "sections": [
+       "A"
+      ]
+     },
+     "voice": "lead",
+     "role": "lead",
+     "instrument": {
+      "channel": "fm1",
+      "patch": "square_lead",
+      "overrides": {}
+     },
+     "notes_total": 12,
+     "span": [
+      "C-5",
+      "A-5"
+     ],
+     "worst_notes": [
+      {
+       "note": "D-5",
+       "velocity": 108,
+       "start_s": 2.571,
+       "section": "A",
+       "row_in_section": 24,
+       "bar": 2,
+       "source_line": 35,
+       "source": "G-3:108  D-5:108  D-5:78  w1:3  kick",
+       "band_margin_db": -5.61
+      },
+      {
+       "note": "C-5",
+       "velocity": 108,
+       "start_s": 1.714,
+       "section": "A",
+       "row_in_section": 16,
+       "bar": 2,
+       "source_line": 27,
+       "source": "C-3:108  C-5:108  E-5:78  w1:3  kick",
+       "band_margin_db": -5.45
+      },
+      {
+       "note": "C-5",
+       "velocity": 108,
+       "start_s": 2.143,
+       "section": "A",
+       "row_in_section": 20,
+       "bar": 2,
+       "source_line": 31,
+       "source": "C-3:108  C-5:108  ...  w1:3  snare:0.8",
+       "band_margin_db": -5.17
+      }
+     ],
+     "chain_at_worst": {
+      "t_s": 2.571,
+      "notes": [
+       {
+        "voice": "lead",
+        "note": "D-5",
+        "velocity": 108,
+        "source_line": 35,
+        "source": "G-3:108  D-5:108  D-5:78  w1:3  kick"
+       }
+      ],
+      "instrument": {
+       "1": {
+        "tl": 24,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       },
+       "2": {
+        "tl": 8,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       },
+       "3": {
+        "tl": 34,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 3,
+        "dt": 4
+       },
+       "4": {
+        "tl": 18,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       }
+      },
+      "register_writes": [
+       {
+        "channel": "fm1",
+        "what": "key",
+        "value": "off",
+        "slots": 0,
+        "t": 2.5714,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "op2.tl",
+        "value": 2,
+        "t": 2.5714,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "op4.tl",
+        "value": 12,
+        "t": 2.5714,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "block_freq_hi",
+        "value": 42,
+        "t": 2.5714,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "freq_lo",
+        "value": 211,
+        "t": 2.5714,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "key",
+        "value": "on",
+        "slots": 15,
+        "t": 2.5714,
+        "chip": "ym2612"
+       }
+      ],
+      "register_writes_total": 6
+     }
+    },
+    "measured": {
+     "band_margin_db": -3.93,
+     "goal_db": -3.0,
+     "need_db": 1.93,
+     "band_share": {
+      "hats": 0.638,
+      "pad": 0.326,
+      "bass": 0.036
+     }
+    },
+    "causes": [
+     {
+      "status": "established",
+      "voice": "hats",
+      "statement": "hats gives 64% of the energy in lead's band",
+      "evidence": {
+       "band_share": 0.638,
+       "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+      }
+     },
+     {
+      "status": "established",
+      "voice": "pad",
+      "statement": "pad gives 33% of the energy in lead's band",
+      "evidence": {
+       "band_share": 0.326,
+       "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+      }
+     },
+     {
+      "status": "plausible",
+      "voice": "pad",
+      "statement": "pad plays C-5-E-5, within an octave of lead's C-5-A-5: its fundamentals and low partials fall in lead's band",
+      "evidence": {
+       "spans": {
+        "pad": [
+         60,
+         64
+        ],
+        "lead": [
+         60,
+         69
+        ]
+       },
+       "method": "note spans from the score"
+      }
+     }
+    ],
+    "hypotheses": [
+     {
+      "patch": [
+       {
+        "db": 5.5,
+        "op": "level",
+        "voice": "lead",
+        "range": "rows 0-31"
+       },
+       {
+        "db": -3.5,
+        "op": "level",
+        "voice": "pad",
+        "range": "rows 0-31"
+       }
+      ],
+      "kind": "remembered",
+      "hypothesis": "what fixed a buried lead before: lead +5.5 dB; pad -3.5 dB",
+      "expect_db": 6.18,
+      "basis": "remembered: record lr-d32b4a39f0 (similarity 0.769), measured 6.18 dB there",
+      "risks": [
+       "a different arrangement may answer differently: rendered and guarded here"
+      ],
+      "cells": 0,
+      "record": "lr-d32b4a39f0",
+      "id": "h1"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "hats",
+       "range": "rows 0-31",
+       "db": -3.5
+      },
+      "kind": "balance",
+      "hypothesis": "hats 4.0 dB quieter in the range leaves lead more of its band",
+      "expect_db": 2.1,
+      "basis": "arithmetic: hats holds 64% of the band; realised -4.00 dB",
+      "risks": [
+       "hats (hats) loses presence"
+      ],
+      "cells": 16,
+      "id": "h2"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "lead",
+       "range": "rows 0-31",
+       "db": 2.0
+      },
+      "kind": "balance",
+      "hypothesis": "lead +1.5 dB (asked +2.0; the chip's velocity curve and the 127 ceiling decide what is realised)",
+      "expect_db": 1.5,
+      "basis": "arithmetic: only the target changes, by its realised level",
+      "risks": [
+       "the mix gets louder",
+       "lead may dominate"
+      ],
+      "cells": 12,
+      "id": "h3"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "pad",
+       "range": "rows 0-31",
+       "db": -6.0
+      },
+      "kind": "balance",
+      "hypothesis": "pad 6.0 dB quieter in the range leaves lead more of its band",
+      "expect_db": 1.22,
+      "basis": "arithmetic: pad holds 33% of the band; realised -6.00 dB",
+      "risks": [
+       "pad (pad) loses presence"
+      ],
+      "cells": 4,
+      "id": "h4"
+     },
+     {
+      "patch": {
+       "op": "param",
+       "voice": "pad",
+       "key": "op1.tl",
+       "delta": 8,
+       "range": "rows 0-31"
+      },
+      "kind": "timbre",
+      "hypothesis": "pad's loudest modulator (op1, TL 30) 6 dB down: fewer upper partials of pad in lead's band",
+      "expect_db": null,
+      "basis": "not estimated: how much of the share is partials rather than fundamentals is not known before the render",
+      "risks": [
+       "pad's character (brightness, bite) changes"
+      ],
+      "cells": 0,
+      "id": "h5"
+     }
+    ],
+    "excluded": [
+     {
+      "patch": {
+       "op": "transpose",
+       "voice": "pad",
+       "range": "rows 0-31",
+       "semitones": -12
+      },
+      "why": "pad would leave its declared register E-4-G-5"
+     }
+    ],
+    "not_considered": "changing the melody's pitches, the harmony, the rhythm, or removing notes: the piece's own tensions are not faults"
+   },
+   "memory": {
+    "records_seen": 2,
+    "matched": [
+     {
+      "record": "lr-d32b4a39f0",
+      "similarity": 0.769
+     },
+     {
+      "record": "lr-5f5db8d562",
+      "similarity": 0.709
+     }
+    ],
+    "used": [
+     {
+      "record": "lr-d32b4a39f0",
+      "similarity": 0.769
+     },
+     {
+      "record": "lr-5f5db8d562",
+      "similarity": 0.709
+     }
+    ],
+    "weak_before": []
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "from": [
+      "base"
+     ],
+     "candidates": [
+      {
+       "hypothesis": "h1",
+       "kind": "remembered",
+       "patch": [
+        {
+         "db": 5.5,
+         "op": "level",
+         "voice": "lead",
+         "range": "rows 0-31"
+        },
+        {
+         "db": -3.5,
+         "op": "level",
+         "voice": "pad",
+         "range": "rows 0-31"
+        }
+       ],
+       "chain": [
+        {
+         "db": 5.5,
+         "op": "level",
+         "voice": "lead",
+         "range": "rows 0-31"
+        },
+        {
+         "db": -3.5,
+         "op": "level",
+         "voice": "pad",
+         "range": "rows 0-31"
+        }
+       ],
+       "expected_db": 6.18,
+       "expected": "what fixed a buried lead before: lead +5.5 dB; pad -3.5 dB",
+       "basis": "remembered: record lr-d32b4a39f0 (similarity 0.769), measured 6.18 dB there",
+       "content_hash": "07a83cb9cb1370b6",
+       "deltas": [
+        {
+         "op": "level",
+         "voice": "lead",
+         "column": "fm1",
+         "range": "rows 0-31",
+         "rows": [
+          0,
+          32
+         ],
+         "scope": "occurrence",
+         "asked_db": 5.5,
+         "realised_db": {
+          "mean": 1.5,
+          "min": 1.5,
+          "max": 1.5
+         },
+         "cells": 12,
+         "at_limit": 0,
+         "copies": [],
+         "edits_total": 12,
+         "edits": [
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 0,
+           "column": "fm1",
+           "from": "E-5:108",
+           "to": "E-5:127"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 2,
+           "column": "fm1",
+           "from": "G-5:108",
+           "to": "G-5:127"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 4,
+           "column": "fm1",
+           "from": "E-5:108",
+           "to": "E-5:127"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 8,
+           "column": "fm1",
+           "from": "F-5:108",
+           "to": "F-5:127"
+          }
+         ]
+        },
+        {
+         "op": "level",
+         "voice": "pad",
+         "column": "fm2",
+         "range": "rows 0-31",
+         "rows": [
+          0,
+          32
+         ],
+         "scope": "occurrence",
+         "asked_db": -3.5,
+         "realised_db": {
+          "mean": -3.0,
+          "min": -3.0,
+          "max": -3.0
+         },
+         "cells": 4,
+         "at_limit": 0,
+         "copies": [],
+         "edits_total": 4,
+         "edits": [
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 0,
+           "column": "fm2",
+           "from": "C-5:78",
+           "to": "C-5:52"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 8,
+           "column": "fm2",
+           "from": "C-5:78",
+           "to": "C-5:52"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 16,
+           "column": "fm2",
+           "from": "E-5:78",
+           "to": "E-5:52"
+          },
+          {
+           "section": "A",
+           "slot": 0,
+           "row": 24,
+           "column": "fm2",
+           "from": "D-5:78",
+           "to": "D-5:52"
+          }
+         ]
+        }
+       ],
+       "metric": {
+        "name": "band_margin_db of lead",
+        "before": -3.93,
+        "after": -1.82,
+        "gain_db": 2.11
+       },
+       "goal_met": true,
+       "guards": [
+        {
+         "name": "no_clipping",
+         "ok": true,
+         "detail": "mix peak -8.30 -> -8.82 dBFS"
+        },
+        {
+         "name": "notes_kept",
+         "ok": true,
+         "detail": "every note keeps its onset row and pitch class; none added or removed"
+        },
+        {
+         "name": "melody_kept",
+         "ok": true,
+         "detail": "pitches of lead unchanged"
+        },
+        {
+         "name": "no_new_faults",
+         "ok": true,
+         "detail": "none"
+        },
+        {
+         "name": "voices_present",
+         "ok": true,
+         "detail": "every other voice stays within its band floor (-9 dB)"
+        },
+        {
+         "name": "bass_under",
+         "ok": true,
+         "detail": "rows with the bass above another voice: 0 -> 0"
+        },
+        {
+         "name": "mix_level",
+         "ok": true,
+         "detail": "mix RMS +0.05 dB"
+        }
+       ],
+       "mix_rms_db": -22.76,
+       "cost": {
+        "renders": 8,
+        "seconds": 11.5
+       },
+       "accepted": true,
+       "why": "band_margin_db of lead -3.93 -> -1.82 dB, every guard passed"
+      }
+     ],
+     "best": "h1"
+    }
+   ],
+   "stopped": "goal met",
+   "outcome": "committed",
+   "chain": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "voice": "lead",
+     "range": "rows 0-31"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 0-31"
+    }
+   ],
+   "before": -3.93,
+   "after": -1.82,
+   "gain_db": 2.11,
+   "goal_met": true,
+   "guards": [
+    {
+     "name": "no_clipping",
+     "ok": true,
+     "detail": "mix peak -8.30 -> -8.82 dBFS"
+    },
+    {
+     "name": "notes_kept",
+     "ok": true,
+     "detail": "every note keeps its onset row and pitch class; none added or removed"
+    },
+    {
+     "name": "melody_kept",
+     "ok": true,
+     "detail": "pitches of lead unchanged"
+    },
+    {
+     "name": "no_new_faults",
+     "ok": true,
+     "detail": "none"
+    },
+    {
+     "name": "voices_present",
+     "ok": true,
+     "detail": "every other voice stays within its band floor (-9 dB)"
+    },
+    {
+     "name": "bass_under",
+     "ok": true,
+     "detail": "rows with the bass above another voice: 0 -> 0"
+    },
+    {
+     "name": "mix_level",
+     "ok": true,
+     "detail": "mix RMS +0.05 dB"
+    }
+   ],
+   "deltas": [
+    {
+     "op": "level",
+     "voice": "lead",
+     "column": "fm1",
+     "range": "rows 0-31",
+     "rows": [
+      0,
+      32
+     ],
+     "scope": "occurrence",
+     "asked_db": 5.5,
+     "realised_db": {
+      "mean": 1.5,
+      "min": 1.5,
+      "max": 1.5
+     },
+     "cells": 12,
+     "at_limit": 0,
+     "copies": [],
+     "edits_total": 12,
+     "edits": [
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 0,
+       "column": "fm1",
+       "from": "E-5:108",
+       "to": "E-5:127"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 2,
+       "column": "fm1",
+       "from": "G-5:108",
+       "to": "G-5:127"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 4,
+       "column": "fm1",
+       "from": "E-5:108",
+       "to": "E-5:127"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 8,
+       "column": "fm1",
+       "from": "F-5:108",
+       "to": "F-5:127"
+      }
+     ]
+    },
+    {
+     "op": "level",
+     "voice": "pad",
+     "column": "fm2",
+     "range": "rows 0-31",
+     "rows": [
+      0,
+      32
+     ],
+     "scope": "occurrence",
+     "asked_db": -3.5,
+     "realised_db": {
+      "mean": -3.0,
+      "min": -3.0,
+      "max": -3.0
+     },
+     "cells": 4,
+     "at_limit": 0,
+     "copies": [],
+     "edits_total": 4,
+     "edits": [
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 0,
+       "column": "fm2",
+       "from": "C-5:78",
+       "to": "C-5:52"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 8,
+       "column": "fm2",
+       "from": "C-5:78",
+       "to": "C-5:52"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 16,
+       "column": "fm2",
+       "from": "E-5:78",
+       "to": "E-5:52"
+      },
+      {
+       "section": "A",
+       "slot": 0,
+       "row": 24,
+       "column": "fm2",
+       "from": "D-5:78",
+       "to": "D-5:52"
+      }
+     ]
+    }
+   ],
+   "id": "d1",
+   "at": "2026-10-08T16:48:40Z",
+   "committed_rev": 2,
+   "ab": {
+    "range": "rows 0-31",
+    "files": {
+     "A": {
+      "wav": "<work>/etude/out/d1_A.wav",
+      "mp3": "<work>/etude/out/d1_A.mp3",
+      "encoder": "lame"
+     },
+     "B": {
+      "wav": "<work>/etude/out/d1_B.wav",
+      "mp3": "<work>/etude/out/d1_B.mp3",
+      "encoder": "lame"
+     }
+    },
+    "original_levels": {
+     "A": {
+      "rms_db": -22.81,
+      "peak_db": -8.3
+     },
+     "B": {
+      "rms_db": -22.76,
+      "peak_db": -8.82
+     }
+    },
+    "gain_applied_db": {
+     "A": 0.0,
+     "B": -0.05
+    },
+    "matched": "RMS of the range (A is the reference)"
+   },
+   "cost": {
+    "renders": 12,
+    "render_seconds": 14.03,
+    "runtime_s": 18.97,
+    "operations": 3,
+    "candidates": 1,
+    "retries": 0,
+    "model_tokens": 0,
+    "audio_model_seconds": 0.0
+   },
+   "learning_record": "lr-fe46ce17c7"
+  },
+  {
+   "observation": "o4",
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "range": {
+    "spec": "rows 32-63",
+    "t0": 3.428571,
+    "t1": 6.857143,
+    "bars": [
+     3,
+     4
+    ],
+    "sections": [
+     "A2"
+    ]
+   },
+   "ear": {
+    "mode": "tool",
+    "statement": "technically analysed the render with the engine's own measurements; nothing was listened to"
+   },
+   "base_rev": 3,
+   "base_hash": "f57371349378870b",
+   "budget": {
+    "candidates": 3,
+    "rounds": 2,
+    "max_renders": 80
+   },
+   "card": {
+    "observation": "o4",
+    "kind": "buried",
+    "statement": "lead sits 3.4 dB under the rest of the mix in its own band",
+    "basis": "measured",
+    "located": {
+     "range": {
+      "spec": "rows 32-63",
+      "t0": 3.428571,
+      "t1": 6.857143,
+      "bars": [
+       3,
+       4
+      ],
+      "sections": [
+       "A2"
+      ]
+     },
+     "voice": "lead",
+     "role": "lead",
+     "instrument": {
+      "channel": "fm1",
+      "patch": "square_lead",
+      "overrides": {}
+     },
+     "notes_total": 12,
+     "span": [
+      "B-4",
+      "F-5"
+     ],
+     "worst_notes": [
+      {
+       "note": "C-5",
+       "velocity": 112,
+       "start_s": 5.143,
+       "section": "A2",
+       "row_in_section": 16,
+       "bar": 4,
+       "source_line": 62,
+       "source": "C-3:112  C-5:112  E-5:82  w1:3  kick",
+       "band_margin_db": -5.39
+      },
+      {
+       "note": "B-4",
+       "velocity": 112,
+       "start_s": 6.0,
+       "section": "A2",
+       "row_in_section": 24,
+       "bar": 4,
+       "source_line": 70,
+       "source": "G-3:112  B-4:112  D-5:82  w1:3  kick",
+       "band_margin_db": -5.39
+      },
+      {
+       "note": "C-5",
+       "velocity": 112,
+       "start_s": 3.429,
+       "section": "A2",
+       "row_in_section": 0,
+       "bar": 3,
+       "source_line": 46,
+       "source": "A-3:112  C-5:112  C-5:82  w1:3  kick",
+       "band_margin_db": -4.93
+      }
+     ],
+     "chain_at_worst": {
+      "t_s": 5.143,
+      "notes": [
+       {
+        "voice": "lead",
+        "note": "C-5",
+        "velocity": 112,
+        "source_line": 62,
+        "source": "C-3:112  C-5:112  E-5:82  w1:3  kick"
+       }
+      ],
+      "instrument": {
+       "1": {
+        "tl": 24,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       },
+       "2": {
+        "tl": 8,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       },
+       "3": {
+        "tl": 34,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 3,
+        "dt": 4
+       },
+       "4": {
+        "tl": 18,
+        "ar": 31,
+        "d1r": 0,
+        "d2r": 0,
+        "sl": 0,
+        "rr": 10,
+        "mul": 1,
+        "dt": 0
+       }
+      },
+      "register_writes": [
+       {
+        "channel": "fm1",
+        "what": "key",
+        "value": "off",
+        "slots": 0,
+        "t": 5.1428,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "op2.tl",
+        "value": 1,
+        "t": 5.1428,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "op4.tl",
+        "value": 11,
+        "t": 5.1428,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "block_freq_hi",
+        "value": 37,
+        "t": 5.1428,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "freq_lo",
+        "value": 8,
+        "t": 5.1428,
+        "chip": "ym2612"
+       },
+       {
+        "channel": "fm1",
+        "what": "key",
+        "value": "on",
+        "slots": 15,
+        "t": 5.1428,
+        "chip": "ym2612"
+       }
+      ],
+      "register_writes_total": 6
+     }
+    },
+    "measured": {
+     "band_margin_db": -4.08,
+     "goal_db": -3.0,
+     "need_db": 2.08,
+     "band_share": {
+      "hats": 0.562,
+      "pad": 0.394,
+      "bass": 0.044
+     }
+    },
+    "causes": [
+     {
+      "status": "established",
+      "voice": "hats",
+      "statement": "hats gives 56% of the energy in lead's band",
+      "evidence": {
+       "band_share": 0.562,
+       "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+      }
+     },
+     {
+      "status": "established",
+      "voice": "pad",
+      "statement": "pad gives 39% of the energy in lead's band",
+      "evidence": {
+       "band_share": 0.394,
+       "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+      }
+     },
+     {
+      "status": "plausible",
+      "voice": "pad",
+      "statement": "pad plays C-5-E-5, within an octave of lead's B-4-F-5: its fundamentals and low partials fall in lead's band",
+      "evidence": {
+       "spans": {
+        "pad": [
+         60,
+         64
+        ],
+        "lead": [
+         59,
+         65
+        ]
+       },
+       "method": "note spans from the score"
+      }
+     }
+    ],
+    "hypotheses": [
+     {
+      "patch": [
+       {
+        "db": 5.5,
+        "op": "level",
+        "voice": "lead",
+        "range": "rows 32-63"
+       },
+       {
+        "db": -3.5,
+        "op": "level",
+        "voice": "pad",
+        "range": "rows 32-63"
+       }
+      ],
+      "kind": "remembered",
+      "hypothesis": "what fixed a buried lead before: lead +5.5 dB; pad -3.5 dB",
+      "expect_db": 6.18,
+      "basis": "remembered: record lr-d32b4a39f0 (similarity 0.774), measured 6.18 dB there",
+      "risks": [
+       "a different arrangement may answer differently: rendered and guarded here"
+      ],
+      "cells": 0,
+      "record": "lr-d32b4a39f0",
+      "id": "h1"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "hats",
+       "range": "rows 32-63",
+       "db": -5.0
+      },
+      "kind": "balance",
+      "hypothesis": "hats 4.0 dB quieter in the range leaves lead more of its band",
+      "expect_db": 1.79,
+      "basis": "arithmetic: hats holds 56% of the band; realised -4.00 dB",
+      "risks": [
+       "hats (hats) loses presence"
+      ],
+      "cells": 16,
+      "id": "h2"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "pad",
+       "range": "rows 32-63",
+       "db": -6.0
+      },
+      "kind": "balance",
+      "hypothesis": "pad 6.0 dB quieter in the range leaves lead more of its band",
+      "expect_db": 1.52,
+      "basis": "arithmetic: pad holds 39% of the band; realised -6.00 dB",
+      "risks": [
+       "pad (pad) loses presence"
+      ],
+      "cells": 4,
+      "id": "h3"
+     },
+     {
+      "patch": {
+       "op": "level",
+       "voice": "lead",
+       "range": "rows 32-63",
+       "db": 2.0
+      },
+      "kind": "balance",
+      "hypothesis": "lead +0.8 dB (asked +2.0; the chip's velocity curve and the 127 ceiling decide what is realised)",
+      "expect_db": 0.75,
+      "basis": "arithmetic: only the target changes, by its realised level",
+      "risks": [
+       "the mix gets louder",
+       "lead may dominate"
+      ],
+      "cells": 12,
+      "id": "h4"
+     },
+     {
+      "patch": {
+       "op": "param",
+       "voice": "pad",
+       "key": "op1.tl",
+       "delta": 8,
+       "range": "rows 32-63"
+      },
+      "kind": "timbre",
+      "hypothesis": "pad's loudest modulator (op1, TL 30) 6 dB down: fewer upper partials of pad in lead's band",
+      "expect_db": null,
+      "basis": "not estimated: how much of the share is partials rather than fundamentals is not known before the render",
+      "risks": [
+       "pad's character (brightness, bite) changes"
+      ],
+      "cells": 0,
+      "id": "h5"
+     }
+    ],
+    "excluded": [
+     {
+      "patch": {
+       "op": "transpose",
+       "voice": "pad",
+       "range": "rows 32-63",
+       "semitones": 12
+      },
+      "why": "pad would leave its declared register E-4-G-5"
+     }
+    ],
+    "not_considered": "changing the melody's pitches, the harmony, the rhythm, or removing notes: the piece's own tensions are not faults"
+   },
+   "memory": {
+    "records_seen": 3,
+    "matched": [
+     {
+      "record": "lr-fe46ce17c7",
+      "similarity": 0.995
+     },
+     {
+      "record": "lr-d32b4a39f0",
+      "similarity": 0.774
+     },
+     {
+      "record": "lr-5f5db8d562",
+      "similarity": 0.714
+     }
+    ],
+    "used": [
+     {
+      "record": "lr-fe46ce17c7",
+      "similarity": 0.995
+     },
+     {
+      "record": "lr-d32b4a39f0",
+      "similarity": 0.774
+     }
+    ],
+    "weak_before": []
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "from": [
+      "base"
+     ],
+     "candidates": [
+      {
+       "hypothesis": "h1",
+       "kind": "remembered",
+       "patch": [
+        {
+         "db": 5.5,
+         "op": "level",
+         "voice": "lead",
+         "range": "rows 32-63"
+        },
+        {
+         "db": -3.5,
+         "op": "level",
+         "voice": "pad",
+         "range": "rows 32-63"
+        }
+       ],
+       "chain": [
+        {
+         "db": 5.5,
+         "op": "level",
+         "voice": "lead",
+         "range": "rows 32-63"
+        },
+        {
+         "db": -3.5,
+         "op": "level",
+         "voice": "pad",
+         "range": "rows 32-63"
+        }
+       ],
+       "expected_db": 6.18,
+       "expected": "what fixed a buried lead before: lead +5.5 dB; pad -3.5 dB",
+       "basis": "remembered: record lr-d32b4a39f0 (similarity 0.774), measured 6.18 dB there",
+       "content_hash": "2be82ba27bad65ef",
+       "deltas": [
+        {
+         "op": "level",
+         "voice": "lead",
+         "column": "fm1",
+         "range": "rows 32-63",
+         "rows": [
+          32,
+          64
+         ],
+         "scope": "occurrence",
+         "asked_db": 5.5,
+         "realised_db": {
+          "mean": 0.75,
+          "min": 0.75,
+          "max": 0.75
+         },
+         "cells": 12,
+         "at_limit": 0,
+         "copies": [],
+         "edits_total": 12,
+         "edits": [
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 0,
+           "column": "fm1",
+           "from": "C-5:112",
+           "to": "C-5:127"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 2,
+           "column": "fm1",
+           "from": "E-5:112",
+           "to": "E-5:127"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 4,
+           "column": "fm1",
+           "from": "C-5:112",
+           "to": "C-5:127"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 8,
+           "column": "fm1",
+           "from": "C-5:112",
+           "to": "C-5:127"
+          }
+         ]
+        },
+        {
+         "op": "level",
+         "voice": "pad",
+         "column": "fm2",
+         "range": "rows 32-63",
+         "rows": [
+          32,
+          64
+         ],
+         "scope": "occurrence",
+         "asked_db": -3.5,
+         "realised_db": {
+          "mean": -3.75,
+          "min": -3.75,
+          "max": -3.75
+         },
+         "cells": 4,
+         "at_limit": 0,
+         "copies": [],
+         "edits_total": 4,
+         "edits": [
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 0,
+           "column": "fm2",
+           "from": "C-5:82",
+           "to": "C-5:55"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 8,
+           "column": "fm2",
+           "from": "C-5:82",
+           "to": "C-5:55"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 16,
+           "column": "fm2",
+           "from": "E-5:82",
+           "to": "E-5:55"
+          },
+          {
+           "section": "A2",
+           "slot": 1,
+           "row": 24,
+           "column": "fm2",
+           "from": "D-5:82",
+           "to": "D-5:55"
+          }
+         ]
+        }
+       ],
+       "metric": {
+        "name": "band_margin_db of lead",
+        "before": -4.08,
+        "after": -2.4,
+        "gain_db": 1.68
+       },
+       "goal_met": true,
+       "guards": [
+        {
+         "name": "no_clipping",
+         "ok": true,
+         "detail": "mix peak -7.03 -> -7.41 dBFS"
+        },
+        {
+         "name": "notes_kept",
+         "ok": true,
+         "detail": "every note keeps its onset row and pitch class; none added or removed"
+        },
+        {
+         "name": "melody_kept",
+         "ok": true,
+         "detail": "pitches of lead unchanged"
+        },
+        {
+         "name": "no_new_faults",
+         "ok": true,
+         "detail": "none"
+        },
+        {
+         "name": "voices_present",
+         "ok": true,
+         "detail": "every other voice stays within its band floor (-9 dB)"
+        },
+        {
+         "name": "bass_under",
+         "ok": true,
+         "detail": "rows with the bass above another voice: 0 -> 0"
+        },
+        {
+         "name": "mix_level",
+         "ok": true,
+         "detail": "mix RMS -0.24 dB"
+        }
+       ],
+       "mix_rms_db": -22.64,
+       "cost": {
+        "renders": 8,
+        "seconds": 16.24
+       },
+       "accepted": true,
+       "why": "band_margin_db of lead -4.08 -> -2.40 dB, every guard passed"
+      }
+     ],
+     "best": "h1"
+    }
+   ],
+   "stopped": "goal met",
+   "outcome": "committed",
+   "chain": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "voice": "lead",
+     "range": "rows 32-63"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 32-63"
+    }
+   ],
+   "before": -4.08,
+   "after": -2.4,
+   "gain_db": 1.68,
+   "goal_met": true,
+   "guards": [
+    {
+     "name": "no_clipping",
+     "ok": true,
+     "detail": "mix peak -7.03 -> -7.41 dBFS"
+    },
+    {
+     "name": "notes_kept",
+     "ok": true,
+     "detail": "every note keeps its onset row and pitch class; none added or removed"
+    },
+    {
+     "name": "melody_kept",
+     "ok": true,
+     "detail": "pitches of lead unchanged"
+    },
+    {
+     "name": "no_new_faults",
+     "ok": true,
+     "detail": "none"
+    },
+    {
+     "name": "voices_present",
+     "ok": true,
+     "detail": "every other voice stays within its band floor (-9 dB)"
+    },
+    {
+     "name": "bass_under",
+     "ok": true,
+     "detail": "rows with the bass above another voice: 0 -> 0"
+    },
+    {
+     "name": "mix_level",
+     "ok": true,
+     "detail": "mix RMS -0.24 dB"
+    }
+   ],
+   "deltas": [
+    {
+     "op": "level",
+     "voice": "lead",
+     "column": "fm1",
+     "range": "rows 32-63",
+     "rows": [
+      32,
+      64
+     ],
+     "scope": "occurrence",
+     "asked_db": 5.5,
+     "realised_db": {
+      "mean": 0.75,
+      "min": 0.75,
+      "max": 0.75
+     },
+     "cells": 12,
+     "at_limit": 0,
+     "copies": [],
+     "edits_total": 12,
+     "edits": [
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 0,
+       "column": "fm1",
+       "from": "C-5:112",
+       "to": "C-5:127"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 2,
+       "column": "fm1",
+       "from": "E-5:112",
+       "to": "E-5:127"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 4,
+       "column": "fm1",
+       "from": "C-5:112",
+       "to": "C-5:127"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 8,
+       "column": "fm1",
+       "from": "C-5:112",
+       "to": "C-5:127"
+      }
+     ]
+    },
+    {
+     "op": "level",
+     "voice": "pad",
+     "column": "fm2",
+     "range": "rows 32-63",
+     "rows": [
+      32,
+      64
+     ],
+     "scope": "occurrence",
+     "asked_db": -3.5,
+     "realised_db": {
+      "mean": -3.75,
+      "min": -3.75,
+      "max": -3.75
+     },
+     "cells": 4,
+     "at_limit": 0,
+     "copies": [],
+     "edits_total": 4,
+     "edits": [
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 0,
+       "column": "fm2",
+       "from": "C-5:82",
+       "to": "C-5:55"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 8,
+       "column": "fm2",
+       "from": "C-5:82",
+       "to": "C-5:55"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 16,
+       "column": "fm2",
+       "from": "E-5:82",
+       "to": "E-5:55"
+      },
+      {
+       "section": "A2",
+       "slot": 1,
+       "row": 24,
+       "column": "fm2",
+       "from": "D-5:82",
+       "to": "D-5:55"
+      }
+     ]
+    }
+   ],
+   "id": "d2",
+   "at": "2026-10-08T16:49:34Z",
+   "committed_rev": 4,
+   "ab": {
+    "range": "rows 32-63",
+    "files": {
+     "A": {
+      "wav": "<work>/etude/out/d2_A.wav",
+      "mp3": "<work>/etude/out/d2_A.mp3",
+      "encoder": "lame"
+     },
+     "B": {
+      "wav": "<work>/etude/out/d2_B.wav",
+      "mp3": "<work>/etude/out/d2_B.mp3",
+      "encoder": "lame"
+     }
+    },
+    "original_levels": {
+     "A": {
+      "rms_db": -22.4,
+      "peak_db": -7.03
+     },
+     "B": {
+      "rms_db": -22.64,
+      "peak_db": -7.41
+     }
+    },
+    "gain_applied_db": {
+     "A": 0.0,
+     "B": 0.24
+    },
+    "matched": "RMS of the range (A is the reference)"
+   },
+   "cost": {
+    "renders": 19,
+    "render_seconds": 32.78,
+    "runtime_s": 37.67,
+    "operations": 3,
+    "candidates": 1,
+    "retries": 0,
+    "model_tokens": 0,
+    "audio_model_seconds": 0.0
+   },
+   "learning_record": "lr-daf34425bb"
+  }
+ ],
+ "revisions": [
+  {
+   "rev": 0,
+   "parent": null,
+   "hash": "97d0db9bce8b6145",
+   "why": {
+    "kind": "create"
+   },
+   "at": "2026-10-08T16:48:12Z"
+  },
+  {
+   "rev": 1,
+   "parent": 0,
+   "hash": "5577d040a8a9d7d9",
+   "why": {
+    "kind": "compose",
+    "section": "A",
+    "function": "statement",
+    "context": {
+     "previous": null,
+     "next": "A2"
+    }
+   },
+   "at": "2026-10-08T16:48:12Z"
+  },
+  {
+   "rev": 2,
+   "parent": 1,
+   "hash": "07a83cb9cb1370b6",
+   "why": {
+    "kind": "patch",
+    "decision": "d1",
+    "observation": "o2",
+    "chain": [
+     {
+      "db": 5.5,
+      "op": "level",
+      "voice": "lead",
+      "range": "rows 0-31"
+     },
+     {
+      "db": -3.5,
+      "op": "level",
+      "voice": "pad",
+      "range": "rows 0-31"
+     }
+    ]
+   },
+   "at": "2026-10-08T16:48:40Z"
+  },
+  {
+   "rev": 3,
+   "parent": 2,
+   "hash": "f57371349378870b",
+   "why": {
+    "kind": "compose",
+    "section": "A2",
+    "function": "variation",
+    "context": {
+     "previous": "A",
+     "next": "B"
+    }
+   },
+   "at": "2026-10-08T16:48:40Z"
+  },
+  {
+   "rev": 4,
+   "parent": 3,
+   "hash": "2be82ba27bad65ef",
+   "why": {
+    "kind": "patch",
+    "decision": "d2",
+    "observation": "o4",
+    "chain": [
+     {
+      "db": 5.5,
+      "op": "level",
+      "voice": "lead",
+      "range": "rows 32-63"
+     },
+     {
+      "db": -3.5,
+      "op": "level",
+      "voice": "pad",
+      "range": "rows 32-63"
+     }
+    ]
+   },
+   "at": "2026-10-08T16:49:34Z"
+  },
+  {
+   "rev": 5,
+   "parent": 4,
+   "hash": "e4e143d66c6fdac9",
+   "why": {
+    "kind": "compose",
+    "section": "B",
+    "function": "development",
+    "context": {
+     "previous": "A2",
+     "next": "C"
+    }
+   },
+   "at": "2026-10-08T16:49:35Z"
+  },
+  {
+   "rev": 6,
+   "parent": 5,
+   "hash": "f0886c3ea317cc7a",
+   "why": {
+    "kind": "compose",
+    "section": "C",
+    "function": "cadence",
+    "context": {
+     "previous": "B",
+     "next": null
+    }
+   },
+   "at": "2026-10-08T16:49:52Z"
+  }
+ ],
+ "head": 6,
+ "created": "2026-10-08T16:48:12Z",
+ "updated": "2026-10-08T16:50:09Z",
+ "composition": {
+  "next": 4,
+  "seed": 7,
+  "log": [
+   {
+    "section": "A",
+    "rev": 1,
+    "function": "statement",
+    "motif": "m1",
+    "fitted_to_harmony": 7,
+    "heard": {
+     "range": "rows 0-31",
+     "observations": [
+      "o1"
+     ],
+     "section_range": "rows 0-31",
+     "focus": [
+      "lead"
+     ],
+     "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+     "cost": {
+      "renders": 7,
+      "render_seconds": 7.72
+     }
+    },
+    "after": [
+     {
+      "section": "A",
+      "observation": "o1",
+      "corrected_as": "o2",
+      "decision": "d1",
+      "outcome": "committed",
+      "before": -3.93,
+      "after": -1.82,
+      "chain": [
+       {
+        "db": 5.5,
+        "op": "level",
+        "voice": "lead",
+        "range": "rows 0-31"
+       },
+       {
+        "db": -3.5,
+        "op": "level",
+        "voice": "pad",
+        "range": "rows 0-31"
+       }
+      ],
+      "remembered": true,
+      "candidates": 1,
+      "renders": 12,
+      "seconds": 18.97,
+      "why": null
+     }
+    ],
+    "seconds": 28.11
+   },
+   {
+    "section": "A2",
+    "rev": 3,
+    "function": "variation",
+    "motif": "m1",
+    "fitted_to_harmony": 6,
+    "transition": {
+     "between": [
+      "A",
+      "A2"
+     ],
+     "row": 32,
+     "issues": [],
+     "notes": [
+      {
+       "kind": "bass_approach",
+       "voice": "bass",
+       "semitones": 2,
+       "prepared": true
+      },
+      {
+       "kind": "leap",
+       "voice": "lead",
+       "semitones": -2,
+       "statement": "lead moves -2 semitones across the join"
+      }
+     ],
+     "state_left": [],
+     "ok": true
+    },
+    "heard": {
+     "range": "rows 16-63",
+     "observations": [
+      "o3"
+     ],
+     "section_range": "rows 32-63",
+     "focus": [
+      "lead"
+     ],
+     "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+     "cost": {
+      "renders": 7,
+      "render_seconds": 15.04
+     }
+    },
+    "after": [
+     {
+      "section": "A2",
+      "observation": "o3",
+      "corrected_as": "o4",
+      "decision": "d2",
+      "outcome": "committed",
+      "before": -4.08,
+      "after": -2.4,
+      "chain": [
+       {
+        "db": 5.5,
+        "op": "level",
+        "voice": "lead",
+        "range": "rows 32-63"
+       },
+       {
+        "db": -3.5,
+        "op": "level",
+        "voice": "pad",
+        "range": "rows 32-63"
+       }
+      ],
+      "remembered": true,
+      "candidates": 1,
+      "renders": 19,
+      "seconds": 37.67,
+      "why": null
+     }
+    ],
+    "seconds": 54.74
+   },
+   {
+    "section": "B",
+    "rev": 5,
+    "function": "development",
+    "motif": "m1",
+    "fitted_to_harmony": 8,
+    "transition": {
+     "between": [
+      "A2",
+      "B"
+     ],
+     "row": 64,
+     "issues": [],
+     "notes": [
+      {
+       "kind": "bass_approach",
+       "voice": "bass",
+       "semitones": -2,
+       "prepared": true
+      },
+      {
+       "kind": "leap",
+       "voice": "lead",
+       "semitones": 6,
+       "statement": "lead moves +6 semitones across the join"
+      }
+     ],
+     "state_left": [],
+     "ok": true
+    },
+    "heard": {
+     "range": "rows 48-95",
+     "observations": [],
+     "section_range": "rows 64-95",
+     "focus": [
+      "lead"
+     ],
+     "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+     "cost": {
+      "renders": 7,
+      "render_seconds": 15.58
+     }
+    },
+    "after": [],
+    "seconds": 17.65
+   },
+   {
+    "section": "C",
+    "rev": 6,
+    "function": "cadence",
+    "motif": "m1",
+    "fitted_to_harmony": 4,
+    "transition": {
+     "between": [
+      "B",
+      "C"
+     ],
+     "row": 96,
+     "issues": [],
+     "notes": [
+      {
+       "kind": "bass_approach",
+       "voice": "bass",
+       "semitones": -2,
+       "prepared": true
+      },
+      {
+       "kind": "leap",
+       "voice": "lead",
+       "semitones": -2,
+       "statement": "lead moves -2 semitones across the join"
+      }
+     ],
+     "state_left": [],
+     "ok": true
+    },
+    "heard": {
+     "range": "rows 80-127",
+     "observations": [],
+     "section_range": "rows 96-127",
+     "focus": [
+      "lead"
+     ],
+     "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+     "cost": {
+      "renders": 7,
+      "render_seconds": 15.38
+     }
+    },
+    "after": [],
+    "seconds": 17.14
+   }
+  ]
+ }
+}

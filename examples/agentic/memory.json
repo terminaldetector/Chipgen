@@ -1,0 +1,161 @@
+{
+ "without_memory": {
+  "outcome": "committed",
+  "before": -7.24,
+  "after": -2.45,
+  "gain_db": 4.79,
+  "goal_met": true,
+  "chain": [
+   {
+    "op": "level",
+    "voice": "lead",
+    "range": "rows 0-31",
+    "db": 5.0
+   },
+   {
+    "op": "level",
+    "voice": "pad",
+    "range": "rows 0-31",
+    "db": -2.5
+   }
+  ],
+  "memory": null,
+  "learning_record": null,
+  "cost": {
+   "renders": 16,
+   "render_seconds": 14.71,
+   "runtime_s": 20.67,
+   "operations": 10,
+   "candidates": 4,
+   "retries": 3,
+   "model_tokens": 0,
+   "audio_model_seconds": 0.0,
+   "seconds": 20.67,
+   "reply_bytes": 1410,
+   "approx_tokens": 352
+  },
+  "candidates": [
+   {
+    "round": 1,
+    "patch": {
+     "op": "level",
+     "voice": "lead",
+     "range": "rows 0-31",
+     "db": 5.0
+    },
+    "after": -3.77,
+    "accepted": true,
+    "why": "band_margin_db of lead -7.24 -> -3.77 dB, every guard passed"
+   },
+   {
+    "round": 1,
+    "patch": {
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 0-31",
+     "db": -6.0
+    },
+    "after": -4.13,
+    "accepted": true,
+    "why": "band_margin_db of lead -7.24 -> -4.13 dB, every guard passed"
+   },
+   {
+    "round": 1,
+    "patch": {
+     "op": "level",
+     "voice": "bass",
+     "range": "rows 0-31",
+     "db": -6.0
+    },
+    "after": -6.11,
+    "accepted": true,
+    "why": "band_margin_db of lead -7.24 -> -6.11 dB, every guard passed"
+   },
+   {
+    "round": 2,
+    "patch": {
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 0-31",
+     "db": -2.5
+    },
+    "after": -2.45,
+    "accepted": true,
+    "why": "band_margin_db of lead -7.24 -> -2.45 dB, every guard passed"
+   }
+  ]
+ },
+ "with_memory": {
+  "outcome": "committed",
+  "before": -7.24,
+  "after": -1.7,
+  "gain_db": 5.54,
+  "goal_met": true,
+  "chain": [
+   {
+    "db": 5.5,
+    "op": "level",
+    "voice": "lead",
+    "range": "rows 0-31"
+   },
+   {
+    "db": -3.5,
+    "op": "level",
+    "voice": "pad",
+    "range": "rows 0-31"
+   }
+  ],
+  "memory": {
+   "records_seen": 1,
+   "matched": [
+    {
+     "record": "lr-d32b4a39f0",
+     "similarity": 0.927
+    }
+   ],
+   "used": [
+    {
+     "record": "lr-d32b4a39f0",
+     "similarity": 0.927
+    }
+   ],
+   "weak_before": []
+  },
+  "learning_record": "lr-5f5db8d562",
+  "cost": {
+   "renders": 6,
+   "render_seconds": 5.38,
+   "runtime_s": 7.78,
+   "operations": 3,
+   "candidates": 1,
+   "retries": 0,
+   "model_tokens": 0,
+   "audio_model_seconds": 0.0,
+   "seconds": 7.78,
+   "reply_bytes": 1055,
+   "approx_tokens": 263
+  },
+  "candidates": [
+   {
+    "round": 1,
+    "patch": [
+     {
+      "db": 5.5,
+      "op": "level",
+      "voice": "lead",
+      "range": "rows 0-31"
+     },
+     {
+      "db": -3.5,
+      "op": "level",
+      "voice": "pad",
+      "range": "rows 0-31"
+     }
+    ],
+    "after": -1.7,
+    "accepted": true,
+    "why": "band_margin_db of lead -7.24 -> -1.70 dB, every guard passed"
+   }
+  ]
+ }
+}

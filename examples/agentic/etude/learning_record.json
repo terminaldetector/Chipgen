@@ -1,0 +1,196 @@
+{
+ "applies_to": {
+  "backend": "megadrive",
+  "initial_margin_db": -4.08,
+  "limits": "measured once, in this arrangement; recall re-renders and re-checks it before use",
+  "patches": {
+   "bass": "slap_bass",
+   "hats": null,
+   "lead": "square_lead",
+   "pad": "strings"
+  },
+  "roles": [
+   "bass",
+   "hats",
+   "lead",
+   "pad"
+  ]
+ },
+ "at": "2026-10-08T16:49:35Z",
+ "auditory": {
+  "judgement": null,
+  "mode": "tool",
+  "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+  "uncertainty": "nothing listened; the result is a measurement of the render"
+ },
+ "change": [
+  {
+   "db": 5.5,
+   "op": "level",
+   "role": "lead"
+  },
+  {
+   "db": -3.5,
+   "op": "level",
+   "role": "pad"
+  }
+ ],
+ "context": {
+  "backend": "megadrive (YM2612 + SN76489), Nuked-OPN2 render",
+  "bpm": 140.0,
+  "key": "A minor",
+  "range_bars": [
+   3,
+   4
+  ],
+  "target_span": [
+   "B-4",
+   "F-5"
+  ],
+  "voices": {
+   "bass": {
+    "band_share": 0.044,
+    "channel": "fm0",
+    "patch": "slap_bass",
+    "register": [
+     33,
+     52
+    ]
+   },
+   "hats": {
+    "band_share": 0.562,
+    "channel": "noise",
+    "patch": null,
+    "register": null
+   },
+   "lead": {
+    "band_share": null,
+    "channel": "fm1",
+    "patch": "square_lead",
+    "register": [
+     57,
+     79
+    ]
+   },
+   "pad": {
+    "band_share": 0.394,
+    "channel": "fm2",
+    "patch": "strings",
+    "register": [
+     52,
+     67
+    ]
+   }
+  }
+ },
+ "cost": {
+  "audio_model_seconds": 0.0,
+  "candidates": 1,
+  "model_tokens": 0,
+  "operations": 3,
+  "render_seconds": 32.78,
+  "renders": 19,
+  "retries": 0,
+  "runtime_s": 37.67
+ },
+ "decision": {
+  "outcome": "committed",
+  "why": "gain 1.68 dB, every guard passed"
+ },
+ "expected": [
+  {
+   "basis": "remembered: record lr-d32b4a39f0 (similarity 0.774), measured 6.18 dB there",
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "expect_db": 6.18
+  }
+ ],
+ "format": "chipgen-learning-record/1",
+ "id": "lr-daf34425bb",
+ "initial": {
+  "band_margin_db": -4.08
+ },
+ "result": {
+  "band_margin_db": -2.4,
+  "gain_db": 1.68,
+  "goal_met": true,
+  "guards": [
+   {
+    "name": "no_clipping",
+    "ok": true
+   },
+   {
+    "name": "notes_kept",
+    "ok": true
+   },
+   {
+    "name": "melody_kept",
+    "ok": true
+   },
+   {
+    "name": "no_new_faults",
+    "ok": true
+   },
+   {
+    "name": "voices_present",
+    "ok": true
+   },
+   {
+    "name": "bass_under",
+    "ok": true
+   },
+   {
+    "name": "mix_level",
+    "ok": true
+   }
+  ]
+ },
+ "scope": "the observation's range, every voice's notes in it",
+ "source": {
+  "base_rev": 3,
+  "committed_rev": 4,
+  "decision": "d2",
+  "kind": "loop",
+  "measured": true,
+  "project": "etude"
+ },
+ "task": {
+  "goal": "band margin >= -3.0 dB",
+  "kind": "buried",
+  "target_role": "lead"
+ },
+ "tried": [
+  {
+   "accepted": true,
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "gain_db": 1.68,
+   "why": "band_margin_db of lead -4.08 -> -2.40 dB, every guard passed"
+  }
+ ],
+ "versions": {
+  "agentic_measure": "3b813f24db21",
+  "format": "chipgen-learning-record/1",
+  "seed": 7
+ }
+}

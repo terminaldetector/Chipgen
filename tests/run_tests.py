@@ -48,7 +48,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program", "test_agentic"]
 
 
 def _collect(pattern=""):
@@ -135,6 +135,10 @@ SLOW = {
     "test_vgm.test_imported_patches_are_levelled_against_the_built_in_bank",
     "test_vgm.test_replay_alignment_is_bounded_and_does_not_accumulate",
     "test_program.test_a_run_keeps_its_budget_and_can_be_undone_exactly",
+    "test_agentic.test_hybrid_checks_what_was_heard_against_what_was_measured",
+    "test_agentic.test_a_range_render_with_the_state_chased_in_sounds_like_the_song",
+    "test_agentic.test_a_local_correction_is_measured_guarded_committed_and_undone",
+    "test_agentic.test_memory_makes_a_similar_task_cheaper_and_is_checked_again",
     "test_program.test_a_round_of_repeats_stops_the_loop",
     "test_synthesis.test_a_dial_turned_up_reads_higher_on_every_chip",
     "test_synthesis.test_a_director_steers_a_run_and_a_broken_one_cannot_stop_it",

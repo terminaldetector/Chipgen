@@ -800,6 +800,15 @@ def agents_md() -> str:
         f"write a score; `START_HERE.md` and `bridge/CORE.md` go deeper, "
         f"for instrument design rather than a first track.",
         "",
+        "## A longer piece, heard and corrected as it grows (YM2612)",
+        "",
+        "`python3 python/agent.py` keeps the piece in a project under "
+        "`work/agentic/`, not in your context: `create_musical_state`, "
+        "`continue_composition` (section by section, resumable), "
+        "`hear_range` (a measurement of the render, not listening), "
+        "`improve` (a measured fix, kept or undone), `export`. Every reply "
+        "is short JSON; `bridge/AGENTIC.md` lists the operations.",
+        "",
     ])
 
 

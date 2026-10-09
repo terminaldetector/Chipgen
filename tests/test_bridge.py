@@ -128,7 +128,12 @@ def test_archive_is_lean_and_reproducible():
         # named), phases.py (a note read phase by phase), improve.py (the
         # bounded intent -> candidates -> probe -> commit/rollback loop),
         # their tests and the worked example — 37.6 KB compressed.
-        assert size < 860 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 960 KB for the agentic loop: python/agentic/ (state, range
+        # render, trace, three ears, diagnose, loop, motif, compose, memory,
+        # capabilities), agent.py, test_agentic.py and bridge/AGENTIC.md —
+        # 92 KB compressed — and its examples' cards, records and state
+        # (JSON, 27 KB). The examples' MP3s stay out, as all audio does.
+        assert size < 960 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

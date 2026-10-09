@@ -56,3 +56,8 @@ studio/studio.json
 
 # Except the things that are meant to ship.
 !examples/*.json
+
+# The scratch folder examples/agentic/make_examples.py works in (renders
+# and revisions, made again by running it). The facade's own projects go
+# under work/agentic/ by default, which is ignored above.
+examples/agentic/_work/

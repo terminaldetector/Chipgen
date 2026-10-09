@@ -38,6 +38,16 @@ lead), and writes the A/B of each part alone, a short etude before and after
 (MP3, VGZ and tracker text), the run records and the readings. About a
 minute; see `bridge/SYNTHESIS.md`, "Programs".
 
+`agentic/make_examples.py` is not a score either: it runs the agentic loop
+(`python/agent.py`, `bridge/AGENTIC.md`) the way an agent calls it and keeps
+what it made — a buried lead found, located, corrected and A/B'd
+(`agentic/masked_lead/`), the same fix recalled from memory on a similar
+piece (`agentic/memory.json`), and a four-section étude composed one section
+after another with each measured fault corrected before the next is written
+(`agentic/etude/`), with the MusicalState, the diagnostic card, the
+patch-delta and the LearningRecords as JSON. About 3.5 minutes; nothing in
+that folder is written by hand, and nothing in it was listened to.
+
 `tests/test_examples.py` renders all six on every test run, with the
 banks above, and fails if any of them stops parsing or comes out silent.
 If you add a score here that needs a bank, add it to `BANKS` in that file

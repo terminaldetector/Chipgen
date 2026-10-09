@@ -1,0 +1,320 @@
+{
+ "motifs": {
+  "m1": {
+   "id": "m1",
+   "voice": "lead",
+   "notes": [
+    [
+     0,
+     64,
+     2
+    ],
+    [
+     2,
+     67,
+     2
+    ],
+    [
+     4,
+     64,
+     4
+    ],
+    [
+     8,
+     65,
+     2
+    ],
+    [
+     10,
+     69,
+     2
+    ],
+    [
+     12,
+     65,
+     4
+    ]
+   ],
+   "key": "A minor",
+   "length_rows": 16,
+   "origin": {
+    "section": "A",
+    "row": 0
+   }
+  }
+ },
+ "instances_said": [
+  {
+   "motif": "m1",
+   "section": "A",
+   "voice": "lead",
+   "row": 0,
+   "transform": [],
+   "role": "statement",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "A",
+   "voice": "lead",
+   "row": 16,
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": -1
+    }
+   ],
+   "role": "statement",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "A2",
+   "voice": "lead",
+   "row": 0,
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": -2
+    }
+   ],
+   "role": "variation",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "A2",
+   "voice": "lead",
+   "row": 16,
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": -3
+    }
+   ],
+   "role": "variation",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "B",
+   "voice": "lead",
+   "row": 0,
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    }
+   ],
+   "role": "development",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "B",
+   "voice": "lead",
+   "row": 8,
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    },
+    {
+     "op": "shift",
+     "degrees": 1
+    }
+   ],
+   "role": "development",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "B",
+   "voice": "lead",
+   "row": 16,
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    },
+    {
+     "op": "shift",
+     "degrees": 2
+    }
+   ],
+   "role": "development",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "B",
+   "voice": "lead",
+   "row": 24,
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    },
+    {
+     "op": "shift",
+     "degrees": 3
+    }
+   ],
+   "role": "development",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "C",
+   "voice": "lead",
+   "row": 0,
+   "transform": [],
+   "role": "cadence",
+   "match": null
+  },
+  {
+   "motif": "m1",
+   "section": "C",
+   "voice": "lead",
+   "row": 16,
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    }
+   ],
+   "role": "cadence",
+   "match": null
+  }
+ ],
+ "instances_found": [
+  {
+   "section": "A",
+   "transform": [],
+   "notes_matched": 6,
+   "notes": 6,
+   "similarity": 1.0,
+   "exact": true,
+   "motif": "m1",
+   "row": 0
+  },
+  {
+   "section": "A",
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": -2
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 6,
+   "similarity": 0.667,
+   "exact": false,
+   "motif": "m1",
+   "row": 16
+  },
+  {
+   "section": "A2",
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 5
+    },
+    {
+     "op": "shift",
+     "degrees": -2
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 5,
+   "similarity": 0.8,
+   "exact": false,
+   "motif": "m1",
+   "row": 0
+  },
+  {
+   "section": "A2",
+   "transform": [
+    {
+     "op": "retrograde"
+    },
+    {
+     "op": "shift",
+     "degrees": -3
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 6,
+   "similarity": 0.667,
+   "exact": false,
+   "motif": "m1",
+   "row": 16
+  },
+  {
+   "section": "B",
+   "transform": [
+    {
+     "op": "retrograde"
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 6,
+   "similarity": 0.667,
+   "exact": false,
+   "motif": "m1",
+   "row": 0
+  },
+  {
+   "section": "B",
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": 1
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 6,
+   "similarity": 0.667,
+   "exact": false,
+   "motif": "m1",
+   "row": 16
+  },
+  {
+   "section": "C",
+   "transform": [
+    {
+     "op": "shift",
+     "degrees": 1
+    }
+   ],
+   "notes_matched": 4,
+   "notes": 6,
+   "similarity": 0.667,
+   "exact": false,
+   "motif": "m1",
+   "row": 0
+  },
+  {
+   "section": "C",
+   "transform": [
+    {
+     "op": "fragment",
+     "start": 0,
+     "count": 3
+    }
+   ],
+   "notes_matched": 3,
+   "notes": 3,
+   "similarity": 1.0,
+   "exact": true,
+   "motif": "m1",
+   "row": 16
+  }
+ ]
+}

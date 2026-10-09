@@ -1,0 +1,271 @@
+{
+ "calls": [
+  {
+   "project": "etude",
+   "op": "create_musical_state",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 1212,
+    "approx_tokens": 303
+   },
+   "error": null
+  },
+  {
+   "project": "etude",
+   "op": "continue_composition",
+   "cost": {
+    "runtime_s": 117.65,
+    "seconds": 117.65,
+    "reply_bytes": 1732,
+    "approx_tokens": 433
+   },
+   "error": null
+  },
+  {
+   "project": "etude",
+   "op": "export",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 231,
+    "approx_tokens": 57
+   },
+   "error": null
+  },
+  {
+   "project": "etude",
+   "op": "export",
+   "cost": {
+    "seconds": 4.58,
+    "reply_bytes": 234,
+    "approx_tokens": 58
+   },
+   "error": null
+  },
+  {
+   "project": "etude",
+   "op": "render_range",
+   "cost": {
+    "renders": 1,
+    "seconds": 4.82,
+    "reply_bytes": 362,
+    "approx_tokens": 90
+   },
+   "error": null
+  },
+  {
+   "project": "etude_draft",
+   "op": "create_musical_state",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 1218,
+    "approx_tokens": 304
+   },
+   "error": null
+  },
+  {
+   "project": "etude_draft",
+   "op": "continue_composition",
+   "cost": {
+    "runtime_s": 0.04,
+    "seconds": 0.04,
+    "reply_bytes": 557,
+    "approx_tokens": 139
+   },
+   "error": null
+  },
+  {
+   "project": "etude_draft",
+   "op": "render_range",
+   "cost": {
+    "renders": 1,
+    "seconds": 4.87,
+    "reply_bytes": 368,
+    "approx_tokens": 92
+   },
+   "error": null
+  },
+  {
+   "project": "etude_draft",
+   "op": "export",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 237,
+    "approx_tokens": 59
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "create_musical_state",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 726,
+    "approx_tokens": 181
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "export",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 236,
+    "approx_tokens": 59
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "hear_range",
+   "cost": {
+    "renders": 7,
+    "render_seconds": 6.77,
+    "seconds": 8.03,
+    "reply_bytes": 1024,
+    "approx_tokens": 256
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "diagnose_range",
+   "cost": {
+    "seconds": 1.27,
+    "reply_bytes": 5980,
+    "approx_tokens": 1495
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "improve",
+   "cost": {
+    "renders": 16,
+    "render_seconds": 15.37,
+    "runtime_s": 22.0,
+    "operations": 10,
+    "candidates": 4,
+    "retries": 3,
+    "model_tokens": 0,
+    "audio_model_seconds": 0.0,
+    "seconds": 22.01,
+    "reply_bytes": 1726,
+    "approx_tokens": 431
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "export",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 236,
+    "approx_tokens": 59
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "rollback_patch",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 63,
+    "approx_tokens": 15
+   },
+   "error": null
+  },
+  {
+   "project": "masked_lead",
+   "op": "commit_patch",
+   "cost": {
+    "seconds": 6.49,
+    "reply_bytes": 802,
+    "approx_tokens": 200
+   },
+   "error": "guard_failed"
+  },
+  {
+   "project": "with_memory",
+   "op": "create_musical_state",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 732,
+    "approx_tokens": 183
+   },
+   "error": null
+  },
+  {
+   "project": "with_memory",
+   "op": "hear_range",
+   "cost": {
+    "renders": 7,
+    "render_seconds": 6.4,
+    "seconds": 7.61,
+    "reply_bytes": 1025,
+    "approx_tokens": 256
+   },
+   "error": null
+  },
+  {
+   "project": "with_memory",
+   "op": "improve",
+   "cost": {
+    "renders": 6,
+    "render_seconds": 5.38,
+    "runtime_s": 7.78,
+    "operations": 3,
+    "candidates": 1,
+    "retries": 0,
+    "model_tokens": 0,
+    "audio_model_seconds": 0.0,
+    "seconds": 7.78,
+    "reply_bytes": 1055,
+    "approx_tokens": 263
+   },
+   "error": null
+  },
+  {
+   "project": "without_memory",
+   "op": "create_musical_state",
+   "cost": {
+    "seconds": 0.0,
+    "reply_bytes": 735,
+    "approx_tokens": 183
+   },
+   "error": null
+  },
+  {
+   "project": "without_memory",
+   "op": "hear_range",
+   "cost": {
+    "renders": 7,
+    "render_seconds": 6.46,
+    "seconds": 7.67,
+    "reply_bytes": 1026,
+    "approx_tokens": 256
+   },
+   "error": null
+  },
+  {
+   "project": "without_memory",
+   "op": "improve",
+   "cost": {
+    "renders": 16,
+    "render_seconds": 14.71,
+    "runtime_s": 20.67,
+    "operations": 10,
+    "candidates": 4,
+    "retries": 3,
+    "model_tokens": 0,
+    "audio_model_seconds": 0.0,
+    "seconds": 20.67,
+    "reply_bytes": 1410,
+    "approx_tokens": 352
+   },
+   "error": null
+  }
+ ],
+ "total_seconds": 213.6,
+ "model_tokens": 0,
+ "note": "no model was in these loops; approx_tokens is the size of each reply an agent would read (bytes / 4, an estimate)"
+}

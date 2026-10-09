@@ -366,11 +366,26 @@ def expand_patterns(text: str):
     return out
 
 
-def loads(text: str):
-    """Parse tracker text. Returns (events, metadata)."""
+def loads(text: str, rows: list = None):
+    """Parse tracker text. Returns (events, metadata).
+
+    `rows`, if given, is filled with one entry per grid row in play order:
+    {"line": source line, "tick": the tick the row starts on, "ticks": its
+    length, "event": the index in `events` where the row's own events
+    start}. That is the score's clock — row to tick to event — for
+    anything that has to say where in the music a sound came from."""
     meta = Metadata()
     columns = list(DEFAULT_COLUMNS)
     events = []
+    clock = {"tick": 0, "counted": 0}
+
+    def now() -> int:
+        """Ticks emitted so far (waits counted once, incrementally)."""
+        for event in events[clock["counted"]:]:
+            if isinstance(event, Wait):
+                clock["tick"] += event.ticks
+        clock["counted"] = len(events)
+        return clock["tick"]
 
     pending_rows = 0          # rows of silence not yet emitted as a Wait
     fm_sounding = [False] * 6
@@ -484,6 +499,9 @@ def loads(text: str):
                 f"({' '.join(columns)}). Use ... for an empty cell.\n  {raw.strip()}")
 
         flush_rows()
+        if rows is not None:
+            rows.append({"line": lineno, "tick": now(),
+                         "ticks": meta.ticks_per_row(), "event": len(events)})
         delayed = []          # (ticks into the row, column, cell)
         for column, cell in zip(columns, cells):
             ticks, cell = _split_delay(cell, meta, lineno, raw)
