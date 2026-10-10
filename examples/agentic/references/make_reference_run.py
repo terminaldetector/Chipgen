@@ -13,8 +13,10 @@ Mega Drive — every step through python/agent.py, the way an agent calls it.
     Purple Motion's "Satellite One", an S3M: a wide stereo field, voices
     placed apart — space and arrangement). Their sources' claims are
     checked against their audio
-3.  two of the agent's own sketches: a busier draft of B (energy 0.95)
-    and a busier draft of D (energy 0.9), kept as the direction for D
+3.  two of the agent's own sketches: another draft of B (energy 0.95)
+    and one of D (energy 0.9), kept as the direction for D. The built-in
+    composer's energy sets the dynamics and, above 0.7, the bass's octave
+    leaps (and an arpeggio's rate): the same notes, played stronger
 4.  the piece before: MP3
 5.  parallel listening on B: B (mix and voices), each reference's
     matching bars, the sketch of B — aligned on bars, loudness-matched,
@@ -156,7 +158,8 @@ def main(argv=None) -> int:
         energies=[0.9])))["sketches"][0]["id"]
     step("choose", _ok(agent.call(
         "choose_sketch", project_id="piece", sketch_id=s2,
-        why="a busier cadence: the direction for D")))
+        why="a stronger cadence (louder, the bass leaping octaves): the "
+            "direction for D")))
     # 4. before
     report["before"] = _render(agent, "piece", out, "before")
     p = agent._project("piece")
