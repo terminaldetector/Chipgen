@@ -348,6 +348,44 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     return out
 
 
+def _instrument_ab(project, spec: str, voice: str, before_rev: int,
+                   rec: dict, instrument_obs: List[dict],
+                   fragments: List[dict], heard: dict, folder: str,
+                   cache) -> dict:
+    """The instrument's change to listen to: the reference's matching
+    voice alone, the voice alone before and after, then the arrangement
+    before and after — one reel, each part at the same loudness
+    (`listen.write`), so the timbre is compared, not the level."""
+    frags = []
+    against = instrument_obs[0]["against"] if instrument_obs else None
+    ref_f = next((f for f in fragments if f["label"] == against), None)
+    rv = (heard.get("matched_voices") or {}).get(against) or {}
+    if ref_f is not None and rv.get("voice"):
+        try:
+            stem = REF.stem(project, ref_f["source"], rv["voice"],
+                            ref_f["t1"])
+            a = 2 * int(ref_f["t0"] * R.RATE)
+            frags.append(dict(ref_f, label=f"{ref_f['label']}: "
+                              f"{rv['voice']} alone",
+                              samples=stem[a:a + len(ref_f["samples"])]))
+        except AgenticError:
+            pass
+    alone, mixed = [], []
+    for rev, name, when in ((before_rev, rec["patch_before"], "before"),
+                            (None, rec["patch_after"], "after")):
+        f = LI.of_project(project, spec, rev=rev, stems=True, cache=cache,
+                          voices=[voice],
+                          label=f"{voice} {when} ({name}), in the mix")
+        solo = f.pop("stems")[voice]
+        alone.append(dict(f, label=f"{voice} {when} ({name}), alone",
+                          source=f"{f['source']}_{voice}", samples=solo))
+        mixed.append(f)
+    out = LI.write(frags + alone + mixed, folder, f"instrument_{voice}",
+                   mp3=True)
+    return {"reel": out["reel"].get("mp3") or out["reel"]["wav"],
+            "index": out["path"]}
+
+
 def _complete_goal(goal: Dict[str, float],
                    voices: List[dict]) -> Optional[str]:
     """An instrument goal made whole from the reference voices' readings.
@@ -530,10 +568,16 @@ def improve_toward(project, spec: str, references: List[str],
                                if not k.startswith("_")} for t in tried]
         report["worked_on"].append(work)
     if instrument_goal and voice:
+        before_rev = project.head
         rec = INS.design(project, voice, instrument_goal, spec, cache=cache,
                          ear=ear, max_candidates=instrument_budget,
                          why="from the references: " + "; ".join(
                              o["statement"] for o in instrument_obs))
+        ab = None
+        if rec["outcome"] == "committed":
+            ab = _instrument_ab(project, spec, voice, before_rev, rec,
+                                instrument_obs, fragments, heard, folder,
+                                cache)
         report["worked_on"].append({
             "observation": ",".join(o["id"] for o in instrument_obs),
             "dimension": "instrument", "statement": "; ".join(
@@ -546,6 +590,8 @@ def improve_toward(project, spec: str, references: List[str],
             "instrument": {k: rec.get(k) for k in
                            ("patch_before", "patch_after", "chosen",
                             "before", "cost", "decision")},
+            "ab_reel": (ab or {}).get("reel"),
+            "ab_index": (ab or {}).get("index"),
             "hypotheses": rec["candidates"]})
     report["head"] = project.head
     report["cost"] = {"runtime_s": round(time.time() - started, 2),

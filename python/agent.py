@@ -891,7 +891,8 @@ class Agent:
                 "worked_on": [{k: w.get(k) for k in
                                ("observation", "dimension", "statement",
                                 "outcome", "why", "committed_rev",
-                                "chosen", "goal", "goal_note", "note")} | {
+                                "chosen", "goal", "goal_note", "note",
+                                "ab_reel")} | {
                     "hypotheses": [{k: h.get(k) for k in
                                     ("id", "principle", "parameter",
                                      "chain", "before", "after",
