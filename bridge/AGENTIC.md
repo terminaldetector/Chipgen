@@ -142,6 +142,7 @@ under that root.
 | | `python/sequencer.py` | `reapply` writes the effect state when the chip still holds an offset (a delayed vibrato no longer leaves notes detuned) |
 | | `python/synthesis/placement.py` | the placement pass keeps a score's own Wait boundaries: it merged the Waits of empty rows, and once any program was installed that moved the arpeggio steps and vibrato ticks of every score |
 | | `python/agentic/loop.py`, `compose.py`, `agent.py` | `improve` and `continue_composition` took a Tool ear whatever ear was chosen; they take the chosen one now, its listening verdict recorded apart and able to veto |
+| | `python/agentic/state.py` | `Project.create` gives the new project its own copy of the state and its own history: a project made from another one's state numbered its first commit after that project's revisions, files its folder never had |
 | | `python/synthesis/backends/rp2a03.py` | the NES probe read a render's bytes as the pure-Python buffer does (`.data[0::2]`); with numpy installed that is a 2-D memoryview and raised. It reads the left channel through `analysis.split_stereo` now. Found by a reviewer who ran the suite with numpy; the whole suite now runs both ways |
 | | `README.md` | stale numbers and the batch note (above) |
 | added | `python/agentic/state.py` | MusicalState, project folder, revisions, rollback, repair, migrations |
@@ -159,9 +160,9 @@ under that root.
 | | `python/agentic/banks.py` | forge and FM banks in a project; a detune layer belongs to its voice |
 | | `python/agentic/fixtures.py` | `masked_lead`, `masked_lead_b`, `etude` |
 | | `python/agent.py` | the facade and its CLI |
-| | `tests/test_agentic.py` | the spec's tests A-F and their foundations (18 tests) |
+| | `tests/test_agentic.py` | the spec's tests A-F and their foundations (19 tests) |
 | | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
-| | `tests/test_agentic_refs.py` | their tests (13) |
+| | `tests/test_agentic_refs.py` | their tests (15) |
 | | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
@@ -265,6 +266,15 @@ What the readings can and cannot say:
   period: a score's grid that the audio confirms is kept, one it does not
   fit (a transcription's 50 ms grid: 150 BPM against the audio's 82) gives
   way to the audio's, and the record says which;
+- where a score's grid gave way to the audio's, its notes still sit on
+  its own rows. The share of onsets between the eighths is then a
+  reading only where an eighth of the beat it is counted on is a whole
+  number of those rows: the Gunstar transcription's 52 ms rows make an
+  eighth of 164 BPM 3.5 rows, every other straight eighth sits 26 ms off
+  (the reading allows 22), and its 0.65 measured the grid. That reading
+  is left out, from the score and from its render, and the comparison
+  says so (`not_compared`); a first run had swung the piece's hats
+  toward it;
 - `brightness` is the power centroid over the fundamental: comparable
   between two Mega Drive FM voices, a direction only between FM and a
   sample;
