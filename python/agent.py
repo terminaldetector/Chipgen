@@ -628,10 +628,25 @@ class Agent:
                 h = G.hear_continuation(project, step["section"], ear=ear,
                                         sketch_ids=ids,
                                         cache=self._cache(project))
+                # the join and the previous section, and apart from them
+                # the sketches: a short list must not cut the comparison
+                # with the chosen direction off
+                said = {"join": [], "previous": [], "sketch": []}
+                for o in h["observations"]:
+                    kind = o.get("against_kind")
+                    said[kind if kind in said else "previous"].append(
+                        o["statement"])
+                compared = [s for s in h.get("sketches", [])
+                            if s["compared"]]
                 summary = {"section": step["section"], "join": h.get("join"),
                            "reel": h["reel"], "listening": h["listening"],
-                           "observations": [o["statement"] for o in
-                                            h["observations"]][:8]}
+                           "observations": said["join"]
+                           + said["previous"][:6],
+                           "against_sketches": said["sketch"][:8] or (
+                               ["no reading differs from the sketch's by "
+                                "more than its threshold"] if compared
+                               else []),
+                           "sketches": h.get("sketches", [])}
                 heard_on.append(summary)
                 out["continuation"] = summary
             return out
@@ -833,8 +848,8 @@ class Agent:
         p = self._project(project_id)
         return {"sketches": [{k: s.get(k) for k in
                               ("id", "label", "status", "why", "reason",
-                               "base_rev", "rev", "section", "chain",
-                               "measured")}
+                               "chosen_because", "base_rev", "rev",
+                               "section", "chain", "measured")}
                              for s in SK.all_(p)]}
 
     def op_choose_sketch(self, project_id: str, sketch_id: str,
@@ -894,7 +909,7 @@ class Agent:
         p.save()
         return {k: out.get(k) for k in ("section", "range", "join", "reel",
                                          "index", "listening",
-                                         "model_listening")} | {
+                                         "model_listening", "sketches")} | {
             "observations": [{k: o.get(k) for k in
                               ("id", "basis", "against", "feature",
                                "statement")}

@@ -294,19 +294,26 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     checks = L.guards(base_tl, tl, base_h, h, rng, obs | {"voices": []},
                       hyp["chain"])
     checks.append(copy_guard(project, base_tl, tl, rng))
-    closed = None
+    closed = of_gap = None
+    step_note = ""
     if before is not None and after is not None and ref_reading is not None:
         gap0 = abs(ref_reading - before)
         gap1 = abs(ref_reading - after)
-        # progress toward the reference, as a share of the gap or of the
-        # reading itself, whichever is smaller: a passage with a quarter
-        # of the reference's onsets is not expected to reach it in one
-        # step, but doubling them is a step
+        # the share of the gap closed, as reported; and the step a change
+        # is held to, the share of the gap or of the reading itself,
+        # whichever is smaller: a passage with a quarter of the
+        # reference's onsets is not expected to reach it in one step, but
+        # doubling them is a step
+        of_gap = (gap0 - gap1) / gap0 if gap0 > 1e-9 else 0.0
         scale = min(gap0, abs(before)) if abs(before) > 1e-9 else gap0
         closed = (gap0 - gap1) / scale if scale > 1e-9 else 0.0
         if (ref_reading - before) * (ref_reading - after) < 0 and \
                 gap1 > gap0:
             closed = -abs(closed)           # overshot past it, further
+            of_gap = -abs(of_gap)
+        if scale < gap0 - 1e-9:
+            step_note = (f" (a step of {closed:.0%} of the reading itself, "
+                         f"the measure where the gap is larger than it)")
     failed = [g for g in checks if not g["ok"]]
     # the original's voices were written once, with the listening reel
     ab = LI.write([dict(ref_f), dict(ours_f, label="original", stems=None),
@@ -315,6 +322,8 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     out.update(deltas=[L._compact_delta(d) for d in deltas],
                before=before, after=after, reference=ref_reading,
                closed=round(closed, 3) if closed is not None else None,
+               closed_of_gap=round(of_gap, 3) if of_gap is not None
+               else None,
                guards=checks, ab_reel=ab["reel"].get("mp3")
                or ab["reel"]["wav"], ab_index=ab["path"],
                _content=content, _timeline=tl)
@@ -325,15 +334,16 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
         out.update(accepted=False, why="the reading could not be measured "
                                        "on the candidate")
     elif closed < MIN_CLOSED:
-        out.update(accepted=False, why=f"moved {closed:.0%} of the way "
-                                       f"(of the gap, or of the reading "
-                                       f"where the gap is larger), under "
+        out.update(accepted=False, why=f"{obs['feature']} {before:g} -> "
+                                       f"{after:g} (the reference: "
+                                       f"{ref_reading:g}): {of_gap:.0%} of "
+                                       f"the gap closed{step_note}, under "
                                        f"{MIN_CLOSED:.0%}")
     else:
         out.update(accepted=True, why=f"{obs['feature']} {before:g} -> "
                                       f"{after:g} (the reference: "
-                                      f"{ref_reading:g}); moved "
-                                      f"{closed:.0%} of the way, every "
+                                      f"{ref_reading:g}): {of_gap:.0%} of "
+                                      f"the gap closed{step_note}, every "
                                       f"guard kept")
     return out
 
@@ -388,16 +398,32 @@ def improve_toward(project, spec: str, references: List[str],
     seen, chosen = set(), []
     instrument_goal: Dict[str, float] = {}
     instrument_obs = []
+    kinds_taken = set()
     for o in measured:
         if o["feature"] in seen:
             continue
         seen.add(o["feature"])
-        if PRINCIPLES[o["feature"]][1] == "instrument":
+        kind = PRINCIPLES[o["feature"]][1]
+        if kind == "instrument":
             # every instrument gap goes to one design: one sound goal
             instrument_goal[o["feature"].split(".", 1)[1]] = o["theirs"]
             instrument_obs.append(o)
-        else:
+        elif kind not in kinds_taken:
+            # one gap of each kind: two density gaps would try the same
+            # changes twice, while a gap of another kind tries others
+            kinds_taken.add(kind)
             chosen.append(o)
+    # the reference voice's other readings of the same kind go with the
+    # goal (a vibrato's rate and delay with its depth), so the transfer
+    # carries the whole principle, not just the number that was missing
+    for o in instrument_obs:
+        theirs = (heard["readings"].get(o["against"]) or {}).get("voice") \
+            or {}
+        for key in ("vibrato_rate_hz", "vibrato_delay_ms"):
+            if key not in instrument_goal and \
+                    isinstance(theirs.get(key), (int, float)) and \
+                    "vibrato_depth_cents" in instrument_goal:
+                instrument_goal[key] = theirs[key]
     for o in chosen[:max_gaps]:
         dim, kind = PRINCIPLES[o["feature"]]
         ref_f = next(f for f in fragments if f["label"] == o["against"])
@@ -406,7 +432,15 @@ def improve_toward(project, spec: str, references: List[str],
         work = {"observation": o["id"], "dimension": dim,
                 "statement": o["statement"], "basis": o["basis"],
                 "against": o["against"], "trace": trace,
-                "hypotheses": [], "outcome": None}
+                "hypotheses": [], "outcome": None,
+                "measured_on": project.head}
+        if project.head != base_rev:
+            # the observation was made on the original; the changes are
+            # measured on the passage as the round has left it so far
+            work["note"] = (f"before is the passage as the earlier changes "
+                            f"of this round left it (revision "
+                            f"{project.head}), not the original the "
+                            f"observation was made on")
         if not hyps:
             work.update(outcome="no_hypothesis", why="no change this layer "
                         "knows carries that principle over here")
@@ -552,11 +586,14 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
                       "(features.py); the score's transition check"}
         fragments.append(dict(before, label="the join: the bar before"))
         fragments.append(dict(after, label="the join: the bar after"))
+    out["sketches"] = []
     for sid in sketch_ids or []:
         s = SK.get(project, sid)
         drafted = next((x for x in SK.content_of(project, sid)["sections"]
                         if x["id"] == section_id), None)
         if drafted is None:
+            out["sketches"].append({"id": sid, "compared": False,
+                                    "why": f"it has no {section_id}"})
             continue
         # the sketch's rows for this section, played by the piece as it
         # is now (its instruments, its other sections): the comparison is
@@ -564,17 +601,25 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
         c = state_content(project.state)
         if len(drafted["rows"]) != len(next(
                 x for x in c["sections"] if x["id"] == section_id)["rows"]):
+            out["sketches"].append({"id": sid, "compared": False,
+                                    "why": f"its {section_id} is not as "
+                                           f"long as the piece's"})
             continue
         c["sections"] = [dict(drafted) if x["id"] == section_id else x
                          for x in c["sections"]]
         try:
             stl = T.build(c)
-        except AgenticError:
+        except AgenticError as error:
+            out["sketches"].append({"id": sid, "compared": False,
+                                    "why": f"it does not build with the "
+                                           f"piece as it is now: {error}"})
             continue
         fragments.append(LI.of_timeline(
             stl, spec, f"sketch {sid} ({s['label']}), its {section_id} played "
             f"with the piece's instruments now", "sketch", sid,
             cache=cache))
+        out["sketches"].append({"id": sid, "label": s["label"],
+                                "compared": True})
     folder = folder or project.path("out", "continue", section_id)
     rep = LI.compare(project, [f for f in fragments if f["kind"] != "join"]
                      if len(fragments) > 1 else fragments, folder,

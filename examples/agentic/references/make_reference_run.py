@@ -190,6 +190,8 @@ def main(argv=None) -> int:
     final = LI.write(frags, os.path.join(out, "ab"), "B_before_after")
     report["ab_final"] = {k: final[k] for k in ("reel", "fragments",
                                                 "loudness", "path")}
+    step("sketches at the end", _ok(agent.call(
+        "list_sketches", project_id="piece")))
     # 9. the audio model
     report["audio_model_check"] = step("check listening",
                                        agent.call("check_listening"))
@@ -206,6 +208,7 @@ def main(argv=None) -> int:
 
 
 def _write_md(out, report, guided):
+    replies = {st["step"]: st["reply"] for st in report["steps"]}
     lines = ["# Improving a piece by reference: one run", ""]
     check = report["audio_model_check"]
     lines.append("**Listening:** " + (
@@ -219,6 +222,19 @@ def _write_md(out, report, guided):
                  f"next to the references, aligned on bars: "
                  f"`ab/B_before_after_reel.mp3`.")
     lines.append("")
+    lines.append("## The references")
+    for name in ("reference 1", "reference 2"):
+        ref = (replies.get(name) or {}).get("reference") or {}
+        if not ref:
+            continue
+        lines.append(f"- **{ref.get('id')}** {ref.get('title')} "
+                     f"({ref.get('kind')}; {ref.get('engine')}), for "
+                     f"{', '.join(ref.get('tags') or [])}: {ref.get('note')}")
+        lines.append(f"  - grid: {(ref.get('grid') or {}).get('how')}")
+        for c in ref.get("claims") or []:
+            lines.append(f"  - the source says {c['claim']}: "
+                         f"{c.get('verdict')} by its audio")
+    lines.append("")
     lines.append("## What was observed on B")
     for o in guided["observations"]:
         lines.append(f"- [{o['basis']}] {o['statement']}")
@@ -227,6 +243,8 @@ def _write_md(out, report, guided):
     for w in guided["worked_on"]:
         lines.append(f"### {w['dimension']}: {w['statement']}")
         lines.append(f"Outcome: **{w['outcome']}** — {w.get('why')}")
+        if w.get("note"):
+            lines.append(f"(Note: {w['note']}.)")
         for h in w["hypotheses"]:
             kept = "kept" if w.get("outcome") == "committed" and \
                 w.get("chosen") == h.get("id") else "rolled back"
@@ -234,6 +252,34 @@ def _write_md(out, report, guided):
             lines.append(f"- {h.get('id')} ({what}): {kept} — {h.get('why')}"
                          + (f" A/B: `{os.path.relpath(h['ab_reel'], out)}`"
                             if h.get("ab_reel") else ""))
+        lines.append("")
+    cont = replies.get("compose D, hear the continuation") or {}
+    for c in cont.get("continuations") or []:
+        lines.append(f"## The continuation: {c['section']} after the "
+                     f"section before it")
+        j = c.get("join") or {}
+        if j:
+            lines.append(f"- the join: {j.get('loudness_change_lufs'):+} LU, "
+                         f"onsets per beat {j.get('onsets_per_beat')}, "
+                         f"centroid {j.get('centroid_hz')} Hz; the score's "
+                         f"transition {'ok' if (j.get('score') or {}).get('ok') else 'with issues'}")
+        for text in c.get("observations") or []:
+            lines.append(f"- [measured] {text}")
+        for sk in c.get("sketches") or []:
+            lines.append(f"- sketch {sk['id']}: " + (
+                "compared, its D played with the piece's instruments now"
+                if sk["compared"] else f"not compared — {sk['why']}"))
+        for text in c.get("against_sketches") or []:
+            lines.append(f"  - [measured] {text}")
+        if c.get("reel"):
+            lines.append(f"- reel: `{os.path.relpath(c['reel'].get('mp3') or c['reel']['wav'], out)}`")
+        lines.append("")
+    sketches = (replies.get("sketches at the end") or {}).get("sketches")
+    if sketches:
+        lines.append("## The sketches kept")
+        for sk in sketches:
+            lines.append(f"- {sk['id']} {sk.get('label')}: {sk['status']}"
+                         + (f" — {sk.get('reason') or sk.get('chosen_because') or ''}"))
         lines.append("")
     with open(os.path.join(out, "report.md"), "w",
               encoding="utf-8") as handle:

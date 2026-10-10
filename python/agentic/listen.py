@@ -741,8 +741,9 @@ def compare(project, fragments: List[dict], folder: str, name: str,
 
 def _compact(r: dict) -> dict:
     keep = {k: r.get(k) for k in ("seconds", "onsets_per_beat",
-                                  "onsets_per_second", "attack_rise_ms",
-                                  "tail_ms")}
+                                  "notes_per_beat", "offbeat_share",
+                                  "onsets_from", "onsets_per_second",
+                                  "attack_rise_ms", "tail_ms")}
     keep["lufs"] = r["loudness"]["lufs"]
     keep["balance"] = r["balance"].get("shares")
     keep["centroid_hz"] = r["balance"].get("centroid_hz")

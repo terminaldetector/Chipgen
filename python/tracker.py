@@ -538,10 +538,10 @@ def loads(text: str, rows: list = None):
 
 def _reindex_rows(events, rows):
     """Point every row at its first event again after the forge's
-    placement pass rebuilt the list (it adds events and merges the Waits
-    of empty rows, so the indices recorded while parsing no longer hold).
-    A Wait that a row starts inside is split there, so each row begins on
-    an event boundary as it did; the timing is unchanged."""
+    placement pass rebuilt the list (it adds events, so the indices
+    recorded while parsing no longer hold). A Wait that a row starts
+    inside is split there, so each row begins on an event boundary as it
+    did; the timing is unchanged."""
     ticks = sorted({r["tick"] for r in rows})
     out, now, k = [], 0, 0
     first = {}

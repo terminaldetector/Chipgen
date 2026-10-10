@@ -123,33 +123,52 @@ class _Item:
 
 
 def _timeline(events, tps):
-    items, now = [], 0
+    """The events at their ticks, the score's length, and the ticks where
+    the score's own Waits end. The rebuilt list cuts its time at those
+    ticks too: the sequencer starts its effect clock afresh at every Wait,
+    so a pass that merged the Waits of empty rows would move every
+    arpeggio step and vibrato tick of the score — a score sounding
+    otherwise because a forge instrument is installed somewhere."""
+    items, cuts, now = [], [], 0
     for seq, ev in enumerate(events):
         if isinstance(ev, E.Wait):
             now += ev.ticks
+            cuts.append(now)
             continue
         items.append(_Item(now, float(seq), ev, tps))
         if isinstance(ev, E.Tempo):
             tps = ev.ticks_per_second
-    return items, now
+    return items, now, cuts
 
 
-def _rebuild(items, total, had_end):
+def _rebuild(items, total, had_end, cuts=()):
     items = [it for it in items if not it.drop]
     items.sort(key=lambda it: (it.tick, it.order))
     out, now = [], 0
     last = max([total] + [it.tick for it in items
                           if not isinstance(it.event, E.End)])
+    cuts = sorted(set(cuts))
+    k = 0
+
+    def wait_until(tick):
+        nonlocal now, k
+        while k < len(cuts) and cuts[k] <= now:
+            k += 1
+        while k < len(cuts) and cuts[k] < tick:
+            out.append(E.Wait(ticks=cuts[k] - now))
+            now = cuts[k]
+            k += 1
+        if tick > now:
+            out.append(E.Wait(ticks=tick - now))
+            now = tick
+
     for it in items:
         if isinstance(it.event, E.End):
             continue
-        if it.tick > now:
-            out.append(E.Wait(ticks=it.tick - now))
-            now = it.tick
+        wait_until(it.tick)
         out.append(it.event)
     if had_end:
-        if last > now:
-            out.append(E.Wait(ticks=last - now))
+        wait_until(last)
         out.append(E.End())
     return out
 
@@ -178,7 +197,7 @@ def expand(events, meta=None) -> list:
     if not needs_expansion(events):
         return events
     tps = getattr(meta, "ticks_per_second", None) or 192.0
-    items, total = _timeline(events, tps)
+    items, total, cuts = _timeline(events, tps)
     had_end = any(isinstance(it.event, E.End) for it in items)
     added: List[_Item] = []
 
@@ -194,7 +213,7 @@ def expand(events, meta=None) -> list:
     if report.layer_voices:
         added.append(_Item(0, -1.0, E.Marker(
             label=LAYERS_MARK + " ".join(sorted(report.layer_voices))), tps))
-    return _rebuild(items + added, total, had_end)
+    return _rebuild(items + added, total, had_end, cuts)
 
 
 #: events aimed at a part by name ("fm2", "opl3") that a detune layer

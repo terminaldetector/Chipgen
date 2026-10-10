@@ -263,6 +263,24 @@ def test_the_score_owns_a_channel_whose_pitch_it_moves():
         assert any("left out" in w for w in placement.LAST.warnings)
 
 
+def test_an_installed_program_leaves_a_score_that_does_not_use_it_alone():
+    # Once a program is installed the placement pass runs on every score.
+    # It must keep the score's own cuts of time: the effect clock starts
+    # afresh at each Wait, and merging the Waits of empty rows moved every
+    # arpeggio step of a score that never names the instrument.
+    import chipgen
+    from synthesis import program as P
+    score = ("bpm 150\nlpb 4\ninst fm0 square_lead\ncols fm0\nA-4/047\n"
+             + "...\n" * 7 + "===\n")
+    plain = chipgen.to_events(score)[0]
+    with _Isolated():
+        _install("elsewhere", "fm_saw_lead", P.parse({
+            "engine": "ym2612",
+            "vibrato": {"depth_cents": 30, "speed_hz": 6}}))
+        placed = chipgen.to_events(score)[0]
+    assert placed == plain, (placed, plain)
+
+
 def test_priority_decides_who_wins_a_register_both_write():
     import chipgen
     import events as E

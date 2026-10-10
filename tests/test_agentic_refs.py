@@ -19,7 +19,7 @@ import tempfile
 
 import support  # noqa: F401  (puts python/ on the path)
 
-from test_agentic import _ABEar, _project
+from test_agentic import _ABEar, _Banks, _project
 
 
 def _tmp():
@@ -372,27 +372,28 @@ def test_sketches_keep_drafts_and_rejections_with_their_reasons():
 # -- an instrument and a guided round (slow: they render) ---------------------------------------
 def test_an_instrument_moves_toward_a_sound_goal_or_stays():
     from agentic import fixtures, instrument as INS, state as S
-    p = _project(fixtures.masked_lead())
-    rec = INS.design(p, "lead", {"vibrato_depth_cents": 30.0,
-                                 "vibrato_rate_hz": 6.0,
-                                 "vibrato_delay_ms": 0.0}, "all",
-                     max_candidates=2)
-    assert rec["outcome"] == "committed", rec["why"]
-    kept = next(c for c in rec["candidates"] if c["id"] == rec["chosen"])
-    assert kept["profile"]["vibrato_depth_cents"] >= 20.0
-    assert all(g["ok"] for g in kept["guards"])
-    assert rec["listening"]["available"] is False
-    name = p.state["instruments"]["lead"]["patch"]
-    assert name != "square_lead" and name == rec["patch_after"]
-    banks = p.state["structure"]["banks"]
-    assert any(b["path"].endswith(f"{name}.bank.json") for b in banks)
-    rejected = [c for c in rec["candidates"] if c is not kept]
-    assert all(c.get("sketch") for c in rejected if c.get("profile"))
-    again = S.Project.open(p.root)          # the bank comes back with it
-    assert again.state["instruments"]["lead"]["patch"] == name
-    rev = again.rollback(0, {"why": "test"})
-    assert again.revision(rev)["hash"] == again.revision(0)["hash"]
-    shutil.rmtree(os.path.dirname(p.root))
+    with _Banks():          # what it installs leaves with it
+        p = _project(fixtures.masked_lead())
+        rec = INS.design(p, "lead", {"vibrato_depth_cents": 30.0,
+                                     "vibrato_rate_hz": 6.0,
+                                     "vibrato_delay_ms": 0.0}, "all",
+                         max_candidates=2)
+        assert rec["outcome"] == "committed", rec["why"]
+        kept = next(c for c in rec["candidates"] if c["id"] == rec["chosen"])
+        assert kept["profile"]["vibrato_depth_cents"] >= 20.0
+        assert all(g["ok"] for g in kept["guards"])
+        assert rec["listening"]["available"] is False
+        name = p.state["instruments"]["lead"]["patch"]
+        assert name != "square_lead" and name == rec["patch_after"]
+        banks = p.state["structure"]["banks"]
+        assert any(b["path"].endswith(f"{name}.bank.json") for b in banks)
+        rejected = [c for c in rec["candidates"] if c is not kept]
+        assert all(c.get("sketch") for c in rejected if c.get("profile"))
+        again = S.Project.open(p.root)          # the bank comes back with it
+        assert again.state["instruments"]["lead"]["patch"] == name
+        rev = again.rollback(0, {"why": "test"})
+        assert again.revision(rev)["hash"] == again.revision(0)["hash"]
+        shutil.rmtree(os.path.dirname(p.root))
 
 
 def test_a_guided_round_keeps_what_moves_toward_the_reference():
@@ -400,30 +401,31 @@ def test_a_guided_round_keeps_what_moves_toward_the_reference():
     from agentic import references as REF, state as S, timeline as T
     if not O.available():
         support.skip("libopenmpt is not installed")
-    src = _composed()
-    c = S.content(src.state)
-    busy, _ = P.apply(c, {"op": "density", "voice": "hats", "range": "all",
-                          "mode": "double"}, T.build(c))
-    other = _project(src.state)
-    other.commit(busy, {"why": "test"})
-    root = _tmp()
-    path = _module_of(other, root)
-    p = _project(src.state)
-    REF.add(p, path, tags=["rhythm"], seconds=20, check=False)
-    rep = G.improve_toward(p, "A", ["ref1"], folder=os.path.join(root, "g"),
-                           max_gaps=1)
-    rhythm = [w for w in rep["worked_on"] if w["dimension"] == "rhythm"]
-    assert rhythm, rep["worked_on"]
-    w = rhythm[0]
-    assert w["outcome"] == "committed", w
-    kept = next(h for h in w["hypotheses"] if h["id"] == w["chosen"])
-    assert kept["after"] > kept["before"] and kept["chain"][0]["op"] in (
-        "density", "rhythm")
-    assert any(g["name"] == "no_reference_copy" and g["ok"]
-               for g in kept["guards"])
-    assert os.path.exists(kept["ab_reel"])
-    assert p.head == 1 and rep["listening"]["available"] is False
-    shutil.rmtree(root)
+    with _Banks():          # what it installs leaves with it
+        src = _composed()
+        c = S.content(src.state)
+        busy, _ = P.apply(c, {"op": "density", "voice": "hats", "range": "all",
+                              "mode": "double"}, T.build(c))
+        other = _project(src.state)
+        other.commit(busy, {"why": "test"})
+        root = _tmp()
+        path = _module_of(other, root)
+        p = _project(src.state)
+        REF.add(p, path, tags=["rhythm"], seconds=20, check=False)
+        rep = G.improve_toward(p, "A", ["ref1"], folder=os.path.join(root, "g"),
+                               max_gaps=1)
+        rhythm = [w for w in rep["worked_on"] if w["dimension"] == "rhythm"]
+        assert rhythm, rep["worked_on"]
+        w = rhythm[0]
+        assert w["outcome"] == "committed", w
+        kept = next(h for h in w["hypotheses"] if h["id"] == w["chosen"])
+        assert kept["after"] > kept["before"] and kept["chain"][0]["op"] in (
+            "density", "rhythm")
+        assert any(g["name"] == "no_reference_copy" and g["ok"]
+                   for g in kept["guards"])
+        assert os.path.exists(kept["ab_reel"])
+        assert p.head == 1 and rep["listening"]["available"] is False
+        shutil.rmtree(root)
 
 
 def test_a_new_section_is_heard_with_the_one_before_the_join_and_a_sketch():
@@ -441,6 +443,8 @@ def test_a_new_section_is_heard_with_the_one_before_the_join_and_a_sketch():
     with open(out["index"]) as handle:
         kinds = [e["kind"] for e in _json.load(handle)["fragments"]]
     assert kinds == ["ours", "previous", "sketch"], kinds
+    assert out["sketches"] == [{"id": sid, "label": SK.get(p, sid)["label"],
+                                "compared": True}]
     assert out["listening"]["available"] is False
     assert os.path.exists(out["reel"]["wav"])
     for o in out["observations"]:
