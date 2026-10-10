@@ -162,7 +162,7 @@ under that root.
 | | `python/agent.py` | the facade and its CLI |
 | | `tests/test_agentic.py` | the spec's tests A-F and their foundations (19 tests) |
 | | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
-| | `tests/test_agentic_refs.py` | their tests (15) |
+| | `tests/test_agentic_refs.py` | their tests (17) |
 | | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
