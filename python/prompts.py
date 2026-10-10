@@ -806,8 +806,14 @@ def agents_md() -> str:
         "`work/agentic/`, not in your context: `create_musical_state`, "
         "`continue_composition` (section by section, resumable), "
         "`hear_range` (a measurement of the render, not listening), "
-        "`improve` (a measured fix, kept or undone), `export`. Every reply "
-        "is short JSON; `bridge/AGENTIC.md` lists the operations.",
+        "`improve` (a measured fix, kept or undone), `export`. With "
+        "references (`add_reference`: a recording, a score or a module, "
+        "and what it is a reference for), `listen_compare` cuts the same "
+        "bars from each, matched in loudness, and "
+        "`improve_toward_reference` tries changes that carry their "
+        "principles over (never their notes). Every reply is short JSON "
+        "and says whether anything listened; `bridge/AGENTIC.md` lists "
+        "the operations.",
         "",
     ])
 

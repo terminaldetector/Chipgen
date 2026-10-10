@@ -64,7 +64,10 @@ THRESHOLDS = {
     "voice.vibrato_depth_cents": ("absolute", 10.0),
     "voice.vibrato_rate_hz": ("absolute", 1.0),
     "voice.vibrato_delay_ms": ("absolute", 80.0),
+    "voice.vibrato_share": ("absolute", 0.2),
     "onsets_per_beat": ("relative", 0.30),
+    "notes_per_beat": ("relative", 0.25),
+    "offbeat_share": ("absolute", 0.10),
     "attack_rise_ms": ("absolute", 8.0),
     "loudness.lufs": ("absolute", 2.0),
     "stereo.side_over_mid_db": ("absolute", 6.0),
@@ -85,7 +88,12 @@ _WORDS = {
     "voice.vibrato_depth_cents": "the lead's vibrato depth (cents)",
     "voice.vibrato_rate_hz": "the lead's vibrato rate (Hz)",
     "voice.vibrato_delay_ms": "how long the lead's vibrato waits (ms)",
+    "voice.vibrato_share": "the share of the lead's notes with a vibrato",
     "onsets_per_beat": "onsets per beat",
+    "notes_per_beat": "notes per beat, every voice counted (how busy "
+                      "the texture is)",
+    "offbeat_share": "the share of onsets between the eighth notes "
+                     "(syncopation, swing)",
     "attack_rise_ms": "the onsets' rise time (ms)",
     "loudness.lufs": "loudness (LUFS)",
     "stereo.side_over_mid_db": "stereo width (side over mid, dB)",
@@ -346,17 +354,43 @@ def measure(project, f: dict, voice: Optional[str] = None,
     # third of the onsets (recall 0.31 and 0.38, measured), so a dense
     # passage reads sparser than it is from the audio alone
     out["onsets_per_beat_audio"] = out.get("onsets_per_beat")
+    beat = f.get("count_beat_s") or f.get("beat_s")
+    if beat and f.get("count_beat_s"):
+        # the per-beat counts on the beat the comparison chose (below)
+        out["onsets_per_beat_audio"] = round(
+            out["onsets"] / (f["seconds"] / beat), 2)
     starts = _score_starts(project, f)
-    if starts is not None and f.get("beat_s"):
+    if starts is not None and beat:
         merged = []
         for t in sorted(starts):
             if not merged or t - merged[-1] > 0.03:
                 merged.append(t)
-        out["onsets_per_beat"] = round(len(merged) / (f["seconds"]
-                                                      / f["beat_s"]), 2)
+        beats = f["seconds"] / beat
+        out["onsets_per_beat"] = round(len(merged) / beats, 2)
+        # every voice's notes, not merged: how busy the texture is (the
+        # merged count saturates at one a row once any voice plays every
+        # row)
+        out["notes_per_beat"] = round(len(starts) / beats, 2)
         out["onsets_from"] = "score"
     else:
+        merged = None
+        if beat:
+            out["onsets_per_beat"] = out["onsets_per_beat_audio"]
         out["onsets_from"] = "audio"
+    if beat:
+        # how much of the rhythm falls between the eighth notes: the share
+        # of onsets more than 6% of a beat from any eighth (a syncopated or
+        # swung part has more); from the score when there is one, from the
+        # audio's onsets as well
+        env, hop, _low = F.onset_envelope(F.mono_of(f["samples"]), RATE)
+        heard = _offbeat(F.peaks(env, hop), beat)
+        if heard is not None:
+            out["offbeat_share_audio"] = heard
+        score = _offbeat(merged, beat) if merged is not None else None
+        if score is not None:
+            out["offbeat_share"] = score
+        elif heard is not None:
+            out["offbeat_share"] = heard
     if voice and f["kind"] in ("ours", "sketch"):
         stem = (f.get("stems") or {}).get(voice)
         if stem is None:
@@ -376,10 +410,21 @@ def measure(project, f: dict, voice: Optional[str] = None,
     return out
 
 
+def _offbeat(times, beat: float) -> Optional[float]:
+    if not times:
+        return None
+    off = 0
+    for t in times:
+        phase = (t / beat) % 0.5 / 0.5
+        if min(phase, 1.0 - phase) > 0.12:
+            off += 1
+    return round(off / len(times), 3)
+
+
 def _score_starts(project, f: dict) -> Optional[List[float]]:
     """Note starts inside the fragment, from its score, in seconds from
     the fragment's start; None for a recording."""
-    if f["kind"] in ("ours", "sketch") and f.get("_timeline") is not None:
+    if f.get("_timeline") is not None:
         tl, rng = f["_timeline"], f["_range"]
         return [n["start"] - rng["t0"] for n in tl.notes
                 if rng["t0"] - 1e-6 <= n["start"] < rng["t1"] - 1e-6]
@@ -546,6 +591,17 @@ def compare(project, fragments: List[dict], folder: str, name: str,
     index = write(fragments, folder, name, mp3)
     readings = {}
     for f in fragments:
+        f.pop("count_beat_s", None)
+        if f["kind"] == "reference" and f.get("grid") == "audio" and \
+                f.get("beat_s") and ours.get("beat_s"):
+            # a beat estimated from audio can be the half or the double
+            # of the one a musician would count: per-beat readings are
+            # taken on the level nearest the piece's beat, and said so
+            import math
+            k = round(math.log2(ours["beat_s"] / f["beat_s"]))
+            k = max(-1, min(1, k))
+            if k:
+                f["count_beat_s"] = f["beat_s"] * (2.0 ** k)
         rv = None
         if f["kind"] == "reference":
             rv = match_voice(project, f["source"], role)
@@ -568,10 +624,16 @@ def compare(project, fragments: List[dict], folder: str, name: str,
                 mine.get("onsets_from") == "score":
             # a recording has no score: both are counted from the audio
             mine = dict(mine, onsets_per_beat=mine["onsets_per_beat_audio"],
+                        offbeat_share=mine.get("offbeat_share_audio"),
                         onsets_from="audio")
+            mine.pop("notes_per_beat", None)
+        said = set()
         for d in _differences(mine, theirs, use):
             if not _gap_is_large(d["reading"], d["ours"], d["reference"]):
                 continue
+            if d["reading"] in said:
+                continue            # a reading two dimensions share: once
+            said.add(d["reading"])
             k += 1
             words = _WORDS.get(d["reading"], d["reading"])
             per_voice = d["reading"].startswith("voice.")
@@ -582,20 +644,29 @@ def compare(project, fragments: List[dict], folder: str, name: str,
                 "fragment": ours["label"], "against": f["label"],
                 "against_kind": f["kind"],
                 "t0": 0.0, "t1": ours["seconds"],
+                "piece_time": [round(ours["t0"], 3), round(ours["t1"], 3)],
+                "bars": ours.get("bars"),
                 "voices": [voice] if per_voice and voice else [],
                 "reference_voice": (f.get("matched_voice") or {}).get(
                     "voice") if per_voice else None,
                 "ours": d["ours"], "theirs": d["reference"],
                 "gap": d["gap"],
                 "counted_from": theirs.get("onsets_from")
-                if d["reading"] == "onsets_per_beat" else None,
+                if d["reading"] in ("onsets_per_beat", "notes_per_beat",
+                                    "offbeat_share") else None,
                 "statement": f"{words}: ours {d['ours']:g}, the {whose} "
                              f"{d['reference']:g}" + (
                                  f" (counted from the "
                                  f"{theirs.get('onsets_from')}, on beats of "
                                  f"{ours.get('bpm') or 0:.0f} and "
-                                 f"{f.get('bpm') or 0:.0f} BPM)"
-                                 if d["reading"] == "onsets_per_beat"
+                                 f"{60.0 / (f.get('count_beat_s') or f.get('beat_s') or 0.5):.0f} BPM"
+                                 + (", the reference's estimated beat "
+                                    "taken at the level nearest ours"
+                                    if f.get("count_beat_s") else "")
+                                 + ")"
+                                 if d["reading"] in ("onsets_per_beat",
+                                                     "notes_per_beat",
+                                                     "offbeat_share")
                                  else ""),
                 "confidence": 0.7,
                 "evidence": {"method": "features.py on both fragments "

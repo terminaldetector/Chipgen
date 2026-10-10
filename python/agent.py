@@ -32,6 +32,24 @@ Operations (the spec's facade, plus `improve`, `trace` and `export`):
     load_bank              project_id, path, kind       forge or FM patches
     export                 project_id, format           trk vgm wav mp3 it
 
+References, parallel listening, sketches and instruments:
+
+    add_reference          project_id, path, tags, note a recording, score
+                                                        or module, checked
+    list_references        project_id                   their cards
+    listen_compare         project_id, range, refs      aligned fragments,
+                                                        reel, observations
+    check_listening        -                            is a model hearing?
+    design_instrument      project_id, voice, goal|ref  a voice's sound
+    save_sketch            project_id, label, rev?      keep a draft
+    section_sketches       project_id, section, seeds   other drafts of it
+    list_sketches          project_id                   drafts and why
+    choose_sketch          project_id, sketch_id, why   a direction
+    reject_sketch          project_id, sketch_id, why   with the reason
+    improve_toward_reference project_id, range, refs    one guided round
+    hear_continuation      project_id, section          previous, join,
+                                                        new, sketches
+
 Every reply is compact JSON: what was done, the ids to ask about next,
 and its cost (renders, seconds, the reply's own size). Audio, events and
 spectra stay on disk; replies carry paths and numbers. A refusal is
@@ -56,6 +74,11 @@ from agentic import compose as COMP              # noqa: E402
 from agentic import diagnose as D                # noqa: E402
 from agentic import ear as EAR                   # noqa: E402
 from agentic import fixtures                     # noqa: E402
+from agentic import guided as G                  # noqa: E402
+from agentic import instrument as INS            # noqa: E402
+from agentic import listen as LI                 # noqa: E402
+from agentic import references as REF            # noqa: E402
+from agentic import sketches as SK               # noqa: E402
 from agentic import loop as L                    # noqa: E402
 from agentic import memory as MEM                # noqa: E402
 from agentic import render as R                  # noqa: E402
@@ -161,6 +184,8 @@ class Agent:
             st = PRESETS[preset]()
             if intent:
                 st["identity"]["intent"] = intent
+            if plan:
+                st["structure"]["plan"] = plan
         else:
             st = S.new_state(intent, target=target, key=key, bpm=bpm,
                              columns=columns, constraints=constraints)
@@ -556,10 +581,13 @@ class Agent:
                                 sections: int = None, seed: int = None,
                                 hear: bool = True, correct: bool = False,
                                 budget: str = "3x2",
-                                mode: str = "auto") -> dict:
+                                mode: str = "auto",
+                                listen: bool = False,
+                                sketches=None) -> dict:
         p = self._project(project_id)
         ear = self._ear(mode, p)
         fixes = []
+        heard_on = []
 
         def correct_section(project, step):
             done = []
@@ -590,10 +618,28 @@ class Agent:
             fixes.extend(done)
             return done
 
+        def after(project, step):
+            out = {}
+            if correct:
+                out["corrections"] = correct_section(project, step)
+            if listen:
+                ids = sketches if sketches is not None else \
+                    [s["id"] for s in SK.chosen(project)]
+                h = G.hear_continuation(project, step["section"], ear=ear,
+                                        sketch_ids=ids,
+                                        cache=self._cache(project))
+                summary = {"section": step["section"], "join": h.get("join"),
+                           "reel": h["reel"], "listening": h["listening"],
+                           "observations": [o["statement"] for o in
+                                            h["observations"]][:8]}
+                heard_on.append(summary)
+                out["continuation"] = summary
+            return out
+
         r = COMP.continue_composition(p, goal=goal, stop_after=sections,
                                       seed=seed, hear=hear,
                                       cache=self._cache(p),
-                                      after=correct_section if correct
+                                      after=after if (correct or listen)
                                       else None, ear=ear)
         return {"status": r["status"], "next": r["next"],
                 "remaining": r["remaining"],
@@ -607,7 +653,7 @@ class Agent:
                                   for o in (x.get("heard") or {}).get(
                                       "observations", [])]}
                              for x in r["done"]],
-                "corrections": fixes,
+                "corrections": fixes, "continuations": heard_on,
                 "statement": EAR.statement(ear),
                 "listening": EAR.listening(ear),
                 "cost": {"runtime_s": r["runtime_s"]}}
@@ -631,6 +677,228 @@ class Agent:
 
     def op_export(self, project_id: str, format: str = "trk") -> dict:
         return CAP.export(self._project(project_id), format)
+
+    # -- references, listening, sketches, instruments ------------------------
+    def op_add_reference(self, project_id: str, path: str, tags=(),
+                         note: str = "", kind: str = None, title: str = "",
+                         author: str = "", licence: str = "",
+                         url: str = "", regions=None, bank: str = None,
+                         seconds: float = REF.DEFAULT_SECONDS,
+                         check: bool = True) -> dict:
+        """Keep someone else's music in the project as a reference (never
+        committed, never copied): what it is for (tags), the user's note,
+        where it came from; its grid and its source's claims, checked
+        against its audio."""
+        p = self._project(project_id)
+        r = REF.add(p, path, kind=kind, tags=list(tags or []), note=note,
+                    title=title, author=author, licence=licence, url=url,
+                    regions=regions, bank=bank, seconds=float(seconds),
+                    check=check)
+        return {"reference": REF.card(r)}
+
+    def op_list_references(self, project_id: str) -> dict:
+        p = self._project(project_id)
+        return {"references": [REF.card(r) for r in REF.all_(p)]}
+
+    def op_check_listening(self) -> dict:
+        """Whether an audio model that passed the probes is configured —
+        and if not, what that means for every reply."""
+        if self.adapter is None:
+            return {"available": False, "adapter": None,
+                    "why": "no audio adapter is configured (agent.py "
+                           "--audio-endpoint URL --audio-model NAME, an "
+                           "OpenAI-compatible endpoint that takes "
+                           "input_audio)",
+                    "consequence": "every observation is measured (or "
+                                   "assumed, and said so); nothing is "
+                                   "reported as heard"}
+        if self.verification is None:
+            self.verification = EAR.verify(self.adapter)
+        v = self.verification
+        return {"available": bool(v.get("verified")),
+                "adapter": self.adapter.name, "probes": v.get("answers"),
+                "why": v.get("why"),
+                "consequence": "observations from this model are reported "
+                               "as heard by model, apart from the "
+                               "measurements" if v.get("verified") else
+                               "the adapter did not pass the probes: it is "
+                               "not used as an ear"}
+
+    def op_listen_compare(self, project_id: str, range: str,
+                          references=(), bars: int = None, sketches=(),
+                          dims=None, voice: str = None,
+                          mode: str = "auto") -> dict:
+        """The range of the piece (its mix and its voices), each
+        reference's matching bars, the sketches' same range: aligned on
+        bars, loudness-matched, written one by one and as a reel;
+        observations with their basis."""
+        p = self._project(project_id)
+        cache = self._cache(p)
+        ear = self._ear(mode, p)
+        tl = self._timeline(p)
+        rng = tl.range(range)
+        n_bars = bars or (rng["bars"][1] - rng["bars"][0] + 1)
+        frags = [LI.of_project(p, range, stems=True, cache=cache)]
+        for rid in references or []:
+            reg = REF.get(p, rid)["regions"][0]
+            frags.append(LI.of_reference(p, rid, reg["bars"][0], n_bars))
+        for sid in sketches or []:
+            frags.append(LI.of_sketch(p, sid, range, cache=cache))
+        name = f"cmp_r{p.head}_" + "".join(ch if ch.isalnum() else "_"
+                                             for ch in range)
+        rep = LI.compare(p, frags, p.path("out", "listen"), name, ear=ear,
+                         voice=voice, dims=dims)
+        p.save()
+        return {"reel": rep["reel"], "index": rep["index"],
+                "fragments": [{k: e.get(k) for k in
+                               ("n", "label", "bars", "bpm", "seconds",
+                                "in_reel", "lufs_as_rendered", "gain_db")}
+                              for e in rep["fragments"]],
+                "observations": [{k: o.get(k) for k in
+                                  ("id", "basis", "dimension", "feature",
+                                   "against", "statement", "confidence",
+                                   "voices", "bars", "t0", "t1")}
+                                 for o in rep["observations"]],
+                "matched_voices": rep["matched_voices"],
+                "listening": rep["listening"],
+                "model_listening": rep["model_listening"],
+                "cost": {"renders": cache.misses}}
+
+    def op_design_instrument(self, project_id: str, voice: str,
+                             range: str = "all", goal: dict = None,
+                             reference: str = None, dims=None,
+                             mode: str = "auto", candidates: int = 6) -> dict:
+        """Work on a voice's instrument toward a sound goal: given, or read
+        off a reference's matching voice (on the dimensions it is tagged
+        for). -> the candidates, what each changed and measured, the one
+        kept or why none was."""
+        p = self._project(project_id)
+        cache = self._cache(p)
+        ear = self._ear(mode, p)
+        if goal is None:
+            if reference is None:
+                raise AgenticError("no_goal", "give a goal (readings) or a "
+                                   "reference to read one from")
+            ref = REF.get(p, reference)
+            role = p.state["instruments"].get(voice, {}).get("role", "lead")
+            matched = LI.match_voice(p, reference, role)
+            if not matched.get("voice"):
+                raise AgenticError("no_voice_to_match", f"{reference}: "
+                                   f"{matched.get('why')}")
+            tl = self._timeline(p)
+            rng = tl.range(range)
+            reg = ref["regions"][0]
+            f = LI.of_reference(p, reference, reg["bars"][0],
+                                rng["bars"][1] - rng["bars"][0] + 1)
+            prof = LI.measure(p, f, reference_voice=matched["voice"])
+            goal = INS.goal_from(prof.get("voice") or {},
+                                 dims or ref["tags"],
+                                 [c for c in ref.get("claims", [])
+                                  if matched["voice"] in c.get("voices",
+                                                               [])])
+            if not goal:
+                raise AgenticError("no_goal", f"{reference}'s "
+                                   f"{matched['voice']} gives no reading "
+                                   f"on {dims or ref['tags']}")
+        rec = INS.design(p, voice, goal, range, cache=cache, ear=ear,
+                         max_candidates=int(candidates))
+        return {"goal": goal, "outcome": rec["outcome"], "why": rec["why"],
+                "rev": rec.get("committed_rev"),
+                "patch": [rec["patch_before"], rec.get("patch_after")],
+                "before": rec["before"],
+                "candidates": [{k: c.get(k) for k in
+                                ("id", "round", "parameter", "change",
+                                 "accepted", "why", "closed", "profile",
+                                 "level_matched", "sketch")}
+                               for c in rec["candidates"]],
+                "listening": rec["listening"],
+                "listening_verdict": rec.get("listening_verdict"),
+                "decision": rec["decision"], "cost": rec["cost"]}
+
+    def op_save_sketch(self, project_id: str, label: str, rev: int = None,
+                       why: str = "") -> dict:
+        p = self._project(project_id)
+        sid = SK.save(p, label, rev=p.head if rev is None else int(rev),
+                      why=why)
+        return {"sketch": SK.get(p, sid)}
+
+    def op_section_sketches(self, project_id: str, section: str,
+                            seeds=(), energies=()) -> dict:
+        p = self._project(project_id)
+        ids = SK.section_variants(p, section, seeds=seeds,
+                                  energies=energies)
+        return {"sketches": [SK.get(p, i) for i in ids]}
+
+    def op_list_sketches(self, project_id: str) -> dict:
+        p = self._project(project_id)
+        return {"sketches": [{k: s.get(k) for k in
+                              ("id", "label", "status", "why", "reason",
+                               "base_rev", "rev", "section", "chain",
+                               "measured")}
+                             for s in SK.all_(p)]}
+
+    def op_choose_sketch(self, project_id: str, sketch_id: str,
+                         why: str = "") -> dict:
+        return {"sketch": SK.choose(self._project(project_id), sketch_id,
+                                    why)}
+
+    def op_reject_sketch(self, project_id: str, sketch_id: str,
+                         why: str) -> dict:
+        return {"sketch": SK.reject(self._project(project_id), sketch_id,
+                                    why)}
+
+    def op_improve_toward_reference(self, project_id: str, range: str,
+                                    references=(), sketches=None,
+                                    bars: int = None, dims=None,
+                                    voice: str = None, mode: str = "auto",
+                                    gaps: int = 3) -> dict:
+        """One guided round on the range toward the references: listen
+        side by side, trace each gap, try changes that carry the
+        principle over, keep what moves its reading with every guard
+        kept, roll the rest back as sketches with their reasons."""
+        p = self._project(project_id)
+        ear = self._ear(mode, p)
+        if sketches is None:
+            sketches = [s["id"] for s in SK.chosen(p)]
+        rep = G.improve_toward(p, range, list(references or []), bars=bars,
+                               dims=dims, ear=ear, sketch_ids=sketches,
+                               voice=voice, cache=self._cache(p),
+                               max_gaps=int(gaps))
+        return {"head": rep["head"], "reel": rep["reel"],
+                "listening": rep["listening"],
+                "statement": rep["statement"],
+                "observations": [{k: o.get(k) for k in
+                                  ("id", "basis", "dimension", "feature",
+                                   "statement", "bars", "confidence")}
+                                 for o in rep["observations"]],
+                "worked_on": [{k: w.get(k) for k in
+                               ("observation", "dimension", "statement",
+                                "outcome", "why", "committed_rev",
+                                "chosen", "goal")} | {
+                    "hypotheses": [{k: h.get(k) for k in
+                                    ("id", "principle", "parameter",
+                                     "chain", "before", "after",
+                                     "reference", "closed", "accepted",
+                                     "why", "ab_reel", "sketch")}
+                                   for h in w.get("hypotheses", [])]}
+                    for w in rep["worked_on"]],
+                "cost": rep["cost"]}
+
+    def op_hear_continuation(self, project_id: str, section: str,
+                             sketches=None, mode: str = "auto") -> dict:
+        p = self._project(project_id)
+        if sketches is None:
+            sketches = [s["id"] for s in SK.chosen(p)]
+        out = G.hear_continuation(p, section, ear=self._ear(mode, p),
+                                  sketch_ids=sketches, cache=self._cache(p))
+        p.save()
+        return {k: out.get(k) for k in ("section", "range", "join", "reel",
+                                         "index", "listening",
+                                         "model_listening")} | {
+            "observations": [{k: o.get(k) for k in
+                              ("id", "basis", "against", "feature",
+                               "statement")}
+                             for o in out["observations"]]}
 
 
 # -- command line --------------------------------------------------------------

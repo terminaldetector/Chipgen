@@ -40,9 +40,11 @@ INCLUDE_FILES = [
     "bridge/PROMPT.md",
     "bridge/LEARNING.md",
     "bridge/AGENTIC.md",
+    "bridge/AGENTIC_PORTING.md",
     "corpus/STUDY.md",
     "examples/README.md",
     "examples/agentic/README.md",
+    "examples/agentic/references/README.md",
     "core/README.md",
     "core/NUKED_OPN2_LICENSE",
 ]

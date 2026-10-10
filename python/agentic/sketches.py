@@ -163,9 +163,17 @@ def section_variants(project, section_id: str, seeds=(), energies=(),
             c["order"].append(section_id)
         T.build(c)                       # it must parse and play
         tag = f"seed {seed}" if seed is not None else f"energy {energy:g}"
+        current = next((s for s in st["sections"] if s["id"] == section_id),
+                       None)
+        same = current is not None and current["rows"] == section["rows"]
         out.append(save(project, label or f"{section_id} ({tag})", content=c,
-                        why=f"another draft of {section_id}: {tag}",
+                        why=f"another draft of {section_id}: {tag}" + (
+                            " — the same rows as the piece's: the composer "
+                            "develops this section from the theme, and "
+                            "the seed does not change that" if same
+                            else ""),
                         section=section_id,
                         measured={"motif": report.get("motif"),
-                                  "fitted_to_harmony": report.get("fitted")}))
+                                  "fitted_to_harmony": report.get("fitted"),
+                                  "same_as_piece": same}))
     return out

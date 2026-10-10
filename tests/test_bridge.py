@@ -133,7 +133,13 @@ def test_archive_is_lean_and_reproducible():
         # capabilities), agent.py, test_agentic.py and bridge/AGENTIC.md —
         # 92 KB compressed — and its examples' cards, records and state
         # (JSON, 27 KB). The examples' MP3s stay out, as all audio does.
-        assert size < 960 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 1100 KB for references and parallel listening:
+        # features.py, references.py, openmpt.py, listen.py,
+        # instrument.py, sketches.py, guided.py, their tests, the run's
+        # script and the porting proposal — 72 KB compressed, the largest
+        # references.py at 15 KB. References themselves never ship: they
+        # are other people's music.
+        assert size < 1100 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()

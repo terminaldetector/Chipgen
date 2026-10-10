@@ -60,6 +60,7 @@ READINGS = {
     "vibrato_depth_cents": (6.0, 20.0),
     "vibrato_rate_hz": (0.8, 2.0),
     "vibrato_delay_ms": (60.0, 150.0),
+    "vibrato_share": (0.15, 0.5),
     "brightness_development": (0.08, 0.25),
     "brightness_attack": (0.3, 1.0),
     "brightness_body": (0.3, 1.0),
@@ -82,7 +83,7 @@ def goal_from(profile: dict, dims=("modulation", "timbre"),
     want = set()
     if "modulation" in dims:
         want |= {"vibrato_depth_cents", "vibrato_rate_hz",
-                 "vibrato_delay_ms"}
+                 "vibrato_delay_ms", "vibrato_share"}
     if "timbre" in dims:
         want |= {"brightness_development", "brightness_body"}
     if "rhythm" in dims or "arrangement" in dims:
@@ -112,7 +113,7 @@ def distance(profile: dict, goal: dict) -> dict:
     for k, target in goal.items():
         tol, scale = READINGS.get(k, (0.0, abs(target) or 1.0))
         v = profile.get(k)
-        if k == "vibrato_depth_cents" and v is None:
+        if k in ("vibrato_depth_cents", "vibrato_share") and v is None:
             v = 0.0
         if v is None:
             parts[k] = 1.0
@@ -173,10 +174,24 @@ def _attack_ms(profile: dict) -> float:
     return max(20.0, min(120.0, rise + 15.0))
 
 
+def _delay_for_share(lengths: List[float], share: float) -> Optional[float]:
+    """The vibrato delay (ms) that lets about `share` of these notes swing:
+    the reference's habit — vibrato on the held notes, none on the short
+    ones — carried over to this part's own note lengths. A note needs
+    about 150 ms past the delay for a swing to be heard."""
+    if not lengths or share is None or share <= 0.0:
+        return None
+    ordered = sorted(lengths, reverse=True)
+    k = max(0, min(len(ordered) - 1, int(round(share * len(ordered))) - 1))
+    return max(0.0, round((ordered[k] - 0.15) * 1000.0 / 10.0) * 10.0)
+
+
 def hypotheses(compiled, profile: dict, goal: dict, voice: str,
-               channel: str, section: Optional[str] = None) -> List[dict]:
+               channel: str, section: Optional[str] = None,
+               lengths: Optional[List[float]] = None) -> List[dict]:
     """Changes that could bring the voice's notes to `goal`, each with the
-    parameter, what should happen and its scope."""
+    parameter, what should happen and its scope. `lengths` are the voice's
+    note lengths in the range (seconds)."""
     from synthesis import program as P
     base = _program_of(compiled)
     out = []
@@ -185,9 +200,16 @@ def hypotheses(compiled, profile: dict, goal: dict, voice: str,
         rate = goal.get("vibrato_rate_hz") or 5.5
         delay = goal.get("vibrato_delay_ms")
         delay = 200.0 if delay is None else delay
-        for k, (d, r, dl) in enumerate(((depth, rate, delay),
-                                        (0.7 * depth, rate, delay + 120.0),
-                                        (depth, rate, 0.0))):
+        fitted = _delay_for_share(lengths or [], goal.get("vibrato_share"))
+        tries = []
+        for d, r, dl in ([(depth, rate, fitted)] if fitted is not None
+                         else []) + [(depth, rate, delay),
+                                     (0.7 * depth, rate, delay + 120.0),
+                                     (depth, rate, 0.0)]:
+            key = (round(d, 1), round(r, 2), round(max(0.0, dl)))
+            if key not in tries:
+                tries.append(key)
+        for k, (d, r, dl) in enumerate(tries):
             p = base.copy()
             p.vibrato = {"depth_cents": round(d, 1),
                          "speed_hz": round(r, 2),
@@ -338,7 +360,7 @@ _FAMILY_READING = {"mod.tl": "brightness_development",
                    "car.ar": "attack_rise_ms", "car.rr": "release_ms"}
 #: the readings each family is meant to move
 _FAMILY_READINGS = {"vibrato": ("vibrato_depth_cents", "vibrato_rate_hz",
-                                "vibrato_delay_ms"),
+                                "vibrato_delay_ms", "vibrato_share"),
                     "mod.tl": ("brightness_development",),
                     "brightness": ("brightness_body", "brightness_attack"),
                     "car.ar": ("attack_rise_ms",),
@@ -563,8 +585,11 @@ def design(project, voice: str, goal: dict, spec: str,
     base_h = tool.hear(base_tl, rng)
     base_dist = distance(base_prof, goal)
     compiled = _base_compiled(ins["patch"])
+    lengths = [n["end"] - n["start"] for n in voice_notes(base_tl, rng,
+                                                           voice)]
     hyps = _interleave(hypotheses(compiled, base_prof, goal, voice,
-                                  ins["channel"], section))[:max_candidates]
+                                  ins["channel"], section,
+                                  lengths))[:max_candidates]
     record = {"voice": voice, "patch_before": ins["patch"], "goal": goal,
               "range": spec, "why": why,
               "before": {"profile": _compact(base_prof),
@@ -751,4 +776,4 @@ def _compact(profile: dict) -> dict:
             ("notes", "attack_rise_ms", "brightness_attack",
              "brightness_body", "brightness_development", "release_ms",
              "vibrato_depth_cents", "vibrato_rate_hz", "vibrato_delay_ms",
-             "rms_db", "pitch_centre_cents")}
+             "vibrato_share", "rms_db", "pitch_centre_cents")}

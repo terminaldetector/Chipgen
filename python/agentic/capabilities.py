@@ -103,6 +103,53 @@ _MD = {
                            "NES and OPL2 instruments are not for this "
                            "target", "none until rendered",
                            "banks.layer_columns, check_patches"),
+    "references": ("Supported", "Native",
+                   "recordings (MP3 by LAME, WAV), Chipgen scores with "
+                   "their FM bank, modules by libopenmpt; kept with "
+                   "provenance, tags and the user's note; the source's "
+                   "claims (tempo, vibrato, density, pan, echo) checked "
+                   "against the audio, voices rendered alone; the grid "
+                   "settled against the audio's beat",
+                   "one render or decode, plus a stem per checked voice",
+                   "references.card: each claim's verdict"),
+    "listen.parallel": ("Supported", "Emulated",
+                        "the same bars of the piece, each reference and "
+                        "the sketches, each on its own grid (tempos and "
+                        "lengths kept), BS.1770-matched, as files and one "
+                        "reel; the piece's voices alone at the mix's gain. "
+                        "Observations heard by model / measured / assumed; "
+                        "onsets counted from the score where there is one "
+                        "(the audio detector finds a third of a 16th-note "
+                        "texture's onsets)",
+                        "a render per fragment and stem",
+                        "listen.compare: the index and the basis of each"),
+    "instrument.design": ("Supported", "Native",
+                          "a sound goal (vibrato depth, rate, delay; "
+                          "brightness and its development; attack; "
+                          "release) reached with a program on the voice's "
+                          "patch or the score's vib command; measured "
+                          "alone and in the mix, level-matched, guarded; "
+                          "committed as a bank of its own or rolled back",
+                          "two renders per candidate, up to 6 + 2",
+                          "instrument.design: the candidates' readings"),
+    "patch.musical": ("Supported", "Native",
+                      "articulation (gate, legato), density (thin, "
+                      "double), rhythm (anticipate, swing by the cell's "
+                      "delay), voicing (nearest chord tone), pan (FM "
+                      "only), echo (a free FM channel); the melody is "
+                      "not theirs to move", "none until rendered",
+                      "loop.guards with what each op may change"),
+    "guided": ("Supported", "Emulated",
+               "one round on a range toward references: gaps traced, "
+               "principles (not notes) carried over, A/B reels with the "
+               "reference, a guard against any five-note figure of a "
+               "reference's melody; kept or rolled back as sketches",
+               "a few minutes a round here", "the round's report"),
+    "sketches": ("Supported", "Native",
+                 "drafts kept beside the piece: other seeds or energies "
+                 "for a section, rejected candidates with their reason, "
+                 "chosen directions heard against new sections",
+                 "none", "sketches.all_"),
     "compose.agent_rows": ("Supported", "Native",
                            "rows written by the agent, parsed by the "
                            "tracker; the same checks run", "none",
@@ -137,12 +184,15 @@ _OTHER = {
                        "(nes_apu)", "one render", "nes_apu"),
             "agentic_loop": ("Unsupported", None,
                              "MusicalState and the range render know the "
-                             "Mega Drive's columns only", None, None)},
+                             "Mega Drive's columns only; a port is "
+                             "proposed in bridge/AGENTIC_PORTING.md (no "
+                             "pan: the 2A03 is mono)", None, None)},
     "opl2": {"render": ("Supported", "Emulated",
                         "YM3812 emulation (opl2.py)", "one render",
                         "opl2"),
              "agentic_loop": ("Unsupported", None,
-                              "not wired: no OPL columns in the state",
+                              "not wired: no OPL columns in the state; a "
+                              "port is proposed in bridge/AGENTIC_PORTING.md",
                               None, None)},
     "schism": {"render": ("Supported", "Native",
                           "Impulse Tracker modules rendered by libopenmpt "
@@ -153,8 +203,9 @@ _OTHER = {
                                 "the Schism forge has its own loop for "
                                 "instruments; this one (state, ear, patch, "
                                 "compose) is not ported to IT samples, "
-                                "envelopes, NNA or effect memory", None,
-                                None)},
+                                "envelopes, NNA or effect memory (proposed "
+                                "in bridge/AGENTIC_PORTING.md); modules are "
+                                "read as references", None, None)},
 }
 
 TARGETS = ("megadrive", "nes", "opl2", "schism")

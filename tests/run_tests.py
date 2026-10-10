@@ -48,7 +48,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program", "test_agentic"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program", "test_agentic", "test_agentic_refs"]
 
 
 def _collect(pattern=""):
@@ -141,6 +141,14 @@ SLOW = {
     "test_agentic.test_memory_makes_a_similar_task_cheaper_and_is_checked_again",
     "test_agentic.test_a_forge_instrument_plays_in_its_voice_with_its_layer",
     "test_agentic.test_the_chosen_ear_judges_the_correction_and_can_veto_it",
+    "test_agentic_refs.test_a_module_reference_is_kept_with_its_source_checked_by_its_audio",
+    "test_agentic_refs.test_a_recording_gets_its_grid_from_its_audio_and_says_so",
+    "test_agentic_refs.test_a_score_reference_plays_its_own_bank_and_leaves_ours_alone",
+    "test_agentic_refs.test_fragments_are_cut_on_bars_and_brought_to_one_loudness",
+    "test_agentic_refs.test_an_observation_says_what_it_rests_on",
+    "test_agentic_refs.test_an_instrument_moves_toward_a_sound_goal_or_stays",
+    "test_agentic_refs.test_a_guided_round_keeps_what_moves_toward_the_reference",
+    "test_agentic_refs.test_a_new_section_is_heard_with_the_one_before_the_join_and_a_sketch",
     "test_program.test_a_round_of_repeats_stops_the_loop",
     "test_synthesis.test_a_dial_turned_up_reads_higher_on_every_chip",
     "test_synthesis.test_a_director_steers_a_run_and_a_broken_one_cannot_stop_it",

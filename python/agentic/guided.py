@@ -119,9 +119,12 @@ PRINCIPLES = {
     "voice.vibrato_depth_cents": ("modulation", "instrument"),
     "voice.vibrato_rate_hz": ("modulation", "instrument"),
     "voice.vibrato_delay_ms": ("modulation", "instrument"),
+    "voice.vibrato_share": ("modulation", "instrument"),
     "voice.brightness_development": ("timbre", "instrument"),
     "voice.brightness_body": ("timbre", "instrument"),
     "onsets_per_beat": ("rhythm", "texture"),
+    "notes_per_beat": ("arrangement", "texture"),
+    "offbeat_share": ("rhythm", "feel"),
     "stereo.side_over_mid_db": ("space", "space"),
     "stereo.correlation": ("space", "space"),
     "tail_ms": ("space", "space"),
@@ -184,7 +187,7 @@ def hypotheses(tl, rng: dict, obs: dict, trace: dict) -> List[dict]:
     spec = rng["spec"]
     out = []
     voices = trace["voices"]
-    if reading == "onsets_per_beat":
+    if reading in ("onsets_per_beat", "notes_per_beat"):
         pulse = [v for v, i in voices.items()
                  if i["role"] in ("hats", "drums", "arp", "bass")]
         if gap > 0:              # the reference is busier
@@ -196,12 +199,6 @@ def hypotheses(tl, rng: dict, obs: dict, trace: dict) -> List[dict]:
                     "principle": "a busier pulse from the accompaniment, "
                                  "not from the melody",
                     "expect": "onsets per beat up"})
-            for v in [x for x in pulse if voices[x]["role"] == "bass"]:
-                out.append({"id": f"anticipate_{v}", "chain": [
-                    {"op": "rhythm", "voice": v, "range": spec,
-                     "mode": "anticipate"}],
-                    "principle": "the bass pushing ahead of the beat",
-                    "expect": "onsets off the beat; drive"})
         else:
             for v in [x for x in pulse if voices[x]["role"] in
                       ("hats", "arp")]:
@@ -210,12 +207,23 @@ def hypotheses(tl, rng: dict, obs: dict, trace: dict) -> List[dict]:
                      "mode": "thin"}],
                     "principle": "air in the accompaniment",
                     "expect": "onsets per beat down"})
-        for v in [x for x in pulse if voices[x]["role"] == "hats"]:
-            out.append({"id": f"swing_{v}", "chain": [
-                {"op": "rhythm", "voice": v, "range": spec,
-                 "mode": "swing", "share": 0.33}],
-                "principle": "the off-beats late by a third of a row",
-                "expect": "a swung feel; onsets per beat unchanged"})
+    elif reading == "offbeat_share":
+        pulse = [v for v, i in voices.items()
+                 if i["role"] in ("hats", "bass", "arp")]
+        if gap > 0:             # the reference sits more between the beats
+            for v in [x for x in pulse if voices[x]["role"] == "bass"]:
+                out.append({"id": f"anticipate_{v}", "chain": [
+                    {"op": "rhythm", "voice": v, "range": spec,
+                     "mode": "anticipate"}],
+                    "principle": "the bass pushing ahead of the beat",
+                    "expect": "more onsets between the eighths"})
+            for v in [x for x in pulse if voices[x]["role"] == "hats"]:
+                out.append({"id": f"swing_{v}", "chain": [
+                    {"op": "rhythm", "voice": v, "range": spec,
+                     "mode": "swing", "share": 0.33}],
+                    "principle": "the off-beats late by a third of a row",
+                    "expect": "more onsets between the eighths; the "
+                              "same notes"})
     elif reading.startswith("stereo.") or reading == "tail_ms":
         fm = _fm_voices(tl)
         pads = [v for v in fm if voices.get(v, {}).get("role") in
@@ -277,8 +285,9 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     cand_m = LI.measure(project, cand_f)
     base_m = ours_f["_measured"]
     path = obs["feature"]
-    if path == "onsets_per_beat" and obs.get("counted_from") == "audio":
-        path = "onsets_per_beat_audio"      # as the reference was counted
+    if path in ("onsets_per_beat", "offbeat_share") and \
+            obs.get("counted_from") == "audio":
+        path += "_audio"                    # as the reference was counted
     before = _reading(base_m, path)
     after = _reading(cand_m, path)
     h = tool.hear(tl, tl.range(spec))
@@ -299,7 +308,8 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
                 gap1 > gap0:
             closed = -abs(closed)           # overshot past it, further
     failed = [g for g in checks if not g["ok"]]
-    ab = LI.write([dict(ref_f), dict(ours_f, label="original"),
+    # the original's voices were written once, with the listening reel
+    ab = LI.write([dict(ref_f), dict(ours_f, label="original", stems=None),
                    dict(cand_f, label=f"candidate {hyp['id']}")],
                   folder, f"{obs['id']}_{hyp['id']}", mp3=True)
     out.update(deltas=[L._compact_delta(d) for d in deltas],
@@ -479,6 +489,7 @@ def improve_toward(project, spec: str, references: List[str],
             "basis": "measured", "goal": instrument_goal,
             "outcome": rec["outcome"], "why": rec["why"],
             "committed_rev": rec.get("committed_rev"),
+            "chosen": rec.get("chosen"),
             "instrument": {k: rec.get(k) for k in
                            ("patch_before", "patch_after", "chosen",
                             "before", "cost", "decision")},
@@ -488,3 +499,106 @@ def improve_toward(project, spec: str, references: List[str],
                       "renders": cache.misses}
     project.save()
     return report
+
+
+# -- continuing: the previous section, the join, the new one, the sketches ------------------
+def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
+                      folder: Optional[str] = None,
+                      cache: Optional[R.Cache] = None) -> dict:
+    """After a section is written: the previous section, the join (the
+    last bar before and the first bar of the new one) and the new section,
+    with the chosen sketches' versions of it, side by side. -> how the new
+    section moves on from the previous one, what happens at the join, how
+    it differs from each sketch, and whether anything listened."""
+    cache = cache or R.Cache(project.path("renders"))
+    ear = ear or EAR.ToolEar(cache)
+    tl = T.build(state_content(project.state))
+    slots = tl.slots()
+    k = next((i for i, s in enumerate(slots)
+              if s["section"] == section_id), None)
+    if k is None:
+        raise AgenticError("no_section", f"{section_id!r} does not play")
+    new = slots[k]
+    spec = f"rows {new['row0']}-{new['row1'] - 1}"
+    fragments = [LI.of_timeline(tl, spec, f"new section {section_id}",
+                                "ours", f"r{project.head}", cache=cache)]
+    out = {"section": section_id, "range": spec}
+    if k > 0:
+        prev = slots[k - 1]
+        fragments.append(LI.of_timeline(
+            tl, f"rows {prev['row0']}-{prev['row1'] - 1}",
+            f"previous section {prev['section']}", "previous",
+            prev["section"], cache=cache))
+        rpb = tl.rows_per_bar
+        a = max(prev["row0"], new["row0"] - rpb)
+        b = min(new["row1"], new["row0"] + rpb)
+        before = LI.of_timeline(tl, f"rows {a}-{new['row0'] - 1}",
+                                "the bar before", "join", "before",
+                                cache=cache)
+        after = LI.of_timeline(tl, f"rows {new['row0']}-{b - 1}",
+                               "the bar after", "join", "after", cache=cache)
+        mb = F.fragment(before["samples"], R.RATE, before["beat_s"])
+        ma = F.fragment(after["samples"], R.RATE, after["beat_s"])
+        from . import compose as C
+        out["join"] = {
+            "loudness_change_lufs": round(ma["loudness"]["lufs"]
+                                          - mb["loudness"]["lufs"], 2),
+            "onsets_per_beat": [mb.get("onsets_per_beat"),
+                                ma.get("onsets_per_beat")],
+            "centroid_hz": [mb["balance"].get("centroid_hz"),
+                            ma["balance"].get("centroid_hz")],
+            "score": C.transition(tl.content, prev["section"], section_id),
+            "method": "the bar on each side of the join measured alone "
+                      "(features.py); the score's transition check"}
+        fragments.append(dict(before, label="the join: the bar before"))
+        fragments.append(dict(after, label="the join: the bar after"))
+    for sid in sketch_ids or []:
+        s = SK.get(project, sid)
+        drafted = next((x for x in SK.content_of(project, sid)["sections"]
+                        if x["id"] == section_id), None)
+        if drafted is None:
+            continue
+        # the sketch's rows for this section, played by the piece as it
+        # is now (its instruments, its other sections): the comparison is
+        # of the composition, not of what changed elsewhere since
+        c = state_content(project.state)
+        if len(drafted["rows"]) != len(next(
+                x for x in c["sections"] if x["id"] == section_id)["rows"]):
+            continue
+        c["sections"] = [dict(drafted) if x["id"] == section_id else x
+                         for x in c["sections"]]
+        try:
+            stl = T.build(c)
+        except AgenticError:
+            continue
+        fragments.append(LI.of_timeline(
+            stl, spec, f"sketch {sid} ({s['label']}), its {section_id} played "
+            f"with the piece's instruments now", "sketch", sid,
+            cache=cache))
+    folder = folder or project.path("out", "continue", section_id)
+    rep = LI.compare(project, [f for f in fragments if f["kind"] != "join"]
+                     if len(fragments) > 1 else fragments, folder,
+                     f"continue_{section_id}", ear=ear)
+    joins = []
+    j = out.get("join") or {}
+    if abs(j.get("loudness_change_lufs") or 0.0) >= 3.0:
+        joins.append(f"the join changes loudness by "
+                     f"{j['loudness_change_lufs']:+.1f} LU from the bar "
+                     f"before to the bar after")
+    cs = j.get("centroid_hz") or [None, None]
+    if cs[0] and cs[1] and abs(cs[1] - cs[0]) / cs[0] >= 0.25:
+        joins.append(f"the join changes the spectral centroid "
+                     f"{cs[0]:.0f} -> {cs[1]:.0f} Hz")
+    for issue in (j.get("score") or {}).get("issues", []):
+        joins.append(f"the score at the join: {issue}")
+    join_obs = [{"id": f"J{k + 1}", "basis": "measured",
+                 "dimension": "development", "feature": "join",
+                 "against": "the bar before", "against_kind": "join",
+                 "statement": text, "confidence": 0.7}
+                for k, text in enumerate(joins)]
+    out.update(observations=join_obs + rep["observations"],
+               reel=rep["reel"], index=rep["index"],
+               listening=rep["listening"],
+               model_listening=rep["model_listening"],
+               readings=rep["readings"])
+    return out

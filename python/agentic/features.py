@@ -464,6 +464,11 @@ def vibrato(track: List[tuple], min_depth: float = 6.0) -> dict:
             else None}
 
 
+#: A note whose pitch swings this much (cents, p90) counts as one with a
+#: vibrato; more than 150 is a slide or an arpeggio, not a vibrato.
+VIBRATO_AUDIBLE_CENTS = 8.0
+
+
 def note_profile(mono, rate: float, notes: List[dict],
                  min_len_s: float = 0.25, limit: int = 8) -> dict:
     """What a voice's notes do, read on the voice alone: for up to `limit`
@@ -501,6 +506,10 @@ def note_profile(mono, rate: float, notes: List[dict],
     def phase_value(r, phase, key):
         return ((r.get("phases") or {}).get(phase) or {}).get(key)
 
+    swinging = [x for x in reads
+                if (x["vibrato"].get("depth_cents") or 0.0)
+                >= VIBRATO_AUDIBLE_CENTS
+                and (x["vibrato"].get("depth_cents") or 0.0) <= 150.0]
     attack_b = med(phase_value(x["reading"], "attack", "brightness")
                    for x in reads)
     body_b = med(phase_value(x["reading"], "body", "brightness")
@@ -515,14 +524,21 @@ def note_profile(mono, rate: float, notes: List[dict],
         if attack_b and body_b else None,
         "release_ms": med((x["reading"].get("release") or {}).get(
             "ms_to_minus20") for x in reads),
+        # a part uses vibrato on some notes (the held ones) and not on
+        # others: the depth, rate and delay are those of the notes that
+        # swing, and the share says how many do
         "vibrato_depth_cents": med(x["vibrato"].get("depth_cents")
-                                   for x in reads),
-        "vibrato_rate_hz": med(x["vibrato"].get("rate_hz") for x in reads),
+                                   for x in swinging) if swinging else
+        med(x["vibrato"].get("depth_cents") for x in reads),
+        "vibrato_rate_hz": med(x["vibrato"].get("rate_hz")
+                               for x in swinging),
         "vibrato_delay_ms": med(x["vibrato"].get("delay_ms")
-                                for x in reads),
+                                for x in swinging),
+        "vibrato_share": round(len(swinging) / len(reads), 3),
         "method": "synthesis/phases.py per note (attack, body brightness = "
                   "power centroid over f0); vibrato from a 10 ms pitch track "
-                  "(autocorrelation)"}
+                  "(autocorrelation), read on the notes that swing at least "
+                  f"{VIBRATO_AUDIBLE_CENTS:g} cents"}
 
 
 # -- a whole fragment ----------------------------------------------------------------------
@@ -551,10 +567,13 @@ DIMENSIONS = {
                "balance.shares.low", "voice.brightness_attack",
                "voice.brightness_body", "voice.brightness_development"],
     "modulation": ["voice.vibrato_depth_cents", "voice.vibrato_rate_hz",
-                   "voice.vibrato_delay_ms", "voice.brightness_development"],
-    "rhythm": ["onsets_per_beat", "attack_rise_ms"],
-    "arrangement": ["onsets_per_beat", "balance.shares.low",
-                    "balance.shares.mid", "balance.shares.high"],
+                   "voice.vibrato_delay_ms", "voice.vibrato_share",
+                   "voice.brightness_development"],
+    "rhythm": ["onsets_per_beat", "notes_per_beat", "offbeat_share",
+               "attack_rise_ms"],
+    "arrangement": ["notes_per_beat", "onsets_per_beat",
+                    "balance.shares.low", "balance.shares.mid",
+                    "balance.shares.high"],
     "development": ["loudness.lufs", "onsets_per_beat",
                     "balance.centroid_hz"],
     "space": ["stereo.side_over_mid_db", "stereo.correlation", "tail_ms"],

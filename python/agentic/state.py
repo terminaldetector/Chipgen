@@ -229,7 +229,9 @@ class Project:
                                f"instead", root=root)
         for sub in ("revisions", "renders", "out"):
             os.makedirs(os.path.join(root, sub), exist_ok=True)
-        project = cls(root, state)
+        # its own copy: two projects made from one state must not share
+        # it (a commit to one would change the other's music)
+        project = cls(root, copy.deepcopy(state))
         project._write_revision(0, None, {"kind": "create"})
         project.save()
         return project
