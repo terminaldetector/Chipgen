@@ -348,6 +348,30 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     return out
 
 
+def _complete_goal(goal: Dict[str, float],
+                   voices: List[dict]) -> Optional[str]:
+    """An instrument goal made whole from the reference voices' readings.
+    The rate goes with a vibrato's depth, so the transfer carries the
+    swing, not just the number that was missing. The delay does not: it
+    is the length of the reference's own held notes (the Gunstar lead's
+    800 ms is longer than a beat of the étude). Which notes swing is what
+    carries over (the share), and the design fits the delay to this
+    part's own note lengths from it (instrument._delay_for_share). ->
+    why a delay was dropped, or None."""
+    for theirs in voices:
+        if "vibrato_rate_hz" not in goal and \
+                isinstance(theirs.get("vibrato_rate_hz"), (int, float)) and \
+                "vibrato_depth_cents" in goal:
+            goal["vibrato_rate_hz"] = theirs["vibrato_rate_hz"]
+    if "vibrato_share" in goal and "vibrato_delay_ms" in goal:
+        return (f"the reference's vibrato delay "
+                f"({goal.pop('vibrato_delay_ms'):g} ms) is not a goal: it "
+                f"is the length of its own notes; the share of notes that "
+                f"swing is, and the delay is fitted to this part's notes "
+                f"from it")
+    return None
+
+
 # -- one round --------------------------------------------------------------------------------
 def improve_toward(project, spec: str, references: List[str],
                    bars: Optional[int] = None, dims=None, ear=None,
@@ -413,28 +437,9 @@ def improve_toward(project, spec: str, references: List[str],
             # changes twice, while a gap of another kind tries others
             kinds_taken.add(kind)
             chosen.append(o)
-    # the reference voice's rate goes with a vibrato's depth, so the
-    # transfer carries the swing, not just the number that was missing.
-    # Its delay does not: it is the length of the reference's own held
-    # notes (the Gunstar lead's 800 ms is longer than a beat of the
-    # étude). Which notes swing is what carries over (the share), and the
-    # design fits the delay to this part's own note lengths from it
-    # (instrument._delay_for_share)
-    for o in instrument_obs:
-        theirs = (heard["readings"].get(o["against"]) or {}).get("voice") \
-            or {}
-        if "vibrato_rate_hz" not in instrument_goal and \
-                isinstance(theirs.get("vibrato_rate_hz"), (int, float)) and \
-                "vibrato_depth_cents" in instrument_goal:
-            instrument_goal["vibrato_rate_hz"] = theirs["vibrato_rate_hz"]
-    goal_note = None
-    if "vibrato_share" in instrument_goal and \
-            "vibrato_delay_ms" in instrument_goal:
-        goal_note = (f"the reference's vibrato delay "
-                     f"({instrument_goal.pop('vibrato_delay_ms'):g} ms) is "
-                     f"not a goal: it is the length of its own notes; the "
-                     f"share of notes that swing is, and the delay is "
-                     f"fitted to this part's notes from it")
+    goal_note = _complete_goal(instrument_goal, [
+        (heard["readings"].get(o["against"]) or {}).get("voice") or {}
+        for o in instrument_obs])
     for o in chosen[:max_gaps]:
         dim, kind = PRINCIPLES[o["feature"]]
         ref_f = next(f for f in fragments if f["label"] == o["against"])

@@ -396,6 +396,26 @@ def test_an_instrument_moves_toward_a_sound_goal_or_stays():
         shutil.rmtree(os.path.dirname(p.root))
 
 
+def test_a_vibrato_goal_takes_the_references_share_not_its_delay():
+    # A reference's vibrato delay is the length of its own held notes; the
+    # share of notes that swing is what carries over, and the delay is
+    # fitted to this part's notes from it.
+    from agentic import guided as G, instrument as INS
+    goal = {"vibrato_depth_cents": 56.1, "vibrato_share": 0.6,
+            "vibrato_delay_ms": 800.0}
+    why = G._complete_goal(goal, [{"vibrato_rate_hz": 7.67,
+                                   "vibrato_delay_ms": 800.0}])
+    assert goal == {"vibrato_depth_cents": 56.1, "vibrato_share": 0.6,
+                    "vibrato_rate_hz": 7.67}, goal
+    assert "800" in why
+    lengths = [0.2, 0.3, 0.6, 0.9]
+    delay = INS._delay_for_share(lengths, 0.5)
+    assert delay == 450.0
+    # half of the notes last 150 ms past it: those swing
+    assert sum(1 for n in lengths
+               if n - delay / 1000.0 >= 0.15 - 1e-9) == 2
+
+
 def test_a_guided_round_keeps_what_moves_toward_the_reference():
     from agentic import guided as G, openmpt as O, patch as P
     from agentic import references as REF, state as S, timeline as T
