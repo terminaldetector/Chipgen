@@ -412,6 +412,35 @@ def test_a_transcriptions_rows_that_miss_the_eighths_give_no_offbeat_reading():
     assert LI._rows_misfit(ref, 0.3648) is None
 
 
+def test_a_combination_that_broke_a_guard_is_tried_with_the_next_best():
+    # Each family's best change put together can break a guard neither
+    # broke alone; the round then takes each family's next best in turn.
+    from agentic import instrument as INS
+    compiled = INS._base_compiled("square_lead")
+    goal = {"vibrato_depth_cents": 56.0, "vibrato_rate_hz": 7.5,
+            "vibrato_share": 0.6, "brightness_body": 2.3}
+    hyps = INS.hypotheses(compiled, {"brightness_body": 6.4}, goal, "lead",
+                          "fm1", lengths=[0.2, 0.3, 0.6, 0.9])
+    ids = [h["id"] for h in hyps]
+    assert {"vib1", "vib2", "br1", "br2"} <= set(ids), ids
+    # a made-up first round: vib2 then vib1 nearest on the vibrato's
+    # readings, br2 then br1 on the body's brightness
+    parts = {"vib1": 0.4, "vib2": 0.2, "vib3": 0.8, "vib4": 0.9,
+             "br1": 2.0, "br2": 1.0}
+    tried = []
+    for h in hyps:
+        part = parts.get(h["id"], 5.0)
+        tried.append({"distance": {"parts": {
+            k: part for k in INS._FAMILY_READINGS.get(h["family"], ())
+            if k in goal}}, "guards": [{"ok": True}], "closed": 0.3})
+    joint = INS.combine(compiled, goal, hyps, tried)
+    assert joint["parts"] == ["br2", "vib2"], joint["parts"]
+    assert INS.combine(compiled, goal, hyps, tried,
+                       avoid={"vib2"})["parts"] == ["br2", "vib1"]
+    assert INS.combine(compiled, goal, hyps, tried,
+                       avoid={"br2"})["parts"] == ["br1", "vib2"]
+
+
 def test_a_vibrato_goal_takes_the_references_share_not_its_delay():
     # A reference's vibrato delay is the length of its own held notes; the
     # share of notes that swing is what carries over, and the delay is

@@ -368,15 +368,16 @@ _FAMILY_READINGS = {"vibrato": ("vibrato_depth_cents", "vibrato_rate_hz",
 
 
 def combine(compiled, goal: dict, hyps: List[dict],
-            tried: List[dict]) -> Optional[dict]:
+            tried: List[dict], avoid=()) -> Optional[dict]:
     """The best program change of each family that moved its own readings
     toward the goal (and broke no guard but the share of the whole
-    distance), put together in one program."""
+    distance), put together in one program. `avoid`: changes (ids) not to
+    use, for another try after a combination with them broke a guard."""
     best = {}
     for h, c in zip(hyps, tried):
         fam = h.get("family")
         if fam not in _FAMILY_READINGS or h["scope"] != "program" or \
-                not c.get("distance"):
+                not c.get("distance") or h["id"] in avoid:
             continue
         if any(not g["ok"] for g in c.get("guards", [])):
             continue
@@ -413,7 +414,7 @@ def combine(compiled, goal: dict, hyps: List[dict],
                     "linear" if shape is not None else "step", None, None,
                     "program")]
     return {"id": "+".join(parts), "family": "combined", "round": 3,
-            "scope": "program", "program": p,
+            "parts": parts, "scope": "program", "program": p,
             "parameter": "together: " + ", ".join(
                 useful[f][1]["parameter"] for f in sorted(useful)),
             "change": {h: useful[f][1]["change"]
@@ -701,10 +702,23 @@ def design(project, voice: str, goal: dict, spec: str,
     for h in more:
         record["candidates"].append(evaluate(h))
     # round 3: the best change of each family together, when more than
-    # one family moved its own readings toward the goal
+    # one family moved its own readings toward the goal. Two changes that
+    # each kept every guard can break one together (a vibrato from the
+    # attack and a darker body moved the pitch centre 15 cents): then the
+    # same once more with each family's next best change in turn
     joint = combine(compiled, goal, hyps + more, record["candidates"])
     if joint is not None:
-        record["candidates"].append(evaluate(joint))
+        cand = evaluate(joint)
+        record["candidates"].append(cand)
+        if any(not g["ok"] for g in cand.get("guards", [])):
+            tried_ids = {joint["id"]}
+            for part in joint["parts"]:
+                alt = combine(compiled, goal, hyps + more,
+                              record["candidates"], avoid={part})
+                if alt is None or alt["id"] in tried_ids:
+                    continue
+                tried_ids.add(alt["id"])
+                record["candidates"].append(evaluate(alt))
     best = None
     for cand in record["candidates"]:
         if cand.get("accepted") and (best is None or cand["distance"]["total"]
