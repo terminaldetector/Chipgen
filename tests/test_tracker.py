@@ -282,3 +282,31 @@ def test_a_flat_with_the_ordinary_separator_stays_in_its_octave():
 def test_notes_that_are_not_notes_still_reject():
     for bad in ("H-4", "A-", "A-12", "", "A#b3", "-3"):
         assert tracker.parse_note(bad) is None, bad
+
+
+def test_rows_point_at_their_events_after_the_forge_places_some():
+    # A forge instrument with a program gets events added at parse time
+    # (its vibrato at each key-on), and the placement pass merges the
+    # Waits of empty rows: the row clock must still name each row's first
+    # event, or a range cut by rows starts in the wrong place.
+    from synthesis import program as P
+    from synthesis.backends import get_backend
+    from synthesis.backends.base import Compiled
+    import instruments
+    patch = instruments.get("square_lead").copy()
+    patch.name = "row_clock_probe"
+    prog = P.Program(engine="ym2612")
+    prog.vibrato = {"depth_cents": 30.0, "speed_hz": 6.0, "delay_ms": 100.0}
+    compiled = P.attach(Compiled("ym2612", "row_clock_probe", patch), prog)
+    get_backend("ym2612").install(P.prepare(compiled), "")
+    text = ("bpm 120\nlpb 4\nticks 240\ninst fm1 row_clock_probe\n"
+            "cols fm1 psg0\n" + "C-5  ...\n...  ...\n...  ...\n"
+            "E-5  C-4\n...  ...\n===  ===\n...  ...\nG-5  ...\n")
+    rows = []
+    events, _meta = tracker.loads(text, rows=rows)
+    assert any(isinstance(e, E.Vibrato) for e in events)
+    for r in rows:
+        tick = sum(e.ticks for e in events[:r["event"]]
+                   if isinstance(e, E.Wait))
+        assert tick == r["tick"], (r, tick)
+

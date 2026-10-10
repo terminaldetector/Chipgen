@@ -114,6 +114,28 @@ def test_a_note_on_restarts_the_swing_but_not_the_slide():
     assert abs(engine.voices["fm0"].portamento_cents - slid) < 1e-9
 
 
+def test_a_delayed_vibrato_leaves_the_next_note_in_tune():
+    # The vibrato restarts at each key-on and adds nothing until its delay
+    # ends; the chip must not keep the offset where the last note's swing
+    # stopped. Before the fix every note after the first sat 9.3 cents
+    # sharp for the whole 0.3 s delay here.
+    import chipgen
+    import analysis
+    from synthesis import phases
+    text = ("bpm 120\nlpb 4\nticks 240\ninst fm1 square_lead\ncols fm1\n"
+            "vib fm1 45 6.5 0.3\n" + ("A-4\n" + "...\n" * 5) * 3
+            + "===\n...\n")
+    buf = chipgen.compose(text).audio
+    left, _right = analysis.split_stereo(buf)
+    mono = left.tolist() if hasattr(left, "tolist") else list(left)
+    rate = 44100
+    for k in (1, 2):                  # the notes after the first
+        start = k * 0.75
+        seg = mono[int((start + 0.05) * rate):int((start + 0.25) * rate)]
+        cents, _ = phases._pitch(seg, rate, 440.0)
+        assert abs(cents) < 3.0, (k, cents)
+
+
 # -- volume ------------------------------------------------------------------
 def test_a_fade_ramps_and_stops_at_the_floor():
     engine = effects.EffectEngine()

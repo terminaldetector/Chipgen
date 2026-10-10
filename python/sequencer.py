@@ -467,6 +467,8 @@ class _RenderState:
         #: rather than replacing it, so a tremolo on a quiet note stays
         #: quiet.
         self.note_velocity = {}
+        #: the pitch offset last pushed to each voice by the effects
+        self._effect_cents = {}
         #: The level a DAC hit was started at. A volume effect scales
         #: this rather than the running value, so a tremolo does not
         #: compound itself byte after byte.
@@ -515,14 +517,23 @@ class _RenderState:
             self._write_effect(target, cents, scale)
 
     def reapply(self, target: str):
-        """Re-assert a voice's effect state after a note-on reset it."""
+        """Re-assert a voice's effect state after a note-on reset it.
+
+        Also when the state is now nothing at all but the chip still holds
+        an offset from the last note: a vibrato with a delay restarts at
+        the key-on and adds nothing until the delay ends, so without this
+        write the new note would sound at whatever the previous note's
+        swing left in the register — measured on repeated A-4s with a
+        45-cent vibrato held off 0.3 s: every note after the first sat 9.3
+        cents sharp for the whole delay (1.2, the fnum step, after)."""
         if self.effects is None:
             return
         cents, scale = self.effects.state(target)
-        if cents or scale < 1.0:
+        if cents or scale < 1.0 or self._effect_cents.get(target, 0.0):
             self._write_effect(target, cents, scale)
 
     def _write_effect(self, target: str, cents: float, scale: float):
+        self._effect_cents[target] = cents
         # `noise` and `dac` carry a level but no index and no pitch, so
         # they are handled before anything tries to slice digits off the
         # end of the name.

@@ -530,7 +530,44 @@ def loads(text: str, rows: list = None):
     if noise_sounding:
         events.append(PSGNoiseOff())
     events.append(End())
-    return _place_forge_instruments(events, meta), meta
+    placed = _place_forge_instruments(events, meta)
+    if rows is not None and placed is not events:
+        placed = _reindex_rows(placed, rows)
+    return placed, meta
+
+
+def _reindex_rows(events, rows):
+    """Point every row at its first event again after the forge's
+    placement pass rebuilt the list (it adds events and merges the Waits
+    of empty rows, so the indices recorded while parsing no longer hold).
+    A Wait that a row starts inside is split there, so each row begins on
+    an event boundary as it did; the timing is unchanged."""
+    ticks = sorted({r["tick"] for r in rows})
+    out, now, k = [], 0, 0
+    first = {}
+    for ev in events:
+        while k < len(ticks) and ticks[k] <= now:
+            first.setdefault(ticks[k], len(out))
+            k += 1
+        if isinstance(ev, Wait):
+            end = now + ev.ticks
+            while k < len(ticks) and ticks[k] < end:
+                if ticks[k] > now:
+                    out.append(Wait(ticks=ticks[k] - now))
+                    now = ticks[k]
+                first.setdefault(ticks[k], len(out))
+                k += 1
+            if end > now:
+                out.append(Wait(ticks=end - now))
+                now = end
+            continue
+        out.append(ev)
+    while k < len(ticks):
+        first.setdefault(ticks[k], len(out))
+        k += 1
+    for r in rows:
+        r["event"] = first[r["tick"]]
+    return out
 
 
 def _place_forge_instruments(events, meta):

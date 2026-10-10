@@ -483,8 +483,10 @@ def note_profile(mono, rate: float, notes: List[dict],
         if len(seg) < int(0.1 * rate):
             continue
         r = phases.note(seg, rate, n["f0"], n["end"] - n["start"])
-        track = pitch_track(mono, rate, n["f0"], n["start"] + 0.02,
-                            n["end"] - 0.01, origin=n["start"])
+        # the window is 46 ms wide: start and stop half a window inside
+        # the note, so the neighbours' pitches do not leak into the track
+        track = pitch_track(mono, rate, n["f0"], n["start"] + 0.03,
+                            n["end"] - 0.025, origin=n["start"])
         reads.append({"reading": r, "vibrato": vibrato(track)})
         if len(reads) >= limit:
             break
