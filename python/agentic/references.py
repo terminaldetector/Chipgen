@@ -710,6 +710,9 @@ def _settle_grid(project, record: dict, rows: List[dict]):
     record["source_grid"] = {k: score.get(k) for k in
                              ("bpm", "beat_s", "rows_per_beat",
                               "rows_per_bar", "beat_known", "how")}
+    # the rows as they were played: where a note can sit (listen.measure
+    # needs it when the audio's grid replaces the source's)
+    record["source_grid"]["row_s"] = round(row_s, 5) if row_s else None
     if not score.get("beat_known") and row_s:
         best = None
         for rpb in _ROWS_PER_BEAT:

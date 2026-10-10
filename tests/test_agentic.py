@@ -35,6 +35,18 @@ def _project(state):
 
 
 # -- state, clock, trace, patches ------------------------------------------------
+def test_a_project_made_from_another_ones_state_starts_its_own_history():
+    from agentic import fixtures, state as S
+    a = _project(fixtures.masked_lead())
+    c = S.content(a.state)
+    c["sections"][0]["rows"][0][1] = "A-5:80"
+    a.commit(c, {"kind": "test"})
+    b = _project(a.state)
+    assert b.head == 0 and [r["rev"] for r in b.state["revisions"]] == [0]
+    assert b.revision(0)["content"] == S.content(a.state)
+    assert a.head == 1 and len(a.state["revisions"]) == 2
+
+
 def test_revisions_roll_back_exactly_and_an_interrupted_state_recovers():
     from agentic import fixtures, state as S
     p = _project(fixtures.masked_lead())

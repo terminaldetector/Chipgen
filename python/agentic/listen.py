@@ -382,15 +382,21 @@ def measure(project, f: dict, voice: Optional[str] = None,
         # of onsets more than 6% of a beat from any eighth (a syncopated or
         # swung part has more); from the score when there is one, from the
         # audio's onsets as well
-        env, hop, _low = F.onset_envelope(F.mono_of(f["samples"]), RATE)
-        heard = _offbeat(F.peaks(env, hop), beat)
-        if heard is not None:
-            out["offbeat_share_audio"] = heard
-        score = _offbeat(merged, beat) if merged is not None else None
-        if score is not None:
-            out["offbeat_share"] = score
-        elif heard is not None:
-            out["offbeat_share"] = heard
+        misfit = _rows_misfit(REF.get(project, f["source"]), beat) \
+            if f["kind"] == "reference" else None
+        if misfit:
+            # the audio is those rows rendered: no reading from it either
+            out["offbeat_share_not_measurable"] = misfit
+        else:
+            env, hop, _low = F.onset_envelope(F.mono_of(f["samples"]), RATE)
+            heard = _offbeat(F.peaks(env, hop), beat)
+            if heard is not None:
+                out["offbeat_share_audio"] = heard
+            score = _offbeat(merged, beat) if merged is not None else None
+            if score is not None:
+                out["offbeat_share"] = score
+            elif heard is not None:
+                out["offbeat_share"] = heard
     if voice and f["kind"] in ("ours", "sketch"):
         stem = (f.get("stems") or {}).get(voice)
         if stem is None:
@@ -410,15 +416,45 @@ def measure(project, f: dict, voice: Optional[str] = None,
     return out
 
 
+#: How far from an eighth an onset may sit and still be on it, as a share
+#: of the eighth (6% of a beat).
+OFFBEAT_TOLERANCE = 0.12
+
+
 def _offbeat(times, beat: float) -> Optional[float]:
     if not times:
         return None
     off = 0
     for t in times:
         phase = (t / beat) % 0.5 / 0.5
-        if min(phase, 1.0 - phase) > 0.12:
+        if min(phase, 1.0 - phase) > OFFBEAT_TOLERANCE:
             off += 1
     return round(off / len(times), 3)
+
+
+def _rows_misfit(ref: dict, beat: float) -> Optional[str]:
+    """Why a score reference's notes cannot be placed against the eighths
+    of `beat`, or None when they can. A source whose own grid the audio
+    confirmed has rows that divide its beat. One whose grid gave way to
+    the audio's (a transcription's 52 ms rows against the music's beat)
+    has each note on its nearest row: when an eighth is not a whole number
+    of rows, every other straight eighth sits half a row away, past the
+    tolerance, and the share of onsets between the eighths would measure
+    the transcription's grid, not the music's rhythm."""
+    if (ref.get("grid") or {}).get("source") != "audio":
+        return None
+    row = (ref.get("source_grid") or {}).get("row_s")
+    if not row or not beat:
+        return None
+    eighth = beat / 2.0
+    k = eighth / row
+    misfit = abs(k - round(k)) * row
+    if round(k) >= 1 and misfit <= OFFBEAT_TOLERANCE * eighth:
+        return None
+    return (f"its rows ({row * 1000:.0f} ms) do not divide an eighth of "
+            f"the beat it is counted on ({eighth * 1000:.0f} ms): a straight "
+            f"eighth can sit {misfit * 1000:.0f} ms from its row, past the "
+            f"{OFFBEAT_TOLERANCE * eighth * 1000:.0f} ms the reading allows")
 
 
 def _score_starts(project, f: dict) -> Optional[List[float]]:
@@ -610,6 +646,7 @@ def compare(project, fragments: List[dict], folder: str, name: str,
             project, f, voice=voice if f["kind"] != "reference" else None,
             reference_voice=(rv or {}).get("voice"))
     observations = []
+    not_compared = []
     k = 0
     for f in fragments:
         if f is ours:
@@ -627,6 +664,12 @@ def compare(project, fragments: List[dict], folder: str, name: str,
                         offbeat_share=mine.get("offbeat_share_audio"),
                         onsets_from="audio")
             mine.pop("notes_per_beat", None)
+        for key, path in (("offbeat_share_not_measurable",
+                           "offbeat_share"),):
+            if theirs.get(key) and path in [
+                    p for dim in use for p in F.DIMENSIONS.get(dim, [])]:
+                not_compared.append({"against": f["label"], "reading": path,
+                                     "why": theirs[key]})
         said = set()
         for d in _differences(mine, theirs, use):
             if not _gap_is_large(d["reading"], d["ours"], d["reference"]):
@@ -733,6 +776,7 @@ def compare(project, fragments: List[dict], folder: str, name: str,
                                if f["kind"] == "reference"},
             "voice": voice,
             "observations": observations,
+            "not_compared": not_compared,
             "listening": EAR.listening(ear) if ear is not None
             else EAR.listening(None),
             "model_listening": {k: v for k, v in heard.items()

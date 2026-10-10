@@ -230,8 +230,13 @@ class Project:
         for sub in ("revisions", "renders", "out"):
             os.makedirs(os.path.join(root, sub), exist_ok=True)
         # its own copy: two projects made from one state must not share
-        # it (a commit to one would change the other's music)
-        project = cls(root, copy.deepcopy(state))
+        # it (a commit to one would change the other's music); and its own
+        # history: another project's revisions are files in that project's
+        # folder, and numbering on from them would leave this one's first
+        # commit at a revision the folder never had
+        state = copy.deepcopy(state)
+        state["revisions"] = []
+        project = cls(root, state)
         project._write_revision(0, None, {"kind": "create"})
         project.save()
         return project

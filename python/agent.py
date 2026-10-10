@@ -774,6 +774,7 @@ class Agent:
                                    "against", "statement", "confidence",
                                    "voices", "bars", "t0", "t1")}
                                  for o in rep["observations"]],
+                "not_compared": rep["not_compared"],
                 "matched_voices": rep["matched_voices"],
                 "listening": rep["listening"],
                 "model_listening": rep["model_listening"],
@@ -886,15 +887,17 @@ class Agent:
                                   ("id", "basis", "dimension", "feature",
                                    "statement", "bars", "confidence")}
                                  for o in rep["observations"]],
+                "not_compared": rep.get("not_compared", []),
                 "worked_on": [{k: w.get(k) for k in
                                ("observation", "dimension", "statement",
                                 "outcome", "why", "committed_rev",
-                                "chosen", "goal")} | {
+                                "chosen", "goal", "goal_note", "note")} | {
                     "hypotheses": [{k: h.get(k) for k in
                                     ("id", "principle", "parameter",
                                      "chain", "before", "after",
-                                     "reference", "closed", "accepted",
-                                     "why", "ab_reel", "sketch")}
+                                     "reference", "closed", "closed_of_gap",
+                                     "accepted", "why", "ab_reel",
+                                     "sketch")}
                                    for h in w.get("hypotheses", [])]}
                     for w in rep["worked_on"]],
                 "cost": rep["cost"]}

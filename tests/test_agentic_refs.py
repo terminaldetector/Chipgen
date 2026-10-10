@@ -396,6 +396,22 @@ def test_an_instrument_moves_toward_a_sound_goal_or_stays():
         shutil.rmtree(os.path.dirname(p.root))
 
 
+def test_a_transcriptions_rows_that_miss_the_eighths_give_no_offbeat_reading():
+    # A transcription's 52 ms rows against a 164 BPM beat: an eighth is 3.5
+    # rows, so every other straight eighth sits half a row away, past the
+    # tolerance; the share of onsets between the eighths would measure the
+    # grid. On the beat the rows divide, and on a source's own rows, it is
+    # a reading.
+    from agentic import listen as LI
+    ref = {"grid": {"source": "audio", "beat_s": 0.7296},
+           "source_grid": {"row_s": 0.05208}}
+    why = LI._rows_misfit(ref, 0.3648)
+    assert why and "52 ms" in why, why
+    assert LI._rows_misfit(ref, 0.7296) is None
+    ref["grid"]["source"] = "score"
+    assert LI._rows_misfit(ref, 0.3648) is None
+
+
 def test_a_vibrato_goal_takes_the_references_share_not_its_delay():
     # A reference's vibrato delay is the length of its own held notes; the
     # share of notes that swing is what carries over, and the delay is

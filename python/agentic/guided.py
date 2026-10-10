@@ -410,7 +410,9 @@ def improve_toward(project, spec: str, references: List[str],
               "listening": heard["listening"],
               "model_listening": heard["model_listening"],
               "listen_index": heard["index"], "reel": heard["reel"],
-              "observations": heard["observations"], "worked_on": [],
+              "observations": heard["observations"],
+              "not_compared": heard.get("not_compared", []),
+              "worked_on": [],
               "statement": EAR.statement(ear)}
     base_h = tool.hear(base_tl, rng)
     measured = [o for o in heard["observations"]

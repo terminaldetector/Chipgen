@@ -238,6 +238,9 @@ def _write_md(out, report, guided):
     lines.append("## What was observed on B")
     for o in guided["observations"]:
         lines.append(f"- [{o['basis']}] {o['statement']}")
+    for n in guided.get("not_compared") or []:
+        lines.append(f"- [not compared] {n['reading']} against "
+                     f"{n['against']}: {n['why']}")
     lines.append("")
     lines.append("## What was tried, kept and rolled back")
     for w in guided["worked_on"]:
