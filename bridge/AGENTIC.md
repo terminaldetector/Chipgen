@@ -303,6 +303,13 @@ its window plus 2 s of pre-roll and 0.5 s of tail. `examples/agentic/
 measurements.json` lists every facade call of the examples with its cost.
 The étude's draft (same plan and seed, no ear) is beside it for the A/B.
 
+The reference run (`examples/agentic/references/`, with numpy): B heard
+beside two references and a sketch, 7 renders and 42 s; the guided round
+on B, three gaps and 13 candidates (two kept: the space and the lead's
+instrument), 18 renders and 308 s; D heard with C, the join and its
+sketch, 38 s; from an empty project to the last reel, 462 s. Its README
+has what was observed, tried, kept and rolled back.
+
 ## What it does not do
 
 - **It does not listen.** The Tool ear measures. Whether a fix sounds
