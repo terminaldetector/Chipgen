@@ -341,10 +341,8 @@ class Agent:
         tl = self._timeline(p)
         rng = tl.range(range)
         ear = self._ear(mode, p)
-        if ear.mode == "tool":
-            h = ear.hear(tl, rng, focus=focus)
-        else:
-            h = ear.hear(tl, rng, intent=p.state["identity"]["intent"])
+        h = ear.hear(tl, rng, focus=focus,
+                     intent=p.state["identity"]["intent"])
         ids = [p.add_observation(o) for o in h["observations"]]
         p.save()
         voices = {v: {k: m.get(k) for k in ("role", "band_margin_db",
@@ -358,7 +356,8 @@ class Agent:
                                                    "bars")},
                 "observations": [_obs_card(p.observation(i)) for i in ids],
                 "mix": h.get("measurements", {}).get("mix"),
-                "voices": voices, "cost": h.get("cost", {})}
+                "voices": voices, "listening": EAR.listening(ear),
+                "cost": h.get("cost", {})}
 
     def op_trace(self, project_id: str, t0: float, t1: float,
                  voice: str = None, writes: bool = True) -> dict:
@@ -402,12 +401,14 @@ class Agent:
                 "not_considered": card.get("not_considered")}
 
     def op_compare_versions(self, project_id: str, rev_a: int, rev_b: int,
-                            range: str = "all", target: str = None) -> dict:
+                            range: str = "all", target: str = None,
+                            mode: str = "auto", goal: str = "") -> dict:
         p = self._project(project_id)
         tl_a, tl_b = self._timeline(p, rev_a), self._timeline(p, rev_b)
         cache = self._cache(p)
         before = cache.misses
-        ear = EAR.ToolEar(cache)
+        chosen = self._ear(mode, p)
+        ear = EAR.measurer(chosen, cache)
         ha = ear.hear(tl_a, tl_a.range(range))
         hb = ear.hear(tl_b, tl_b.range(range))
         obs = {"voices": [target] if target else []}
@@ -421,7 +422,13 @@ class Agent:
                          "rms_db": [a.get("rms_db"), m.get("rms_db")]}
         ab = L.write_ab(p.path("out"), f"r{rev_a}_vs_r{rev_b}", tl_a, tl_b,
                         range, cache)
+        verdict = L._listen_ab(chosen, tl_a, tl_b, range, cache,
+                               {"voices": [target] if target else [],
+                                "kind": "comparison",
+                                "statement": goal or "the better version"})
         return {"range": range, "statement": EAR.TOOL_STATEMENT,
+                "listening": EAR.listening(chosen),
+                "listening_verdict": verdict,
                 "voices": voices,
                 "mix_rms_db": [ha["measurements"]["mix"]["rms_db"],
                                hb["measurements"]["mix"]["rms_db"]],
@@ -516,12 +523,14 @@ class Agent:
 
     def op_improve(self, project_id: str, observation_id: str,
                    budget: str = "3x2", memory: bool = True,
-                   ab: bool = True) -> dict:
+                   ab: bool = True, mode: str = "auto") -> dict:
         p = self._project(project_id)
+        ear = self._ear(mode, p)
         # memory=false is a control run: nothing recalled, nothing learned
         d = L.improve(p, observation_id, budget=L.Budget.parse(budget),
                       cache=self._cache(p),
-                      memory=self.memory if memory else None, ab=ab)
+                      memory=self.memory if memory else None, ab=ab,
+                      ear=ear)
         return {"decision": d["id"], "outcome": d["outcome"],
                 "before": d.get("before"), "after": d.get("after"),
                 "gain_db": d.get("gain_db"), "goal_met": d.get("goal_met"),
@@ -537,13 +546,19 @@ class Agent:
                                                            {}).items()},
                 "memory": d.get("memory"),
                 "learning_record": d.get("learning_record"),
-                "statement": EAR.TOOL_STATEMENT, "cost": d["cost"]}
+                "statement": EAR.statement(ear),
+                "listening": EAR.listening(ear),
+                "listening_verdict": d.get("listening_verdict"),
+                "judged_by": d.get("judged_by"),
+                "why": d.get("why"), "cost": d["cost"]}
 
     def op_continue_composition(self, project_id: str, goal=None,
                                 sections: int = None, seed: int = None,
                                 hear: bool = True, correct: bool = False,
-                                budget: str = "3x2") -> dict:
+                                budget: str = "3x2",
+                                mode: str = "auto") -> dict:
         p = self._project(project_id)
+        ear = self._ear(mode, p)
         fixes = []
 
         def correct_section(project, step):
@@ -557,7 +572,8 @@ class Agent:
                 # section only
                 scoped = L.rescope(project, oid, heard["section_range"])
                 d = L.improve(project, scoped, budget=L.Budget.parse(budget),
-                              cache=self._cache(project), memory=self.memory)
+                              cache=self._cache(project), memory=self.memory,
+                              ear=ear)
                 done.append({"section": step["section"], "observation": oid,
                              "corrected_as": scoped,
                              "decision": d["id"], "outcome": d["outcome"],
@@ -569,6 +585,7 @@ class Agent:
                              "candidates": d["cost"]["candidates"],
                              "renders": d["cost"]["renders"],
                              "seconds": d["cost"]["runtime_s"],
+                             "judged_by": d.get("judged_by"),
                              "why": d.get("why")})
             fixes.extend(done)
             return done
@@ -577,7 +594,7 @@ class Agent:
                                       seed=seed, hear=hear,
                                       cache=self._cache(p),
                                       after=correct_section if correct
-                                      else None)
+                                      else None, ear=ear)
         return {"status": r["status"], "next": r["next"],
                 "remaining": r["remaining"],
                 "sections": [{"section": x["section"], "rev": x["rev"],
@@ -591,6 +608,8 @@ class Agent:
                                       "observations", [])]}
                              for x in r["done"]],
                 "corrections": fixes,
+                "statement": EAR.statement(ear),
+                "listening": EAR.listening(ear),
                 "cost": {"runtime_s": r["runtime_s"]}}
 
     def op_learn_recipe(self, project_id: str, decision_id: str) -> dict:

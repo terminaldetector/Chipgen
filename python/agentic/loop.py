@@ -220,12 +220,17 @@ class Search:
 
     def __init__(self, timeline, obs: dict, hearing: dict,
                  cache: Optional[R.Cache] = None,
-                 budget: Optional[Budget] = None, remembered=None):
+                 budget: Optional[Budget] = None, remembered=None,
+                 ear=None):
         self.base_tl = timeline
         self.obs = obs
         self.base_h = hearing
         self.cache = cache or R.Cache()
-        self.ear = EAR.ToolEar(self.cache)
+        # candidates are measured: the metric and the guards are numbers,
+        # whichever ear made the observation (a listening model hears the
+        # chosen candidate against the original afterwards, in `improve`)
+        self.ear = EAR.measurer(ear, self.cache) if ear is not None \
+            else EAR.ToolEar(self.cache)
         self.budget = budget or Budget()
         self.remembered = remembered or []
         self.rng = timeline.range(D._spec(obs))
@@ -439,13 +444,39 @@ def rescope(project, oid: str, spec: str) -> str:
     return project.add_observation(new)
 
 
+def _listen_ab(ear, tl_a, tl_b, spec: str, cache, obs: dict) -> dict:
+    """The verified listening model's verdict on the original (A) against
+    the chosen candidate (B) over the range; {"available": False, why}
+    when nothing can listen."""
+    if not EAR.listening(ear)["available"]:
+        return EAR.ab_verdict(ear, [], [], "")
+    clips = []
+    for tl in (tl_a, tl_b):
+        rng = tl.range(spec)
+        r = R.render_range(tl, rng, cache=cache)
+        clips.append(r.segment(rng["t0"], rng["t1"], mono=False))
+    voices = list(obs.get("voices") or [])
+    goal = (obs.get("statement") or obs["kind"]) + \
+        " — the change should correct this without harming the rest"
+    return EAR.ab_verdict(ear, clips[0], clips[1], goal,
+                          voices=voices or tl_a.voices())
+
+
 def improve(project, oid: str, budget: Optional[Budget] = None,
             cache: Optional[R.Cache] = None, memory=None,
             use_memory: bool = True, ab: bool = True,
-            hearing: Optional[dict] = None) -> dict:
+            hearing: Optional[dict] = None, ear=None) -> dict:
     """Correct observation `oid` of the project's head: search, commit the
     best or nothing, write the A/B, record the decision (and, with a
-    memory, the LearningRecord). -> the decision."""
+    memory, the LearningRecord). -> the decision.
+
+    `ear` is the ear the caller chose (ear.choose). The candidates are
+    measured by its measuring part — the metric and the guards are
+    numbers. When a listening model that passed the probes is behind it,
+    the chosen candidate is played to it against the original, matched in
+    loudness; its preference is recorded as "heard by model", apart from
+    the measurements, and a confident preference for the original vetoes
+    the commit. Without one, the decision says that nothing listened."""
     started = time.time()
     obs = project.observation(oid)
     cache = cache or R.Cache(project.path("renders"))
@@ -453,14 +484,18 @@ def improve(project, oid: str, budget: Optional[Budget] = None,
                   ("structure", "instruments", "sections", "order",
                    "columns")})
     rng = tl.range(D._spec(obs))
-    ear = EAR.ToolEar(cache)
+    ear = ear or EAR.ToolEar(cache)
+    tool = EAR.measurer(ear, cache)
+    ear_record = {"mode": ear.mode, "statement": EAR.statement(ear),
+                  "listening": EAR.listening(ear),
+                  "candidates_judged_by": "measurement (Tool ear)"}
     renders0, seconds0 = cache.misses, cache.render_seconds
     if hearing is None:
-        hearing = ear.hear(tl, rng)
+        hearing = tool.hear(tl, rng)
     remembered, retrieval = [], None
     if memory is not None and use_memory:
         remembered, retrieval = memory.recall(tl, obs, hearing)
-    search = Search(tl, obs, hearing, cache, budget, remembered)
+    search = Search(tl, obs, hearing, cache, budget, remembered, ear=tool)
     if search.goal(search.read(hearing)):
         # measured again over its own range, the fault is not there (a
         # rescoped observation can be): nothing to correct
@@ -468,7 +503,7 @@ def improve(project, oid: str, budget: Optional[Budget] = None,
             "observation": oid, "kind": obs["kind"], "voices": obs["voices"],
             "range": {k: rng[k] for k in ("spec", "t0", "t1", "bars",
                                            "sections")},
-            "ear": {"mode": "tool", "statement": EAR.TOOL_STATEMENT},
+            "ear": ear_record,
             "base_rev": project.head, "outcome": "not_needed",
             "before": search.read(hearing), "rounds": [],
             "stopped": "goal already met", "committed_rev": None,
@@ -487,11 +522,18 @@ def improve(project, oid: str, budget: Optional[Budget] = None,
     result = search.run()
     best = result["best"]
     base_rev = project.head
+    verdict = None
+    if best is not None:
+        verdict = _listen_ab(ear, tl, best["_timeline"], rng["spec"], cache,
+                             obs)
     decision = {
         "observation": oid, "kind": obs["kind"], "voices": obs["voices"],
         "range": {k: rng[k] for k in ("spec", "t0", "t1", "bars",
                                        "sections")},
-        "ear": {"mode": "tool", "statement": EAR.TOOL_STATEMENT},
+        "ear": ear_record,
+        "listening_verdict": verdict,
+        "judged_by": "measured" if not (verdict or {}).get("available")
+        else "measured, then heard by model",
         "base_rev": base_rev, "base_hash": content_hash(tl.content),
         "budget": search.budget.to_dict(),
         "card": _compact_card(result["card"]) if result["card"] else None,
@@ -499,7 +541,22 @@ def improve(project, oid: str, budget: Optional[Budget] = None,
         "rounds": [{**r, "candidates": [_public(c) for c in r["candidates"]]}
                    for r in result["rounds"]],
         "stopped": result["stopped"]}
-    if best is None:
+    if best is not None and EAR.vetoes(verdict):
+        decision.update(outcome="rolled_back", committed_rev=None,
+                        vetoed_by=verdict["model"],
+                        rejected_chain=best["chain"],
+                        measured_before=result["base_value"],
+                        measured_after=best["metric"]["after"],
+                        why=f"the measurement improved "
+                            f"({result['base_value']:+.2f} -> "
+                            f"{best['metric']['after']:+.2f} dB) but "
+                            f"{verdict['model']} preferred the original "
+                            f"(confidence {verdict['confidence']:.2f}): "
+                            f"\"{verdict.get('statement', '')}\"; not "
+                            f"committed, the project stays at revision "
+                            f"{base_rev}")
+        best = None
+    elif best is None:
         decision.update(outcome="rolled_back", committed_rev=None,
                         why="no candidate improved the measurement with "
                             "every guard passed; the project stays at "

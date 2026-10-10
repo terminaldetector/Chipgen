@@ -347,6 +347,91 @@ def test_hybrid_checks_what_was_heard_against_what_was_measured():
             assert word not in o["statement"], o["statement"]
 
 
+class _ABEar(_DSPEar):
+    """The DSP stand-in, also asked A against B: it finds the two versions
+    in the clip by their energy (the silence between them is real), and
+    answers with a scripted preference — the test is of the plumbing: the
+    selected ear is the one asked, its verdict is recorded apart from the
+    measurements, and a confident "A" stops the commit."""
+
+    def __init__(self, preference, confidence=0.9):
+        super().__init__()
+        self.preference = preference
+        self.confidence = confidence
+        self.asked = []
+
+    def listen(self, wav, prompt):
+        if "Which version" not in prompt:
+            return super().listen(wav, prompt)
+        rate, pcm = _read_wav(wav)
+        hop = rate // 50
+        loud = [max(abs(v) for v in pcm[i:i + hop]) > 300
+                for i in range(0, len(pcm) - hop, hop)]
+        runs, start = [], None
+        for i, on in enumerate(loud + [False]):
+            if on and start is None:
+                start = i
+            if not on and start is not None:
+                runs.append((start, i))
+                start = None
+        gaps = [(b[0] - a[1]) * hop / rate for a, b in zip(runs, runs[1:])]
+        self.asked.append({"seconds": len(pcm) / rate,
+                           "longest_gap": max(gaps, default=0.0)})
+        if max(gaps, default=0.0) < 0.5:
+            return json.dumps({"preference": "same", "confidence": 0.1,
+                               "statement": "could not tell two versions"})
+        return json.dumps({"preference": self.preference,
+                           "confidence": self.confidence,
+                           "statement": f"prefers {self.preference}",
+                           "observations": []})
+
+
+def test_the_chosen_ear_judges_the_correction_and_can_veto_it():
+    from agentic import ear as EAR, fixtures, loop as L, render as R
+    from agentic import state as S, timeline as T
+    p = _project(fixtures.masked_lead())
+    h, cache = _heard(p)
+    oid = next(o["id"] for o in p.state["observations"]
+               if o["kind"] == "buried")
+    # the same search twice (the second reads the render cache): a model
+    # that prefers the original stops the commit, one that prefers the
+    # change lets it through
+    for preference, outcome in (("A", "rolled_back"), ("B", "committed")):
+        adapter = _ABEar(preference)
+        ear = EAR.choose("hybrid", adapter, EAR.verify(adapter), cache)
+        d = L.improve(p, oid, cache=cache, hearing=h, ab=False, ear=ear)
+        assert d["ear"]["mode"] == "hybrid", d["ear"]
+        assert d["ear"]["listening"]["available"]
+        v = d["listening_verdict"]
+        assert v["basis"] == "heard by model" and v["model"] == adapter.name
+        assert v["preference"] == preference
+        assert adapter.asked and adapter.asked[-1]["longest_gap"] >= 0.5
+        assert d["judged_by"] == "measured, then heard by model"
+        assert d["outcome"] == outcome, d["why"]
+        if outcome == "rolled_back":
+            assert d["vetoed_by"] == adapter.name and p.head == 0
+            assert d["measured_after"] > d["measured_before"]
+        else:
+            assert p.head == 1
+    # the Tool ear: the decision says nothing listened
+    d = L.improve(p, oid, cache=cache, ab=False)
+    assert d["ear"]["mode"] == "tool"
+    assert not d["ear"]["listening"]["available"]
+    assert "nothing listened" in d["ear"]["listening"]["why"]
+    shutil.rmtree(os.path.dirname(p.root))
+    # continue_composition hears with the ear it is given
+    from agentic import compose as C
+    adapter = _ABEar("B")
+    p = _project(fixtures.etude())
+    ear = EAR.choose("hybrid", adapter, EAR.verify(adapter),
+                     R.Cache(p.path("renders")))
+    r = C.continue_composition(p, stop_after=1, seed=1, ear=ear)
+    heard = r["done"][0]["heard"]
+    assert heard["mode"] == "hybrid" and heard["listening"]["available"]
+    assert T.build(S.content(p.state)).duration > 0
+    shutil.rmtree(os.path.dirname(p.root))
+
+
 # -- F: the backend's limits ----------------------------------------------------------
 def test_the_backend_limits_are_refused_by_name():
     from agentic import capabilities as CAP, fixtures, state as S

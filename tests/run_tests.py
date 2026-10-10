@@ -140,6 +140,7 @@ SLOW = {
     "test_agentic.test_a_local_correction_is_measured_guarded_committed_and_undone",
     "test_agentic.test_memory_makes_a_similar_task_cheaper_and_is_checked_again",
     "test_agentic.test_a_forge_instrument_plays_in_its_voice_with_its_layer",
+    "test_agentic.test_the_chosen_ear_judges_the_correction_and_can_veto_it",
     "test_program.test_a_round_of_repeats_stops_the_loop",
     "test_synthesis.test_a_dial_turned_up_reads_higher_on_every_chip",
     "test_synthesis.test_a_director_steers_a_run_and_a_broken_one_cannot_stop_it",

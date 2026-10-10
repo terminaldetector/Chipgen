@@ -195,7 +195,9 @@ class ToolEar:
         self.cache = cache or R.Cache()
 
     def hear(self, timeline, rng: dict, focus: Optional[List[str]] = None,
-             bands: bool = False) -> dict:
+             bands: bool = False, intent: str = "") -> dict:
+        """`intent` is accepted so every ear is called the same way; the
+        measurements do not depend on it."""
         renders_before = self.cache.misses
         seconds_before = self.cache.render_seconds
         t0, t1 = rng["t0"], rng["t1"]
@@ -467,7 +469,8 @@ class NativeEar:
         self.verification = verification
         self.cache = cache or R.Cache()
 
-    def hear(self, timeline, rng: dict, intent: str = "") -> dict:
+    def hear(self, timeline, rng: dict, focus: Optional[List[str]] = None,
+             intent: str = "") -> dict:
         mix = R.render_range(timeline, rng, cache=self.cache)
         samples = mix.in_range()
         prompt = NATIVE_PROMPT.format(
@@ -524,9 +527,10 @@ class HybridEar:
         self.tool = tool
         self.native = native
 
-    def hear(self, timeline, rng: dict, intent: str = "") -> dict:
-        measured = self.tool.hear(timeline, rng)
-        heard = self.native.hear(timeline, rng, intent)
+    def hear(self, timeline, rng: dict, focus: Optional[List[str]] = None,
+             intent: str = "") -> dict:
+        measured = self.tool.hear(timeline, rng, focus=focus)
+        heard = self.native.hear(timeline, rng, intent=intent)
         voices = measured["measurements"]["voices"]
         for obs in heard["observations"]:
             check = _CHECKS.get(obs["kind"])
@@ -581,3 +585,141 @@ def choose(mode: str = "auto", adapter: Optional[AudioAdapter] = None,
             requested=mode)
     native = NativeEar(adapter, verification, tool.cache)
     return native if mode == "native" else HybridEar(tool, native)
+
+
+# -- what the loop uses each ear for -------------------------------------------------
+def measurer(ear, cache: Optional[R.Cache] = None) -> ToolEar:
+    """The measuring ear behind any ear: the loop's metric and its guards
+    are measurements, whichever ear observed. Shares the ear's cache."""
+    if isinstance(ear, ToolEar):
+        return ear
+    if isinstance(ear, HybridEar):
+        return ear.tool
+    return ToolEar(getattr(ear, "cache", None) or cache)
+
+
+def listening(ear) -> dict:
+    """Whether anything listens behind `ear`, said plainly — every reply
+    that could be read as hearing carries this."""
+    if isinstance(ear, HybridEar):
+        ear = ear.native
+    if isinstance(ear, NativeEar):
+        return {"mode": "native", "available": True,
+                "model": ear.adapter.name, "verified": True,
+                "why": ear.verification.get("why", "answered the probes")}
+    return {"mode": "tool", "available": False, "model": None,
+            "verified": False,
+            "why": "no audio model that passed the probes is configured: "
+                   "the observations are measurements, nothing listened"}
+
+
+def statement(ear) -> str:
+    if isinstance(ear, HybridEar):
+        return (f"{TOOL_STATEMENT}; and the range was sent as audio to "
+                f"{ear.native.adapter.name}, verified by probe")
+    if isinstance(ear, NativeEar):
+        return (f"the range was sent as audio to {ear.adapter.name}, "
+                f"verified by probe")
+    return TOOL_STATEMENT
+
+
+#: A listening model's preference for the original vetoes a commit only
+#: this sure of itself (a weaker "A" is recorded, not obeyed).
+VETO_CONFIDENCE = 0.6
+#: Silence between the two versions in an A/B clip (seconds).
+AB_GAP_S = 0.75
+
+AB_PROMPT = """You are listening to two versions of the same {seconds:.1f} s passage of a chiptune piece (Sega Mega Drive: YM2612 FM + SN76489), one after the other, matched in loudness. Version A plays from {a0:.2f} s to {a1:.2f} s of this clip, version B from {b0:.2f} s to {b1:.2f} s; silence between them. Voices: {voices}.
+What the change is meant to improve: {goal}.
+Which version does that better? Report only what you hear.
+Answer with JSON only: {{"preference": "<A|B|same>", "confidence": <0..1>, "statement": "<short: what you heard>", "observations": [{{"version": "<A|B>", "t0": <s from that version's start>, "t1": <s>, "feature": "<what you heard>", "voices": ["<voice>"], "confidence": <0..1>}}]}}"""
+
+
+def _mono(samples, stereo: bool):
+    if not stereo:
+        return list(samples)
+    return [0.5 * (samples[i] + samples[i + 1])
+            for i in range(0, len(samples) - 1, 2)]
+
+
+def ab_clip(a, b, rate: int = R.RATE, stereo: bool = True):
+    """A, silence, B as one mono clip, B matched to A's loudness (BS.1770,
+    one channel) and both scaled down together if a peak would pass -1
+    dBFS. -> (samples, {a0, a1, b0, b1, gain_db})."""
+    from . import features as F
+    a, b = _mono(a, stereo), _mono(b, stereo)
+    la = F.loudness(a, rate, channels=1)["lufs"]
+    lb = F.loudness(b, rate, channels=1)["lufs"]
+    gain_b = la - lb if la > -70.0 and lb > -70.0 else 0.0
+    fb = 10 ** (gain_b / 20.0)
+    peak = max([abs(v) for v in a] + [abs(v) * fb for v in b] + [1e-9])
+    common = min(1.0, 10 ** (-1.0 / 20.0) / peak)
+    gap = [0.0] * int(AB_GAP_S * rate)
+    clip = [v * common for v in a] + gap + [v * fb * common for v in b]
+    a1 = len(a) / rate
+    b0 = a1 + AB_GAP_S
+    return clip, {"a0": 0.0, "a1": round(a1, 3), "b0": round(b0, 3),
+                  "b1": round(b0 + len(b) / rate, 3),
+                  "gain_b_db": round(gain_b, 2),
+                  "common_gain_db": round(20 * math.log10(common), 2)}
+
+
+def ab_verdict(ear, a, b, goal: str, voices=(), rate: int = R.RATE,
+               stereo: bool = True) -> dict:
+    """Ask the listening model behind `ear` which of two versions does
+    `goal` better. Without a verified model: {"available": False, why} —
+    and nothing is put in its place. The reply is the model's, recorded
+    as "heard by model"; it is never merged with the measurements."""
+    status = listening(ear)
+    if not status["available"]:
+        return {"available": False, "why": status["why"], "basis": None}
+    native = ear.native if isinstance(ear, HybridEar) else ear
+    clip, marks = ab_clip(a, b, rate, stereo)
+    prompt = AB_PROMPT.format(seconds=marks["a1"], a0=marks["a0"],
+                              a1=marks["a1"], b0=marks["b0"],
+                              b1=marks["b1"],
+                              voices=", ".join(voices) or "not listed",
+                              goal=goal)
+    out = {"available": True, "model": native.adapter.name,
+           "basis": "heard by model", "clip": marks,
+           "audio_seconds": round(len(clip) / rate, 2)}
+    try:
+        reply = native.adapter.listen(wav_bytes(clip, rate), prompt)
+    except Exception as error:          # a refusal is recorded, not hidden
+        out.update(preference=None, problem=f"the model did not answer: "
+                                            f"{str(error)[:160]}")
+        return out
+    try:
+        text = reply[reply.index("{"):reply.rindex("}") + 1]
+        data = json.loads(text)
+        pref = str(data.get("preference", "")).strip().upper()
+        pref = {"A": "A", "B": "B", "SAME": "same"}.get(pref)
+        if pref is None:
+            raise ValueError(f"preference {data.get('preference')!r}")
+        out.update(preference=pref, confidence=max(0.0, min(1.0, float(
+            data.get("confidence", 0.5)))),
+            statement=str(data.get("statement", ""))[:240],
+            observations=[{
+                "version": str(o.get("version", "")).upper()[:1],
+                "t0": float(o.get("t0", 0.0)),
+                "t1": float(o.get("t1", 0.0)),
+                "feature": str(o.get("feature", ""))[:160],
+                "voices": [v for v in o.get("voices", [])
+                           if isinstance(v, str)],
+                "confidence": max(0.0, min(1.0, float(
+                    o.get("confidence", 0.5)))),
+                "basis": "heard by model"}
+                for o in data.get("observations", [])[:12]])
+    except (ValueError, TypeError) as error:
+        out.update(preference=None, problem=f"the reply was not the JSON "
+                                            f"asked for: {str(error)[:120]}",
+                   reply=reply[:200])
+    return out
+
+
+def vetoes(verdict: Optional[dict]) -> bool:
+    """True when a verified listening model preferred the original (A)
+    with at least VETO_CONFIDENCE."""
+    return bool(verdict and verdict.get("available")
+                and verdict.get("preference") == "A"
+                and verdict.get("confidence", 0.0) >= VETO_CONFIDENCE)

@@ -621,7 +621,7 @@ def harmony_check(c: dict, section_id: str) -> dict:
 def continue_composition(project, goal: Optional[dict] = None,
                          stop_after: Optional[int] = None, seed: int = None,
                          hear: bool = True, cache=None,
-                         focus="melodic", after=None) -> dict:
+                         focus="melodic", after=None, ear=None) -> dict:
     """Compose the plan's remaining sections from the cursor, one
     checkpoint per section. `goal` {"add": [plan entries]} extends the
     plan first. `stop_after` ends the session after that many sections
@@ -632,8 +632,10 @@ def continue_composition(project, goal: Optional[dict] = None,
     voice. `after(project, step)` runs once a section is written and
     heard, before the next is composed — the place for a correction, so
     the next window reads the corrected music and a lesson learned on
-    one section is there for the next. -> what was done and where it
-    stopped."""
+    one section is there for the next. `ear` is the ear the caller chose
+    (ear.choose; the Tool ear when none is given): a listening model
+    behind it hears each new section with its join, and the step says
+    which ear heard. -> what was done and where it stopped."""
     from . import render as R
     started = time.time()
     st = project.state
@@ -652,7 +654,7 @@ def continue_composition(project, goal: Optional[dict] = None,
                              [e["id"] for e in goal["add"]]})
         plan = st["structure"]["plan"]
     cache = cache or R.Cache(project.path("renders"))
-    ear = EAR.ToolEar(cache)
+    ear = ear or EAR.ToolEar(cache)
     done = []
     for i in range(cur["next"], len(plan)):
         if stop_after is not None and len(done) >= stop_after:
@@ -706,12 +708,15 @@ def continue_composition(project, goal: Optional[dict] = None,
                           if ins.get("role") in MELODIC_ROLES] or None
             elif focus:
                 voices = list(focus)
-            h = ear.hear(tl, tl.range(spec), focus=voices)
+            h = ear.hear(tl, tl.range(spec), focus=voices,
+                         intent=st["identity"].get("intent", ""))
             ids = [project.add_observation(o) for o in h["observations"]]
             step["heard"] = {"range": spec, "observations": ids,
                              "section_range": f"rows {slot['row0']}-"
                                               f"{slot['row1'] - 1}",
                              "focus": voices or "every voice",
+                             "mode": h["mode"],
+                             "listening": EAR.listening(ear),
                              "statement": h["statement"],
                              "cost": h["cost"]}
         if after is not None:
