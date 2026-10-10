@@ -54,6 +54,17 @@ studio/studio.json
 *.mp3
 *.flac
 
+# Other people's music: a project's references (agentic/references.py)
+# keep the file as given, its decoded or rendered audio and its stems in
+# <project>/references/. They are study material under their own licence
+# and are never committed, wherever a project lives.
+*.it
+*.xm
+*.s3m
+*.mod
+*.mptm
+**/references/ref*/
+
 # Except the things that are meant to ship.
 !examples/*.json
 
