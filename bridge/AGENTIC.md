@@ -140,6 +140,7 @@ under that root.
 | | `python/llm.py` | the endpoint the audio adapter calls |
 | fixed | `python/tracker.py` | `loads(text, rows=...)` records each grid row's line, tick and first event (the event list is unchanged); re-pointed after the forge's placement pass |
 | | `python/sequencer.py` | `reapply` writes the effect state when the chip still holds an offset (a delayed vibrato no longer leaves notes detuned) |
+| | `python/synthesis/placement.py` | the placement pass keeps a score's own Wait boundaries: it merged the Waits of empty rows, and once any program was installed that moved the arpeggio steps and vibrato ticks of every score |
 | | `python/agentic/loop.py`, `compose.py`, `agent.py` | `improve` and `continue_composition` took a Tool ear whatever ear was chosen; they take the chosen one now, its listening verdict recorded apart and able to veto |
 | | `python/synthesis/backends/rp2a03.py` | the NES probe read a render's bytes as the pure-Python buffer does (`.data[0::2]`); with numpy installed that is a 2-D memoryview and raised. It reads the left channel through `analysis.split_stereo` now. Found by a reviewer who ran the suite with numpy; the whole suite now runs both ways |
 | | `README.md` | stale numbers and the batch note (above) |
@@ -160,7 +161,7 @@ under that root.
 | | `python/agent.py` | the facade and its CLI |
 | | `tests/test_agentic.py` | the spec's tests A-F and their foundations (18 tests) |
 | | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
-| | `tests/test_agentic_refs.py` | their tests (12) |
+| | `tests/test_agentic_refs.py` | their tests (13) |
 | | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
@@ -231,17 +232,26 @@ tries changes that carry the reference's principle over — never its notes.
 | `agentic/guided.py` | one round on a range (`improve_toward_reference`), and `hear_continuation`: a new section heard with the previous one, the join and the chosen sketches |
 | `agentic/sketches.py` | the agent's drafts: other seeds or energies for a section, rejected candidates with their reason, chosen directions |
 
-Two engine faults were found and fixed on the way, each with a test that
-fails without the fix:
+Three engine faults were found and fixed on the way, each with a test
+that fails without the fix:
 
 - a vibrato with a delay restarts at each key-on and adds nothing until
   the delay ends, but the chip kept the offset where the last note's swing
   stopped: every note after the first sat 9.3 cents sharp for the whole
   0.3 s delay (`sequencer.reapply`; 1.2 cents, the fnum step, now);
 - the tracker's row clock named each row's first event by its index while
-  parsing; the forge's placement pass adds events and merges Waits, so
-  with a program instrument every later row pointed early and a range
-  render cut by rows started in the wrong place (`tracker._reindex_rows`).
+  parsing; the forge's placement pass adds events, so with a program
+  instrument every later row pointed early and a range render cut by rows
+  started in the wrong place (`tracker._reindex_rows`);
+- the placement pass runs on every score once any program is installed,
+  and it merged the Waits of empty rows. The sequencer starts its effect
+  clock afresh at each Wait, so a score that never named the instrument
+  had its arpeggio steps and vibrato ticks moved: a held `A-4/047` lost
+  its +7 step. The pass keeps the score's own cuts of time now
+  (`placement._timeline`, `_rebuild`); a score it has nothing to place in
+  comes out exactly as it went in. A tracker test that left its probe
+  instrument installed is how it showed: four tests in other modules
+  failed after it.
 
 What the readings can and cannot say:
 

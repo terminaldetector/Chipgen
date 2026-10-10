@@ -413,17 +413,28 @@ def improve_toward(project, spec: str, references: List[str],
             # changes twice, while a gap of another kind tries others
             kinds_taken.add(kind)
             chosen.append(o)
-    # the reference voice's other readings of the same kind go with the
-    # goal (a vibrato's rate and delay with its depth), so the transfer
-    # carries the whole principle, not just the number that was missing
+    # the reference voice's rate goes with a vibrato's depth, so the
+    # transfer carries the swing, not just the number that was missing.
+    # Its delay does not: it is the length of the reference's own held
+    # notes (the Gunstar lead's 800 ms is longer than a beat of the
+    # étude). Which notes swing is what carries over (the share), and the
+    # design fits the delay to this part's own note lengths from it
+    # (instrument._delay_for_share)
     for o in instrument_obs:
         theirs = (heard["readings"].get(o["against"]) or {}).get("voice") \
             or {}
-        for key in ("vibrato_rate_hz", "vibrato_delay_ms"):
-            if key not in instrument_goal and \
-                    isinstance(theirs.get(key), (int, float)) and \
-                    "vibrato_depth_cents" in instrument_goal:
-                instrument_goal[key] = theirs[key]
+        if "vibrato_rate_hz" not in instrument_goal and \
+                isinstance(theirs.get("vibrato_rate_hz"), (int, float)) and \
+                "vibrato_depth_cents" in instrument_goal:
+            instrument_goal["vibrato_rate_hz"] = theirs["vibrato_rate_hz"]
+    goal_note = None
+    if "vibrato_share" in instrument_goal and \
+            "vibrato_delay_ms" in instrument_goal:
+        goal_note = (f"the reference's vibrato delay "
+                     f"({instrument_goal.pop('vibrato_delay_ms'):g} ms) is "
+                     f"not a goal: it is the length of its own notes; the "
+                     f"share of notes that swing is, and the delay is "
+                     f"fitted to this part's notes from it")
     for o in chosen[:max_gaps]:
         dim, kind = PRINCIPLES[o["feature"]]
         ref_f = next(f for f in fragments if f["label"] == o["against"])
@@ -521,6 +532,7 @@ def improve_toward(project, spec: str, references: List[str],
             "dimension": "instrument", "statement": "; ".join(
                 o["statement"] for o in instrument_obs),
             "basis": "measured", "goal": instrument_goal,
+            "goal_note": goal_note,
             "outcome": rec["outcome"], "why": rec["why"],
             "committed_rev": rec.get("committed_rev"),
             "chosen": rec.get("chosen"),

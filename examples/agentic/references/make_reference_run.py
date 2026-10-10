@@ -245,6 +245,10 @@ def _write_md(out, report, guided):
         lines.append(f"Outcome: **{w['outcome']}** — {w.get('why')}")
         if w.get("note"):
             lines.append(f"(Note: {w['note']}.)")
+        if w.get("goal"):
+            lines.append("Goal: " + ", ".join(
+                f"{k} {v:g}" for k, v in w["goal"].items())
+                + (f" ({w['goal_note']})" if w.get("goal_note") else ""))
         for h in w["hypotheses"]:
             kept = "kept" if w.get("outcome") == "committed" and \
                 w.get("chosen") == h.get("id") else "rolled back"

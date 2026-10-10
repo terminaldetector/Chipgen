@@ -76,7 +76,7 @@ def _state_path(pattern, quick):
 
 
 #: The tests that render enough audio to take a second or more each,
-#: measured on a pure-Python sandbox: 53 of the suite, and about
+#: measured on a pure-Python sandbox: 76 of the suite, and about
 #: nine tenths of its time. `--quick` runs everything else — every module,
 #: every chip, in well under a minute — and says it was the quick set.
 #: test_studio checks that every name here is still a real test.
