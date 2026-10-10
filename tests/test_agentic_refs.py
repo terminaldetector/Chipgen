@@ -493,6 +493,19 @@ def test_a_guided_round_keeps_what_moves_toward_the_reference():
         shutil.rmtree(root)
 
 
+def test_a_sketch_drafted_before_a_voice_came_keeps_its_cells_by_voice():
+    # A sketch drafted before the piece gained a voice (an echo on a new
+    # column) is still compared: its cells go to the piece's columns by
+    # name, and the new voice is silent in it.
+    from agentic import guided as G
+    rows = [["C-4", "E-4", "kick"], ["...", "===", "..."]]
+    assert G._in_columns(rows, ["fm0", "fm1", "dac"],
+                         ["fm0", "fm1", "dac", "fm3"]) == [
+        ["C-4", "E-4", "kick", "..."], ["...", "===", "...", "..."]]
+    assert G._in_columns(rows, ["fm0", "fm1", "dac"],
+                         ["fm1", "fm0", "dac"])[0] == ["E-4", "C-4", "kick"]
+
+
 def test_a_new_section_is_heard_with_the_one_before_the_join_and_a_sketch():
     import json as _json
     from agentic import compose as C, fixtures, guided as G

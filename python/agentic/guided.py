@@ -555,6 +555,15 @@ def improve_toward(project, spec: str, references: List[str],
 
 
 # -- continuing: the previous section, the join, the new one, the sketches ------------------
+def _in_columns(rows: List[list], theirs: List[str],
+                ours: List[str]) -> List[list]:
+    """Rows written for the columns `theirs`, in the order of `ours`; a
+    column they do not have is empty."""
+    at = {name: i for i, name in enumerate(theirs)}
+    return [[row[at[name]] if name in at and at[name] < len(row) else "..."
+             for name in ours] for row in rows]
+
+
 def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
                       folder: Optional[str] = None,
                       cache: Optional[R.Cache] = None) -> dict:
@@ -608,7 +617,8 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
     out["sketches"] = []
     for sid in sketch_ids or []:
         s = SK.get(project, sid)
-        drafted = next((x for x in SK.content_of(project, sid)["sections"]
+        sketch = SK.content_of(project, sid)
+        drafted = next((x for x in sketch["sections"]
                         if x["id"] == section_id), None)
         if drafted is None:
             out["sketches"].append({"id": sid, "compared": False,
@@ -616,8 +626,14 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
             continue
         # the sketch's rows for this section, played by the piece as it
         # is now (its instruments, its other sections): the comparison is
-        # of the composition, not of what changed elsewhere since
+        # of the composition, not of what changed elsewhere since. Its
+        # cells go to the piece's columns by voice; a voice the piece has
+        # gained since (an echo) is silent in it, and the entry says so
         c = state_content(project.state)
+        theirs = sketch.get("columns") or c["columns"]
+        silent = [col for col in c["columns"] if col not in theirs]
+        drafted = dict(drafted, rows=_in_columns(drafted["rows"], theirs,
+                                                 c["columns"]))
         if len(drafted["rows"]) != len(next(
                 x for x in c["sections"] if x["id"] == section_id)["rows"]):
             out["sketches"].append({"id": sid, "compared": False,
@@ -638,7 +654,9 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
             f"with the piece's instruments now", "sketch", sid,
             cache=cache))
         out["sketches"].append({"id": sid, "label": s["label"],
-                                "compared": True})
+                                "compared": True}
+                               | ({"silent_in_it": silent} if silent
+                                  else {}))
     folder = folder or project.path("out", "continue", section_id)
     rep = LI.compare(project, [f for f in fragments if f["kind"] != "join"]
                      if len(fragments) > 1 else fragments, folder,
