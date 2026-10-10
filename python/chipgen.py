@@ -70,7 +70,7 @@ F-2  ...  ...  C-5   w1   snare
 class Result:
     """What a render produced: the audio plus where it was written."""
 
-    __slots__ = ("it_path", "it_report",
+    __slots__ = ("it_path", "it_report", "mp3_path", "mp3_report",
                  "audio", "events", "sample_rate", "wav_path", "vgm_path",
                  "warnings", "source_format", "metadata")
 
@@ -78,6 +78,8 @@ class Result:
                  vgm_path=None, warnings=None, source_format="", metadata=None):
         self.audio = audio
         self.events = events
+        self.mp3_path = None
+        self.mp3_report = None
         self.sample_rate = sample_rate
         self.wav_path = wav_path
         self.vgm_path = vgm_path
@@ -103,10 +105,30 @@ class Result:
             parts.append(os.path.basename(self.vgm_path))
         if getattr(self, "it_path", None):
             parts.append(os.path.basename(self.it_path))
+        report = getattr(self, "mp3_report", None)
+        if report:
+            parts.append(f"{os.path.basename(report['path'])} "
+                         f"({report['bytes'] // 1024} KB, {report['mode']}, "
+                         f"{report['ratio']}x smaller than WAV)")
         return ", ".join(parts)
 
     def __repr__(self):
         return f"<chipgen.Result {self.summary()}>"
+
+    def levels(self, sequencer=None):
+        """Every sounding voice, rendered alone and measured.
+
+        The question this answers is "why can't I hear the instruments",
+        and it is not answerable from the mix — a mix is a sum. Each
+        voice is re-rendered with the others' notes removed and its own
+        setup intact, so the number is that channel's contribution
+        rather than a guess from the event list.
+
+        Costs one render per voice, which is why it is a method you call
+        rather than something compose() always does.
+        """
+        import levels as levels_mod
+        return levels_mod.measure(self.events, sequencer)
 
     def profile(self, bpm: float = None, beats_per_bar: int = 4):
         """RMS/peak per section — by Marker if the score used them,
@@ -160,6 +182,14 @@ def to_events(source, ticks_per_second: float = None):
     if kind == "json":
         data = json.loads(source) if isinstance(source, str) else list(source)
         if isinstance(data, dict):
+            if "voices" in data:
+                # A Score, not an event list — the shape the NES half of
+                # the corpus is stored in. Without this branch all 74 of
+                # those files rendered to 1 event and 0.00 seconds, and
+                # said "wrote" on the way out.
+                import score_model as score_model_mod
+                score = score_model_mod.from_json(data)
+                return score_model_mod.to_events(score), [], None
             # tolerate {"events": [...]} — a shape models produce constantly
             data = data.get("events", data.get("pattern", []))
         events, warnings = events_mod.parse(data)
@@ -171,13 +201,23 @@ def to_events(source, ticks_per_second: float = None):
     return events, [], metadata
 
 
+def _load_forge_banks(paths):
+    """Install instruments made by the synthesis layer (python/forge.py)
+    for all three chips by name. Before the score is parsed, because the
+    tracker places them (detune layers, NES macros) as it reads."""
+    from synthesis import bank as forge_bank_mod
+    for path in ([paths] if isinstance(paths, str) else paths):
+        forge_bank_mod.Bank.load(path).install()
+
+
 def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
-            it: str = None,
+            it: str = None, mp3: str = None, bitrate: int = None,
             bpm: float = None, ticks_per_second: float = None,
             target_rate: int = 44100, title: str = "", author: str = "",
             pal: bool = False, dc_block: bool = True,
-            chip_type: str = None, bank: str = None,
-            normalize: float = None, quiet: bool = True):
+            chip_type: str = None, bank: str = None, opl_bank: str = None,
+            normalize: float = None, quiet: bool = True,
+            forge_bank=None):
     """Render tracker text / JSON events / Event objects to audio.
 
     Everything but `source` is optional; with no output paths it just
@@ -194,10 +234,22 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     Result.warnings rather than raised — a model that got 95% of a pattern
     right should hear the 95%.
     """
+    if mp3:
+        # Before the render, not after it: a rate MP3 cannot carry should
+        # cost nothing, not a whole render and then a traceback.
+        import mp3 as mp3_mod
+        mp3_mod.check(target_rate, bitrate)
     if bank:
         # Merged into the shared bank, so names from an imported set and the
-        # built-in ones are referenced the same way in a score.
+        # built-in ones are referenced the same way in a score. Loading it
+        # twice is harmless — load_bank merges — and compose() is a public
+        # entry point in its own right, so it cannot rely on the CLI.
         instruments_mod.load_bank(bank)
+    if opl_bank:
+        import opl_instruments
+        opl_instruments.load_bank(opl_bank)
+    if forge_bank:
+        _load_forge_banks(forge_bank)
 
     events, warnings, metadata = to_events(source, ticks_per_second)
 
@@ -222,6 +274,11 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         tag.title = "chipgen"
 
     warnings = warnings + sanity_mod.check(events, rate)
+    import integrity
+    edited = integrity.warning()
+    if edited:
+        warnings.append(edited)
+
 
     buf = seq.render(events, vgm_path=vgm, gd3=tag)
     if normalize:
@@ -229,6 +286,14 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
         buf = mixer.normalize_peak(buf, normalize)
     if wav:
         wavio.write(wav, buf, target_rate)
+    mp3_report = None
+    if mp3:
+        # A tenth of the WAV and playable anywhere — the format to hand
+        # back from a sandbox, where a WAV is often the most expensive
+        # thing in the exchange. See mp3.py.
+        mp3_report = mp3_mod.encode(buf, target_rate, mp3, bitrate=bitrate,
+                                    title=tag.title if tag.title != "chipgen"
+                                    else "", artist=tag.author)
     if tracker_out:
         tracker_mod.dump(events, tracker_out, metadata)
     it_report = None
@@ -241,6 +306,21 @@ def compose(source, wav: str = None, vgm: str = None, tracker_out: str = None,
     result = Result(buf, events, target_rate, wav, vgm, warnings,
                     detect_format(source), metadata)
     result.it_path = it
+    result.mp3_report = mp3_report
+    result.mp3_path = mp3_report["path"] if mp3_report else None
+    # The last net. Every known cause of a silent render has its own check
+    # above; this catches the ones nobody has met yet, because "wrote
+    # song.wav" over a file of zeros is the worst thing this can say.
+    sounding = (events_mod.FMNoteOn, events_mod.PSGToneOn,
+                events_mod.PSGNoiseOn, events_mod.DACSample,
+                events_mod.OPLNoteOn, events_mod.NESNoteOn,
+                events_mod.NESNoiseOn, events_mod.NESSample)
+    if result.peak == 0.0 and any(isinstance(e, sounding) for e in events):
+        result.warnings.append(
+            "the render is SILENT: there are notes in the score and not "
+            "one non-zero sample in the audio. Look at the warnings above "
+            "for the cause; if there are none, that is a bug worth "
+            "reporting rather than working around")
     result.it_report = it_report
     if not quiet:
         print(result.summary())
@@ -267,6 +347,27 @@ def vocabulary() -> dict:
     return events_mod.describe_vocabulary()
 
 
+def _arrange_targets() -> dict:
+    import arrange
+    return arrange.targets()
+
+
+def _opl2_fields():
+    import opl2
+    return opl2.YM3812.OPERATOR_FIELDS
+
+
+def _opl2_aliases():
+    import opl2
+    return opl2.YM3812.OPERATOR_ALIASES
+
+
+def _forge_info() -> dict:
+    """The instrument/driver synthesis layer, for the manifest."""
+    import synthesis
+    return synthesis.info()
+
+
 def info() -> dict:
     """Machine-readable description of what this copy of chipgen can do.
 
@@ -275,12 +376,252 @@ def info() -> dict:
     looking at the same thing.
     """
     backend = core_loader.status()
+    import fx
+    import opn2
+    import selection
     return {
         "name": "chipgen",
+        "form": {
+            "how": "`pattern NAME` opens a block of rows; `order a b*3 c` "
+                   "plays them in sequence",
+            "repeat": f"name*N, up to {tracker_mod.MAX_ORDER_REPEAT}",
+            "scope": "before the first pattern is setup and runs once; "
+                     "lines inside a pattern replay on every use; after "
+                     "the order comes last",
+            "strict": "an undefined pattern in the order, and a defined "
+                      "pattern the order never plays, are both errors",
+        },
+        "effect_column": fx.vocabulary(),
+        "samples": {
+            "kit": samples_mod.names(),
+            "import": "`sample NAME PATH.wav [BASE_NOTE]` in a score, or "
+                      "samples.load_wav(name, path, base_note=...)",
+            "pitched": "`kick@D-3` in a dac cell; `kick@D-3:0.5` for level too",
+            "dac_rate_ceiling_hz": samples_mod.DAC_RATE_CEILING,
+            "ceiling_note": "measured: above this the chip drops bytes, so a "
+                            "sample keeps its length and loses its pitch. "
+                            "Pitching up thins the data instead.",
+        },
+        "live_fm": {
+            "how": "`op fm0 4 tl 12` writes one operator field between two "
+                   "rows; `alg fm1 4 6` changes routing and feedback",
+            "operator_numbering": "1-4 as on a block diagram; the register "
+                                  "interleave op1,op3,op2,op4 is handled",
+            "fields": sorted(opn2.YM2612.OPERATOR_FIELDS),
+            "aliases": opn2.YM2612.OPERATOR_ALIASES,
+            "absolute": "values are absolute and the next note-on reloads "
+                        "the patch over them, as on the hardware",
+        },
+        "ch3_special": {
+            "how": "`ch3 special` then `ch3op 1 A-5` — each of channel 3's "
+                   "operators takes its own pitch instead of tracking the "
+                   "channel; `ch3 normal` gives it back",
+            "what_for": "one channel holding a fixed inharmonic cluster: "
+                        "bells, gongs, metallic percussion — the FM side has "
+                        "no noise generator, so this is how drivers get it",
+            "what_you_write_is_a_base_frequency": "not a partial: `mul` "
+                    "multiplies it, the algorithm decides whether the "
+                    "operator sounds or only modulates, and a carrier at "
+                    "tl 127 is muted. On an arbitrary patch the mode gives "
+                    "an inharmonic smear rather than the cluster you wrote. "
+                    "Measured: bell_pluck's operator 3 is mul 7, so a G-6 "
+                    "written there sounds at 10976 Hz and nothing appears "
+                    "at 1568 Hz — an 80 dB swing against mul 1.",
+            "operator_numbering": "`op` and `ch3op` take block-diagram "
+                    "numbering 1-4. FMInstrument.operators is in REGISTER "
+                    "order (op1, op3, op2, op4), so reading a patch in "
+                    "Python is what misleads, not the directives.",
+            "to_hear_the_pitches_as_written": "put the channel on algorithm "
+                    "7 (four parallel carriers), set every mul to 1, and "
+                    "give each operator an audible tl — `alg fm2 7` then "
+                    "`op fm2 N mul 1` / `op fm2 N tl V`",
+            "persistence": "the operators you pitch keep those pitches "
+                    "across note-ons — the supplementary registers are not "
+                    "part of a patch, so a new note re-keys the cluster "
+                    "rather than replacing it. `ch3 normal` clears it.",
+            "scope": "channel 3 only — one bit in one register, not a "
+                     "global mode; the other five channels are unaffected",
+            "registers": {str(op): [hex(low), hex(high)] for op, (low, high)
+                          in opn2.YM2612.CH3_OPERATOR_REGISTERS.items()},
+            "register_note": "the supplementary pairs were mapped by "
+                             "experiment, not from a published table: "
+                             "$A8/$AC is operator THREE, because these "
+                             "registers ascend in the same op1,op3,op2 order "
+                             "the operator offsets do",
+            "operator_4": "has no supplementary pair of its own — it follows "
+                          "the channel's own frequency at $A2/$A6",
+            "csm": "`ch3 csm` also keys the channel from timer A (a speech "
+                   "trick); accepted, and does nothing without a timer",
+        },
+        "nes": {
+            "columns": "nes0/nes1 pulses, nes2 triangle, nes3 noise, "
+                       "nes4 DMC. Aliases: pulse1/pu1/sq1, pulse2/pu2/sq2, "
+                       "tri/triangle, nnoise/nesnoise, dmc/nespcm",
+            "cells": "nes0-nes2 take notes (A-4, A#3:100, ===); nes3 takes "
+                     "a noise period 0-15 with optional m for the short "
+                     "shift register and :velocity (6, 4m:80); nes4 takes "
+                     "a kit sample name",
+            "directives": "`nes duty nes0 1` (0=12.5% 1=25% 2=50% 3=75%), "
+                          "`nes sweep nes0 3 2 up|down`, `nes sweep nes0 "
+                          "off`, `nes dmc nes4 64`",
+            "ranges": {
+                "pulse": "A-1 (55 Hz) up to about C-6. Below A-1 the "
+                         "11-bit timer clamps and the note sounds SHARP, "
+                         "not low — a written C-1 measures +888 cents.",
+                "triangle": "A-0 (27.5 Hz) to about A-5, one octave lower "
+                            "because it divides by 32 rather than 16",
+                "accuracy": "measured within 4 cents to C-6, degrading to "
+                            "12 cents at A-6 as the timer runs out",
+            },
+            "the_sweep_mute": "the sweep unit silences a pulse channel "
+                    "whenever the target period passes $7FF, and it does "
+                    "that whether or not the sweep is enabled. With shift "
+                    "0 the target is twice the period, so everything below "
+                    "about 110 Hz would be muted — measured, A-1/C-2/E-2/"
+                    "G-2 all render 0.0000 RMS. chipgen writes the negate "
+                    "bit at init so the octave is audible, the same thing "
+                    "real drivers do. A `down` sweep re-arms the mute.",
+            "the_triangle_has_no_volume": "it has no volume register at "
+                    "all, and that is not approximated — its output "
+                    "measures bit-identical at velocity 8 and at 127, so "
+                    "7xy and Axy on nes2 raise an error rather than doing "
+                    "nothing. Pitch effects work on it normally.",
+            "duty_3_equals_duty_1": "75% is 25% inverted — measured "
+                    "identical harmonics, differing only in phase. Two "
+                    "pulse channels on 1 and 3 give one timbre twice.",
+            "dmc": "$4011 is a plain 7-bit DAC, so nes4 plays the same kit "
+                   "the Genesis DAC does, one bit coarser. Effects on it "
+                   "are volume-only, same as the dac column.",
+            "vgm": "exported with the NES clock at header offset 0x84 and "
+                   "command 0xB4 per register write; vgm_player replays "
+                   "it. Every voice round-trips above 0.997 correlation "
+                   "against its own render.",
+        },
+        "live_opl2": {
+            "how": "`op opl0 2 wave 2` writes one operator field mid-note; "
+                   "`alg opl0 0|1` sets FM or additive, with optional "
+                   "feedback",
+            "operators": "1 (modulator) and 2 (carrier) — two, not four",
+            "algorithm": "one bit: 0 FM (modulator into carrier), 1 "
+                         "additive (both heard). `alg opl0 4` is refused, "
+                         "not clamped.",
+            "fields": sorted(_opl2_fields()),
+            "aliases": _opl2_aliases(),
+            "which_operator_to_attenuate": "depends on the connection "
+                    "bit. Measured on opl_organ, which is additive: "
+                    "tl 40 on the carrier alone gives -1.7 dB, the "
+                    "modulator alone -4.7, both together -19.1. In FM "
+                    "mode the same single carrier write gives -17.4. On "
+                    "an additive patch, move both.",
+            "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute "
+                    "sine, 3 pulse-sine. Rectifying doubles the "
+                    "frequency, so waves 2 and 3 put their loudest "
+                    "partial on the SECOND harmonic — measured at A-4 "
+                    "the fundamental is 90 dB down and the note sounds "
+                    "an octave up. Changing waveform mid-phrase changes "
+                    "octave with it.",
+            "rhythm_mode": "NOT implemented. Register 0xBD's five "
+                           "percussion voices need the voices actually "
+                           "emulated; use the dac kit for drums.",
+        },
+        # Fitting music onto a chip, as opposed to checking an
+        # arrangement that already fits. `arrangement_checks` below is
+        # the second thing; this is the first.
+        "rearrangement": {
+            "what": "arrange.py fits a score from anywhere — a .trk, a "
+                    "transcribed register log, a Score JSON, a MIDI file "
+                    "— onto a target chip and reports every compromise: "
+                    "`--arrange-for RP2A03`, or `--arrangements` for what "
+                    "each target holds",
+            "targets": {name: f"{target['melodic_voices']} melodic voices"
+                              + (f" + {len(target['percussion'])} percussion"
+                                 if target["percussion"] else "")
+                        for name, target in _arrange_targets().items()},
+            "never_clamps": "a note out of range is transposed by whole "
+                            "octaves, never clamped: below the NES pulse "
+                            "floor the 11-bit timer clamps and the note "
+                            "sounds 888 cents SHARP rather than low",
+            "velocity_domains": "the YM2612, OPL2 and NES read 1-127 as a "
+                                "fader; the SN76489 reads 0-15 as an "
+                                "attenuator where 0 is loudest and a step "
+                                "is -2 dB. Crossing between them is "
+                                "converted through dB — copying the "
+                                "number inverts the dynamics",
+            "reports": "dropped voices, octave moves, folded notes, "
+                       "flattened chords and converted velocities are all "
+                       "named, per voice",
+        },
+        "arrangement_checks": {
+            "crowding": "three or more FM voices whose median pitches fall "
+                        "inside one octave are reported: six is the whole "
+                        "chip, so that is most of the arrangement in one "
+                        "band, reading as a single thick sound. Measured "
+                        "from where the parts sit, with no reference to "
+                        "patch names — the bass/lead register checks look "
+                        "the instrument up by name and so see nothing on "
+                        "an imported bank.",
+            "note": "sanity.check() declines to judge anything shorter "
+                    "than 5 seconds; a few rows is not an arrangement",
+        },
+        "mix_levels": {
+            "how": "`chipgen.py score.trk --levels` renders each voice "
+                   "ALONE and reports rms, peak, crest factor and unused "
+                   "patch headroom, plus what to do about it. "
+                   "Result.levels() from Python.",
+            "why_not_the_mix": "a per-channel level cannot be recovered "
+                               "from a finished mix — a mix is a sum. "
+                               "Each voice is re-rendered with the others' "
+                               "notes removed and its own setup intact.",
+            "the_drums_own_the_master": "measured against the fully "
+                    "calibrated built-in bank: the DAC peaks 5-6 dB above "
+                    "every FM voice while sitting ~1 dB BELOW them in RMS, "
+                    "because its crest factor is 17.4 dB against 5-8. "
+                    "Mastering normalises PEAK, so that gap comes straight "
+                    "out of everything else. Patch calibration narrows it "
+                    "and cannot close it — `vol dac N` is the fix, and "
+                    "`vol dac 55` measured them level.",
+            "uncalibrated_banks": "a bank imported with --no-calibrate "
+                    "carries whatever level its source game happened to "
+                    "be at, which can be 12-18 dB under the built-in "
+                    "bank. `vol` CANNOT recover it: velocity attenuates "
+                    "down from the patch's own level and never above it. "
+                    "Fix the bank, not the score: `python3 "
+                    "python/vgm_import.py --recalibrate BANK.json`.",
+            "how_the_check_works": "each patch is measured against the "
+                    "bank's own reference (the same measurement "
+                    "calibration makes) rather than against whatever else "
+                    "is in the score. Unused headroom alone would flag "
+                    "the built-in bank, whose patches hold 4.5-9 dB on "
+                    "purpose; 'quiet relative to the mix' would miss an "
+                    "uncalibrated bank, which holds every patch back "
+                    "equally and so looks level once the drums are down.",
+        },
+        "instrument_selection": {
+            "how": "patches are measured, not tagged; roles and genres are "
+                   "target positions on measured axes, and every pick comes "
+                   "back with the numbers that chose it",
+            "roles": sorted(selection.ROLES),
+            "genres": sorted(selection.GENRES),
+            "axes": {name: phrase for name, (_, phrase)
+                     in selection.AXES.items()},
+            "cli": "chipgen.py --cast lead --genre hardcore | --palette "
+                   "--genre ambient | --audition PATCH",
+        },
+        "forge": _forge_info(),
         "version": VERSION,
         "summary": "Generative chiptune on real YM2612 + SN76489 emulation, "
                    "driven by a flat event vocabulary any model can emit.",
         "chips": {
+            "RP2A03": {
+                "channels": "2 pulse + triangle + noise + DMC",
+                "role": "NES / Famicom APU, register-level model with "
+                        "the hardware's non-linear mixing",
+                "scoreable": True,
+                "notes": "the triangle has no volume control and the "
+                         "pulse channels are muted below ~110 Hz unless "
+                         "the sweep negate bit is set — see the `nes` "
+                         "section",
+            },
             "YM2612": {
                 "channels": 6,
                 "role": "4-operator FM; channel 6 doubles as an 8-bit PCM DAC",
@@ -296,6 +637,19 @@ def info() -> dict:
                 "role": "Sega PSG, register-level model",
                 "backend": backend["sn76489"],
             },
+            "YM3812": {
+                "channels": 9,
+                "role": "OPL2 — AdLib / Sound Blaster. 2-operator FM with "
+                        "four selectable waveforms, which the YM2612 has "
+                        "not got",
+                "backend": "pure-python",
+                "scoreable": True,
+                "notes": "one algorithm bit (FM or additive), not eight. "
+                         "Waves 2 and 3 rectify, so they sound an octave "
+                         "above waves 0 and 1 at the same written note — "
+                         "see the `live_opl2` section. Rhythm mode "
+                         "(register 0xBD) is not implemented.",
+            },
         },
         "runtime": {
             "python": sys.version.split()[0],
@@ -309,6 +663,15 @@ def info() -> dict:
             "tracker": "compact text grid; see python/tracker.py docstring",
             "json": "array of event objects; see events",
             "events": "python objects from events.py",
+            "score_json": "a dict of voices and drums — notes rather than "
+                          "events, which is how the NES half of the corpus "
+                          "is stored",
+            "midi": "a Standard MIDI File (.mid). It holds PARTS, not "
+                    "channels, so it has to be fitted to a chip before it "
+                    "can be played — the CLI does that and says which chip "
+                    "it picked. This is the join with every tool that turns "
+                    "a recording into notes; nothing in this project reads "
+                    "audio",
         },
         "instrument_import": {
             "tool": "python/vgm_import.py",
@@ -318,9 +681,16 @@ def info() -> dict:
                      "then render with --bank bank.json",
         },
         "outputs": {
-            "wav": "16-bit PCM, any sample rate (default 44100)",
+            "mp3": "what to hand back: -o song.mp3. About a tenth of the "
+                   "WAV (160 kbps default, --bitrate 128 is 11x smaller) "
+                   "and plays anywhere. LAME when the machine has it, a "
+                   "built-in encoder when it does not",
+            "wav": "16-bit PCM, any sample rate (default 44100) — ten "
+                   "megabytes a minute",
             "vgm": "VGM 1.71 register log; plays in VGM players, imports "
-                   "into DefleMask and Furnace. .vgz gzips it.",
+                   "into DefleMask and Furnace. .vgz gzips it — hand that "
+                   "back: DAC and DMC drums are a write per sample, "
+                   "megabytes uncompressed",
             "tracker": "the score written back out as text",
         },
         "instruments": instruments_mod.describe(),
@@ -361,17 +731,76 @@ def _master_peak(value):
     return value if value > 0 else None
 
 
+def _delivery() -> str:
+    """Inside the bridge archive the reader of a brief is an agent in a
+    sandbox; anywhere else it is someone about to paste it into a chat."""
+    import integrity
+    shipped = os.path.join(integrity.ROOT, integrity.MANIFEST)
+    return "agent" if os.path.exists(shipped) else "chat"
+
+
+def _generate(args, request) -> int:
+    """--generate: brief a model, check what it writes, render the result."""
+    import re
+
+    import llm
+
+    chip = (args.chip_target or "YM2612").upper()
+    request["chip"] = chip
+    endpoint = llm.Endpoint(args.endpoint, args.model, args.api_key,
+                            grammar_field=args.grammar_field)
+    delivery = args.delivery or "chat"
+    print(f"asking {endpoint.model} at {endpoint.url} for a {chip} score "
+          f"({delivery}, up to {args.rounds} rounds)")
+    result = llm.generate(chip, request, endpoint, family=args.family,
+                          rounds=args.rounds, delivery=delivery, log=print)
+    if args.json:
+        print(json.dumps(result.to_json(), indent=1, ensure_ascii=False))
+    else:
+        print(result.summary())
+    if not result.ok:
+        print("\nnot playable after the last round:")
+        print(result.verdict.feedback(delivery))
+        return 1
+
+    slug = re.sub(r"[^a-z0-9]+", "_", (args.generate or "song").lower())
+    slug = slug.strip("_")[:40] or "song"
+    os.makedirs("work", exist_ok=True)
+    score_path = args.tracker or os.path.join("work", f"{slug}.trk")
+    with open(score_path, "w", encoding="utf-8") as handle:
+        handle.write(result.score)
+    wav = args.wav or os.path.join("work", f"{slug}.wav")
+    rendered = compose(result.score, wav=wav, vgm=args.vgm,
+                       normalize=_master_peak(args.peak), quiet=False,
+                       chip_type=args.chip)
+    print(f"wrote {score_path}")
+    for path in (rendered.wav_path, rendered.vgm_path):
+        if path:
+            print(f"wrote {path}")
+    return 0
+
+
 def main(argv):
     import argparse
 
     parser = argparse.ArgumentParser(
         prog="chipgen",
         description="Render a chipgen score (tracker text or JSON events) "
-                    "to WAV and/or VGM.")
+                    "to MP3, WAV and/or VGM.")
     parser.add_argument("source", nargs="?",
                         help="score file; '-' reads stdin")
-    parser.add_argument("-o", "--wav", help="write a WAV here")
-    parser.add_argument("--vgm", help="write a VGM here (.vgz to compress)")
+    parser.add_argument("-o", "--wav", metavar="FILE",
+                        help="write the audio here: a .wav, or a .mp3 — "
+                             "about a tenth of the size and playable "
+                             "anywhere, which is what to hand back from a "
+                             "sandbox")
+    parser.add_argument("--mp3", help="also write an MP3 here")
+    parser.add_argument("--bitrate", type=int,
+                        help="MP3 bitrate in kbps (default 160; 128 is "
+                             "11x smaller than the WAV, 192 7x)")
+    parser.add_argument("--vgm", help="write a VGM here; a .vgz path gzips "
+                                      "it — hand that one back, DAC and DMC "
+                                      "drums make a plain VGM megabytes")
     parser.add_argument("--tracker", help="write the score back as text here")
     parser.add_argument("--it", metavar="SONG.IT",
                         help="write an Impulse Tracker module here — opens "
@@ -387,6 +816,21 @@ def main(argv):
                              "(default 0.89; --peak 0 to leave levels alone)")
     parser.add_argument("--bank", metavar="BANK.JSON",
                         help="load extra instruments (see vgm_import.py)")
+    parser.add_argument("--opl-bank", metavar="BANK.JSON",
+                        help="load extra OPL2 patches (see opl_import.py)")
+    parser.add_argument("--forge-bank", metavar="BANK.JSON", action="append",
+                        help="load instruments made by the synthesis layer "
+                             "(python3 python/forge.py run ...): YM2612, "
+                             "OPL2 and NES in one file; repeatable")
+    parser.add_argument("--cast", metavar="ROLE",
+                        help="rank the bank for a musical role and exit "
+                             "(bass, lead, pad, pluck, harmony, bell, stab)")
+    parser.add_argument("--palette", action="store_true",
+                        help="cast a whole arrangement and exit")
+    parser.add_argument("--genre", metavar="GENRE",
+                        help="bias --cast/--palette toward a style")
+    parser.add_argument("--audition", metavar="PATCH",
+                        help="measure one patch and exit; 'all' for the bank")
     parser.add_argument("--chip", default=None, choices=("ym2612", "ym3438"),
                         help="ym2612 = discrete Model 1 (DAC ladder, gritty); "
                              "ym3438 = later ASIC (clean). Default ym2612.")
@@ -394,6 +838,12 @@ def main(argv):
                         help="keep the DAC ladder's DC offset instead of "
                              "centring the mix (for comparing against an "
                              "unfiltered capture)")
+    parser.add_argument("--levels", action="store_true",
+                        help="render each voice alone and report its level, "
+                             "headroom and crest factor — the answer to "
+                             "'the drums are there but the instruments "
+                             "aren't'. One render per voice, so it is "
+                             "slower than the render itself.")
     parser.add_argument("--profile", action="store_true",
                         help="print RMS/peak per section after rendering — "
                              "by Marker if the score has them, else by bar "
@@ -406,12 +856,191 @@ def main(argv):
                              "has no Marker events (default 4)")
     parser.add_argument("--info", action="store_true",
                         help="print capabilities as JSON and exit")
+    parser.add_argument("--prompt", action="store_true",
+                        help="print the briefing to give a model, and "
+                             "exit. `--prompt --chip-target RP2A03` "
+                             "targets one chip; add --describe TEXT for a "
+                             "full generation request. This is the same "
+                             "briefing the interface sends — one source, "
+                             "so the two cannot teach a model different "
+                             "things")
+    parser.add_argument("--chip-target", metavar="CHIP",
+                        help="which chip --prompt is for (YM2612, RP2A03, "
+                             "YM3812, SN76489)")
+    parser.add_argument("--describe", metavar="TEXT",
+                        help="with --prompt, assemble a full generation "
+                             "request around this description")
+    parser.add_argument("--studio", action="store_true",
+                        help="print the interface contract as JSON and "
+                             "exit — every fact a front end renders "
+                             "(channel bus, directive catalogue, preset "
+                             "library, health), so the interface does not "
+                             "carry its own copy of any of them. "
+                             "`python3 python/studio.py --section X` for "
+                             "one part of it")
+    parser.add_argument("--arrange-for", metavar="CHIP", dest="arrange_for",
+                        help="fit the score onto another chip before "
+                             "rendering, and print what that cost "
+                             "(RP2A03, YM2612, YM3812). `--arrangements` "
+                             "lists what each one can hold")
+    parser.add_argument("--arrangements", action="store_true",
+                        help="list the arrangement targets and every "
+                             "channel each one has, as JSON")
+    # -- briefing, checking and generating: the model-facing half --------
+    parser.add_argument("--brief", action="store_true",
+                        help="print a complete, self-contained briefing "
+                             "for --chip-target (YM2612, RP2A03, YM3812), "
+                             "pitched for --family. A few hundred tokens: "
+                             "the notation, the closed lists, the rules "
+                             "and a header to start from")
+    parser.add_argument("--family", metavar="NAME",
+                        help="the model the briefing is for: a family "
+                             "(gpt, claude, grok, gemini, llama, qwen...), "
+                             "a model name (qwen2.5:7b), or a profile "
+                             "(reasoned, contract, compact). Unknown "
+                             "names get the strictest")
+    parser.add_argument("--delivery", choices=("chat", "agent", "grammar"),
+                        help="how the score comes back: one fenced block "
+                             "in a chat reply, a file in an agent's "
+                             "sandbox, or raw under a grammar. Default: "
+                             "agent inside the bridge archive, chat "
+                             "elsewhere")
+    parser.add_argument("--bpm", type=float,
+                        help="tempo for a --brief, --prompt or --generate "
+                             "request")
+    parser.add_argument("--bars", type=int,
+                        help="length in bars for --brief, --check and "
+                             "--generate")
+    parser.add_argument("--key", default="",
+                        help="key for a --brief or --generate request")
+    parser.add_argument("--check", action="store_true",
+                        help="check the source — a score or a model's "
+                             "whole reply, - for stdin — instead of "
+                             "rendering it: extracts the score, repairs "
+                             "what has one meaning, and reports every "
+                             "error with its line and fix. Exit 1 if it "
+                             "is not playable")
+    parser.add_argument("--json", action="store_true",
+                        help="with --check or --generate: JSON output")
+    parser.add_argument("--grammar", action="store_true",
+                        help="print the GBNF grammar for --chip-target: "
+                             "for grammar-constrained decoding on a local "
+                             "server, which makes format errors impossible")
+    parser.add_argument("--generate", metavar="TEXT",
+                        help="ask a model for a score through any "
+                             "OpenAI-compatible endpoint (Ollama, "
+                             "llama.cpp, LM Studio, vLLM, or a cloud API), "
+                             "check it, feed the errors back until it "
+                             "plays, then render")
+    parser.add_argument("--endpoint", metavar="URL",
+                        help="chat-completions base URL (default "
+                             "CHIPGEN_ENDPOINT, else Ollama's "
+                             "http://localhost:11434/v1)")
+    parser.add_argument("--model", metavar="NAME",
+                        help="the model to ask (default CHIPGEN_MODEL)")
+    parser.add_argument("--api-key", metavar="KEY",
+                        help="bearer token (default CHIPGEN_API_KEY or "
+                             "OPENAI_API_KEY); local servers need none")
+    parser.add_argument("--rounds", type=int, default=3,
+                        help="how many tries --generate gets (default 3)")
+    parser.add_argument("--grammar-field", choices=("llama.cpp", "vllm"),
+                        help="send the GBNF grammar in this server's field "
+                             "(with --delivery grammar)")
     parser.add_argument("--demo", action="store_true",
                         help="render the built-in example score")
     args = parser.parse_args(argv)
+    # A whole-number tempo prints as one: "144 BPM", not "144.0 BPM".
+    if args.bpm is not None and float(args.bpm).is_integer():
+        args.bpm = int(args.bpm)
+
+    # --bank has to land BEFORE the branches that return early. It used
+    # to be loaded only inside compose(), so `--cast lead --bank x.json`
+    # ranked the built-in bank and never saw one patch of the imported
+    # one — which is the "picking a patch because its filename sounds
+    # appropriate" failure, with the tool that exists to prevent it
+    # silently looking at the wrong shelf.
+    if args.bank:
+        instruments_mod.load_bank(args.bank)
+    if args.opl_bank:
+        import opl_instruments
+        opl_instruments.load_bank(args.opl_bank)
+    if args.forge_bank:
+        _load_forge_banks(args.forge_bank)
+
+    if args.audition:
+
+        import audition as audition_mod
+
+        if args.audition == "all":
+
+            print(audition_mod.format_bank(audition_mod.audition_bank()))
+
+        else:
+
+            print(audition_mod.format_one(audition_mod.audition(args.audition)))
+
+        return 0
+
+
+    if args.cast or args.palette:
+
+        import selection
+
+        if args.cast:
+
+            print(selection.format_cast(selection.cast(args.cast, args.genre)))
+
+        else:
+
+            print(selection.format_palette(selection.palette(args.genre)))
+
+        return 0
+
 
     if args.info:
         print(json.dumps(info(), indent=2))
+        return 0
+
+    if args.prompt:
+        import prompts as prompts_mod
+        if args.describe:
+            print(prompts_mod.compose({
+                "chip": args.chip_target, "prompt": args.describe,
+                "bpm": args.bpm, "bars": args.bars, "key": args.key,
+                "style": args.title or ""}))
+        else:
+            print(prompts_mod.starter(args.chip_target))
+        return 0
+
+    request = {"chip": args.chip_target, "prompt": args.describe or
+               args.generate or "", "bpm": args.bpm, "bars": args.bars,
+               "key": args.key, "style": args.title or ""}
+
+    if args.brief:
+        import prompts as prompts_mod
+        chip = (args.chip_target or "YM2612").upper()
+        print(prompts_mod.brief(chip, args.family, request,
+                                delivery=args.delivery or _delivery()))
+        return 0
+
+    if args.grammar:
+        import grammar as grammar_mod
+        print(grammar_mod.gbnf((args.chip_target or "YM2612").upper(),
+                               request), end="")
+        return 0
+
+    if args.generate:
+        return _generate(args, request)
+
+    if args.arrangements:
+        import arrange as arrange_mod
+        print(json.dumps(arrange_mod.targets(), indent=1))
+        return 0
+
+    if args.studio:
+        import studio as studio_mod
+        print(json.dumps(studio_mod.manifest(), indent=1,
+                         ensure_ascii=False))
         return 0
 
     if args.demo:
@@ -420,6 +1049,22 @@ def main(argv):
         args.vgm = args.vgm or "output/chipgen_demo.vgm"
     elif args.source == "-":
         source = sys.stdin.read()
+    elif args.source and args.source.endswith((".mid", ".midi")):
+        # MIDI is bytes, not text, and it is the join between this engine
+        # and every tool that turns a recording into notes. A MIDI file
+        # holds PARTS, not channels, so it cannot be played until it has
+        # been fitted to a chip — which is why this sets a default target
+        # rather than rendering silence.
+        import midi_import
+        imported = midi_import.load(args.source)
+        print(imported)
+        print()
+        source = imported.score
+        if not args.arrange_for:
+            args.arrange_for = "YM2612"
+            print("no --arrange-for given: fitting onto YM2612, this "
+                  "engine's default chip. `--arrangements` lists the "
+                  "others.\n")
     elif args.source:
         with open(args.source, encoding="utf-8") as fh:
             source = fh.read()
@@ -427,19 +1072,71 @@ def main(argv):
         parser.error("give a score file, or --demo, or --info")
         return 2
 
-    if not (args.wav or args.vgm or args.tracker or args.it):
+    if args.arrange_for:
+        import arrange as arrange_mod
+        import score_model as score_model_mod
+
+        score = (source if hasattr(source, "voices")
+                 else score_model_mod.loads(source, title=args.title))
+        fitted, report = arrange_mod.arrange(score, args.arrange_for)
+        print(report)
+        print()
+        # Back to text rather than straight to events, so the arrangement
+        # is a thing you can read, edit and re-render — an arranger whose
+        # output only exists inside one process is not reviewable.
+        out_meta = tracker_mod.Metadata()
+        out_meta.bpm, out_meta.lpb = fitted.bpm, fitted.lpb
+        out_meta.title = fitted.title
+        source = tracker_mod.dumps(score_model_mod.to_events(fitted),
+                                   out_meta)
+        if args.tracker:
+            with open(args.tracker, "w", encoding="utf-8") as handle:
+                handle.write(source)
+
+    if args.check:
+        import reply as reply_mod
+        text = source if isinstance(source, str) else ""
+        verdict = reply_mod.check(
+            text, chip=(args.chip_target or "").upper() or None,
+            request={"bars": args.bars} if args.bars else None)
+        print(json.dumps(verdict.to_json(), indent=1, ensure_ascii=False)
+              if args.json else verdict.report())
+        return 0 if verdict.ok else 1
+
+    if args.wav and args.wav.lower().endswith(".mp3"):
+        args.mp3, args.wav = args.mp3 or args.wav, None
+    if args.bitrate and not args.mp3:
+        parser.error("--bitrate is for MP3 output: -o song.mp3, or --mp3")
+    if args.mp3:
+        import mp3 as mp3_mod
+        try:
+            mp3_mod.check(args.rate, args.bitrate)
+        except ValueError as error:
+            parser.error(str(error))
+    if not (args.wav or args.vgm or args.tracker or args.it or args.mp3):
         args.wav = "output/chipgen.wav"
 
     result = compose(source, wav=args.wav, vgm=args.vgm, it=args.it,
+                     mp3=args.mp3, bitrate=args.bitrate,
+                     opl_bank=args.opl_bank, forge_bank=args.forge_bank,
                      tracker_out=args.tracker, ticks_per_second=args.ticks,
                      target_rate=args.rate, title=args.title,
                      author=args.author, pal=args.pal,
                      dc_block=not args.no_dc_block,
                      chip_type=args.chip, bank=args.bank,
                      normalize=_master_peak(args.peak), quiet=False)
-    for path in (result.wav_path, result.vgm_path, args.tracker, args.it):
+    for path in (result.wav_path, result.vgm_path, args.tracker, args.it,
+                 result.mp3_path):
         if path:
             print(f"wrote {path}")
+
+    if args.levels:
+        import levels as levels_mod
+        measured = result.levels()
+        print()
+        print(levels_mod.format_table(measured))
+        for warning in levels_mod.warnings(measured):
+            print(f"\nwarning: {warning}")
 
     if args.profile:
         stats = result.profile(beats_per_bar=args.beats_per_bar)

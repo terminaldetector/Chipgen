@@ -1,0 +1,143 @@
+{
+ "status": "complete",
+ "next": 4,
+ "remaining": [],
+ "sections": [
+  {
+   "section": "A",
+   "rev": 1,
+   "function": "statement",
+   "motif": "m1",
+   "transition_ok": null,
+   "observations": [
+    {
+     "id": "o1",
+     "kind": "buried",
+     "voices": [
+      "lead"
+     ],
+     "bars": [
+      1,
+      2
+     ],
+     "t": [
+      0.0,
+      3.4286
+     ],
+     "statement": "lead sits 3.9 dB under the rest of the mix in its own band",
+     "basis": "measured",
+     "severity": "high",
+     "confidence": 0.8
+    }
+   ]
+  },
+  {
+   "section": "A2",
+   "rev": 3,
+   "function": "variation",
+   "motif": "m1",
+   "transition_ok": true,
+   "observations": [
+    {
+     "id": "o3",
+     "kind": "buried",
+     "voices": [
+      "lead"
+     ],
+     "bars": [
+      2,
+      4
+     ],
+     "t": [
+      1.7143,
+      6.8571
+     ],
+     "statement": "lead sits 3.4 dB under the rest of the mix in its own band",
+     "basis": "measured",
+     "severity": "high",
+     "confidence": 0.8
+    }
+   ]
+  },
+  {
+   "section": "B",
+   "rev": 5,
+   "function": "development",
+   "motif": "m1",
+   "transition_ok": true,
+   "observations": []
+  },
+  {
+   "section": "C",
+   "rev": 6,
+   "function": "cadence",
+   "motif": "m1",
+   "transition_ok": true,
+   "observations": []
+  }
+ ],
+ "corrections": [
+  {
+   "section": "A",
+   "observation": "o1",
+   "corrected_as": "o2",
+   "decision": "d1",
+   "outcome": "committed",
+   "before": -3.93,
+   "after": -1.82,
+   "chain": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "voice": "lead",
+     "range": "rows 0-31"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 0-31"
+    }
+   ],
+   "remembered": true,
+   "candidates": 1,
+   "renders": 12,
+   "seconds": 18.97,
+   "why": null
+  },
+  {
+   "section": "A2",
+   "observation": "o3",
+   "corrected_as": "o4",
+   "decision": "d2",
+   "outcome": "committed",
+   "before": -4.08,
+   "after": -2.4,
+   "chain": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "voice": "lead",
+     "range": "rows 32-63"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "voice": "pad",
+     "range": "rows 32-63"
+    }
+   ],
+   "remembered": true,
+   "candidates": 1,
+   "renders": 19,
+   "seconds": 37.67,
+   "why": null
+  }
+ ],
+ "cost": {
+  "runtime_s": 117.65,
+  "seconds": 117.65,
+  "reply_bytes": 1732,
+  "approx_tokens": 433
+ }
+}

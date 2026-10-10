@@ -1,0 +1,38 @@
+title Form test
+bpm 150
+lpb 4
+inst fm0 deep_bass
+inst fm1 square_lead
+inst fm2 strings
+pan fm1 L
+pan fm2 R
+cols fm0 fm1 fm2 psg0 noise dac
+
+pattern intro
+mark intro
+D-2:70  ...      A-4:40/455  ...    ...  kick
+...     ...      ...         ...    w1   ...
+A-2:60  ...      A-4:40      D-5:8  ...  snare
+...     ...      ...         ...    w1   ...
+
+pattern main
+mark main
+D-2:110 D-5:90   A-4:60      D-5:4  ...  kick
+...     ...      ...         A-5:4  w1   hat
+A-2:100 A-4:90   F-4:60      F-5:4  ...  snare
+...     F-4:85/4A3 ...       D-5:4  w1   hat
+
+pattern break
+mark break
+D-2:30  ===      ===         ===    ===  ...
+...     ...      ...         ...    ...  ...
+...     ...      ...         ...    ...  ...
+...     ...      ...         ...    ...  ...
+
+pattern outro
+mark outro
+D-2:80  D-5:60/A0C ...       ...    ...  kick
+...     ===      ...         ...    ...  ...
+
+order intro main*3 break main*3 outro
+end

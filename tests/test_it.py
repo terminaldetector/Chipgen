@@ -296,3 +296,42 @@ def test_a_silent_event_list_is_refused_rather_than_written_empty():
         assert "no notes" in str(exc)
     else:
         raise AssertionError("an empty module should not have been written")
+
+
+def test_the_opl_reaches_the_module_too():
+    # The .it is the only export that carries every chip, and the CLI says
+    # so when a score plays the OPL2 and asks for a .vgm. That claim has to
+    # be true: an OPL part silently missing here would make the advice
+    # actively wrong.
+    text = ("ticks 240\nbpm 150\nlpb 4\n"
+            "inst opl0 opl_bass\ninst opl3 opl_bell\ninst fm0 bass\n"
+            "cols opl0 opl3 fm0 dac\n"
+            "A-2  C-5  A-2  kick\n...  ...  ...  ...\n"
+            "C-3  E-5  C-3  snare\n===  ===  ===  ...\n")
+    events, meta = tracker.loads(text)
+    data, report = it_export.build(events, meta=meta)
+    module = _read_it(data)
+
+    names = [name for name, *_ in report["samples"]]
+    assert any(n.startswith("OPL ") for n in names), names
+    assert "bass" in names, names
+
+    notes = {(channel, cell["note"])
+             for pattern in module["patterns"] for row in pattern
+             for channel, cell in row.items()
+             if cell.get("note") is not None and cell["note"] < 120}
+    for opl_channel in (0, 3):
+        assert any(ch == it_export.CHANNEL_MAP[("opl", opl_channel)]
+                   for ch, _ in notes), f"opl{opl_channel} is missing"
+    assert any(ch == it_export.CHANNEL_MAP[("fm", 0)] for ch, _ in notes)
+    # OPLDepth has no IT equivalent and must be reported, not dropped quietly.
+    assert not [k for k in report["skipped"] if k.startswith("OPLNote")], \
+        report["skipped"]
+
+
+def test_opl_channels_do_not_collide_with_the_others():
+    seen = {}
+    for key, channel in it_export.CHANNEL_MAP.items():
+        assert channel not in seen, f"{key} collides with {seen[channel]}"
+        seen[channel] = key
+    assert max(seen) < it_export.IT_CHANNELS_USED

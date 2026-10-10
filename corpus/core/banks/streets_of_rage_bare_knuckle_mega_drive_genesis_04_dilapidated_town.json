@@ -1,0 +1,734 @@
+[
+  {
+    "name": "04___dilapidated_town_01",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 18,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 17,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 18,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_02",
+    "algorithm": 7,
+    "feedback": 3,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 6,
+        "total_level": 22,
+        "attack_rate": 28,
+        "decay_rate": 18,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 6,
+        "multiple": 1,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 5,
+        "multiple": 2,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_03",
+    "algorithm": 4,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 51,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 31,
+        "sustain_rate": 18,
+        "release_rate": 9,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 9,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_04",
+    "algorithm": 2,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 11,
+        "attack_rate": 21,
+        "decay_rate": 19,
+        "sustain_rate": 11,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 10,
+        "total_level": 127,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 12,
+        "attack_rate": 21,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 8,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_05",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 15,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 24,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 11,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 17,
+        "release_rate": 12,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 9,
+        "attack_rate": 31,
+        "decay_rate": 19,
+        "sustain_rate": 16,
+        "release_rate": 12,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_06",
+    "algorithm": 4,
+    "feedback": 3,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 6,
+        "multiple": 15,
+        "total_level": 40,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 8,
+        "release_rate": 10,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 42,
+        "attack_rate": 30,
+        "decay_rate": 6,
+        "sustain_rate": 11,
+        "release_rate": 6,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 27,
+        "decay_rate": 7,
+        "sustain_rate": 10,
+        "release_rate": 6,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 30,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_07",
+    "algorithm": 4,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 31,
+        "attack_rate": 16,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 31,
+        "attack_rate": 16,
+        "decay_rate": 1,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 38,
+        "attack_rate": 16,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 38,
+        "attack_rate": 16,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_08",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 0,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 31,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 2,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 11,
+        "sustain_rate": 16,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 22,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 15,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_09",
+    "algorithm": 2,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 23,
+        "attack_rate": 13,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 38,
+        "attack_rate": 14,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 3,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 7,
+        "total_level": 40,
+        "attack_rate": 13,
+        "decay_rate": 14,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 19,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_10",
+    "algorithm": 2,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 11,
+        "attack_rate": 21,
+        "decay_rate": 19,
+        "sustain_rate": 11,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 10,
+        "total_level": 127,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 21,
+        "decay_rate": 15,
+        "sustain_rate": 5,
+        "release_rate": 8,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_11",
+    "algorithm": 2,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 11,
+        "attack_rate": 21,
+        "decay_rate": 19,
+        "sustain_rate": 11,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 10,
+        "total_level": 127,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 12,
+        "attack_rate": 21,
+        "decay_rate": 15,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      }
+    ]
+  },
+  {
+    "name": "04___dilapidated_town_12",
+    "algorithm": 2,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 3,
+        "multiple": 3,
+        "total_level": 11,
+        "attack_rate": 21,
+        "decay_rate": 19,
+        "sustain_rate": 11,
+        "release_rate": 8,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 24,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 1
+      },
+      {
+        "detune": 4,
+        "multiple": 10,
+        "total_level": 127,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 4,
+        "release_rate": 8,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 1
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 17,
+        "attack_rate": 21,
+        "decay_rate": 15,
+        "sustain_rate": 6,
+        "release_rate": 8,
+        "sustain_level": 3,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 1
+      }
+    ]
+  }
+]

@@ -45,6 +45,13 @@ directive keyword is a directive):
     chord off fm2 fm3 fm4        release them again
     arp fm1 0 3 7        arpeggiate that channel within every row
     arp fm1 off          stop arpeggiating
+    porta fm0 600 200    slide pitch at 600 cents/s until +200 cents
+    porta fm0 off        stop the slide where it is
+    vib fm1 60 6         vibrato +/-60 cents at 6 Hz  (`vib fm1 60 6 0.1`
+                         holds it off for 0.1s after each note-on)
+    fade fm2 -40         ramp level by -40 units/s (the FMVolume scale)
+    trem fm3 30 5        tremolo +/-30 units at 5 Hz
+                         — any of the four take `off`
     title / author / game / notes    GD3 metadata for the .vgm
     end                  stop early
 
@@ -89,10 +96,15 @@ so group rows into bars however you like.
 import re
 
 import events as events_mod
-from events import (DACSample, End, FMInstrumentSelect, FMLFO, FMNoteOff,
-                    FMNoteOn, FMPan, FMPitch, FMVolume, LoopPoint, Marker,
-                    PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
-                    PSGVolume, Tempo, Wait)
+import fx
+from events import (
+    Arpeggio, DACSample, DACVolume, End, FMAlgorithm, FMCh3Frequency, FMCh3Mode,
+    FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn, FMOperator, FMPan,
+    FMPitch, FMVolume, LoopPoint, Marker, NESDMCLevel, NESDuty,
+    NESNoiseOff, NESNoiseOn, NESNoteOff, NESNoteOn, NESSample, NESSweep,
+    NESVolume, OPLDepth, OPLInstrumentSelect, OPLNoteOff, OPLNoteOn,
+    OPLConnection, OPLOperator, OPLVolume, Portamento, PSGNoiseOff, PSGNoiseOn, PSGToneOff, PSGToneOn,
+    PSGVolume, Tempo, Tremolo, Vibrato, VolumeSlide, Wait)
 
 DEFAULT_BPM = 150.0
 DEFAULT_LPB = 4
@@ -102,6 +114,9 @@ HOLD_TOKENS = {"...", "..", ".", "--", "---", "-", "~", ""}
 OFF_TOKENS = {"===", "==", "off", "^^^", "^"}
 
 _FM_COLUMNS = tuple(f"fm{i}" for i in range(6))
+#: The OPL2's nine two-operator voices, addressed separately from the
+#: YM2612's six because they are a different chip, not a mode of it.
+_OPL_COLUMNS = tuple(f"opl{i}" for i in range(9))
 _PSG_COLUMNS = tuple(f"psg{i}" for i in range(3))
 _COLUMN_ALIASES = {}
 for _i in range(6):
@@ -109,6 +124,33 @@ for _i in range(6):
 for _i in range(3):
     _COLUMN_ALIASES[f"p{_i}"] = f"psg{_i}"
     _COLUMN_ALIASES[f"psg{_i}"] = f"psg{_i}"
+for _i in range(9):
+    _COLUMN_ALIASES[f"o{_i}"] = f"opl{_i}"
+    _COLUMN_ALIASES[f"opl{_i}"] = f"opl{_i}"
+#: The NES's five voices, numbered like every other chip's columns here
+#: rather than named, so `cols` reads the same whichever chip a score
+#: plays. nes0/nes1 are the pulses, nes2 the triangle, nes3 the noise and
+#: nes4 the DMC. Numbered and not named for one concrete reason: `noise`
+#: already means the PSG's noise voice, and a column whose meaning
+#: depended on which other columns the score used would be the kind of
+#: implicit mode that costs a take to debug.
+_NES_COLUMNS = tuple(f"nes{i}" for i in range(5))
+
+#: Column -> the voice name the chip and the effect engine both use.
+_NES_VOICE = {"nes0": "pulse1", "nes1": "pulse2", "nes2": "triangle",
+              "nes3": "noise", "nes4": "dmc"}
+#: And back, for writing a score out.
+_NES_COLUMN = {voice: column for column, voice in _NES_VOICE.items()}
+
+for _i in range(5):
+    _COLUMN_ALIASES[f"nes{_i}"] = f"nes{_i}"
+_COLUMN_ALIASES.update({
+    "pulse1": "nes0", "pu1": "nes0", "sq1": "nes0",
+    "pulse2": "nes1", "pu2": "nes1", "sq2": "nes1",
+    "tri": "nes2", "triangle": "nes2",
+    "nnoise": "nes3", "nesnoise": "nes3",
+    "dmc": "nes4", "nespcm": "nes4",
+})
 _COLUMN_ALIASES.update({"n": "noise", "ns": "noise", "noise": "noise",
                         "d": "dac", "pcm": "dac", "dac": "dac"})
 
@@ -116,7 +158,9 @@ DEFAULT_COLUMNS = ("fm0", "fm1", "fm2", "psg0", "noise", "dac")
 
 DIRECTIVES = {"bpm", "lpb", "ticks", "inst", "vol", "pan", "lfo", "pitch",
               "cols", "columns", "loop", "mark", "chord", "arp", "title",
-              "author", "game", "notes", "end"}
+              "author", "game", "notes", "end", "opldepth", "op", "alg",
+              "sample", "pattern", "order", "ch3", "ch3op", "nes",
+              "porta", "vib", "fade", "trem"}
 
 #: Semitone offsets from the root, for the `chord` directive. Kept small and
 #: conventional on purpose: this exists so a four-note voicing is one line
@@ -139,11 +183,21 @@ CHORD_ALIASES = {"m": "min", "-": "min", "M": "maj", "": "maj",
                  "6": "maj6", "m6": "min6", "half-dim": "m7b5",
                  "aug7": "aug", "+": "aug", "o": "dim", "o7": "dim7"}
 
-_NOTE_CELL = re.compile(r"^([A-Ga-g])([#b\-]?)(-?\d)(?::(\d+))?$")
+#: letter, optional accidental, optional `-` separator, octave, optional
+#: `:param`. The separator is its own group on purpose: folding it into
+#: the accidental made `Bb-3` read as B-flat in octave MINUS three, so a
+#: flat written with the ordinary separator landed three octaves low and
+#: nothing complained. Octaves are unsigned — the chips have none below 0.
+_NOTE_CELL = re.compile(r"^([A-Ga-g])([#b]?)-?(\d)(?::(\d+))?$")
 #: `;` always starts a comment; `#` only at line start or after whitespace,
 #: so that the sharp in `A#2` survives.
 _COMMENT = re.compile(r"(?:(?:^|(?<=\s))#|;)")
 _NOISE_CELL = re.compile(r"^([wpWP])([0-3])(?::(\d+))?$")
+
+#: The NES noise cell: a period 0-15, an optional `m` for the short
+#: (metallic) shift register, an optional velocity. `6m:80` is period 6,
+#: metallic, at velocity 80.
+_NES_NOISE_CELL = re.compile(r"^(\d{1,2})([mM])?(?::(\d+))?$")
 
 
 class TrackerError(ValueError):
@@ -197,11 +251,141 @@ def parse_note(cell: str):
     return canonical, int(octave), (int(param) if param is not None else None)
 
 
-def loads(text: str):
-    """Parse tracker text. Returns (events, metadata)."""
+
+#: Repetition shorthand in an `order` line: `verse*4`.
+_ORDER_REPEAT = re.compile(r"^(?P<name>[^*]+)\*(?P<count>\d+)$")
+#: How many times one `order` entry may repeat. A typo of `*1000` on a
+#: 16-row pattern is 16,000 rows, which renders for minutes before anyone
+#: notices something is wrong.
+MAX_ORDER_REPEAT = 64
+
+
+def expand_patterns(text: str):
+    """-> [(original line number, line)] with `pattern`/`order` resolved.
+
+    Writing a two-minute piece as one sheet of rows is the wrong shape for
+    the job: Streets of Rage's title theme is 98 seconds, and at four rows
+    to the beat that is roughly 650 rows of mostly repetition. A tracker
+    answers this with patterns and an order, so:
+
+        pattern verse
+          D-2  ...  kick
+          ...  A-4  ...
+
+        pattern chorus
+          A-2  C-5  kick
+
+        order verse verse chorus verse*2
+
+    Everything before the first `pattern` is the preamble and runs once.
+    Lines inside a pattern — rows AND directives — replay every time the
+    order names it, which is what lets a `mark` or an instrument change
+    belong to a section. A score with no `pattern` in it is untouched.
+
+    Line numbers are carried through rather than renumbered, so an error
+    inside a pattern used four times still points at the line the author
+    wrote.
+    """
+    lines = list(enumerate(text.splitlines(), start=1))
+    if not any(_COMMENT.split(raw, 1)[0].strip().split()[:1] == ["pattern"]
+               for _n, raw in lines):
+        return lines
+
+    preamble = []
+    patterns = {}
+    order = []
+    epilogue = []
+    current = None
+    seen_order = False
+    for lineno, raw in lines:
+        stripped = _COMMENT.split(raw, maxsplit=1)[0].strip()
+        words = stripped.split()
+        head = words[0].lower() if words else ""
+        if head == "pattern":
+            if len(words) < 2:
+                raise TrackerError(
+                    f"line {lineno}: pattern needs a name, e.g. `pattern verse`")
+            name = words[1]
+            if name in patterns:
+                raise TrackerError(
+                    f"line {lineno}: pattern {name!r} is already defined")
+            current = patterns.setdefault(name, [])
+            continue
+        if head == "order":
+            if len(words) < 2:
+                raise TrackerError(
+                    f"line {lineno}: order needs at least one pattern name")
+            for token in words[1:]:
+                match = _ORDER_REPEAT.match(token)
+                name = match.group("name") if match else token
+                count = int(match.group("count")) if match else 1
+                if count < 1 or count > MAX_ORDER_REPEAT:
+                    raise TrackerError(
+                        f"line {lineno}: {token!r} repeats {count} times; "
+                        f"the limit is {MAX_ORDER_REPEAT}")
+                order.append((lineno, name, count))
+            current = None
+            seen_order = True
+            continue
+        # Before the first pattern is preamble; inside one is the pattern;
+        # after the order is epilogue. Sending the tail to the preamble
+        # put a trailing `end` BEFORE the music and rendered six events of
+        # silence.
+        if current is not None:
+            current.append((lineno, raw))
+        elif seen_order:
+            epilogue.append((lineno, raw))
+        else:
+            preamble.append((lineno, raw))
+
+    if not order:
+        raise TrackerError(
+            "the score defines patterns but never plays them — add an "
+            "`order` line, e.g. `order "
+            + " ".join(list(patterns)[:3]) + "`")
+
+    named = set()
+    out = list(preamble)
+    for lineno, name, count in order:
+        if name not in patterns:
+            raise TrackerError(
+                f"line {lineno}: order names pattern {name!r}, which is not "
+                f"defined. Defined: {', '.join(sorted(patterns)) or 'none'}")
+        named.add(name)
+        for _ in range(count):
+            out.extend(patterns[name])
+    unused = sorted(set(patterns) - named)
+    if unused:
+        # Loudly, because the symptom is a section missing from the render
+        # while everything else works — the quiet failure this project
+        # keeps running into.
+        raise TrackerError(
+            f"pattern(s) {', '.join(repr(u) for u in unused)} are defined "
+            f"but not in any `order` line, so they would not be played")
+    out.extend(epilogue)
+    return out
+
+
+def loads(text: str, rows: list = None):
+    """Parse tracker text. Returns (events, metadata).
+
+    `rows`, if given, is filled with one entry per grid row in play order:
+    {"line": source line, "tick": the tick the row starts on, "ticks": its
+    length, "event": the index in `events` where the row's own events
+    start}. That is the score's clock — row to tick to event — for
+    anything that has to say where in the music a sound came from."""
     meta = Metadata()
     columns = list(DEFAULT_COLUMNS)
     events = []
+    clock = {"tick": 0, "counted": 0}
+
+    def now() -> int:
+        """Ticks emitted so far (waits counted once, incrementally)."""
+        for event in events[clock["counted"]:]:
+            if isinstance(event, Wait):
+                clock["tick"] += event.ticks
+        clock["counted"] = len(events)
+        return clock["tick"]
 
     pending_rows = 0          # rows of silence not yet emitted as a Wait
     fm_sounding = [False] * 6
@@ -250,7 +434,51 @@ def loads(text: str):
             events.append(Wait(ticks=base + (1 if step < remainder else 0)))
         return True
 
-    for lineno, raw in enumerate(text.splitlines(), start=1):
+    def emit_timed_row(delayed, noise_sounding, lineno, raw):
+        """Spend a row whose cells do not all start on its first tick.
+
+        `Cxx` moves a cell xx ticks into the row. Everything else in the
+        row has already been emitted at tick 0; what remains is a timeline
+        of the delayed cells and, if an `arp` is running, its pitch steps,
+        played in order with the waits between them. The row still lasts
+        exactly one row.
+        """
+        total = meta.ticks_per_row()
+        timeline = []                       # (tick, order, action)
+        active = [ch for ch, offsets in arps.items()
+                  if offsets and fm_sounding[ch]]
+        if active:
+            steps = max(len(arps[ch]) for ch in active)
+            if total >= steps:
+                base, remainder = divmod(total, steps)
+                at = 0
+                for step in range(steps):
+                    pitches = [FMPitch(channel=ch,
+                                       cents=arps[ch][step % len(arps[ch])]
+                                       * 100.0) for ch in active]
+                    timeline.append((at, 0, pitches))
+                    at += base + (1 if step < remainder else 0)
+        for order, (ticks, column, cell) in enumerate(delayed, start=1):
+            timeline.append((ticks, order, (column, cell)))
+        timeline.sort(key=lambda item: (item[0], item[1]))
+
+        now = 0
+        for at, _order, action in timeline:
+            if at > now:
+                events.append(Wait(ticks=at - now))
+                now = at
+            if isinstance(action, list):
+                events.extend(action)
+                continue
+            column, cell = action
+            _apply_cell(column, cell, events, fm_sounding, psg_sounding,
+                        lineno, raw)
+            if column == "noise":
+                noise_sounding = _noise_state(cell, noise_sounding)
+        events.append(Wait(ticks=total - now))
+        return noise_sounding
+
+    for lineno, raw in expand_patterns(text):
         line = _COMMENT.split(raw, maxsplit=1)[0].strip()
         if not line or stopped:
             continue
@@ -271,12 +499,23 @@ def loads(text: str):
                 f"({' '.join(columns)}). Use ... for an empty cell.\n  {raw.strip()}")
 
         flush_rows()
+        if rows is not None:
+            rows.append({"line": lineno, "tick": now(),
+                         "ticks": meta.ticks_per_row(), "event": len(events)})
+        delayed = []          # (ticks into the row, column, cell)
         for column, cell in zip(columns, cells):
+            ticks, cell = _split_delay(cell, meta, lineno, raw)
+            if ticks:
+                delayed.append((ticks, column, cell))
+                continue
             _apply_cell(column, cell, events, fm_sounding, psg_sounding,
                         lineno, raw)
             if column == "noise":
                 noise_sounding = _noise_state(cell, noise_sounding)
-        if not emit_arpeggio_row():
+        if delayed:
+            noise_sounding = emit_timed_row(delayed, noise_sounding,
+                                            lineno, raw)
+        elif not emit_arpeggio_row():
             pending_rows = 1
 
     flush_rows()
@@ -291,7 +530,60 @@ def loads(text: str):
     if noise_sounding:
         events.append(PSGNoiseOff())
     events.append(End())
-    return events, meta
+    placed = _place_forge_instruments(events, meta)
+    if rows is not None and placed is not events:
+        placed = _reindex_rows(placed, rows)
+    return placed, meta
+
+
+def _reindex_rows(events, rows):
+    """Point every row at its first event again after the forge's
+    placement pass rebuilt the list (it adds events, so the indices
+    recorded while parsing no longer hold). A Wait that a row starts
+    inside is split there, so each row begins on an event boundary as it
+    did; the timing is unchanged."""
+    ticks = sorted({r["tick"] for r in rows})
+    out, now, k = [], 0, 0
+    first = {}
+    for ev in events:
+        while k < len(ticks) and ticks[k] <= now:
+            first.setdefault(ticks[k], len(out))
+            k += 1
+        if isinstance(ev, Wait):
+            end = now + ev.ticks
+            while k < len(ticks) and ticks[k] < end:
+                if ticks[k] > now:
+                    out.append(Wait(ticks=ticks[k] - now))
+                    now = ticks[k]
+                first.setdefault(ticks[k], len(out))
+                k += 1
+            if end > now:
+                out.append(Wait(ticks=end - now))
+                now = end
+            continue
+        out.append(ev)
+    while k < len(ticks):
+        first.setdefault(ticks[k], len(out))
+        k += 1
+    for r in rows:
+        r["event"] = first[r["tick"]]
+    return out
+
+
+def _place_forge_instruments(events, meta):
+    """Add what instruments from the synthesis layer need: NES macro notes,
+    detune layers, channel settings. Costs one scan unless the layer is in
+    use (a marker in the score, or a forge bank installed)."""
+    import sys
+    if "synthesis.registry" not in sys.modules and not any(
+            isinstance(e, Marker) and e.label.startswith("forge:")
+            for e in events):
+        return events
+    from synthesis import placement
+    try:
+        return placement.expand(events, meta)
+    except placement.PlacementError as error:
+        raise TrackerError(str(error)) from None
 
 
 def _noise_state(cell: str, current: bool) -> bool:
@@ -324,19 +616,326 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
         columns[:] = [_column(a, lineno) for a in args]
     elif head == "inst":
         need(2, "a channel and an instrument, e.g. `inst fm0 bass`")
-        events.append(FMInstrumentSelect(channel=_fm_channel(args[0], lineno),
-                                         instrument=args[1]))
+        target = _column(args[0], lineno)
+        if target in _NES_COLUMNS:
+            # The NES has no patches to select: an instrument there is a set
+            # of macros a driver plays (synthesis/nes_driver.py). Leave a
+            # marker; the pass at the end of loads() expands the notes.
+            if _NES_VOICE[target] == "dmc":
+                raise TrackerError(
+                    f"line {lineno}: nes4 plays samples, not instruments; "
+                    f"use the `sample` directive and a sample name in the "
+                    f"cell")
+            events.append(Marker(label=f"forge:nes {_NES_VOICE[target]} "
+                                       f"{args[1]} @{lineno}"))
+        elif target in _OPL_COLUMNS:
+            events.append(OPLInstrumentSelect(channel=int(target[3:]),
+                                              instrument=args[1]))
+        else:
+            events.append(FMInstrumentSelect(
+                channel=_fm_channel(args[0], lineno), instrument=args[1]))
+    elif head in ("porta", "vib", "fade", "trem"):
+        need(2, f"a voice and its settings, e.g. `{head} fm0 ...`")
+        voice = _column(args[0], lineno)
+        rest = args[1:]
+        off = rest[0].lower() in ("off", "0", "stop")
+        try:
+            if head == "porta":
+                events.append(Portamento(
+                    target=voice,
+                    cents_per_second=0.0 if off else float(rest[0]),
+                    to_cents=float(rest[1]) if len(rest) > 1 and not off else 0.0))
+            elif head == "vib":
+                events.append(Vibrato(
+                    target=voice,
+                    depth_cents=0.0 if off else float(rest[0]),
+                    speed_hz=float(rest[1]) if len(rest) > 1 and not off else 0.0,
+                    delay=float(rest[2]) if len(rest) > 2 and not off else 0.0))
+            elif head == "fade":
+                events.append(VolumeSlide(
+                    target=voice,
+                    per_second=0.0 if off else float(rest[0]),
+                    floor=int(rest[1]) if len(rest) > 1 and not off else 0,
+                    ceiling=int(rest[2]) if len(rest) > 2 and not off else 127))
+            else:
+                events.append(Tremolo(
+                    target=voice,
+                    depth=0.0 if off else float(rest[0]),
+                    speed_hz=float(rest[1]) if len(rest) > 1 and not off else 0.0))
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {head} wants numbers or `off`, got "
+                f"{' '.join(rest)!r}") from None
+    elif head == "sample":
+        # `sample bass808 kits/808.wav` — import a WAV as a DAC sample.
+        # `sample bass808 kits/808.wav C-2` says what pitch the file
+        # sounds at, which is what lets a cell ask for another one.
+        need(2, "a name and a .wav path, e.g. "
+                "`sample bass808 kits/808.wav`, optionally the pitch it "
+                "sounds at: `sample bass808 kits/808.wav C-2`")
+        import samples as samples_mod
+        name, path = args[0], args[1]
+        base = args[2] if len(args) > 2 else None
+        if base is not None and parse_note(base) is None:
+            raise TrackerError(
+                f"line {lineno}: {base!r} is not a note (want e.g. C-2)")
+        try:
+            samples_mod.load_wav(name, path, base_note=base)
+        except FileNotFoundError:
+            raise TrackerError(
+                f"line {lineno}: no such file {path!r}. Paths are relative "
+                f"to where the render runs, not to the score.") from None
+        except Exception as error:
+            raise TrackerError(
+                f"line {lineno}: could not read {path!r} as a WAV: "
+                f"{error}") from None
+    elif head == "ch3":
+        # `ch3 special` gives channel 3's operators their own pitches.
+        need(1, "a mode: `ch3 normal`, `ch3 special` or `ch3 csm`")
+        mode = args[0].lower()
+        import opn2 as _opn2
+        if mode not in _opn2.YM2612._CH3_MODE_BITS:
+            raise TrackerError(
+                f"line {lineno}: unknown ch3 mode {args[0]!r}. Valid: "
+                f"{', '.join(sorted(_opn2.YM2612._CH3_MODE_BITS))}")
+        events.append(FMCh3Mode(mode=mode))
+    elif head == "nes":
+        # `nes duty nes0 1` and `nes sweep nes0 3 2 down` — the NES's
+        # live register writes, the same job `op` does on the YM2612.
+        # Both take effect mid-note and neither is reloaded by the next
+        # note-on (an `op` write on the YM2612 is not either: only `inst`
+        # reloads a patch).
+        need(2, "a setting and a column, e.g. `nes duty nes0 1` or "
+                "`nes sweep nes0 3 2 down`")
+        setting = args[0].lower()
+        column = _column(args[1], lineno)
+        if column not in _NES_COLUMNS:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not a NES column; want one "
+                f"of {', '.join(_NES_COLUMNS)}")
+        voice = _NES_VOICE[column]
+        if setting == "duty":
+            need(3, "a duty 0-3, e.g. `nes duty nes0 1`")
+            if voice not in ("pulse1", "pulse2"):
+                raise TrackerError(
+                    f"line {lineno}: only the pulse channels (nes0, nes1) "
+                    f"have a duty cycle; {args[1]} does not")
+            try:
+                duty = int(args[2])
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {args[2]!r} is not a duty "
+                    f"(want 0=12.5%, 1=25%, 2=50%, 3=75%)") from None
+            if not 0 <= duty <= 3:
+                raise TrackerError(
+                    f"line {lineno}: duty must be 0-3, got {duty}")
+            events.append(NESDuty(voice=voice, duty=duty))
+        elif setting == "sweep":
+            # `nes sweep nes0 PERIOD SHIFT [up|down] [off]`
+            if voice not in ("pulse1", "pulse2"):
+                raise TrackerError(
+                    f"line {lineno}: only the pulse channels (nes0, nes1) "
+                    f"have a sweep unit; {args[1]} does not")
+            if len(args) >= 3 and args[2].lower() == "off":
+                # Back to the default chipgen sets at init: negate on,
+                # shift zero, which is what keeps the low octave audible.
+                events.append(NESSweep(voice=voice, period=0, shift=0,
+                                       negate=True, enabled=False))
+            else:
+                need(4, "a period 0-7 and a shift 0-7, e.g. "
+                        "`nes sweep nes0 3 2 down`")
+                try:
+                    period, shift = int(args[2]), int(args[3])
+                except ValueError:
+                    raise TrackerError(
+                        f"line {lineno}: sweep period and shift must be "
+                        f"whole numbers 0-7, got {args[2]!r} "
+                        f"{args[3]!r}") from None
+                if not 0 <= period <= 7 or not 0 <= shift <= 7:
+                    raise TrackerError(
+                        f"line {lineno}: sweep period and shift are both "
+                        f"0-7, got period={period} shift={shift}")
+                direction = args[4].lower() if len(args) > 4 else "down"
+                if direction not in ("up", "down"):
+                    raise TrackerError(
+                        f"line {lineno}: sweep direction is `up` or "
+                        f"`down`, got {args[4]!r}")
+                # `up` means the PITCH rises, which on this chip means
+                # the negate bit: the sweep unit works on the timer
+                # period, and period and frequency run opposite ways.
+                # Measured with period 1, shift 3 over half a second:
+                # negate on takes A-4 up 2,716 cents, negate off takes it
+                # down 2,815. Getting this backwards is silent — the note
+                # simply sweeps the wrong way.
+                #
+                # It also decides whether the sweep re-arms the
+                # low-register mute. A downward sweep grows the target
+                # period, and once that passes $7FF the channel goes
+                # silent — the classic "my sweep killed the note".
+                events.append(NESSweep(voice=voice, period=period,
+                                       shift=shift,
+                                       negate=(direction == "up"),
+                                       enabled=True))
+        elif setting == "dmc":
+            need(3, "a level 0-127, e.g. `nes dmc nes4 64`")
+            try:
+                level = int(args[2])
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: {args[2]!r} is not a DMC level "
+                    f"(want 0-127)") from None
+            if not 0 <= level <= 127:
+                raise TrackerError(
+                    f"line {lineno}: DMC level is 0-127, got {level}")
+            events.append(NESDMCLevel(level=level))
+        else:
+            raise TrackerError(
+                f"line {lineno}: unknown nes setting {args[0]!r}. "
+                f"Valid: duty, sweep, dmc")
+
+    elif head == "ch3op":
+        # `ch3op 1 A-5` pitches one of channel 3's operators.
+        need(2, "an operator 1-4 and a note, e.g. `ch3op 1 A-5`")
+        try:
+            operator = int(args[0])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[0]!r} is not an operator number "
+                f"(want 1-4)") from None
+        if not 1 <= operator <= 4:
+            raise TrackerError(
+                f"line {lineno}: operator must be 1-4, got {operator}")
+        parsed = parse_note(args[1])
+        if parsed is None:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not a note (want e.g. A-5)")
+        events.append(FMCh3Frequency(operator=operator, note=parsed[0],
+                                     octave=parsed[1]))
+    elif head == "op":
+        # `op fm0 4 tl 20` — write one operator field mid-note. Lands
+        # between the rows around it, because a directive flushes the
+        # pending ones first. Takes an OPL column too: `op opl0 2 wave 2`
+        # — same directive rather than a second name, because it is the
+        # same job and a model should not have to learn which chip spells
+        # it differently.
+        need(4, "a channel, an operator, a field and a value, "
+                "e.g. `op fm0 4 tl 20` or `op opl0 2 wave 2`")
+        if _column(args[0], lineno) in _OPL_COLUMNS:
+            # False, not True: this function's return value means "stop
+            # parsing the score" — it is how `end` works — so returning
+            # True here ended the track at the first `op opl0` line and
+            # silently dropped everything after it.
+            _opl_operator(args, events, lineno)
+            return False
+        channel = _fm_channel(args[0], lineno)
+        try:
+            operator = int(args[1])
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[1]!r} is not an operator number "
+                f"(want 1-4, in the ordinary numbering)") from None
+        if not 1 <= operator <= 4:
+            raise TrackerError(
+                f"line {lineno}: operator must be 1-4, got {operator}")
+        field = args[2].lower()
+        import opn2 as _opn2
+        known = _opn2.YM2612.OPERATOR_FIELDS
+        resolved = _opn2.YM2612.OPERATOR_ALIASES.get(field, field)
+        if resolved not in known:
+            raise TrackerError(
+                f"line {lineno}: unknown operator field {args[2]!r}. "
+                f"Valid: {', '.join(sorted(known))}")
+        try:
+            value = int(args[3], 0)
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: {args[3]!r} is not a number") from None
+        events.append(FMOperator(channel=channel, operator=operator,
+                                 field=resolved, value=value))
+    elif head == "alg":
+        # `alg fm1 4` or `alg fm1 4 6` (algorithm, feedback)
+        need(2, "a channel and an algorithm 0-7, e.g. `alg fm1 4` "
+                "or `alg fm1 4 6` to set feedback too")
+        if _column(args[0], lineno) in _OPL_COLUMNS:
+            # The OPL2's whole algorithm space is one bit: 0 is FM
+            # (modulator into carrier), 1 is additive (both heard).
+            # Anything else would be a number this chip cannot hold.
+            channel = int(_column(args[0], lineno)[3:])
+            try:
+                additive = int(args[1])
+                feedback = int(args[2]) if len(args) > 2 else None
+            except ValueError:
+                raise TrackerError(
+                    f"line {lineno}: the OPL2 takes `alg {args[0]} 0` for "
+                    f"FM or `alg {args[0]} 1` for additive, optionally "
+                    f"with a feedback 0-7") from None
+            if additive not in (0, 1):
+                raise TrackerError(
+                    f"line {lineno}: the OPL2 has one algorithm bit, not "
+                    f"eight — 0 is FM, 1 is additive. Got {additive}")
+            if feedback is not None and not 0 <= feedback <= 7:
+                raise TrackerError(
+                    f"line {lineno}: feedback is 0-7, got {feedback}")
+            events.append(OPLConnection(channel=channel, additive=additive,
+                                        feedback=feedback))
+            return False
+        channel = _fm_channel(args[0], lineno)
+        try:
+            algorithm = int(args[1])
+            feedback = int(args[2]) if len(args) > 2 else None
+        except ValueError:
+            raise TrackerError(
+                f"line {lineno}: algorithm and feedback must be numbers") from None
+        if not 0 <= algorithm <= 7:
+            raise TrackerError(
+                f"line {lineno}: algorithm must be 0-7, got {algorithm}")
+        if feedback is not None and not 0 <= feedback <= 7:
+            raise TrackerError(
+                f"line {lineno}: feedback must be 0-7, got {feedback}")
+        events.append(FMAlgorithm(channel=channel, algorithm=algorithm,
+                                  feedback=feedback))
+    elif head == "opldepth":
+        need(2, "a tremolo and a vibrato depth, e.g. `opldepth 0 1`")
+        events.append(OPLDepth(tremolo=int(args[0]), vibrato=int(args[1])))
     elif head == "vol":
         need(2, "a channel and a level, e.g. `vol fm0 100`")
         target = _column(args[0], lineno)
         if target in _FM_COLUMNS:
             events.append(FMVolume(channel=int(target[2:]), volume=int(args[1])))
+        elif target in _OPL_COLUMNS:
+            events.append(OPLVolume(channel=int(target[3:]), volume=int(args[1])))
         elif target in _PSG_COLUMNS:
             events.append(PSGVolume(channel=int(target[3:]), volume=int(args[1])))
         elif target == "noise":
             events.append(PSGVolume(channel=3, volume=int(args[1])))
+        elif target == "dac":
+            # The drums own the master otherwise. normalize_peak works on
+            # peak and a drum is nearly all peak: measured against the
+            # fully calibrated built-in bank, the DAC peaks 7-9 dB above
+            # every FM voice in the same score while sitting 2 dB BELOW
+            # them in RMS (crest 17.4 dB against 5-8). Patch calibration
+            # narrows that and cannot close it — this is the fader that
+            # does.
+            events.append(DACVolume(volume=int(args[1])))
+        elif target in _NES_COLUMNS:
+            voice = _NES_VOICE[target]
+            if voice == "dmc":
+                events.append(DACVolume(volume=int(args[1])))
+            elif voice == "triangle":
+                raise TrackerError(
+                    f"line {lineno}: the NES triangle has no volume "
+                    f"register — its output is identical at velocity 8 "
+                    f"and 127. Gate it with note-offs instead.")
+            elif voice == "noise":
+                events.append(NESNoiseOn(period=4,
+                                         velocity=int(args[1])))
+            else:
+                events.append(NESVolume(voice=voice, velocity=int(args[1])))
         else:
-            raise TrackerError(f"line {lineno}: cannot set volume on {args[0]}")
+            raise TrackerError(
+                f"line {lineno}: cannot set volume on {args[0]}. Volume "
+                f"works on fm0-fm5, opl0-opl8, psg0-psg2, noise, dac and "
+                f"nes0/nes1/nes4")
     elif head == "pan":
         need(2, "a channel and L/R/C/off, e.g. `pan fm1 L`")
         side = args[1].upper()
@@ -412,13 +1011,67 @@ def _directive(head, args, meta, columns, events, arps, lineno) -> bool:
     return False
 
 
+def _opl_operator(args, events, lineno):
+    """`op opl0 2 wave 2` — one OPL2 operator field, mid-note."""
+    import opl2 as _opl2
+
+    channel = int(_column(args[0], lineno)[3:])
+    try:
+        operator = int(args[1])
+    except ValueError:
+        raise TrackerError(
+            f"line {lineno}: {args[1]!r} is not an operator number. The "
+            f"OPL2 has two: 1 is the modulator, 2 the carrier") from None
+    if operator not in (1, 2):
+        raise TrackerError(
+            f"line {lineno}: the OPL2 has two operators per channel, "
+            f"1 (modulator) and 2 (carrier); got {operator}")
+    field = args[2].lower()
+    known = _opl2.YM3812.OPERATOR_FIELDS
+    resolved = _opl2.YM3812.OPERATOR_ALIASES.get(field, field)
+    if resolved not in known:
+        raise TrackerError(
+            f"line {lineno}: unknown OPL2 operator field {args[2]!r}. "
+            f"Valid: {', '.join(sorted(known))}")
+    try:
+        value = int(args[3], 0)
+    except ValueError:
+        raise TrackerError(
+            f"line {lineno}: {args[3]!r} is not a number") from None
+    _base, _shift, mask = known[resolved]
+    if not 0 <= value <= mask:
+        raise TrackerError(
+            f"line {lineno}: {resolved} is 0-{mask} on the OPL2, got "
+            f"{value}")
+    events.append(OPLOperator(channel=channel, operator=operator,
+                              field=resolved, value=value))
+
+
+def valid_columns() -> tuple:
+    """Every column name a score may use, in report order.
+
+    Public because anything building a score from outside — an interface,
+    a generator — needs the real list rather than its own copy of it.
+    A copy is right on the day it is written and wrong the first time a
+    chip is added, with nothing to say so.
+    """
+    return (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
+            + ("noise", "dac"))
+
+
+def column_aliases() -> dict:
+    """Alias -> canonical column, for an interface that accepts either."""
+    return dict(_COLUMN_ALIASES)
+
+
 def _column(name: str, lineno: int) -> str:
     key = name.lower()
     resolved = _COLUMN_ALIASES.get(key, key)
-    if resolved not in _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac"):
+    valid = valid_columns()
+    if resolved not in valid:
         raise TrackerError(
             f"line {lineno}: unknown column {name!r}. Valid: "
-            f"{', '.join(_FM_COLUMNS + _PSG_COLUMNS + ('noise', 'dac'))}")
+            f"{', '.join(valid)}")
     return resolved
 
 
@@ -462,9 +1115,65 @@ def resolve_quality(name: str, lineno: int) -> str:
     return key
 
 
+
+def _split_delay(cell, meta, lineno, raw):
+    """`A-4/C06/4A3` -> (6, 'A-4/4A3'): a cell's delay, and the cell without it.
+
+    The delay is in the score's own ticks, so it is checked against the
+    row it has to fit in: a delay as long as the row would land the cell
+    in the next one, where it should simply be written.
+    """
+    token, codes = fx.split_cell(cell.strip())
+    ticks = 0
+    kept = []
+    for code in codes:
+        try:
+            value = fx.delay_ticks(code)
+        except fx.FXError as error:
+            raise TrackerError(
+                f"line {lineno}: {error}\n  {raw.strip()}") from None
+        if value is None:
+            kept.append(code)
+            continue
+        if ticks:
+            raise TrackerError(
+                f"line {lineno}: {cell.strip()!r} has two delays; a cell "
+                f"starts once\n  {raw.strip()}")
+        ticks = value
+    if not ticks:
+        return 0, cell if len(kept) == len(codes) else \
+            fx.SEPARATOR.join([token] + kept)
+    total = meta.ticks_per_row()
+    if ticks >= total:
+        raise TrackerError(
+            f"line {lineno}: C{ticks:02X} delays the cell by {ticks} ticks, "
+            f"but a row here is {total} ticks long ({meta.bpm:g} BPM, lpb "
+            f"{meta.lpb}, {meta.ticks_per_second:g} ticks a second), so it "
+            f"would land in a later row. Use C01-C{total - 1:02X}, or write "
+            f"the note in the row where it sounds.\n  {raw.strip()}")
+    return ticks, fx.SEPARATOR.join([token] + kept)
+
+
+def _apply_effects(column, codes, events, lineno, raw):
+    """Turn a cell's effect codes into events on that column's voice."""
+    for code in codes:
+        try:
+            events.extend(fx.to_events(column, code))
+        except fx.FXError as error:
+            raise TrackerError(
+                f"line {lineno}: {error}\n  {raw.strip()}") from None
+
+
 def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
-    token = cell.strip()
+    # A cell may carry effects after its note: `A-2:100/1F0/4A3`. They are
+    # emitted AFTER the note event, because a note-on restarts the
+    # modulators and would otherwise wipe the vibrato it was given.
+    token, codes = fx.split_cell(cell.strip())
+    token = token.strip()
+    if token in HOLD_TOKENS and not codes:
+        return
     if token in HOLD_TOKENS:
+        _apply_effects(column, codes, events, lineno, raw)
         return
     lowered = token.lower()
 
@@ -473,6 +1182,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         if lowered in OFF_TOKENS:
             events.append(FMNoteOff(channel=ch))
             fm_sounding[ch] = False
+            _apply_effects(column, codes, events, lineno, raw)
             return
         parsed = parse_note(token)
         if parsed is None:
@@ -482,6 +1192,97 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(FMNoteOn(channel=ch, note=note, octave=octave,
                                velocity=velocity if velocity else 127))
         fm_sounding[ch] = True
+        _apply_effects(column, codes, events, lineno, raw)
+        return
+
+    if column in _OPL_COLUMNS:
+        # The OPL2 gets the same effect column the FM and PSG channels do.
+        # Everything downstream was already in place — effects.py carries
+        # opl0-8 voices and the sequencer's _write_effect pushes them to
+        # set_pitch_offset/set_volume — so for a while an `opl0` cell
+        # parsed its effect codes and then dropped them on the floor,
+        # which is the kind of silence that reads as "vibrato does nothing
+        # on this chip" rather than as a missing wire.
+        ch = int(column[3:])
+        if lowered in OFF_TOKENS:
+            events.append(OPLNoteOff(channel=ch))
+            _apply_effects(column, codes, events, lineno, raw)
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-4, A#3, ===)\n  {raw.strip()}")
+        note, octave, velocity = parsed
+        events.append(OPLNoteOn(channel=ch, note=note, octave=octave,
+                                velocity=velocity if velocity else 127))
+        _apply_effects(column, codes, events, lineno, raw)
+        return
+
+    if column in _NES_COLUMNS:
+        voice = _NES_VOICE[column]
+        if column == "nes3":
+            # The NES noise cell carries a period, not a note: 0-15, and
+            # it runs backwards — 0 is the highest pitch. `m` asks for the
+            # short shift register, which is the chip's only route to a
+            # tonal metallic timbre.
+            if lowered in OFF_TOKENS:
+                events.append(NESNoiseOff())
+                _apply_effects(voice, codes, events, lineno, raw)
+                return
+            m = _NES_NOISE_CELL.match(token)
+            if not m:
+                raise TrackerError(
+                    f"line {lineno}: {token!r} is not a NES noise cell "
+                    f"(want a period 0-15, optionally m for metallic and "
+                    f":velocity — e.g. 6, 6m, 6:80, ===)\n  {raw.strip()}")
+            period, metallic, velocity = m.groups()
+            if int(period) > 15:
+                raise TrackerError(
+                    f"line {lineno}: NES noise period is 0-15, got "
+                    f"{period}\n  {raw.strip()}")
+            events.append(NESNoiseOn(
+                period=int(period), metallic=bool(metallic),
+                velocity=int(velocity) if velocity else 127))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        if column == "nes4":
+            # $4011 is a plain DAC, so the DMC column takes the same kit
+            # the Genesis one does.
+            if lowered in OFF_TOKENS:
+                return
+            name, _, level = token.partition(":")
+            import samples as samples_mod
+            if name not in samples_mod.KIT:
+                raise TrackerError(
+                    f"line {lineno}: unknown sample {name!r}; have: "
+                    f"{', '.join(samples_mod.names())}\n  {raw.strip()}")
+            volume = 1.0
+            if level:
+                try:
+                    volume = float(level)
+                except ValueError:
+                    raise TrackerError(
+                        f"line {lineno}: {level!r} is not a DMC volume "
+                        f"(want 0.0-1.0)\n  {raw.strip()}") from None
+                if not 0.0 <= volume <= 1.0:
+                    raise TrackerError(
+                        f"line {lineno}: DMC volume {volume} is outside "
+                        f"0.0-1.0\n  {raw.strip()}")
+            events.append(NESSample(name=name, volume=volume, rate=0))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        if lowered in OFF_TOKENS:
+            events.append(NESNoteOff(voice=voice))
+            _apply_effects(voice, codes, events, lineno, raw)
+            return
+        parsed = parse_note(token)
+        if parsed is None:
+            raise TrackerError(f"line {lineno}: {token!r} is not a note "
+                               f"(want e.g. A-4, A#3, ===)\n  {raw.strip()}")
+        note, octave, velocity = parsed
+        events.append(NESNoteOn(voice=voice, note=note, octave=octave,
+                                velocity=velocity if velocity else 127))
+        _apply_effects(voice, codes, events, lineno, raw)
         return
 
     if column in _PSG_COLUMNS:
@@ -489,6 +1290,7 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         if lowered in OFF_TOKENS:
             events.append(PSGToneOff(channel=ch))
             psg_sounding[ch] = False
+            _apply_effects(column, codes, events, lineno, raw)
             return
         parsed = parse_note(token)
         if parsed is None:
@@ -498,11 +1300,16 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         events.append(PSGToneOn(channel=ch, note=note, octave=octave,
                                 volume=volume if volume is not None else 0))
         psg_sounding[ch] = True
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column == "noise":
+        # Volume effects only, and fx.py refuses the pitch codes with a
+        # reason: the noise rate is four discrete settings, so there is
+        # nothing to bend. A hat swelling into a fill is the point.
         if lowered in OFF_TOKENS:
             events.append(PSGNoiseOff())
+            _apply_effects(column, codes, events, lineno, raw)
             return
         m = _NOISE_CELL.match(token)
         if not m:
@@ -511,12 +1318,33 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
         kind, rate, volume = m.groups()
         events.append(PSGNoiseOn(white=kind.lower() == "w", rate=int(rate),
                                  volume=int(volume) if volume else 0))
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
     if column == "dac":
         if lowered in OFF_TOKENS:
+            _apply_effects(column, codes, events, lineno, raw)
             return
         name, _, level = token.partition(":")
+        # `kick@D-3` plays the sample at that pitch, by playing it faster
+        # or slower. Split the pitch off before the volume so both can be
+        # given: `kick@D-3:0.5`.
+        name, at, pitch = name.partition("@")
+        rate = 0
+        if at:
+            parsed = parse_note(pitch)
+            if parsed is None:
+                raise TrackerError(
+                    f"line {lineno}: {pitch!r} is not a note to play "
+                    f"{name!r} at (want e.g. D-3)\n  {raw.strip()}")
+            import samples as samples_mod
+            try:
+                sample = samples_mod.KIT[name]
+            except KeyError:
+                raise TrackerError(
+                    f"line {lineno}: unknown sample {name!r}; have: "
+                    f"{', '.join(samples_mod.names())}") from None
+            name, rate = samples_mod.for_note(sample, parsed[0], parsed[1])
         volume = 1.0
         if level:
             try:
@@ -529,7 +1357,11 @@ def _apply_cell(column, cell, events, fm_sounding, psg_sounding, lineno, raw):
                 raise TrackerError(
                     f"line {lineno}: DAC volume {volume} is outside 0.0-1.0"
                     f"\n  {raw.strip()}")
-        events.append(DACSample(name=name, volume=volume))
+        events.append(DACSample(name=name, volume=volume, rate=rate))
+        # Volume effects only, same as `noise`: the DAC's pitch is its
+        # feed rate, which is already against the chip's byte ceiling, so
+        # fx.py refuses the pitch codes rather than accept and ignore.
+        _apply_effects(column, codes, events, lineno, raw)
         return
 
 
@@ -606,6 +1438,7 @@ def dumps(events, meta: Metadata = None, columns=None,
     columns = list(columns) if columns else None
 
     rows = {}        # row index -> {column: cell}
+    row_effects = {}      # row index -> {column: [effect codes]}
     row_directives = {}   # row index -> [directive lines to print before it]
     header = []
     used = set()
@@ -645,6 +1478,40 @@ def dumps(events, meta: Metadata = None, columns=None,
             directive(r, f"lfo {'on' if ev.enable else 'off'} {ev.freq}")
         elif isinstance(ev, FMVolume):
             directive(r, f"vol fm{ev.channel} {ev.volume}")
+        elif isinstance(ev, OPLInstrumentSelect):
+            directive(r, f"inst opl{ev.channel} {ev.instrument}")
+        elif isinstance(ev, OPLVolume):
+            directive(r, f"vol opl{ev.channel} {ev.volume}")
+        elif isinstance(ev, OPLDepth):
+            directive(r, f"opldepth {ev.tremolo} {ev.vibrato}")
+        elif isinstance(ev, Portamento):
+            directive(r, f"porta {ev.target} {ev.cents_per_second:g} "
+                         f"{ev.to_cents:g}")
+        elif isinstance(ev, Vibrato):
+            directive(r, f"vib {ev.target} {ev.depth_cents:g} "
+                         f"{ev.speed_hz:g}"
+                         + (f" {ev.delay:g}" if ev.delay else ""))
+        elif isinstance(ev, VolumeSlide):
+            directive(r, f"fade {ev.target} {ev.per_second:g}"
+                         + (f" {ev.floor} {ev.ceiling}"
+                            if (ev.floor, ev.ceiling) != (0, 127) else ""))
+        elif isinstance(ev, Tremolo):
+            directive(r, f"trem {ev.target} {ev.depth:g} {ev.speed_hz:g}")
+        elif isinstance(ev, Arpeggio):
+            # Written back as the cell effect it came from — there is no
+            # directive for it, and an arpeggio dropped on the way out
+            # would be a chord turned into a single note.
+            column = _NES_COLUMN.get(ev.target, ev.target)
+            used.add(column)
+            row_effects.setdefault(r, {}).setdefault(column, []).append(
+                f"0{ev.x:X}{ev.y:X}")
+        elif isinstance(ev, OPLNoteOn):
+            used.add(f"opl{ev.channel}")
+            suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
+            cell[f"opl{ev.channel}"] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, OPLNoteOff):
+            used.add(f"opl{ev.channel}")
+            cell[f"opl{ev.channel}"] = "==="
         elif isinstance(ev, PSGVolume):
             target = "noise" if ev.channel == 3 else f"psg{ev.channel}"
             directive(r, f"vol {target} {ev.volume}")
@@ -681,10 +1548,44 @@ def dumps(events, meta: Metadata = None, columns=None,
             used.add("dac")
             cell["dac"] = ev.name + (f":{ev.volume:g}" if ev.volume != 1.0
                                      else "")
+        # The NES half. These arrived late: the parser has read nes0-nes4
+        # since the chip was added, and this loop could not write one back
+        # out, so an NES score round-tripped to an empty file with a
+        # correct header. Nothing caught it because the NES corpus is
+        # stored as JSON, which does not come through here.
+        elif isinstance(ev, NESNoteOn):
+            column = _NES_COLUMN[ev.voice]
+            used.add(column)
+            suffix = f":{ev.velocity}" if ev.velocity != 127 else ""
+            cell[column] = _note_cell(ev.note, ev.octave) + suffix
+        elif isinstance(ev, NESNoteOff):
+            column = _NES_COLUMN[ev.voice]
+            used.add(column)
+            cell[column] = "==="
+        elif isinstance(ev, NESNoiseOn):
+            used.add("nes3")
+            cell["nes3"] = (f"{ev.period}" + ("m" if ev.metallic else "")
+                            + (f":{ev.velocity}" if ev.velocity != 127
+                               else ""))
+        elif isinstance(ev, NESNoiseOff):
+            used.add("nes3")
+            cell["nes3"] = "==="
+        elif isinstance(ev, NESSample):
+            used.add("nes4")
+            cell["nes4"] = ev.name + (f":{ev.volume:g}"
+                                      if ev.volume != 1.0 else "")
+        elif isinstance(ev, NESDuty):
+            directive(r, f"nes duty {_NES_COLUMN[ev.voice]} {ev.duty}")
 
     if columns is None:
-        order = _FM_COLUMNS + _PSG_COLUMNS + ("noise", "dac")
+        order = (_FM_COLUMNS + _OPL_COLUMNS + _PSG_COLUMNS + _NES_COLUMNS
+                 + ("noise", "dac"))
         columns = [c for c in order if c in used] or list(DEFAULT_COLUMNS)
+
+    for r, effects in row_effects.items():
+        cells = rows.setdefault(r, {})
+        for c, codes in effects.items():
+            cells[c] = fx.SEPARATOR.join([cells.get(c, "...")] + codes)
 
     widths = {c: max(len(c), 3) for c in columns}
     for cells in rows.values():

@@ -27,7 +27,7 @@ someone wants — the point is that it should be a choice, not a surprise
 discovered by staring at a spectrogram.
 """
 
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 
 import events as events_mod
 import samples as samples_mod
@@ -107,6 +107,20 @@ BASS_PATCH_NAMES = frozenset({"bass", "sub_bass", "deep_bass", "slap_bass",
 LEAD_PATCH_NAMES = frozenset({"distorted_lead", "square_lead", "saw_lead",
                               "lead"})
 
+#: How many voices have to pile into one narrow pitch band before it is
+#: worth saying so, and how narrow that band is. Name-free on purpose:
+#: the two checks above look up the patch assigned to a channel, so they
+#: see nothing at all on an imported bank whose patches are called hl_01
+#: and hl_05 — and crowding is a property of where the parts SIT, not of
+#: what they are called.
+#:
+#: An octave is the band. Three or more melodic voices whose median
+#: pitches all fall inside one octave are not three parts, they are one
+#: chord voiced in unison-ish, and on a chip with six voices total that
+#: is most of the arrangement spent on a single band.
+CROWDED_VOICES = 3
+CROWDED_SPAN_SEMITONES = 12
+
 
 def _midi(note: str, octave: int) -> int:
     """Note name + octave -> a comparable integer. Octave 4 holds A440."""
@@ -133,6 +147,183 @@ def _dac_sample_seconds(name: str, rate_override: int) -> float:
     return (len(sample.data) / float(rate)) if rate > 0 else None
 
 
+# --------------------------------------------------------------------------
+# Silent failures: the render succeeds and the note is not there, or is not
+# the note that was written. These are not judgements about an arrangement
+# and the 5-second floor does not apply to them — a four-row score with no
+# instrument is as silent as a four-minute one.
+# --------------------------------------------------------------------------
+
+#: The lowest note each voice plays at its written pitch. Below these the
+#: divider register clamps and the note sounds SHARP rather than low.
+#: Measured, not read off a datasheet: PSG C-2 renders at 109.34 Hz, which
+#: is A-2 and +889.6 cents from what was written; the NES pulse clamps the
+#: same way below A-1 and the triangle below A-0.
+FLOORS = {"psg": ("A", 2), "nes_pulse": ("A", 1), "nes_triangle": ("A", 0)}
+
+#: The highest PSG note within 10 cents of its written pitch. G#6 measured
+#: +8.6 cents, A-6 -12.0, C-7 +14.5; adjacent semitones do not collide
+#: until C9, so this is intonation drift, not lost notes.
+PSG_IN_TUNE_CEILING = ("G#", 6)
+
+
+class Finding(NamedTuple):
+    """One silent failure, in a form a model can act on.
+
+    `rule` is shared with prompts.RULES: the briefing that tells a model
+    the rule and the check that catches it breaking use the same name, so
+    the two cannot drift into teaching one thing and testing another.
+    """
+    rule: str
+    severity: str             #: "error" — the music is wrong — or "warning"
+    voice: str                #: the score column it happened on
+    message: str
+    fix: str
+    count: int = 1
+    at: float = 0.0           #: seconds into the track, first occurrence
+
+    def text(self) -> str:
+        times = f" ({self.count}x, first at {self.at:.2f}s)" \
+            if self.count > 1 else f" (at {self.at:.2f}s)"
+        return f"{self.message}{times} — {self.fix}"
+
+
+def _below(note: str, octave: int, floor) -> bool:
+    return _midi(note, octave) < _midi(floor[0], floor[1])
+
+
+def _cell(note: str, octave: int) -> str:
+    """A pitch the way the score wrote it: `C-2`, `G#6`."""
+    return f"{note}{'-' if len(note) == 1 else ''}{octave}"
+
+
+def silent_failures(events: List[events_mod.Event],
+                    ticks_per_second: float = 192.0) -> List[Finding]:
+    """Every place the render will succeed and the music will not be there.
+
+    Structured rather than a string so a checker can hand a model the
+    column and the fix; check() flattens them into its warnings so every
+    other path — the CLI, the interface, the bridge — sees them too.
+    """
+    E = events_mod
+    rate = ticks_per_second
+    clock = 0.0
+    voiced = set()            # FM channels with an instrument or live ops
+    tally = {}                # (rule, voice) -> [count, first_at, sample]
+
+    def hit(rule, voice, detail=None):
+        entry = tally.get((rule, voice))
+        if entry is None:
+            tally[(rule, voice)] = [1, clock, detail]
+        else:
+            entry[0] += 1
+
+    for event in events:
+        if isinstance(event, E.Wait):
+            clock += event.ticks / rate
+            continue
+        if isinstance(event, E.Tempo):
+            rate = max(1.0, float(event.ticks_per_second))
+            continue
+        if isinstance(event, E.End):
+            break
+        if isinstance(event, (E.FMInstrumentSelect, E.FMOperator,
+                              E.FMAlgorithm)):
+            voiced.add(event.channel)
+        elif isinstance(event, E.FMNoteOn):
+            if event.channel not in voiced:
+                hit("fm_needs_inst", f"fm{event.channel}")
+        elif isinstance(event, E.PSGToneOn):
+            voice = f"psg{event.channel}"
+            if event.volume >= 15:
+                hit("psg_15_is_silent", voice)
+            if _below(event.note, event.octave, FLOORS["psg"]):
+                hit("psg_floor", voice, _cell(event.note, event.octave))
+            elif not _below(event.note, event.octave, PSG_IN_TUNE_CEILING) \
+                    and _midi(event.note, event.octave) > \
+                    _midi(*PSG_IN_TUNE_CEILING):
+                hit("psg_detune", voice, _cell(event.note, event.octave))
+        elif isinstance(event, E.PSGNoiseOn):
+            if event.volume >= 15:
+                hit("psg_15_is_silent", "noise")
+        elif isinstance(event, E.NESNoteOn):
+            voice = {"pulse1": "nes0", "pulse2": "nes1",
+                     "triangle": "nes2"}.get(event.voice, event.voice)
+            if event.voice == "triangle":
+                if _below(event.note, event.octave, FLOORS["nes_triangle"]):
+                    hit("nes_triangle_floor", voice,
+                        _cell(event.note, event.octave))
+                if event.velocity != 127:
+                    hit("nes_triangle_velocity", voice)
+            elif _below(event.note, event.octave, FLOORS["nes_pulse"]):
+                hit("nes_pulse_floor", voice, _cell(event.note, event.octave))
+
+    out = []
+    for (rule, voice), (count, at, detail) in sorted(
+            tally.items(), key=lambda kv: (kv[1][1], kv[0])):
+        spec = SILENT_RULES[rule]
+        out.append(Finding(
+            rule=rule, severity=spec["severity"], voice=voice,
+            message=spec["message"].format(voice=voice, detail=detail),
+            fix=spec["fix"].format(voice=voice, detail=detail),
+            count=count, at=at))
+    return out
+
+
+#: The wording for each silent failure. One place, because the checker,
+#: check()'s warnings and the briefings all quote it.
+SILENT_RULES = {
+    "fm_needs_inst": {
+        "severity": "error",
+        "message": "{voice} plays notes before any `inst {voice} <name>` — "
+                   "an FM channel with no instrument is SILENT",
+        "fix": "add `inst {voice} <instrument>` above the first row",
+    },
+    "psg_15_is_silent": {
+        "severity": "error",
+        "message": "{voice} has notes at volume 15 — the PSG field is an "
+                   "ATTENUATOR, so 15 is silence and 0 is loudest",
+        "fix": "write the note bare (`C-5`) for full volume, or `:2`-`:8` "
+               "for quieter",
+    },
+    "psg_floor": {
+        "severity": "error",
+        "message": "{voice} plays {detail}, below the PSG floor A-2 — the "
+                   "10-bit divider clamps and it sounds as A-2, up to "
+                   "+890 cents SHARP",
+        "fix": "move the part up an octave, or give the bass to an FM "
+               "channel",
+    },
+    "psg_detune": {
+        "severity": "warning",
+        "message": "{voice} plays {detail}, above G#6 — the PSG divider "
+                   "drifts 12-19 cents out of tune up there",
+        "fix": "keep PSG parts at or below G#6, or move the line to FM",
+    },
+    "nes_pulse_floor": {
+        "severity": "error",
+        "message": "{voice} plays {detail}, below the pulse floor A-1 — "
+                   "the 11-bit timer clamps and the note sounds SHARP, "
+                   "not low",
+        "fix": "move the part up an octave, or give the bass to nes2 "
+               "(the triangle reaches A-0)",
+    },
+    "nes_triangle_floor": {
+        "severity": "error",
+        "message": "{voice} plays {detail}, below the triangle floor A-0 "
+                   "— the timer clamps and the note sounds SHARP",
+        "fix": "move the part up an octave",
+    },
+    "nes_triangle_velocity": {
+        "severity": "warning",
+        "message": "{voice} has velocities, and the triangle has no volume "
+                   "register — they are ignored",
+        "fix": "drop the `:N` on nes2; shape the bass with note lengths "
+               "instead",
+    },
+}
+
+
 def check(events: List[events_mod.Event],
           ticks_per_second: float = 192.0) -> List[str]:
     """Return human-readable warnings about the event list's arrangement.
@@ -140,7 +331,11 @@ def check(events: List[events_mod.Event],
     Does not render anything — this is pure bookkeeping over the event
     stream, so it costs microseconds even on a long track.
     """
-    warnings: List[str] = []
+    # Silent failures first and regardless of length: the 5-second floor
+    # exists so a four-row test is not judged as an arrangement, and a
+    # silent channel is not a judgement.
+    warnings: List[str] = [finding.text() for finding in
+                           silent_failures(events, ticks_per_second)]
     rate = ticks_per_second
     clock = 0.0
 
@@ -175,6 +370,11 @@ def check(events: List[events_mod.Event],
     any_pan = False
     any_dac_sample = False
     fm_pitches = {}           # channel -> [midi numbers played]
+    # The same question asked of the other two chips. Crowding was an
+    # FM-only check, so six OPL2 voices inside one octave, or both NES
+    # pulses in unison with the triangle, passed with nothing said.
+    opl_pitches = {}          # "OPL3" -> [midi numbers]
+    nes_pitches = {}          # "nes0" -> [midi numbers]
     fm_instrument = {}        # channel -> instrument name last assigned
 
     def close_dac_span(at):
@@ -186,8 +386,13 @@ def check(events: List[events_mod.Event],
                 dac_spans.append((dac_span_start, stop))
         dac_span_start = dac_span_end = None
 
+    layers = set()            # channels that double another part (forge)
     for event in events:
         E = events_mod
+        if isinstance(event, E.Marker) \
+                and event.label.startswith("forge:layers "):
+            layers.update(event.label.split()[1:])
+            continue
         if isinstance(event, E.Wait):
             clock += event.ticks / rate
             continue
@@ -202,8 +407,22 @@ def check(events: List[events_mod.Event],
             # sounding channel — see the RETRIGGER_CEILING note above.
             fm_retriggers[event.channel] += 1
             fm_on_since.setdefault(event.channel, clock)
-            fm_pitches.setdefault(event.channel, []).append(
-                _midi(event.note, event.octave))
+            if f"fm{event.channel}" not in layers:
+                fm_pitches.setdefault(event.channel, []).append(
+                    _midi(event.note, event.octave))
+        elif isinstance(event, E.OPLNoteOn):
+            if f"opl{event.channel}" not in layers:
+                opl_pitches.setdefault(f"OPL{event.channel}", []).append(
+                    _midi(event.note, event.octave))
+        elif isinstance(event, E.NESNoteOn):
+            column = {"pulse1": "nes0", "pulse2": "nes1",
+                      "triangle": "nes2"}.get(event.voice, event.voice)
+            # Written pitch is sounding pitch on all three: the engine
+            # sets the triangle's timer for its /32 divider (measured,
+            # triangle C-4 at 261.36 Hz), so no octave correction here.
+            if event.voice not in layers:
+                nes_pitches.setdefault(column, []).append(
+                    _midi(event.note, event.octave))
         elif isinstance(event, E.FMInstrumentSelect):
             fm_instrument[event.channel] = event.instrument
         elif isinstance(event, E.FMNoteOff):
@@ -313,7 +532,10 @@ def check(events: List[events_mod.Event],
                 f"channel 6 for drums precisely for this reason), or drop "
                 f"the DAC drums and play them on the noise channel")
 
-    if len(events) > 200 and not any_pan:
+    # Only where there is FM to pan: NES and OPL2 scores have no FM
+    # channel, and telling a model to add FMPan to one sends it after a
+    # control its chip does not have.
+    if len(events) > 200 and not any_pan and any(fm_on_time):
         warnings.append(
             "no FMPan event anywhere — every FM channel defaults to "
             "centre, so the mix has no stereo width at all. Not wrong, "
@@ -321,6 +543,10 @@ def check(events: List[events_mod.Event],
             "spreading FM channels with FMPan is free separation")
 
     warnings.extend(_register_warnings(fm_pitches, fm_instrument))
+    warnings.extend(_crowding_warnings(opl_pitches, chip="OPL2",
+                                       whole="nine"))
+    warnings.extend(_crowding_warnings(nes_pitches, chip="NES",
+                                       whole="three"))
     return warnings
 
 
@@ -379,6 +605,11 @@ def _register_warnings(fm_pitches, fm_instrument) -> List[str]:
                 f"an octave or two, or use a lead patch and let something "
                 f"else carry the low end")
 
+    # And the same question without reference to any patch name, because
+    # the two checks above only fire on the built-in bank's names and an
+    # imported one is exactly where this goes wrong unseen.
+    warnings.extend(_crowding_warnings(fm_pitches))
+
     for bass_channel, bass_name in sorted(bass_channels.items()):
         bass_centre = _median(fm_pitches[bass_channel])
         for lead_channel, lead_name in sorted(lead_channels.items()):
@@ -391,6 +622,56 @@ def _register_warnings(fm_pitches, fm_instrument) -> List[str]:
                     f"each other instead of reading as two parts. Move the "
                     f"lead up an octave or the bass down one")
 
+    return warnings
+
+
+def _crowding_warnings(fm_pitches, chip: str = "FM",
+                       whole: str = "six") -> List[str]:
+    """Voices stacked into one narrow band mask each other.
+
+    Six FM voices is the whole chip, so spending three or more of them
+    inside one octave is most of the arrangement in a single band —
+    a chord voiced almost in unison rather than three parts. It reads as
+    one thick sound with nothing distinguishable in it, and every timing
+    and register check above passes, because nothing is wrong with any
+    individual channel.
+
+    Deliberately about pitch, not patches: the checks above look the
+    instrument up by name and so are blind on any imported bank.
+    """
+    warnings: List[str] = []
+    centres = {channel: _median(pitches)
+               for channel, pitches in sorted(fm_pitches.items())
+               if pitches}
+    if len(centres) < CROWDED_VOICES:
+        return warnings
+
+    # The widest group that still fits inside the span.
+    ordered = sorted(centres.items(), key=lambda pair: pair[1])
+    best = []
+    for start in range(len(ordered)):
+        group = [ordered[start]]
+        for channel, centre in ordered[start + 1:]:
+            if centre - ordered[start][1] <= CROWDED_SPAN_SEMITONES:
+                group.append((channel, centre))
+        if len(group) > len(best):
+            best = group
+
+    if len(best) < CROWDED_VOICES:
+        return warnings
+    names = ", ".join(f"FM{channel}" if isinstance(channel, int)
+                      else str(channel) for channel, _ in best)
+    span = best[-1][1] - best[0][1]
+    voices = f"{chip} voices" if chip != "FM" else "FM voices"
+    whole_chip = "" if chip == "FM" else \
+        f" The chip has {whole} melodic voices in all."
+    warnings.append(
+        f"{len(best)} {voices} ({names}) sit within {span:.0f} semitones "
+        f"of each other — inside one octave. That is not {len(best)} parts, "
+        f"it is one chord voiced almost in unison, and it reads as a single "
+        f"thick sound with nothing distinguishable in it.{whole_chip} "
+        f"Spread them: bass an octave or two down, lead an octave up, and "
+        f"let the middle hold two voices at most")
     return warnings
 
 

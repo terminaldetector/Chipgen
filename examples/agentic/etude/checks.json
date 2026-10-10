@@ -1,0 +1,199 @@
+{
+ "harmony": {
+  "A": {
+   "spans": [
+    {
+     "chord": "Am",
+     "read": "Amin7",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "F",
+     "read": "F5",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "C",
+     "read": "C",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "G",
+     "read": "G5",
+     "root_match": true,
+     "bass_root": true
+    }
+   ],
+   "root_match": 1.0,
+   "bass_on_root": 1.0
+  },
+  "A2": {
+   "spans": [
+    {
+     "chord": "Am",
+     "read": "Amin",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "F",
+     "read": "F5",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "C",
+     "read": "C",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "G",
+     "read": "Gmaj6",
+     "root_match": true,
+     "bass_root": true
+    }
+   ],
+   "root_match": 1.0,
+   "bass_on_root": 1.0
+  },
+  "B": {
+   "spans": [
+    {
+     "chord": "Dm",
+     "read": "Dmin",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "Em",
+     "read": "Emin",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "F",
+     "read": "F5",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "G",
+     "read": "G",
+     "root_match": true,
+     "bass_root": true
+    }
+   ],
+   "root_match": 1.0,
+   "bass_on_root": 1.0
+  },
+  "C": {
+   "spans": [
+    {
+     "chord": "F",
+     "read": "F5",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "G",
+     "read": "G",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "E",
+     "read": "E5",
+     "root_match": true,
+     "bass_root": true
+    },
+    {
+     "chord": "Am",
+     "read": "Amin",
+     "root_match": true,
+     "bass_root": true
+    }
+   ],
+   "root_match": 1.0,
+   "bass_on_root": 1.0
+  }
+ },
+ "transitions": [
+  {
+   "between": [
+    "A",
+    "A2"
+   ],
+   "row": 32,
+   "issues": [],
+   "notes": [
+    {
+     "kind": "bass_approach",
+     "voice": "bass",
+     "semitones": 2,
+     "prepared": true
+    },
+    {
+     "kind": "leap",
+     "voice": "lead",
+     "semitones": -2,
+     "statement": "lead moves -2 semitones across the join"
+    }
+   ],
+   "state_left": [],
+   "ok": true
+  },
+  {
+   "between": [
+    "A2",
+    "B"
+   ],
+   "row": 64,
+   "issues": [],
+   "notes": [
+    {
+     "kind": "bass_approach",
+     "voice": "bass",
+     "semitones": -2,
+     "prepared": true
+    },
+    {
+     "kind": "leap",
+     "voice": "lead",
+     "semitones": 6,
+     "statement": "lead moves +6 semitones across the join"
+    }
+   ],
+   "state_left": [],
+   "ok": true
+  },
+  {
+   "between": [
+    "B",
+    "C"
+   ],
+   "row": 96,
+   "issues": [],
+   "notes": [
+    {
+     "kind": "bass_approach",
+     "voice": "bass",
+     "semitones": -2,
+     "prepared": true
+    },
+    {
+     "kind": "leap",
+     "voice": "lead",
+     "semitones": -2,
+     "statement": "lead moves -2 semitones across the join"
+    }
+   ],
+   "state_left": [],
+   "ok": true
+  }
+ ],
+ "hanging": []
+}

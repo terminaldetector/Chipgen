@@ -1,0 +1,81 @@
+{
+ "mode": "tool",
+ "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+ "range": {
+  "spec": "all",
+  "t0": 0.0,
+  "t1": 3.2,
+  "bars": [
+   1,
+   2
+  ]
+ },
+ "observations": [
+  {
+   "id": "o1",
+   "kind": "buried",
+   "voices": [
+    "lead"
+   ],
+   "bars": [
+    1,
+    2
+   ],
+   "t": [
+    0.0,
+    3.2
+   ],
+   "statement": "lead sits 7.5 dB under the rest of the mix in its own band",
+   "basis": "measured",
+   "severity": "high",
+   "confidence": 0.8
+  }
+ ],
+ "mix": {
+  "rms_db": -23.98,
+  "peak_db": -10.8,
+  "limiter": false
+ },
+ "voices": {
+  "bass": {
+   "role": "bass",
+   "band_margin_db": 0.8,
+   "body_margin_db": -0.98,
+   "attack_margin_db": -3.95,
+   "band_share": {
+    "pad": 0.823,
+    "lead": 0.177
+   },
+   "notes": 16
+  },
+  "lead": {
+   "role": "lead",
+   "band_margin_db": -7.46,
+   "body_margin_db": -5.88,
+   "attack_margin_db": -5.5,
+   "band_share": {
+    "pad": 0.664,
+    "bass": 0.336
+   },
+   "notes": 12
+  },
+  "pad": {
+   "role": "pad",
+   "band_margin_db": 2.71,
+   "body_margin_db": 1.19,
+   "attack_margin_db": 0.42,
+   "band_share": {
+    "bass": 0.715,
+    "lead": 0.285
+   },
+   "notes": 2
+  }
+ },
+ "cost": {
+  "renders": 7,
+  "render_seconds": 6.77,
+  "seconds": 8.03,
+  "reply_bytes": 1024,
+  "approx_tokens": 256
+ }
+}

@@ -1,0 +1,368 @@
+[
+  {
+    "name": "03___stage_1__asteroid_field_01",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 7,
+        "multiple": 3,
+        "total_level": 29,
+        "attack_rate": 15,
+        "decay_rate": 10,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 3,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 4,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 0,
+        "total_level": 29,
+        "attack_rate": 31,
+        "decay_rate": 4,
+        "sustain_rate": 6,
+        "release_rate": 12,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 7,
+        "release_rate": 8,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___stage_1__asteroid_field_02",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 4,
+        "multiple": 2,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 2,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 0,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 14,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___stage_1__asteroid_field_03",
+    "algorithm": 5,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 17,
+        "attack_rate": 17,
+        "decay_rate": 6,
+        "sustain_rate": 4,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 27,
+        "decay_rate": 4,
+        "sustain_rate": 7,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 25,
+        "decay_rate": 7,
+        "sustain_rate": 7,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 25,
+        "decay_rate": 2,
+        "sustain_rate": 6,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___stage_1__asteroid_field_04",
+    "algorithm": 3,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 4,
+        "multiple": 6,
+        "total_level": 65,
+        "attack_rate": 16,
+        "decay_rate": 8,
+        "sustain_rate": 1,
+        "release_rate": 6,
+        "sustain_level": 7,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 2,
+        "total_level": 43,
+        "attack_rate": 25,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 7,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 2,
+        "total_level": 35,
+        "attack_rate": 18,
+        "decay_rate": 5,
+        "sustain_rate": 1,
+        "release_rate": 1,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 3,
+        "total_level": 24,
+        "attack_rate": 15,
+        "decay_rate": 1,
+        "sustain_rate": 1,
+        "release_rate": 9,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 1,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___stage_1__asteroid_field_05",
+    "algorithm": 3,
+    "feedback": 5,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 6,
+        "multiple": 14,
+        "total_level": 2,
+        "attack_rate": 31,
+        "decay_rate": 28,
+        "sustain_rate": 5,
+        "release_rate": 9,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 2,
+        "multiple": 10,
+        "total_level": 40,
+        "attack_rate": 31,
+        "decay_rate": 6,
+        "sustain_rate": 5,
+        "release_rate": 9,
+        "sustain_level": 13,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 5,
+        "multiple": 2,
+        "total_level": 19,
+        "attack_rate": 31,
+        "decay_rate": 0,
+        "sustain_rate": 1,
+        "release_rate": 12,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 1,
+        "release_rate": 9,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "03___stage_1__asteroid_field_06",
+    "algorithm": 5,
+    "feedback": 3,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 29,
+        "attack_rate": 18,
+        "decay_rate": 11,
+        "sustain_rate": 5,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 27,
+        "decay_rate": 4,
+        "sustain_rate": 8,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 25,
+        "decay_rate": 7,
+        "sustain_rate": 8,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 25,
+        "decay_rate": 3,
+        "sustain_rate": 7,
+        "release_rate": 10,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

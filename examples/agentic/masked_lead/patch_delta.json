@@ -1,0 +1,150 @@
+{
+ "chain": [
+  {
+   "op": "level",
+   "voice": "lead",
+   "range": "rows 0-31",
+   "db": 5.5
+  },
+  {
+   "op": "level",
+   "voice": "pad",
+   "range": "rows 0-31",
+   "db": -3.5
+  }
+ ],
+ "deltas": [
+  {
+   "op": "level",
+   "voice": "lead",
+   "column": "fm1",
+   "range": "rows 0-31",
+   "rows": [
+    0,
+    32
+   ],
+   "scope": "occurrence",
+   "asked_db": 5.5,
+   "realised_db": {
+    "mean": 3.75,
+    "min": 3.75,
+    "max": 3.75
+   },
+   "cells": 12,
+   "at_limit": 0,
+   "copies": [],
+   "edits_total": 12,
+   "edits": [
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 0,
+     "column": "fm1",
+     "from": "E-5:80",
+     "to": "E-5:127"
+    },
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 3,
+     "column": "fm1",
+     "from": "D-5:80",
+     "to": "D-5:127"
+    },
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 5,
+     "column": "fm1",
+     "from": "C-5:80",
+     "to": "C-5:127"
+    },
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 8,
+     "column": "fm1",
+     "from": "B-4:80",
+     "to": "B-4:127"
+    }
+   ]
+  },
+  {
+   "op": "level",
+   "voice": "pad",
+   "column": "fm2",
+   "range": "rows 0-31",
+   "rows": [
+    0,
+    32
+   ],
+   "scope": "occurrence",
+   "asked_db": -3.5,
+   "realised_db": {
+    "mean": -3.75,
+    "min": -3.75,
+    "max": -3.75
+   },
+   "cells": 2,
+   "at_limit": 0,
+   "copies": [],
+   "edits_total": 2,
+   "edits": [
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 0,
+     "column": "fm2",
+     "from": "C-5",
+     "to": "C-5:85"
+    },
+    {
+     "section": "A",
+     "slot": 0,
+     "row": 16,
+     "column": "fm2",
+     "from": "A-4",
+     "to": "A-4:85"
+    }
+   ]
+  }
+ ],
+ "rev": 1,
+ "guards": [
+  {
+   "name": "no_clipping",
+   "ok": true,
+   "detail": "mix peak -10.80 -> -11.24 dBFS"
+  },
+  {
+   "name": "notes_kept",
+   "ok": true,
+   "detail": "every note keeps its onset row and pitch class; none added or removed"
+  },
+  {
+   "name": "melody_kept",
+   "ok": true,
+   "detail": "pitches of lead unchanged"
+  },
+  {
+   "name": "no_new_faults",
+   "ok": true,
+   "detail": "none"
+  },
+  {
+   "name": "voices_present",
+   "ok": true,
+   "detail": "every other voice stays within its band floor (-9 dB)"
+  },
+  {
+   "name": "bass_under",
+   "ok": true,
+   "detail": "rows with the bass above another voice: 0 -> 0"
+  },
+  {
+   "name": "mix_level",
+   "ok": true,
+   "detail": "mix RMS -0.28 dB"
+  }
+ ]
+}

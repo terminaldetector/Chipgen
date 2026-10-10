@@ -102,6 +102,26 @@ def is_fallback(buf) -> bool:
     return isinstance(buf, Buffer)
 
 
+def _samples(buf):
+    """Every sample value, flat, from a Buffer or any plain sequence.
+
+    The no-numpy path used to read `buf.data` and nothing else, so a plain
+    list of (left, right) frames — the natural thing to build when
+    differencing two renders — raised AttributeError there while working
+    under numpy. A machine without numpy is exactly where a local user
+    runs this, so the two paths have to accept the same inputs.
+    """
+    if is_fallback(buf):
+        return buf.data
+    out = []
+    for frame in buf:
+        if isinstance(frame, (tuple, list)):
+            out.extend(frame)
+        else:
+            out.append(frame)
+    return out
+
+
 # --------------------------------------------------------------------------
 # Construction
 # --------------------------------------------------------------------------
@@ -160,7 +180,7 @@ def peak(buf) -> float:
         return 0.0
     if HAVE_NUMPY and not is_fallback(buf):
         return float(_np.max(_np.abs(buf)))
-    return max(abs(v) for v in buf.data)
+    return max((abs(v) for v in _samples(buf)), default=0.0)
 
 
 def rms(buf) -> float:
@@ -168,8 +188,9 @@ def rms(buf) -> float:
         return 0.0
     if HAVE_NUMPY and not is_fallback(buf):
         return float(_np.sqrt(_np.mean(_np.square(buf, dtype=_np.float64))))
-    n = len(buf.data)
-    return math.sqrt(sum(v * v for v in buf.data) / n) if n else 0.0
+    values = _samples(buf)
+    n = len(values)
+    return math.sqrt(sum(v * v for v in values) / n) if n else 0.0
 
 
 # --------------------------------------------------------------------------

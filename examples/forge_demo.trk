@@ -1,0 +1,236 @@
+; forge_demo — instruments made by the synthesis layer, on all three chips.
+;
+;   python3 python/chipgen.py examples/forge_demo.trk -o forge_demo.mp3 \
+;       --forge-bank python/synthesis/banks/starter.bank.json
+;
+; Every instrument name below is in the starter bank (forge.py show). The
+; ones with a detune layer take the next channel up (fm2 -> fm3, fm4 -> fm5,
+; opl0 -> opl1, pulse1 -> pulse2); the score leaves those channels free.
+; The NES parts are macros played by a frame driver: `inst nes3` is changed
+; between rows to turn one noise channel into a kick, a snare and a hat.
+
+title Forge demo
+author chipgen
+notes YM2612 + OPL2 + 2A03 with instruments made by forge.py
+
+ticks 240
+bpm 118
+lpb 4
+
+inst fm0 fm_punch_bass
+inst fm2 fm_saw_lead
+inst fm4 fm_pad
+inst opl0 opl_pad
+inst nes0 nes_square_lead
+inst nes2 nes_sub_bass
+
+; the NES is the quietest of the three chips in the engine's own mix, and a
+; pulse cannot be turned up past 127, so the others come down to meet it
+vol fm0 80
+vol fm2 70
+vol fm4 70
+vol opl0 45
+
+cols fm0 fm2 fm4 opl0 nes0 nes2 nes3
+; bar 1: A
+inst nes3 nes_noise_kick
+A-2  A-4  C-3  E-3  E-5  A-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  C-4  ...  ...  ...  ...  6
+A-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  E-4  ...  ...  C-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+A-2  A-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+A-2  E-4  ...  ...  A-5  A-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  C-4  ...  ...  ...  ...  6
+A-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  A-5  ...  ...  E-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+A-2  C-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 2: F
+inst nes3 nes_noise_kick
+F-2  F-4  A-3  C-3  C-5  F-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  A-4  ...  ...  ...  ...  6
+F-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  C-4  ...  ...  A-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+F-2  F-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+F-2  C-4  ...  ...  F-5  F-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  A-4  ...  ...  ...  ...  6
+F-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  F-5  ...  ...  C-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+F-2  A-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 3: C
+inst nes3 nes_noise_kick
+C-3  C-4  E-3  G-3  G-5  C-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  E-4  ...  ...  ...  ...  6
+C-3  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  G-4  ...  ...  E-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+C-3  C-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+C-3  G-4  ...  ...  C-5  C-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  E-4  ...  ...  ...  ...  6
+C-3  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  C-5  ...  ...  G-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+C-3  E-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 4: G
+inst nes3 nes_noise_kick
+G-2  G-4  B-3  D-3  D-5  G-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  B-4  ...  ...  ...  ...  6
+G-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  D-4  ...  ...  B-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+G-2  G-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+G-2  D-4  ...  ...  G-5  G-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  B-4  ...  ...  ...  ...  6
+G-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  G-5  ...  ...  D-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+G-2  B-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 5: A
+inst nes3 nes_noise_kick
+A-2  A-4  C-3  E-3  E-5  A-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  C-4  ...  ...  ...  ...  6
+A-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  E-4  ...  ...  C-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+A-2  A-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+A-2  E-4  ...  ...  A-5  A-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  C-4  ...  ...  ...  ...  6
+A-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  A-5  ...  ...  E-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+A-2  C-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 6: F
+inst nes3 nes_noise_kick
+F-2  F-4  A-3  C-3  C-5  F-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  A-4  ...  ...  ...  ...  6
+F-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  C-4  ...  ...  A-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+F-2  F-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+F-2  C-4  ...  ...  F-5  F-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  A-4  ...  ...  ...  ...  6
+F-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  F-5  ...  ...  C-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+F-2  A-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 7: C
+inst nes3 nes_noise_kick
+C-3  C-4  E-3  G-3  G-5  C-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  E-4  ...  ...  ...  ...  6
+C-3  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  G-4  ...  ...  E-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+C-3  C-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+C-3  G-4  ...  ...  C-5  C-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  E-4  ...  ...  ...  ...  6
+C-3  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  C-5  ...  ...  G-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+C-3  E-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+; bar 8: G
+inst nes3 nes_noise_kick
+G-2  G-4  B-3  D-3  D-5  G-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  B-4  ...  ...  ...  ...  6
+G-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  D-4  ...  ...  B-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+G-2  G-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_kick
+G-2  D-4  ...  ...  G-5  G-2  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+...  B-4  ...  ...  ...  ...  6
+G-2  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_snare
+...  G-5  ...  ...  D-5  ...  6
+...  ...  ...  ...  ...  ...  ...
+inst nes3 nes_noise_hat
+G-2  B-5  ...  ...  ...  ...  6
+...  ...  ...  ...  ...  ...  ...
+===  ===  ===  ===  ===  ===  ===
+end

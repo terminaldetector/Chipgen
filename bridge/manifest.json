@@ -1,8 +1,490 @@
 {
   "name": "chipgen",
+  "form": {
+    "how": "`pattern NAME` opens a block of rows; `order a b*3 c` plays them in sequence",
+    "repeat": "name*N, up to 64",
+    "scope": "before the first pattern is setup and runs once; lines inside a pattern replay on every use; after the order comes last",
+    "strict": "an undefined pattern in the order, and a defined pattern the order never plays, are both errors"
+  },
+  "effect_column": {
+    "syntax": "NOTE[:velocity][/EFFECT]... e.g. A-2:100/1F0/4A3",
+    "separator": "/",
+    "effects": {
+      "0xy": "arpeggio: the note, +x and +y semitones, one step per 60 Hz frame — a chord on one voice. Every voice with a pitch; stays until changed, 000 stops it",
+      "1xx": "pitch slide up, 8 cents/s per unit",
+      "2xx": "pitch slide down, 8 cents/s per unit",
+      "3xx": "portamento to the written note",
+      "4xy": "vibrato, speed x+1 Hz, depth y x 8 cents",
+      "7xy": "tremolo, speed x+1 Hz, depth y",
+      "8xx": "pan: 00 left, 80 centre, FF right",
+      "Axy": "volume slide, (x-y) x 16 per second",
+      "Cxx": "delay the whole cell xx ticks into its row — swing, flams, a late entry. Must be shorter than the row: at 192 ticks a second a row is 60/bpm/lpb*192 ticks"
+    },
+    "calibration": "vibrato 455 is 6 Hz at 40 cents, which is the corpus median of 34 cents at 6 Hz",
+    "columns": {
+      "all": "every column takes the effect column: fm0-fm5, psg0-psg2, opl0-opl8, noise, dac",
+      "pitch_effects": "fm, opl, psg and the NES tone voices. `noise` and `dac` REFUSE 0/1/2/3/4 rather than accept and do nothing — the noise rate is four discrete settings and the DAC's pitch is its feed rate, already at the byte ceiling. For a pitched noise sweep bend psg2 and use periodic noise at rate 3.",
+      "pan": "fm only; 8xx on any other column is refused",
+      "dac_limits": "measured: the effect clock is 60 Hz and the longest built-in sample is 260 ms, so A0F reaches only about -2 dB by the end of a tom, while tremolo 75A swings 7.4 dB. Once a drum decays into its last few 8-bit codes, scaling cannot be represented and the tail flattens."
+    }
+  },
+  "samples": {
+    "kit": [
+      "clap",
+      "hat",
+      "hat_open",
+      "kick",
+      "rim",
+      "snare",
+      "tom"
+    ],
+    "import": "`sample NAME PATH.wav [BASE_NOTE]` in a score, or samples.load_wav(name, path, base_note=...)",
+    "pitched": "`kick@D-3` in a dac cell; `kick@D-3:0.5` for level too",
+    "dac_rate_ceiling_hz": 15980,
+    "ceiling_note": "measured: above this the chip drops bytes, so a sample keeps its length and loses its pitch. Pitching up thins the data instead."
+  },
+  "live_fm": {
+    "how": "`op fm0 4 tl 12` writes one operator field between two rows; `alg fm1 4 6` changes routing and feedback",
+    "operator_numbering": "1-4 as on a block diagram; the register interleave op1,op3,op2,op4 is handled",
+    "fields": [
+      "am",
+      "ar",
+      "d1r",
+      "d2r",
+      "dt",
+      "ks",
+      "mul",
+      "rr",
+      "sl",
+      "ssg",
+      "tl"
+    ],
+    "aliases": {
+      "dr": "d1r",
+      "sr": "d2r",
+      "multiple": "mul",
+      "detune": "dt",
+      "total_level": "tl",
+      "attack": "ar",
+      "decay": "d1r",
+      "sustain": "d2r",
+      "release": "rr",
+      "sustain_level": "sl",
+      "ssg_eg": "ssg"
+    },
+    "absolute": "values are absolute and the next note-on reloads the patch over them, as on the hardware"
+  },
+  "ch3_special": {
+    "how": "`ch3 special` then `ch3op 1 A-5` — each of channel 3's operators takes its own pitch instead of tracking the channel; `ch3 normal` gives it back",
+    "what_for": "one channel holding a fixed inharmonic cluster: bells, gongs, metallic percussion — the FM side has no noise generator, so this is how drivers get it",
+    "what_you_write_is_a_base_frequency": "not a partial: `mul` multiplies it, the algorithm decides whether the operator sounds or only modulates, and a carrier at tl 127 is muted. On an arbitrary patch the mode gives an inharmonic smear rather than the cluster you wrote. Measured: bell_pluck's operator 3 is mul 7, so a G-6 written there sounds at 10976 Hz and nothing appears at 1568 Hz — an 80 dB swing against mul 1.",
+    "operator_numbering": "`op` and `ch3op` take block-diagram numbering 1-4. FMInstrument.operators is in REGISTER order (op1, op3, op2, op4), so reading a patch in Python is what misleads, not the directives.",
+    "to_hear_the_pitches_as_written": "put the channel on algorithm 7 (four parallel carriers), set every mul to 1, and give each operator an audible tl — `alg fm2 7` then `op fm2 N mul 1` / `op fm2 N tl V`",
+    "persistence": "the operators you pitch keep those pitches across note-ons — the supplementary registers are not part of a patch, so a new note re-keys the cluster rather than replacing it. `ch3 normal` clears it.",
+    "scope": "channel 3 only — one bit in one register, not a global mode; the other five channels are unaffected",
+    "registers": {
+      "1": [
+        "0xa9",
+        "0xad"
+      ],
+      "2": [
+        "0xaa",
+        "0xae"
+      ],
+      "3": [
+        "0xa8",
+        "0xac"
+      ],
+      "4": [
+        "0xa2",
+        "0xa6"
+      ]
+    },
+    "register_note": "the supplementary pairs were mapped by experiment, not from a published table: $A8/$AC is operator THREE, because these registers ascend in the same op1,op3,op2 order the operator offsets do",
+    "operator_4": "has no supplementary pair of its own — it follows the channel's own frequency at $A2/$A6",
+    "csm": "`ch3 csm` also keys the channel from timer A (a speech trick); accepted, and does nothing without a timer"
+  },
+  "nes": {
+    "columns": "nes0/nes1 pulses, nes2 triangle, nes3 noise, nes4 DMC. Aliases: pulse1/pu1/sq1, pulse2/pu2/sq2, tri/triangle, nnoise/nesnoise, dmc/nespcm",
+    "cells": "nes0-nes2 take notes (A-4, A#3:100, ===); nes3 takes a noise period 0-15 with optional m for the short shift register and :velocity (6, 4m:80); nes4 takes a kit sample name",
+    "directives": "`nes duty nes0 1` (0=12.5% 1=25% 2=50% 3=75%), `nes sweep nes0 3 2 up|down`, `nes sweep nes0 off`, `nes dmc nes4 64`",
+    "ranges": {
+      "pulse": "A-1 (55 Hz) up to about C-6. Below A-1 the 11-bit timer clamps and the note sounds SHARP, not low — a written C-1 measures +888 cents.",
+      "triangle": "A-0 (27.5 Hz) to about A-5, one octave lower because it divides by 32 rather than 16",
+      "accuracy": "measured within 4 cents to C-6, degrading to 12 cents at A-6 as the timer runs out"
+    },
+    "the_sweep_mute": "the sweep unit silences a pulse channel whenever the target period passes $7FF, and it does that whether or not the sweep is enabled. With shift 0 the target is twice the period, so everything below about 110 Hz would be muted — measured, A-1/C-2/E-2/G-2 all render 0.0000 RMS. chipgen writes the negate bit at init so the octave is audible, the same thing real drivers do. A `down` sweep re-arms the mute.",
+    "the_triangle_has_no_volume": "it has no volume register at all, and that is not approximated — its output measures bit-identical at velocity 8 and at 127, so 7xy and Axy on nes2 raise an error rather than doing nothing. Pitch effects work on it normally.",
+    "duty_3_equals_duty_1": "75% is 25% inverted — measured identical harmonics, differing only in phase. Two pulse channels on 1 and 3 give one timbre twice.",
+    "dmc": "$4011 is a plain 7-bit DAC, so nes4 plays the same kit the Genesis DAC does, one bit coarser. Effects on it are volume-only, same as the dac column.",
+    "vgm": "exported with the NES clock at header offset 0x84 and command 0xB4 per register write; vgm_player replays it. Every voice round-trips above 0.997 correlation against its own render."
+  },
+  "live_opl2": {
+    "how": "`op opl0 2 wave 2` writes one operator field mid-note; `alg opl0 0|1` sets FM or additive, with optional feedback",
+    "operators": "1 (modulator) and 2 (carrier) — two, not four",
+    "algorithm": "one bit: 0 FM (modulator into carrier), 1 additive (both heard). `alg opl0 4` is refused, not clamped.",
+    "fields": [
+      "am",
+      "ar",
+      "dr",
+      "eg",
+      "ksl",
+      "ksr",
+      "mul",
+      "rr",
+      "sl",
+      "tl",
+      "vib",
+      "wave"
+    ],
+    "aliases": {
+      "d1r": "dr",
+      "d2r": "rr",
+      "sus": "eg",
+      "sustain": "eg",
+      "mult": "mul",
+      "multiple": "mul",
+      "waveform": "wave",
+      "level": "tl",
+      "attack": "ar",
+      "decay": "dr",
+      "release": "rr"
+    },
+    "which_operator_to_attenuate": "depends on the connection bit. Measured on opl_organ, which is additive: tl 40 on the carrier alone gives -1.7 dB, the modulator alone -4.7, both together -19.1. In FM mode the same single carrier write gives -17.4. On an additive patch, move both.",
+    "wave_shifts_the_octave": "0 sine, 1 half-sine, 2 absolute sine, 3 pulse-sine. Rectifying doubles the frequency, so waves 2 and 3 put their loudest partial on the SECOND harmonic — measured at A-4 the fundamental is 90 dB down and the note sounds an octave up. Changing waveform mid-phrase changes octave with it.",
+    "rhythm_mode": "NOT implemented. Register 0xBD's five percussion voices need the voices actually emulated; use the dac kit for drums."
+  },
+  "rearrangement": {
+    "what": "arrange.py fits a score from anywhere — a .trk, a transcribed register log, a Score JSON, a MIDI file — onto a target chip and reports every compromise: `--arrange-for RP2A03`, or `--arrangements` for what each target holds",
+    "targets": {
+      "RP2A03": "3 melodic voices + 2 percussion",
+      "YM2612": "8 melodic voices + 2 percussion",
+      "YM3812": "9 melodic voices"
+    },
+    "never_clamps": "a note out of range is transposed by whole octaves, never clamped: below the NES pulse floor the 11-bit timer clamps and the note sounds 888 cents SHARP rather than low",
+    "velocity_domains": "the YM2612, OPL2 and NES read 1-127 as a fader; the SN76489 reads 0-15 as an attenuator where 0 is loudest and a step is -2 dB. Crossing between them is converted through dB — copying the number inverts the dynamics",
+    "reports": "dropped voices, octave moves, folded notes, flattened chords and converted velocities are all named, per voice"
+  },
+  "arrangement_checks": {
+    "crowding": "three or more FM voices whose median pitches fall inside one octave are reported: six is the whole chip, so that is most of the arrangement in one band, reading as a single thick sound. Measured from where the parts sit, with no reference to patch names — the bass/lead register checks look the instrument up by name and so see nothing on an imported bank.",
+    "note": "sanity.check() declines to judge anything shorter than 5 seconds; a few rows is not an arrangement"
+  },
+  "mix_levels": {
+    "how": "`chipgen.py score.trk --levels` renders each voice ALONE and reports rms, peak, crest factor and unused patch headroom, plus what to do about it. Result.levels() from Python.",
+    "why_not_the_mix": "a per-channel level cannot be recovered from a finished mix — a mix is a sum. Each voice is re-rendered with the others' notes removed and its own setup intact.",
+    "the_drums_own_the_master": "measured against the fully calibrated built-in bank: the DAC peaks 5-6 dB above every FM voice while sitting ~1 dB BELOW them in RMS, because its crest factor is 17.4 dB against 5-8. Mastering normalises PEAK, so that gap comes straight out of everything else. Patch calibration narrows it and cannot close it — `vol dac N` is the fix, and `vol dac 55` measured them level.",
+    "uncalibrated_banks": "a bank imported with --no-calibrate carries whatever level its source game happened to be at, which can be 12-18 dB under the built-in bank. `vol` CANNOT recover it: velocity attenuates down from the patch's own level and never above it. Fix the bank, not the score: `python3 python/vgm_import.py --recalibrate BANK.json`.",
+    "how_the_check_works": "each patch is measured against the bank's own reference (the same measurement calibration makes) rather than against whatever else is in the score. Unused headroom alone would flag the built-in bank, whose patches hold 4.5-9 dB on purpose; 'quiet relative to the mix' would miss an uncalibrated bank, which holds every patch back equally and so looks level once the drums are down."
+  },
+  "instrument_selection": {
+    "how": "patches are measured, not tagged; roles and genres are target positions on measured axes, and every pick comes back with the numbers that chose it",
+    "roles": [
+      "bass",
+      "bell",
+      "harmony",
+      "lead",
+      "pad",
+      "pluck",
+      "stab"
+    ],
+    "genres": [
+      "ambient",
+      "boss",
+      "dark_action",
+      "funk",
+      "hardcore",
+      "industrial",
+      "jrpg",
+      "melodic",
+      "retro_arcade"
+    ],
+    "axes": {
+      "low": "more low end at C2",
+      "presence": "more midrange at C4",
+      "brightness": "brighter",
+      "attack": "slower to start",
+      "release": "longer ring",
+      "harmonics": "denser harmonically",
+      "dynamics": "more velocity range"
+    },
+    "cli": "chipgen.py --cast lead --genre hardcore | --palette --genre ambient | --audition PATCH"
+  },
+  "forge": {
+    "what": "make new instruments for the YM2612, OPL2 and NES from eleven measured dials, offline; blend existing ones; check how instruments sit together in a score",
+    "dials": {
+      "brightness": {
+        "zero": "dark, close to a sine",
+        "one": "harsh and buzzy",
+        "measured": "spectral centroid / fundamental, 1x -> 0, 16x -> 1 (log)"
+      },
+      "attack": {
+        "zero": "instant",
+        "one": "a slow swell",
+        "measured": "10%-90% rise time of the loudness envelope, log(1 + t / 2 ms): 0 ms -> 0, 400 ms -> 1"
+      },
+      "body": {
+        "zero": "dies away",
+        "one": "holds at full level",
+        "measured": "level 0.6 s into the note (0.25 s after the peak for a slow swell) against the peak, -40 dB -> 0, 0 dB -> 1"
+      },
+      "decay": {
+        "zero": "a short ring",
+        "one": "rings for seconds",
+        "measured": "time for the level to fall 63% of the way from the peak to the body, 30 ms -> 0, 3 s -> 1 (log); 1 when it hardly falls"
+      },
+      "metallicity": {
+        "zero": "smooth, harmonic",
+        "one": "clangorous, hollow, inharmonic",
+        "measured": "inharmonicity of the partials plus roughness among the upper ones"
+      },
+      "detune": {
+        "zero": "one pitch",
+        "one": "a wide ensemble",
+        "measured": "depth of the slow (0.7-3.5 Hz) amplitude beating of the lowest strong partial, read from a second or more of steady note: 4% -> 0, 44% -> 1"
+      },
+      "motion": {
+        "zero": "static",
+        "one": "strong vibrato, tremolo or sweep",
+        "measured": "amplitude and pitch movement of the held note at 3.5 Hz and up"
+      },
+      "bass_weight": {
+        "zero": "thin",
+        "one": "sub-heavy",
+        "measured": "energy at or under 1.5x the fundamental against 1.5-4.5x, 0.2 -> 0, 100 -> 1 (log)"
+      },
+      "articulation": {
+        "zero": "staccato, gated",
+        "one": "legato, rings out after note-off",
+        "measured": "time to fall 20 dB after note-off, 20 ms -> 0, 1 s -> 1 (log); not measured when the note had already died"
+      },
+      "noise": {
+        "zero": "tonal",
+        "one": "noise",
+        "measured": "spectral flatness of the held note, 0.005 -> 0, 0.5 -> 1 (log)"
+      },
+      "punch": {
+        "zero": "none",
+        "one": "a strong attack transient",
+        "measured": "how many octaves higher the spectral centroid of the attack is than that of the body, 3 octaves -> 1"
+      }
+    },
+    "chips": {
+      "nes": {
+        "chip": "RP2A03 (NES / Famicom)",
+        "cannot_express": [
+          "punch"
+        ],
+        "channels": 4
+      },
+      "opl2": {
+        "chip": "YM3812 (OPL2, AdLib / Sound Blaster)",
+        "cannot_express": [
+          "noise"
+        ],
+        "channels": 9
+      },
+      "ym2612": {
+        "chip": "YM2612 (Sega Mega Drive / Genesis)",
+        "cannot_express": [
+          "noise"
+        ],
+        "channels": 6
+      }
+    },
+    "archetypes": {
+      "bell": {
+        "roles": [
+          "lead",
+          "harmony"
+        ],
+        "register": "A4",
+        "what": "a bell: bright, metallic, rings for seconds"
+      },
+      "blip": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "an arcade blip with a chirp"
+      },
+      "brass": {
+        "roles": [
+          "lead",
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a section that leans in after the attack"
+      },
+      "epiano": {
+        "roles": [
+          "harmony",
+          "lead"
+        ],
+        "register": "A3",
+        "what": "an electric piano that rings and fades"
+      },
+      "noise_hat": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A4",
+        "what": "a closed hat"
+      },
+      "noise_kick": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A2",
+        "what": "a noise kick: low period, fast fall"
+      },
+      "noise_snare": {
+        "roles": [
+          "drums"
+        ],
+        "register": "A3",
+        "what": "a snare: noise with a crack"
+      },
+      "organ": {
+        "roles": [
+          "harmony",
+          "pad"
+        ],
+        "register": "A3",
+        "what": "a drawbar organ that holds until the key comes up"
+      },
+      "pad": {
+        "roles": [
+          "pad",
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a slow swelling ensemble pad"
+      },
+      "pluck": {
+        "roles": [
+          "harmony",
+          "lead"
+        ],
+        "register": "A3",
+        "what": "a plucked string"
+      },
+      "punch_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a punchy bass with a bite at the front"
+      },
+      "saw_lead": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "a sawtooth lead with a little ensemble and vibrato"
+      },
+      "slap_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a funk bass: bright attack, clean body"
+      },
+      "square_lead": {
+        "roles": [
+          "lead"
+        ],
+        "register": "A4",
+        "what": "the chiptune square"
+      },
+      "stab": {
+        "roles": [
+          "harmony"
+        ],
+        "register": "A3",
+        "what": "a short metallic hit for the off-beat"
+      },
+      "sub_bass": {
+        "roles": [
+          "bass"
+        ],
+        "register": "A2",
+        "what": "a pure sine under everything"
+      }
+    },
+    "scenario": {
+      "format": "chipgen-forge-scenario/1",
+      "fields": [
+        "archive",
+        "backend",
+        "format",
+        "generations",
+        "keep",
+        "locked",
+        "max_probes",
+        "min_distance",
+        "mix",
+        "name",
+        "note",
+        "novelty",
+        "objective",
+        "offspring",
+        "prefix",
+        "realise_probes",
+        "register",
+        "role",
+        "seconds",
+        "seed",
+        "seeds",
+        "sigma"
+      ],
+      "example": {
+        "backend": "opl2",
+        "role": "lead",
+        "seeds": [
+          "saw_lead"
+        ],
+        "objective": {
+          "target": {
+            "brightness": 0.7,
+            "attack": 0.05
+          }
+        },
+        "generations": 6,
+        "offspring": 8,
+        "keep": 4
+      },
+      "note": "axes a target does not name are free, not pulled to a default"
+    },
+    "bank": {
+      "format": "chipgen-forge-bank/1",
+      "load": "python3 python/chipgen.py song.trk --forge-bank work/forge/x.bank.json",
+      "in_a_score": "`inst fm0 NAME`, `inst opl0 NAME`, `inst nes0 NAME` (pulse), `inst nes2 NAME` (triangle), `inst nes3 NAME` (noise); a detune layer takes the next channel up and is dropped, with a warning, if the score plays it"
+    },
+    "commands": {
+      "dials": "python3 python/forge.py axes",
+      "try one": "python3 python/forge.py compile opl2 --archetype bell --dna brightness=0.8",
+      "search": "python3 python/forge.py run work/forge/x.json --out work/forge/x.bank.json",
+      "blend": "python3 python/forge.py mix ym2612 slap_bass archetype:bell --weights 2,1",
+      "where it sits": "python3 python/forge.py place work/song.trk --assign fm0=NAME --fit",
+      "listen": "python3 python/forge.py play work/forge/x.bank.json",
+      "NES by hand": "python3 python/forge.py nes-inst NAME --volume \"15 12 | 9 / 4 0\" --duty 2 --out work/forge/x.bank.json"
+    },
+    "model": {
+      "asked": "which way to push the dials, and which finalist to keep; never once per candidate",
+      "reply_format": "JSON: {\"directions\": [{\"axis\": \"brightness\", \"add\": 0.2}]}",
+      "max_directions": 6,
+      "max_step": 0.5
+    }
+  },
   "version": "0.2.0",
   "summary": "Generative chiptune on real YM2612 + SN76489 emulation, driven by a flat event vocabulary any model can emit.",
   "chips": {
+    "RP2A03": {
+      "channels": "2 pulse + triangle + noise + DMC",
+      "role": "NES / Famicom APU, register-level model with the hardware's non-linear mixing",
+      "scoreable": true,
+      "notes": "the triangle has no volume control and the pulse channels are muted below ~110 Hz unless the sweep negate bit is set — see the `nes` section"
+    },
     "YM2612": {
       "channels": 6,
       "role": "4-operator FM; channel 6 doubles as an 8-bit PCM DAC",
@@ -16,20 +498,21 @@
       "channels": "3 tone + 1 noise",
       "role": "Sega PSG, register-level model",
       "backend": "native"
+    },
+    "YM3812": {
+      "channels": 9,
+      "role": "OPL2 — AdLib / Sound Blaster. 2-operator FM with four selectable waveforms, which the YM2612 has not got",
+      "backend": "pure-python",
+      "scoreable": true,
+      "notes": "one algorithm bit (FM or additive), not eight. Waves 2 and 3 rectify, so they sound an octave above waves 0 and 1 at the same written note — see the `live_opl2` section. Rhythm mode (register 0xBD) is not implemented."
     }
-  },
-  "runtime": {
-    "python": "3.11.15",
-    "platform": "linux",
-    "numpy": true,
-    "scipy": true,
-    "dsp_backend": "scipy",
-    "notes": []
   },
   "inputs": {
     "tracker": "compact text grid; see python/tracker.py docstring",
     "json": "array of event objects; see events",
-    "events": "python objects from events.py"
+    "events": "python objects from events.py",
+    "score_json": "a dict of voices and drums — notes rather than events, which is how the NES half of the corpus is stored",
+    "midi": "a Standard MIDI File (.mid). It holds PARTS, not channels, so it has to be fitted to a chip before it can be played — the CLI does that and says which chip it picked. This is the join with every tool that turns a recording into notes; nothing in this project reads audio"
   },
   "instrument_import": {
     "tool": "python/vgm_import.py",
@@ -37,8 +520,9 @@
     "usage": "python3 python/vgm_import.py song.vgm -o bank.json, then render with --bank bank.json"
   },
   "outputs": {
-    "wav": "16-bit PCM, any sample rate (default 44100)",
-    "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it.",
+    "mp3": "what to hand back: -o song.mp3. About a tenth of the WAV (160 kbps default, --bitrate 128 is 11x smaller) and plays anywhere. LAME when the machine has it, a built-in encoder when it does not",
+    "wav": "16-bit PCM, any sample rate (default 44100) — ten megabytes a minute",
+    "vgm": "VGM 1.71 register log; plays in VGM players, imports into DefleMask and Furnace. .vgz gzips it — hand that back: DAC and DMC drums are a write per sample, megabytes uncompressed",
     "tracker": "the score written back out as text"
   },
   "instruments": {
@@ -387,6 +871,422 @@
       },
       "doc": "Detune the channel by `cents` (+/-, 100 = a semitone).\n\n    Applies to the currently sounding note immediately and to later notes\n    on the channel until changed — vibrato, pitch envelopes and slides are\n    a series of these."
     },
+    "Portamento": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "cents_per_second": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -48000,
+            48000
+          ]
+        },
+        "to_cents": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -4800,
+            4800
+          ]
+        }
+      },
+      "doc": "Slide a voice's pitch toward `to_cents` at `cents_per_second`.\n\n    `target` names the voice the way a tracker column does — \"fm0\",\n    \"psg1\", \"opl3\" — because chipgen drives three chips now and an int\n    channel cannot say which one it means.\n\n    The slide stops on arrival and stays there, so `to_cents=0` is how a\n    bend returns to the written pitch. A rate of 0 stops it where it is."
+    },
+    "Vibrato": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "depth_cents": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            2400
+          ]
+        },
+        "speed_hz": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            40
+          ]
+        },
+        "delay": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0.0,
+            10.0
+          ]
+        }
+      },
+      "doc": "Swing a voice's pitch by +/- depth_cents at speed_hz.\n\n    `delay` holds it off for that many seconds after each note-on, which\n    is what makes a vibrato sound played rather than switched on.\n    Depth or speed of 0 turns it off."
+    },
+    "VolumeSlide": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "per_second": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            -1000,
+            1000
+          ]
+        },
+        "floor": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            127
+          ]
+        },
+        "ceiling": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Ramp a voice's level by `per_second`, in the same 0-127 units as\n    FMVolume, bounded by floor and ceiling. Negative fades out."
+    },
+    "Tremolo": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "depth": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            127
+          ]
+        },
+        "speed_hz": {
+          "type": "float",
+          "default": 0.0,
+          "range": [
+            0,
+            40
+          ]
+        }
+      },
+      "doc": "Swing a voice's level by +/- depth (0-127 units) at speed_hz."
+    },
+    "Arpeggio": {
+      "fields": {
+        "target": {
+          "type": "str"
+        },
+        "x": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            15
+          ]
+        },
+        "y": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            15
+          ]
+        }
+      },
+      "doc": "Cycle a voice through its note, `x` semitones above it and `y`\n    above it — a tracker's 0xy — one step per effect tick.\n\n    The effect clock runs at 60 Hz because that is the vertical blank\n    Mega Drive and NES sound drivers update on, and a step a frame is\n    what makes an arpeggio read as a chord rather than a trill. Restarts\n    on the root at every note-on, persists until changed, and `x = y = 0`\n    turns it off. Works on every voice with a pitch; `noise`, `dac` and\n    `dmc` have none to cycle."
+    },
+    "NESNoteOn": {
+      "fields": {
+        "voice": {
+          "type": "str"
+        },
+        "note": {
+          "type": "str",
+          "values": [
+            "C",
+            "C#",
+            "D",
+            "D#",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "G#",
+            "A",
+            "A#",
+            "B"
+          ]
+        },
+        "octave": {
+          "type": "int"
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127
+        }
+      },
+      "doc": "`voice` is \"pulse1\", \"pulse2\" or \"triangle\".\n\n    Two ranges worth knowing, both measured and both hard floors rather\n    than gentle roll-offs. The pulse channels reach **A-1 (55 Hz)** and\n    the triangle **A-0 (27.5 Hz)**; below that the 11-bit timer clamps and\n    the note sounds an octave or more sharp instead of low. And velocity\n    does nothing at all on the triangle — it has no volume register, so it\n    plays at one level or not at all."
+    },
+    "NESNoteOff": {
+      "fields": {
+        "voice": {
+          "type": "str"
+        }
+      },
+      "doc": ""
+    },
+    "NESVolume": {
+      "fields": {
+        "voice": {
+          "type": "str"
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127
+        }
+      },
+      "doc": "0-127, linear in amplitude — no dB curve to undo, unlike FM.\n\n    A no-op on the triangle, deliberately rather than silently: there is\n    no register to write, so approximating it would mean faking a level\n    the hardware cannot produce."
+    },
+    "NESDuty": {
+      "fields": {
+        "voice": {
+          "type": "str"
+        },
+        "duty": {
+          "type": "int",
+          "default": 2
+        }
+      },
+      "doc": "Pulse waveform: 0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%.\n\n    3 and 1 are the same waveform inverted, so they measure identically\n    and differ only in phase — worth knowing before spending a channel on\n    the distinction."
+    },
+    "NESSweep": {
+      "fields": {
+        "voice": {
+          "type": "str"
+        },
+        "period": {
+          "type": "int",
+          "default": 0
+        },
+        "shift": {
+          "type": "int",
+          "default": 0
+        },
+        "negate": {
+          "type": "bool",
+          "default": false
+        },
+        "enabled": {
+          "type": "bool",
+          "default": true
+        }
+      },
+      "doc": "The pulse channels' hardware pitch slide.\n\n    Free — the CPU writes nothing per frame — but coarse, and it silences\n    the channel whenever the target period leaves range, which is the\n    classic \"my sweep killed the note\". `negate` is also what keeps the\n    low octave audible at all: chipgen sets it by default, and a positive\n    sweep re-arms the mute below about 110 Hz."
+    },
+    "NESNoiseOn": {
+      "fields": {
+        "period": {
+          "type": "int",
+          "default": 4
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127
+        },
+        "metallic": {
+          "type": "bool",
+          "default": false
+        }
+      },
+      "doc": "`period` is 0-15 and runs backwards: 0 is the highest pitch.\n\n    `metallic` is the mode bit. It shortens the shift register from 32767\n    steps to 93, which is short enough to have a pitch — the NES's only\n    route to a tonal metallic timbre."
+    },
+    "NESNoiseOff": {
+      "fields": {},
+      "doc": ""
+    },
+    "NESDMCLevel": {
+      "fields": {
+        "level": {
+          "type": "int",
+          "default": 64
+        }
+      },
+      "doc": "Write the DMC's 7-bit output register directly.\n\n    $4011 is the one register on this chip that is a plain DAC: writing it\n    moves the output immediately. Feeding it in a loop is how NES games\n    play samples without DPCM data, and it is the same trick as the\n    YM2612's register 0x2A."
+    },
+    "NESSample": {
+      "fields": {
+        "name": {
+          "type": "str"
+        },
+        "volume": {
+          "type": "float",
+          "default": 1.0
+        },
+        "rate": {
+          "type": "int",
+          "default": 0
+        }
+      },
+      "doc": "A kit sample, played through $4011 at `rate` bytes per second.\n\n    The same sample kit the Genesis DAC uses, requantised to the DMC's\n    7 bits on the way out."
+    },
+    "OPLInstrumentSelect": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "instrument": {
+          "type": "str"
+        }
+      },
+      "doc": "Assign a patch to one of the OPL2's nine channels (0-8).\n\n    A separate family from FMInstrumentSelect on purpose: the YM3812 is a\n    different chip sitting alongside the YM2612, not a mode of it, and a\n    score can drive both at once."
+    },
+    "OPLNoteOn": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "note": {
+          "type": "str",
+          "values": [
+            "C",
+            "C#",
+            "D",
+            "D#",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "G#",
+            "A",
+            "A#",
+            "B"
+          ]
+        },
+        "octave": {
+          "type": "int",
+          "range": [
+            0,
+            9
+          ]
+        },
+        "velocity": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            1,
+            127
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "OPLNoteOff": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        }
+      },
+      "doc": ""
+    },
+    "OPLOperator": {
+      "fields": {
+        "channel": {
+          "type": "int"
+        },
+        "operator": {
+          "type": "int"
+        },
+        "field": {
+          "type": "str"
+        },
+        "value": {
+          "type": "int",
+          "default": 0
+        }
+      },
+      "doc": "One OPL2 operator field, written while the note sounds.\n\n    `operator` is 1 (modulator) or 2 (carrier) — this chip has two, not\n    four. `wave` is the field with no YM2612 equivalent and the most\n    character: sine, half-sine, absolute sine, pulse-sine. As on the\n    YM2612 the value is absolute and the next instrument select reloads\n    the patch over it."
+    },
+    "OPLConnection": {
+      "fields": {
+        "channel": {
+          "type": "int"
+        },
+        "additive": {
+          "type": "int",
+          "default": 0
+        },
+        "feedback": {
+          "type": "int",
+          "default": null
+        }
+      },
+      "doc": "Register 0xC0: FM or additive, plus the modulator's feedback.\n\n    The OPL2's entire algorithm space is one bit, which is most of why a\n    patch here carries so much less than a YM2612 one."
+    },
+    "OPLVolume": {
+      "fields": {
+        "channel": {
+          "type": "int",
+          "range": [
+            0,
+            8
+          ]
+        },
+        "volume": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Channel volume, 0-127, on the same linear-in-amplitude scale as FM."
+    },
+    "OPLDepth": {
+      "fields": {
+        "tremolo": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "vibrato": {
+          "type": "int",
+          "default": 0,
+          "range": [
+            0,
+            1
+          ]
+        }
+      },
+      "doc": "The chip's two global LFO depths (register 0xBD).\n\n    They are global, not per channel — one tremolo depth and one vibrato\n    depth for all nine voices — and only operators with their AM or VIB\n    bit set are affected at all."
+    },
     "DACEnable": {
       "fields": {
         "enable": {
@@ -419,6 +1319,19 @@
         }
       },
       "doc": "Play a PCM sample through the DAC. `name` indexes samples.KIT.\n\n    This is the Genesis drum trick: FM channel 6 gives up its voice and\n    becomes an 8-bit sample player, which is how Streets of Rage and\n    Contra: Hard Corps get real drums out of the chip."
+    },
+    "DACVolume": {
+      "fields": {
+        "volume": {
+          "type": "int",
+          "default": 127,
+          "range": [
+            0,
+            127
+          ]
+        }
+      },
+      "doc": "Level for every DAC hit that follows, 0-127.\n\n    Separate from a hit's own `:level` the way `vol fm0` is separate from\n    a note's velocity: one is the channel fader, the other is how hard\n    this particular note was struck, and they multiply.\n\n    This exists because the drums own the master. normalize_peak() works\n    on peak, and a drum is almost all peak — measured against the fully\n    calibrated built-in bank, the DAC channel peaks 7-9 dB above every FM\n    voice in the same score while sitting 2 dB BELOW them in RMS. Its\n    crest factor is 17.4 dB against 5-8 for an FM voice. So a mix\n    normalised to peak hands the whole gain budget to the kick and\n    everything else arrives that much quieter, and no amount of patch\n    calibration fixes it — the fader has to come down."
     },
     "PSGToneOn": {
       "fields": {
@@ -534,24 +1447,37 @@
   },
   "tracker_syntax": {
     "directives": [
+      "alg",
       "arp",
       "author",
       "bpm",
+      "ch3",
+      "ch3op",
       "chord",
       "cols",
       "columns",
       "end",
+      "fade",
       "game",
       "inst",
       "lfo",
       "loop",
       "lpb",
       "mark",
+      "nes",
       "notes",
+      "op",
+      "opldepth",
+      "order",
       "pan",
+      "pattern",
       "pitch",
+      "porta",
+      "sample",
       "ticks",
       "title",
+      "trem",
+      "vib",
       "vol"
     ],
     "columns": [

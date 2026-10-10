@@ -63,7 +63,9 @@ for _i in range(3):
     CHANNEL_MAP[("psg", _i)] = 6 + _i     # 7-9
 CHANNEL_MAP[("noise", 0)] = 9             # 10
 CHANNEL_MAP[("dac", 0)] = 10              # 11
-IT_CHANNELS_USED = 11
+for _i in range(9):
+    CHANNEL_MAP[("opl", _i)] = 11 + _i    # 12-20
+IT_CHANNELS_USED = 20
 
 
 class ITExportError(ValueError):
@@ -182,6 +184,29 @@ def render_fm_sample(instrument, attack: float = 0.25, note=REFERENCE_NOTE):
     rate = _sample_rate_for(actual)
     loop_seconds = LOOP_PERIODS / actual
     body = chip.render(int(native * (attack + loop_seconds + 0.05)))
+    chip.close()
+    return _build(body, native, rate, attack, note, actual)
+
+
+def render_opl_sample(instrument, attack: float = 0.25, note=REFERENCE_NOTE):
+    """The same construction as render_fm_sample, on the other chip.
+
+    The OPL2's pitch is quantised by a ten-bit F-Number just as the
+    YM2612's is by its own, so the loop is built on what the chip will
+    play rather than on what was asked for.
+    """
+    import opl2
+
+    chip = opl2.YM3812()
+    chip.set_instrument(0, instrument)
+    chip.note_on(0, note[0], note[1])
+    native = chip.native_rate
+    fnum, block = opl2.freq_to_fnum_block(
+        _note_frequency(note[0], note[1]), chip.clock)
+    actual = opl2.fnum_block_to_freq(fnum, block, chip.clock)
+
+    rate = _sample_rate_for(actual)
+    body = chip.render(int(native * (attack + LOOP_PERIODS / actual + 0.05)))
     chip.close()
     return _build(body, native, rate, attack, note, actual)
 
@@ -365,6 +390,7 @@ def build_grid(events, ticks_per_row: int, sample_index):
     skipped = {}
     tick = 0
     fm_patch = {}
+    opl_patch = {}
 
     def note(count):
         skipped[count] = skipped.get(count, 0) + 1
@@ -387,6 +413,25 @@ def build_grid(events, ticks_per_row: int, sample_index):
             cell.volume = _fm_volume(event.velocity)
         elif isinstance(event, E.FMNoteOff):
             grid.cell(row, CHANNEL_MAP[("fm", event.channel)]).note = IT_NOTE_OFF
+        elif isinstance(event, E.OPLInstrumentSelect):
+            opl_patch[event.channel] = event.instrument
+        elif isinstance(event, E.OPLNoteOn):
+            cell = grid.cell(row, CHANNEL_MAP[("opl", event.channel)])
+            cell.note = _note_byte(event.note, event.octave)
+            cell.instrument = sample_index.get(
+                ("opl", opl_patch.get(event.channel)), 0)
+            cell.volume = _fm_volume(event.velocity)
+        elif isinstance(event, E.OPLNoteOff):
+            grid.cell(row, CHANNEL_MAP[("opl", event.channel)]).note = IT_NOTE_OFF
+        elif isinstance(event, E.OPLVolume):
+            cell = grid.cell(row, CHANNEL_MAP[("opl", event.channel)])
+            cell.effect = ord("M") - ord("A") + 1
+            cell.param = max(0, min(64, int(round(event.volume * 64.0 / 127.0))))
+        elif isinstance(event, E.OPLDepth):
+            # The OPL's tremolo and vibrato are chip-wide switches with no
+            # IT equivalent; the samples already carry whatever the patch
+            # sounds like without them.
+            note("OPLDepth (chip-wide LFO switch)")
         elif isinstance(event, E.PSGToneOn):
             cell = grid.cell(row, CHANNEL_MAP[("psg", event.channel)])
             cell.note = _note_byte(event.note, event.octave)
@@ -530,6 +575,7 @@ def collect_samples(events, progress=None):
             wanted.append(key)
 
     patch_of = {}
+    opl_patch = {}
     for event in events:
         if isinstance(event, E.FMInstrumentSelect):
             patch_of[event.channel] = event.instrument
@@ -537,6 +583,12 @@ def collect_samples(events, progress=None):
             name = patch_of.get(event.channel)
             if name:
                 want(("fm", name))
+        elif isinstance(event, E.OPLInstrumentSelect):
+            opl_patch[event.channel] = event.instrument
+        elif isinstance(event, E.OPLNoteOn):
+            name = opl_patch.get(event.channel)
+            if name:
+                want(("opl", name))
         elif isinstance(event, E.PSGToneOn):
             want(("psg", None))
         elif isinstance(event, E.PSGNoiseOn):
@@ -553,6 +605,10 @@ def collect_samples(events, progress=None):
         if kind == "fm":
             data = render_fm_sample(instruments_mod.get(detail))
             name = detail
+        elif kind == "opl":
+            import opl_instruments
+            data = render_opl_sample(opl_instruments.get(detail))
+            name = f"OPL {detail}"[:25]
         elif kind == "psg":
             data = render_psg_tone_sample()
             name = "PSG square"

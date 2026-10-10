@@ -1,0 +1,34 @@
+{
+ "name": "nes_bass",
+ "backend": "nes",
+ "role": "bass",
+ "note": "the triangle channel as a bass: no volume, a pitch drop on the attack",
+ "seeds": [
+  {
+   "archetype": "sub_bass",
+   "style": {
+    "channel": "triangle"
+   }
+  }
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.5,
+   "body": 0.9,
+   "bass_weight": 0.9,
+   "punch": 0.4
+  },
+  "ignore": [
+   "punch"
+  ]
+ },
+ "register": [
+  "A",
+  2
+ ],
+ "generations": 3,
+ "offspring": 4,
+ "keep": 3,
+ "seed": 8,
+ "format": "chipgen-forge-scenario/1"
+}

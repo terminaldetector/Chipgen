@@ -9,7 +9,10 @@ That difference matters more than it sounds:
     on real hardware through a MegaDrive flashcart;
   * DefleMask and Furnace import VGM, so a track a model composed here can
     be opened in a tracker and edited by a human;
-  * it is a few kilobytes where the WAV is megabytes.
+  * it is kilobytes where the WAV is megabytes — until the chip plays
+    samples. YM2612 DAC drums and NES DMC drums are a register write per
+    sample: 28 seconds is 786 KB and 1.5 MB, and a `.vgz` path (gzip,
+    which VGM players read) brings them to 13 and 134 KB.
 
 The recording mechanism is deliberately dumb, and that is the point: the
 writer is attached as the *logger* on the same YM2612 and SN76489 objects
@@ -32,6 +35,9 @@ DEFAULT_SAMPLE_RATE = 44100   # VGM waits are always counted in 44100 Hz samples
 CMD_PSG = 0x50            # 0x50 dd
 CMD_YM2612_PORT0 = 0x52   # 0x52 aa dd
 CMD_YM2612_PORT1 = 0x53   # 0x53 aa dd
+CMD_YM3812 = 0x5A         # 0x5A aa dd — the OPL2/AdLib chip
+CMD_NES_APU = 0xB4        # 0xB4 aa dd — RP2A03, register $40aa
+CMD_AY8910 = 0xA0         # 0xA0 aa dd
 CMD_WAIT_LONG = 0x61      # 0x61 nn nn  (16-bit sample count)
 CMD_WAIT_735 = 0x62       # one NTSC frame
 CMD_WAIT_882 = 0x63       # one PAL frame
@@ -97,10 +103,22 @@ class VGMWriter:
     """
 
     def __init__(self, ym_clock: float = 7_670_453.57,
-                 psg_clock: float = 3_579_545, gd3: GD3 = None,
+                 psg_clock: float = 3_579_545, opl_clock: float = 0,
+                 nes_clock: float = 0, gd3: GD3 = None,
                  pcm_blocks: bool = True):
         self.ym_clock = int(round(ym_clock))
         self.psg_clock = int(round(psg_clock))
+        #: Zero means "no OPL2 in this file", which is how a VGM player
+        #: knows not to instantiate one. Set it only when the score
+        #: actually plays the chip.
+        self.opl_clock = int(round(opl_clock))
+        #: Same rule for the NES APU. Zero until a score plays it — a
+        #: header claiming a chip the data never writes makes a player
+        #: instantiate one and hold it silent, and a header NOT claiming
+        #: a chip the data does write makes the player drop those
+        #: commands. Either way the file plays wrong with no error, which
+        #: is why this is set from the sequencer rather than defaulted on.
+        self.nes_clock = int(round(nes_clock))
         self.gd3 = gd3 or GD3()
         #: Route DAC bytes into a PCM data block (0x67) played back with
         #: 0x8n commands, the way ripped Genesis VGMs do it. One byte per
@@ -127,6 +145,27 @@ class VGMWriter:
         self._settle()
         cmd = CMD_YM2612_PORT1 if port >= 2 else CMD_YM2612_PORT0
         self._data += bytes((cmd, addr & 0xFF, data & 0xFF))
+        self._writes += 1
+
+    def opl_logger(self, addr: int, data: int):
+        """Log one YM3812 register write (VGM command 0x5A)."""
+        self._flush_wait()
+        self._data += bytes((CMD_YM3812, addr & 0xFF, data & 0xFF))
+
+    def nes_logger(self, addr: int, data: int):
+        """Log one RP2A03 register write (VGM command 0xB4).
+
+        The command carries the register as a single byte: $4000-$4017
+        become 0x00-0x17, since the APU's whole register file lives in
+        that page. A write outside it is dropped rather than truncated —
+        0xB4 has nowhere to put the high bits, and silently aliasing
+        $5011 onto $4011 would be worse than losing it.
+        """
+        register = addr & 0xFFFF
+        if not 0x4000 <= register <= 0x40FF:
+            return
+        self._flush_wait()
+        self._data += bytes((CMD_NES_APU, register & 0xFF, data & 0xFF))
         self._writes += 1
 
     def psg_logger(self, byte: int):
@@ -241,6 +280,15 @@ class VGMWriter:
         header[0x2A] = SEGA_PSG_SHIFT_WIDTH
         header[0x2B] = 0x00                       # SN76489 flags
         struct.pack_into("<I", header, 0x2C, self.ym_clock)
+        # YM3812's clock lives at 0x50 in the VGM header. It is only
+        # meaningful from version 1.51, which 1.71 is comfortably past.
+        struct.pack_into("<I", header, 0x50, self.opl_clock)
+        # The NES APU's clock is at 0x84, which only exists from version
+        # 1.61 onward — 1.71 covers it. The header is already
+        # HEADER_SIZE bytes of zeros, so a Genesis-only file writes
+        # nothing here and stays byte-identical to what it was before
+        # the NES existed in this writer.
+        struct.pack_into("<I", header, 0x84, self.nes_clock)
         struct.pack_into("<I", header, 0x34, HEADER_SIZE - 0x34)
         return bytes(header) + data + gd3
 
@@ -285,16 +333,19 @@ class VGMWriter:
                 f"{len(self.to_bytes())} bytes")
 
 
+def _raw_bytes(path_or_bytes) -> bytes:
+    """A VGM's bytes, from a path or already in hand, gunzipped if .vgz."""
+    if isinstance(path_or_bytes, (bytes, bytearray)):
+        return bytes(path_or_bytes)
+    with open(path_or_bytes, "rb") as fh:
+        raw = fh.read()
+    return gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw
+
+
 def read_header(path_or_bytes) -> dict:
     """Parse a VGM header back out. Used by the tests, and handy for
     checking that a player's complaint is the file's fault or its own."""
-    if isinstance(path_or_bytes, (bytes, bytearray)):
-        raw = bytes(path_or_bytes)
-    else:
-        with open(path_or_bytes, "rb") as fh:
-            raw = fh.read()
-        if raw[:2] == b"\x1f\x8b":
-            raw = gzip.decompress(raw)
+    raw = _raw_bytes(path_or_bytes)
     if raw[:4] != b"Vgm ":
         raise ValueError("not a VGM file (bad magic)")
     version = struct.unpack_from("<I", raw, 0x08)[0]
@@ -305,6 +356,8 @@ def read_header(path_or_bytes) -> dict:
         "eof_offset": struct.unpack_from("<I", raw, 0x04)[0] + 0x04,
         "file_size": len(raw),
         "psg_clock": struct.unpack_from("<I", raw, 0x0C)[0],
+        "opl_clock": (struct.unpack_from("<I", raw, 0x50)[0]
+                      if len(raw) >= 0x54 else 0),
         "ym2612_clock": struct.unpack_from("<I", raw, 0x2C)[0],
         "total_samples": struct.unpack_from("<I", raw, 0x18)[0],
         "duration": struct.unpack_from("<I", raw, 0x18)[0] / DEFAULT_SAMPLE_RATE,
@@ -313,4 +366,56 @@ def read_header(path_or_bytes) -> dict:
         "loop_offset": (loop_offset + 0x1C) if loop_offset else 0,
         "psg_feedback": struct.unpack_from("<H", raw, 0x28)[0],
         "psg_shift_width": raw[0x2A],
+        # NES APU and AY8910 arrived in later header revisions, so the
+        # fields only exist if the header is long enough to hold them.
+        # Reading them unconditionally on a 1.50 file reads the data
+        # section as a clock.
+        "nes_clock": (struct.unpack_from("<I", raw, 0x84)[0] & 0x7FFFFFFF
+                      if len(raw) >= 0x88 and data_offset + 0x34 > 0x84 else 0),
+        "ay8910_clock": (struct.unpack_from("<I", raw, 0x74)[0]
+                         if len(raw) >= 0x78 and data_offset + 0x34 > 0x74
+                         else 0),
     }
+
+
+#: Header offset -> chip name, for every clock field this project can act
+#: on plus the common ones it cannot, because "which chip is this" has to
+#: be answerable before "can we read it".
+CHIP_CLOCK_FIELDS = (
+    (0x0C, "SN76489"), (0x10, "YM2413"), (0x2C, "YM2612"), (0x30, "YM2151"),
+    (0x44, "YM2203"), (0x48, "YM2608"), (0x4C, "YM2610"), (0x50, "YM3812"),
+    (0x54, "YM3526"), (0x5C, "YMF262"), (0x74, "AY8910"), (0x80, "GameBoy"),
+    (0x84, "NES APU"), (0x9C, "K051649"), (0xA4, "HuC6280"), (0xB0, "Pokey"),
+)
+
+#: Which of those this project has a core for.
+SUPPORTED_CHIPS = ("SN76489", "YM2612", "YM3812", "NES APU")
+
+
+def detect_chips(path_or_bytes) -> dict:
+    """-> {chip name: clock Hz} for every chip the file declares.
+
+    A VGM is not one chip. Assuming the first one found is the whole
+    track silently drops half of a two-chip soundtrack — Gimmick! is NES
+    APU plus a Sunsoft 5B expansion, and reading only the APU loses the
+    bass and half the harmony.
+    """
+    raw = _raw_bytes(path_or_bytes)
+    if raw[:4] != b"Vgm ":
+        raise ValueError("not a VGM file")
+    data_offset = struct.unpack_from("<I", raw, 0x34)[0]
+    limit = (data_offset + 0x34) if data_offset else 0x40
+    found = {}
+    for offset, name in CHIP_CLOCK_FIELDS:
+        if offset + 4 > min(len(raw), limit):
+            continue
+        clock = struct.unpack_from("<I", raw, offset)[0] & 0x7FFFFFFF
+        if clock:
+            found[name] = clock
+    return found
+
+
+def unsupported_chips(path_or_bytes):
+    """Chips in this file that nothing here can render. Empty is good."""
+    return sorted(name for name in detect_chips(path_or_bytes)
+                  if name not in SUPPORTED_CHIPS)

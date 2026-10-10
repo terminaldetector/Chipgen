@@ -34,18 +34,40 @@ INCLUDE_FILES = [
     "bridge/bootstrap.py",
     "bridge/make_zip.py",
     "bridge/manifest.json",
+    "bridge/CORE.md",
+    "bridge/NES.md",
+    "bridge/SYNTHESIS.md",
     "bridge/PROMPT.md",
+    "bridge/LEARNING.md",
+    "bridge/AGENTIC.md",
+    "bridge/AGENTIC_PORTING.md",
+    "corpus/STUDY.md",
+    "examples/README.md",
+    "examples/agentic/README.md",
+    "examples/agentic/references/README.md",
     "core/README.md",
     "core/NUKED_OPN2_LICENSE",
 ]
 INCLUDE_TREES = [
     ("python", (".py",)),
+    # the synthesis layer's data: a starter bank of 42 instruments and the
+    # example scenarios an agent copies into work/
+    ("python/synthesis/banks", (".json",)),
+    ("python/synthesis/scenarios", (".json",)),
     ("core", (".c", ".h")),
-    ("examples", (".py",)),
+    # The .trk scores too, not just the .py drivers. They were missing,
+    # so the archive shipped an examples/ directory with no scores in it
+    # — and examples/README.md, which names all five, would have pointed
+    # at files that were not there. The two full-length tracks bring
+    # their instrument banks along; all eight files cost 11.8 KB
+    # compressed, which is less than the README describing them.
+    ("examples", (".py", ".trk", ".json")),
     ("tests", (".py",)),
 ]
 BINARY_EXTENSIONS = (".so", ".dylib", ".dll")
-SKIP_DIRECTORIES = {"__pycache__", ".git", ".pytest_cache"}
+#: `_work` is examples/agentic/make_examples.py's scratch (renders and
+#: revisions), left behind only by an interrupted run.
+SKIP_DIRECTORIES = {"__pycache__", ".git", ".pytest_cache", "_work"}
 
 
 def _walk(directory, extensions):
@@ -94,17 +116,59 @@ def build(destination: str = None, with_binaries: bool = False,
     os.makedirs(os.path.dirname(destination), exist_ok=True)
 
     entries = collect(with_binaries, with_demo)
+    generated = _generated(entries)
     with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as archive:
         for path, relative in entries:
-            # Fixed timestamps: the same source tree should always produce a
-            # byte-identical archive, so "did anything change" is a checksum
-            # comparison rather than a diff of two unzipped trees.
-            info = zipfile.ZipInfo(f"chipgen/{relative}", date_time=(2026, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
             with open(path, "rb") as fh:
-                archive.writestr(info, fh.read())
+                _write(archive, relative, fh.read())
+        for relative, data in generated:
+            _write(archive, relative, data)
     return destination
+
+
+def _write(archive, relative, data: bytes):
+    # Fixed timestamps: the same source tree should always produce a
+    # byte-identical archive, so "did anything change" is a checksum
+    # comparison rather than a diff of two unzipped trees.
+    info = zipfile.ZipInfo(f"chipgen/{relative}", date_time=(2026, 1, 1, 0, 0, 0))
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.external_attr = 0o644 << 16
+    archive.writestr(info, data)
+
+
+def _generated(entries):
+    """Files that exist only in the archive, made from the tree.
+
+    AGENTS.md is what several agent tools read before anything else, so
+    it is the one document a model that skims is sure to see — and it
+    belongs in the archive only: in a checkout, an agent is meant to
+    change the engine. integrity.json lets every render notice when a
+    model has changed it anyway.
+    """
+    import json
+
+    sys.path.insert(0, os.path.join(ROOT, "python"))
+    import integrity
+    import prompts
+
+    checksums = json.dumps(integrity.build(entries), indent=1,
+                           sort_keys=True) + "\n"
+    return [("AGENTS.md", prompts.agents_md().encode("utf-8")),
+            ("bridge/integrity.json", checksums.encode("utf-8")),
+            ("work/README.md", WORK_README.encode("utf-8"))]
+
+
+#: The one directory a model is meant to write in. Shipped with a README
+#: so it exists on unzip, and so `ls` answers "where does my score go".
+WORK_README = """\
+# work/ — your files go here
+
+Scores (`song.trk`), renders (`song.mp3`, `song.vgz`) and, if you need an
+instrument the bank lacks, a patch file you pass with `--bank`.
+
+Everything outside this directory is the engine. It is checksummed, and
+a render from an edited engine says so.
+"""
 
 
 def main(argv):

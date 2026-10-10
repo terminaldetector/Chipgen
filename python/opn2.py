@@ -272,6 +272,11 @@ class YM2612:
         self._channel_cents = [0.0] * 6
         self._channel_note = [None] * 6      # (note, octave) currently keyed on
         self._keyed_on = [False] * 6
+        #: (port, address) -> last byte written. See write().
+        self._shadow = {}
+        self._ch3_mode = "normal"
+        #: Per channel: did the last note_on write attenuated carriers?
+        self._velocity_dirty = [False] * 6
         self._dac_enabled = False
 
     def close(self):
@@ -295,9 +300,18 @@ class YM2612:
 
     def write(self, port: int, addr: int, data: int):
         """Write one register. `port` is the ADDRESS port (0 or 2); data goes
-        to port+1, exactly as a Genesis driver would do it."""
+        to port+1, exactly as a Genesis driver would do it.
+
+        Every write is also kept in `_shadow`. The chip cannot be read
+        back, and four of its operator registers pack two fields into one
+        byte — dt with mul, ks with ar, am with d1r, sl with rr — so
+        changing one field means rebuilding the byte from what was last
+        written. A real Genesis driver keeps the same copy in RAM for the
+        same reason.
+        """
         addr &= 0xFF
         data &= 0xFF
+        self._shadow[(port, addr)] = data
         if self.logger is not None:
             self.logger(port, addr, data)
         if self._py is not None:
@@ -324,6 +338,93 @@ class YM2612:
         self.write(addr_port, 0xB0 + ch, ((instrument.feedback & 0x7) << 3) | (instrument.algorithm & 0x7))
         self.write(addr_port, 0xB4 + ch, 0xC0)  # pan L+R on, AMS/PMS off
         self._channel_instrument[channel] = instrument
+
+    #: Operator register fields, as (offset from 0x30, shift, mask). A
+    #: driver that shapes a note while it sounds writes these one at a
+    #: time, which is what separates a live FM part from a patch that was
+    #: loaded once. Measured on Streets of Rage's title theme: 1,657 Total
+    #: Level changes mid-note against 6,256 key-ons.
+    OPERATOR_FIELDS = {
+        "dt":  (0x00, 4, 0x7),
+        "mul": (0x00, 0, 0xF),
+        "tl":  (0x10, 0, 0x7F),
+        "ks":  (0x20, 6, 0x3),
+        "ar":  (0x20, 0, 0x1F),
+        "am":  (0x30, 7, 0x1),
+        "d1r": (0x30, 0, 0x1F),
+        "d2r": (0x40, 0, 0x1F),
+        "sl":  (0x50, 4, 0xF),
+        "rr":  (0x50, 0, 0xF),
+        "ssg": (0x60, 0, 0xF),
+    }
+    #: Names a tracker or a patch editor is likely to use instead.
+    OPERATOR_ALIASES = {"dr": "d1r", "sr": "d2r", "multiple": "mul",
+                        "detune": "dt", "total_level": "tl",
+                        "attack": "ar", "decay": "d1r", "sustain": "d2r",
+                        "release": "rr", "sustain_level": "sl",
+                        "ssg_eg": "ssg"}
+
+    def set_operator(self, channel: int, operator: int, field: str,
+                     value: int):
+        """Write one field of one operator while the note is sounding.
+
+        `operator` is 1-4 in the ORDINARY numbering off a block diagram,
+        not the register order. The chip's offsets ascend op1, op3, op2,
+        op4, so a caller passing 2 means the operator at offset 0x08 and
+        would otherwise silently address op3.
+
+        Two fields share a register — dt with mul, ks with ar, am with
+        d1r, sl with rr — so the other half is read back from the shadow
+        and preserved. Writing `mul` alone must not zero the detune.
+
+        The value is absolute and it stays until something writes the
+        register again: note_on does not reload the patch (it rewrites the
+        carriers' levels only when the velocity asks for it), so a
+        modulator written mid-note is still there on the next note.
+        set_instrument reloads everything. That is what the hardware does
+        and why real drivers write a note's starting values at every key-on
+        (synthesis/program.py does).
+        """
+        key = self.OPERATOR_ALIASES.get(field.lower(), field.lower())
+        spec = self.OPERATOR_FIELDS.get(key)
+        if spec is None:
+            raise ValueError(
+                f"unknown operator field {field!r}; have: "
+                f"{', '.join(sorted(self.OPERATOR_FIELDS))}")
+        if not 1 <= operator <= 4:
+            raise ValueError(f"operator must be 1-4, got {operator}")
+        offset, shift, mask = spec
+        addr_port, _, ch = self._port_addr_for(channel)
+        slot = _OP_TO_LIST[operator]
+        address = 0x30 + offset + self._OP_OFFSETS[slot] + ch
+        previous = self._shadow.get((addr_port, address), 0)
+        merged = (previous & ~(mask << shift)) | ((int(value) & mask) << shift)
+        self.write(addr_port, address, merged)
+        return merged
+
+    def set_algorithm(self, channel: int, algorithm: int = None,
+                      feedback: int = None):
+        """Register 0xB0: which operator feeds which, and op1's self-feedback.
+
+        Either may be left alone. Both live in one register, so the one
+        not given is read back from the shadow rather than zeroed.
+        """
+        addr_port, _, ch = self._port_addr_for(channel)
+        address = 0xB0 + ch
+        previous = self._shadow.get((addr_port, address), 0)
+        if algorithm is None:
+            algorithm = previous & 0x7
+        if feedback is None:
+            feedback = (previous >> 3) & 0x7
+        value = ((feedback & 0x7) << 3) | (algorithm & 0x7)
+        self.write(addr_port, address, value)
+        instrument = self._channel_instrument[channel]
+        if instrument is not None:
+            # Keep the stored patch honest: carrier_indices() is what
+            # velocity and set_volume attenuate, and after an algorithm
+            # change the carriers are different operators.
+            instrument.algorithm = algorithm & 0x7
+        return value
 
     def set_pan(self, channel: int, left: bool = True, right: bool = True,
                 ams: int = 0, pms: int = 0):
@@ -375,6 +476,82 @@ class YM2612:
         self.write(addr_port, 0xA4 + ch, ((block & 0x7) << 3) | (fnum >> 8))
         self.write(addr_port, 0xA0 + ch, fnum & 0xFF)
 
+    #: Register 0x27, bits 6-7: what channel 3 is doing.
+    CH3_NORMAL, CH3_SPECIAL, CH3_CSM = "normal", "special", "csm"
+    _CH3_MODE_BITS = {CH3_NORMAL: 0x00, CH3_SPECIAL: 0x40, CH3_CSM: 0x80}
+
+    #: Supplementary frequency registers for channel 3's operators, as
+    #: (low byte, block/high byte). Which pair drives which operator is
+    #: not obvious, so this was established by experiment rather than
+    #: taken from a mapping: four operators on algorithm 7 at levels 9 dB
+    #: apart, every supplementary pair pointed at a different pitch, and
+    #: then the level measured at each pitch names the operator sitting
+    #: there. The reading was unambiguous —
+    #:
+    #:      $A9/$AD  +0.0 dB -> op1 (TL 0)
+    #:      $AA/$AE  -8.5 dB -> op2 (TL 12)
+    #:      $A8/$AC -18.7 dB -> op3 (TL 24)
+    #:      $A2/$A6 -26.5 dB -> op4 (TL 36)
+    #:
+    #: Note the shape: $A8/$AC is operator THREE. The supplementary
+    #: registers ascend in the same op1, op3, op2 order the operator
+    #: offsets do, which is the interleave this chip applies everywhere
+    #: and the reason a plausible guess here lands on the wrong operator.
+    CH3_OPERATOR_REGISTERS = {
+        1: (0xA9, 0xAD),
+        2: (0xAA, 0xAE),
+        3: (0xA8, 0xAC),
+        #: Operator 4 has no supplementary pair — it follows the channel.
+        4: (0xA2, 0xA6),
+    }
+
+    def set_ch3_mode(self, mode: str):
+        """Register 0x27: hand channel 3 its four separate frequencies.
+
+        In special mode each of channel 3's operators takes its own pitch
+        instead of all four tracking the channel. That is what the mode is
+        for: one channel playing a fixed inharmonic cluster, which is how
+        drivers get bells, gongs and metallic percussion out of a chip
+        with no noise generator on the FM side.
+
+        CSM additionally keys the channel on and off from timer A, which
+        is a speech trick and needs the timer running; it is accepted here
+        and does nothing useful without one.
+
+        Measured in Streets of Rage's title theme: 149 writes to this
+        register across the track.
+        """
+        if mode not in self._CH3_MODE_BITS:
+            raise ValueError(
+                f"ch3 mode must be one of "
+                f"{', '.join(sorted(self._CH3_MODE_BITS))}, got {mode!r}")
+        previous = self._shadow.get((0, 0x27), 0)
+        value = (previous & 0x3F) | self._CH3_MODE_BITS[mode]
+        self.write(0, 0x27, value)
+        self._ch3_mode = mode
+        return value
+
+    def set_ch3_operator_frequency(self, operator: int, note: str, octave: int,
+                                   cents: float = 0.0):
+        """Pitch one of channel 3's operators, in special mode.
+
+        `operator` is 1-4 in the ordinary numbering. Operator 4 has no
+        supplementary register of its own: it uses the channel's normal
+        frequency at 0xA2/0xA6, which is also what every operator follows
+        when the mode is off.
+        """
+        if not 1 <= operator <= 4:
+            raise ValueError(f"operator must be 1-4, got {operator}")
+        freq = note_to_freq(note, octave)
+        if cents:
+            freq *= 2.0 ** (cents / 1200.0)
+        fnum, block = freq_to_fnum_block(freq, self.clock)
+        low, high = self.CH3_OPERATOR_REGISTERS.get(operator, (0xA2, 0xA6))
+        # Block/high first, same latching rule as a channel frequency.
+        self.write(0, high, ((block & 0x7) << 3) | (fnum >> 8))
+        self.write(0, low, fnum & 0xFF)
+        return fnum, block
+
     def _key_code(self, channel: int) -> int:
         return channel if channel < 3 else channel + 1  # 0,1,2,4,5,6
 
@@ -393,14 +570,19 @@ class YM2612:
             self.write(0, 0x28, 0x00 | self._key_code(channel))
 
         instrument = self._channel_instrument[channel]
-        if instrument is not None and velocity < 127:
+        # Write carrier levels whenever this note needs attenuating OR the
+        # previous note left them attenuated. The second half matters: a
+        # velocity-127 note after a quiet one would otherwise skip the write
+        # entirely and inherit the quiet note's levels.
+        if instrument is not None and (velocity < 127
+                                       or self._velocity_dirty[channel]):
             addr_port, _, ch = self._port_addr_for(channel)
             extra = (level_to_attenuation(self._channel_volume[channel])
                      + level_to_attenuation(velocity) + instrument.trim)
             for i in instrument.carrier_indices():
                 tl = max(0, min(127, instrument.operators[i].total_level + extra))
                 self.write(addr_port, 0x40 + self._OP_OFFSETS[i] + ch, tl & 0x7F)
-            self._velocity_dirty = True
+            self._velocity_dirty[channel] = velocity < 127
 
         self._write_frequency(channel, note, octave)
         self.write(0, 0x28, 0xF0 | self._key_code(channel))
@@ -411,11 +593,13 @@ class YM2612:
         self.write(0, 0x28, 0x00 | self._key_code(channel))
         self._keyed_on[channel] = False
         self._channel_note[channel] = None
-        if getattr(self, "_velocity_dirty", False):
-            # Restore the patch's own carrier levels so the next note is not
-            # stuck at the last note's velocity.
-            self._velocity_dirty = False
-            self.set_volume(channel, self._channel_volume[channel])
+        # Carrier levels are deliberately NOT restored here. Key-off starts
+        # the release phase; the note is still sounding. Writing the patch's
+        # full Total Level back at this moment makes the tail of a quiet note
+        # jump to full volume — measured at velocity 16, the note itself
+        # peaked at -37.0 dBFS and its own release burst at -22.8 dBFS, a
+        # 14 dB click on the way out of every soft note. The restore belongs
+        # at the next note_on, which is where it now happens.
 
     # -- DAC / PCM (channel 6) --------------------------------------------------
     def set_dac_enable(self, enable: bool):

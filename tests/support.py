@@ -26,6 +26,17 @@ def skip(reason: str):
     raise Skipped(reason)
 
 
+def need_files(*relative):
+    """Skip the current test unless these files (relative to the repository
+    root) exist. The bridge archive ships the engine and its tests but not
+    the corpora or the Studio's page, so a test that reads them has nothing
+    to read there."""
+    missing = [r for r in relative
+               if not os.path.exists(os.path.join(ROOT, r))]
+    if missing:
+        skip(f"{', '.join(missing)} is not in this archive")
+
+
 class TempDir:
     """`with TempDir() as d:` — a scratch directory that cleans itself up."""
 

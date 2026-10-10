@@ -1,0 +1,490 @@
+[
+  {
+    "name": "08___turbo_tunnel_race_01",
+    "algorithm": 1,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 32,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 0,
+        "total_level": 27,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 1,
+        "multiple": 1,
+        "total_level": 29,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 8,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 10,
+        "release_rate": 15,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_02",
+    "algorithm": 3,
+    "feedback": 0,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 8,
+        "total_level": 34,
+        "attack_rate": 31,
+        "decay_rate": 15,
+        "sustain_rate": 4,
+        "release_rate": 15,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 11,
+        "attack_rate": 31,
+        "decay_rate": 13,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_03",
+    "algorithm": 5,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 14,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 13,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 2,
+        "total_level": 11,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 13,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 2,
+        "multiple": 1,
+        "total_level": 16,
+        "attack_rate": 31,
+        "decay_rate": 10,
+        "sustain_rate": 13,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_04",
+    "algorithm": 4,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 8,
+        "attack_rate": 30,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 22,
+        "attack_rate": 30,
+        "decay_rate": 11,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 10,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 12,
+        "attack_rate": 30,
+        "decay_rate": 6,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 0,
+        "total_level": 15,
+        "attack_rate": 30,
+        "decay_rate": 3,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_05",
+    "algorithm": 4,
+    "feedback": 1,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 5,
+        "total_level": 28,
+        "attack_rate": 31,
+        "decay_rate": 12,
+        "sustain_rate": 16,
+        "release_rate": 7,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 3,
+        "multiple": 4,
+        "total_level": 32,
+        "attack_rate": 31,
+        "decay_rate": 7,
+        "sustain_rate": 0,
+        "release_rate": 7,
+        "sustain_level": 10,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 12,
+        "attack_rate": 29,
+        "decay_rate": 6,
+        "sustain_rate": 19,
+        "release_rate": 7,
+        "sustain_level": 5,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 7,
+        "multiple": 1,
+        "total_level": 12,
+        "attack_rate": 29,
+        "decay_rate": 6,
+        "sustain_rate": 19,
+        "release_rate": 7,
+        "sustain_level": 8,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_06",
+    "algorithm": 2,
+    "feedback": 4,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 1,
+        "multiple": 5,
+        "total_level": 37,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 4,
+        "release_rate": 15,
+        "sustain_level": 12,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 25,
+        "attack_rate": 31,
+        "decay_rate": 16,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 31,
+        "attack_rate": 31,
+        "decay_rate": 2,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 10,
+        "attack_rate": 31,
+        "decay_rate": 5,
+        "sustain_rate": 0,
+        "release_rate": 15,
+        "sustain_level": 15,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_07",
+    "algorithm": 4,
+    "feedback": 7,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 20,
+        "attack_rate": 23,
+        "decay_rate": 8,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 0,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 1,
+        "total_level": 6,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 3,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 6,
+        "multiple": 2,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 8,
+        "sustain_rate": 0,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 2,
+        "multiple": 2,
+        "total_level": 12,
+        "attack_rate": 31,
+        "decay_rate": 9,
+        "sustain_rate": 0,
+        "release_rate": 11,
+        "sustain_level": 1,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  },
+  {
+    "name": "08___turbo_tunnel_race_08",
+    "algorithm": 3,
+    "feedback": 6,
+    "trim": 0,
+    "operator_order": "register",
+    "operators": [
+      {
+        "detune": 0,
+        "multiple": 0,
+        "total_level": 26,
+        "attack_rate": 30,
+        "decay_rate": 4,
+        "sustain_rate": 5,
+        "release_rate": 15,
+        "sustain_level": 2,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 2,
+        "total_level": 18,
+        "attack_rate": 30,
+        "decay_rate": 8,
+        "sustain_rate": 12,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 0,
+        "multiple": 3,
+        "total_level": 26,
+        "attack_rate": 30,
+        "decay_rate": 7,
+        "sustain_rate": 9,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      },
+      {
+        "detune": 4,
+        "multiple": 2,
+        "total_level": 8,
+        "attack_rate": 30,
+        "decay_rate": 4,
+        "sustain_rate": 2,
+        "release_rate": 15,
+        "sustain_level": 4,
+        "ssg_eg": 0,
+        "rate_scaling": 0,
+        "am_enable": 0
+      }
+    ]
+  }
+]

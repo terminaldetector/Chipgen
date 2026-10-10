@@ -1,0 +1,43 @@
+{
+ "name": "ym2612_bass",
+ "backend": "ym2612",
+ "role": "bass",
+ "note": "a bass for the Mega Drive: heavy under the mix, a bite at the front",
+ "seeds": [
+  "punch_bass",
+  "slap_bass"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.5,
+   "attack": 0.0,
+   "body": 0.6,
+   "bass_weight": 0.8,
+   "punch": 0.5
+  },
+  "weights": {
+   "bass_weight": 1.4
+  }
+ },
+ "register": [
+  "A",
+  2
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 4,
+ "seed": 1,
+ "mix": [
+  {
+   "mix": [
+    {
+     "from": "archetype:punch_bass"
+    },
+    {
+     "from": "archetype:slap_bass"
+    }
+   ]
+  }
+ ],
+ "format": "chipgen-forge-scenario/1"
+}

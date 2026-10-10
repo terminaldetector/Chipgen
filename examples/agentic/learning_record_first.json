@@ -1,0 +1,257 @@
+{
+ "applies_to": {
+  "backend": "megadrive",
+  "initial_margin_db": -7.46,
+  "limits": "measured once, in this arrangement; recall re-renders and re-checks it before use",
+  "patches": {
+   "bass": "slap_bass",
+   "lead": "square_lead",
+   "pad": "strings"
+  },
+  "roles": [
+   "bass",
+   "lead",
+   "pad"
+  ]
+ },
+ "at": "2026-10-08T16:47:22Z",
+ "auditory": {
+  "judgement": null,
+  "mode": "tool",
+  "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+  "uncertainty": "nothing listened; the result is a measurement of the render"
+ },
+ "change": [
+  {
+   "db": 5.5,
+   "op": "level",
+   "role": "lead"
+  },
+  {
+   "db": -3.5,
+   "op": "level",
+   "role": "pad"
+  }
+ ],
+ "context": {
+  "backend": "megadrive (YM2612 + SN76489), Nuked-OPN2 render",
+  "bpm": 150.0,
+  "key": "A minor",
+  "range_bars": [
+   1,
+   2
+  ],
+  "target_span": [
+   "G-4",
+   "E-5"
+  ],
+  "voices": {
+   "bass": {
+    "band_share": 0.336,
+    "channel": "fm0",
+    "patch": "slap_bass",
+    "register": [
+     36,
+     52
+    ]
+   },
+   "lead": {
+    "band_share": null,
+    "channel": "fm1",
+    "patch": "square_lead",
+    "register": [
+     55,
+     76
+    ]
+   },
+   "pad": {
+    "band_share": 0.664,
+    "channel": "fm2",
+    "patch": "strings",
+    "register": [
+     48,
+     72
+    ]
+   }
+  }
+ },
+ "cost": {
+  "audio_model_seconds": 0.0,
+  "candidates": 4,
+  "model_tokens": 0,
+  "operations": 10,
+  "render_seconds": 15.37,
+  "renders": 16,
+  "retries": 3,
+  "runtime_s": 22.0
+ },
+ "decision": {
+  "outcome": "committed",
+  "why": "gain 6.18 dB, every guard passed"
+ },
+ "expected": [
+  {
+   "basis": "arithmetic: only the target changes, by its realised level",
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    }
+   ],
+   "expect_db": 3.75
+  },
+  {
+   "basis": "arithmetic: pad holds 66% of the band; realised -6.00 dB",
+   "change": [
+    {
+     "db": -6.0,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "expect_db": 2.99
+  },
+  {
+   "basis": "arithmetic: bass holds 34% of the band; realised -6.00 dB",
+   "change": [
+    {
+     "db": -6.0,
+     "op": "level",
+     "role": "bass"
+    }
+   ],
+   "expect_db": 1.26
+  },
+  {
+   "basis": "arithmetic: pad holds 66% of the band; realised -3.75 dB",
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "expect_db": 2.1
+  }
+ ],
+ "format": "chipgen-learning-record/1",
+ "id": "lr-d32b4a39f0",
+ "initial": {
+  "band_margin_db": -7.46
+ },
+ "result": {
+  "band_margin_db": -1.28,
+  "gain_db": 6.18,
+  "goal_met": true,
+  "guards": [
+   {
+    "name": "no_clipping",
+    "ok": true
+   },
+   {
+    "name": "notes_kept",
+    "ok": true
+   },
+   {
+    "name": "melody_kept",
+    "ok": true
+   },
+   {
+    "name": "no_new_faults",
+    "ok": true
+   },
+   {
+    "name": "voices_present",
+    "ok": true
+   },
+   {
+    "name": "bass_under",
+    "ok": true
+   },
+   {
+    "name": "mix_level",
+    "ok": true
+   }
+  ]
+ },
+ "scope": "the observation's range, every voice's notes in it",
+ "source": {
+  "base_rev": 0,
+  "committed_rev": 1,
+  "decision": "d1",
+  "kind": "loop",
+  "measured": true,
+  "project": "masked_lead"
+ },
+ "task": {
+  "goal": "band margin >= -3.0 dB",
+  "kind": "buried",
+  "target_role": "lead"
+ },
+ "tried": [
+  {
+   "accepted": true,
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    }
+   ],
+   "gain_db": 3.48,
+   "why": "band_margin_db of lead -7.46 -> -3.98 dB, every guard passed"
+  },
+  {
+   "accepted": true,
+   "change": [
+    {
+     "db": -6.0,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "gain_db": 3.26,
+   "why": "band_margin_db of lead -7.46 -> -4.20 dB, every guard passed"
+  },
+  {
+   "accepted": true,
+   "change": [
+    {
+     "db": -6.0,
+     "op": "level",
+     "role": "bass"
+    }
+   ],
+   "gain_db": 1.5,
+   "why": "band_margin_db of lead -7.46 -> -5.96 dB, every guard passed"
+  },
+  {
+   "accepted": true,
+   "change": [
+    {
+     "db": 5.5,
+     "op": "level",
+     "role": "lead"
+    },
+    {
+     "db": -3.5,
+     "op": "level",
+     "role": "pad"
+    }
+   ],
+   "gain_db": 6.18,
+   "why": "band_margin_db of lead -7.46 -> -1.28 dB, every guard passed"
+  }
+ ],
+ "versions": {
+  "agentic_measure": "3b813f24db21",
+  "format": "chipgen-learning-record/1",
+  "seed": null
+ }
+}

@@ -32,16 +32,46 @@ from array import array
 #: and what every drum here is authored at.
 DEFAULT_RATE = 16000
 
+#: The pitch a sample is taken to sound at when nothing says otherwise.
+#: Asking for this note plays the file at its own rate.
+BASE_NOTE = "C-4"
+
+#: Fastest the DAC actually accepts new bytes, in Hz. MEASURED, not read
+#: off a datasheet: feeding a 220 Hz tone through register 0x2A at rising
+#: rates and reading the pitch back off the render gives
+#:
+#:      feed 11025 -> 220.0 Hz      feed 26633 -> 132.0 Hz
+#:      feed 16000 -> 219.7 Hz      feed 32000 -> 109.9 Hz
+#:      feed 22050 -> 159.4 Hz      feed 44100 ->  79.7 Hz
+#:
+#: Every failing row works out to the same effective rate — 15,979,
+#: 15,980, 15,985, 15,977 — so the chip latches a new byte about once
+#: every 3.33 output samples and anything faster is quietly decimated.
+#: Note what that does: the DURATION stays right and only the pitch
+#: drops, which is why it reads as broken repitching rather than as a
+#: ceiling. The built-in kit's 16000 Hz sits just under it, which is luck
+#: rather than judgement.
+#:
+#: So a sample plays faster by having its data thinned, never by asking
+#: for a faster feed. See `for_note` and `load_wav`.
+DAC_RATE_CEILING = 15980
+
 
 class PCMSample:
     """8-bit unsigned PCM, exactly what register 0x2A eats."""
 
-    __slots__ = ("name", "data", "rate")
+    __slots__ = ("name", "data", "rate", "base_note")
 
-    def __init__(self, name: str, data, rate: int = DEFAULT_RATE):
+    def __init__(self, name: str, data, rate: int = DEFAULT_RATE,
+                 base_note: str = None):
         self.name = name
         self.data = data if isinstance(data, array) else array("B", data)
         self.rate = rate
+        #: The pitch this sample sounds at its own rate, so a score can
+        #: ask for another one. A reference point, not a claim: a kick has
+        #: no real pitch, and repitching one down an octave is still a
+        #: thing drivers do and Genesis composers did.
+        self.base_note = base_note or BASE_NOTE
 
     def __len__(self):
         return len(self.data)
@@ -235,16 +265,110 @@ def register(sample: PCMSample):
     return sample
 
 
-def load_wav(name: str, path: str, rate: int = None) -> PCMSample:
-    """Import a real WAV as a DAC sample. Mono-ised and requantised to 8-bit."""
+def load_wav(name: str, path: str, rate: int = None,
+             base_note: str = None) -> PCMSample:
+    """Import a real WAV as a DAC sample. Mono-ised and requantised to 8-bit.
+
+    `base_note` is the pitch the file sounds at, which is what lets a
+    score play it at another one. Left out, it is assumed to be BASE_NOTE
+    and asking for that note plays the file untouched.
+    """
+    import analysis
     import wavio
     buf, file_rate = wavio.read(path)
-    frames = []
-    for frame in buf:
-        frames.append(sum(frame) / len(frame) if isinstance(frame, (tuple, list))
-                      else frame)
+    # analysis.to_mono, not a hand-rolled average. wavio hands back either
+    # a numpy array shaped (frames, channels) or a flat Buffer with a
+    # channel count, and the loop that used to be here tested
+    # isinstance(frame, (tuple, list)) — false for a numpy row and false
+    # for a flat sample — so it never averaged anything on either
+    # backend. A stereo file came out twice as long with the channels
+    # interleaved as consecutive samples, which reads as an octave down
+    # plus aliasing. Nothing caught it because nothing could reach this
+    # function until now.
+    frames = list(analysis.to_mono(buf))
     sample = _quantise(frames, rate or file_rate, name)
+    sample.base_note = base_note or BASE_NOTE
+    if sample.rate > DAC_RATE_CEILING:
+        # The DAC cannot be fed this fast, so store the sample at a rate
+        # it can play. Left alone, a 22 kHz file plays at the right length
+        # and 557 cents flat, because the chip drops the bytes it cannot
+        # take and nothing reports it.
+        sample = thin(sample, sample.rate / float(DAC_RATE_CEILING),
+                      DAC_RATE_CEILING, name)
+        sample.base_note = base_note or BASE_NOTE
     return register(sample)
+
+
+def rate_for_note(sample: PCMSample, note: str, octave: int) -> int:
+    """Playback rate that puts `sample` at the asked-for pitch.
+
+    Repitching a sample is done by playing it faster or slower, which
+    also makes it shorter or longer — there is no formant correction on a
+    chip whose sample player is one register. An octave down is twice as
+    long, and on the DAC that is audible as the drum getting fatter,
+    which is the reason the trick is used.
+    """
+    import opn2
+    base_name, base_octave = _split_note(sample.base_note)
+    target = opn2.note_to_freq(note, octave)
+    origin = opn2.note_to_freq(base_name, base_octave)
+    if origin <= 0 or target <= 0:
+        return sample.rate
+    return max(1, int(round(sample.rate * target / origin)))
+
+
+def thin(sample: PCMSample, factor: float, rate: int = None,
+         name: str = None) -> PCMSample:
+    """Keep one byte in `factor` so the sample plays `factor` times faster.
+
+    Takes the FACTOR, not a target rate. Passing a rate looked natural and
+    was wrong: thinning to the ceiling from a sample already AT the
+    ceiling is a factor of one, so pitching up did nothing and the note
+    came out at the base pitch.
+
+    Nearest-neighbour, which is what the hardware's own repitching sounds
+    like and cheaper than pretending otherwise.
+    """
+    if factor <= 0:
+        return sample
+    n_out = max(1, int(round(len(sample) / factor)))
+    step = len(sample) / n_out
+    data = array("B", bytes(n_out))
+    for i in range(n_out):
+        data[i] = sample.data[min(len(sample) - 1, int(i * step))]
+    return PCMSample(name or sample.name, data, rate or sample.rate,
+                     base_note=sample.base_note)
+
+
+def for_note(sample: PCMSample, note: str, octave: int):
+    """-> (name to play, feed rate) for `sample` at the asked-for pitch.
+
+    Below the DAC's ceiling this is just a faster or slower feed. Above
+    it, the chip would decimate the feed and the note would come out flat
+    at the right length, so the data is thinned here by exactly the excess
+    and fed at the ceiling instead. The derived sample is registered under
+    its own name so an event can refer to it.
+    """
+    rate = rate_for_note(sample, note, octave)
+    if rate <= DAC_RATE_CEILING:
+        return sample.name, rate
+    derived = f"{sample.name}@{note}{octave}"
+    if derived not in _kit():
+        register(thin(sample, rate / float(DAC_RATE_CEILING),
+                      DAC_RATE_CEILING, derived))
+    return derived, DAC_RATE_CEILING
+
+
+def _split_note(text: str):
+    """'C-4' / 'A#3' -> ('C', 4). Accepts what the tracker accepts."""
+    import events as events_mod
+    body = text.strip()
+    octave = int(body[-1])
+    name = body[:-1].rstrip("-")
+    canonical = events_mod.normalize_note(name)
+    if canonical is None:
+        raise ValueError(f"{text!r} is not a note")
+    return canonical, octave
 
 
 def resample(sample: PCMSample, rate: int) -> PCMSample:
