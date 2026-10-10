@@ -138,7 +138,44 @@ def _faults(hearing) -> set:
             for v in (o["voices"] or ["mix"])}
 
 
-def guards(base_tl, cand_tl, base_h, cand_h, rng, obs) -> List[dict]:
+def _allowed(chain) -> Dict[str, str]:
+    """{voice: what its patch may change} for the musical ops in a chain
+    (patch.CHANGES); the level, register and instrument ops allow
+    nothing beyond what notes_kept already permits."""
+    out = {}
+    for spec in chain or []:
+        kind = P.CHANGES.get(spec.get("op"))
+        if kind and spec.get("voice"):
+            out[spec["voice"]] = kind
+    return out
+
+
+def _notes_kept(a: dict, b: dict, allowed: Dict[str, str]):
+    """notes_kept with the ops' own changes allowed: a voice an op may
+    re-time is left out (the others must stay), a re-voiced pad keeps its
+    onset rows, an echo's new voice is the only voice that may appear."""
+    problems = []
+    new_voices = set(b) - set(a)
+    allowed_new = {v for v, k in allowed.items() if k == "new_voice"}
+    for v in sorted(new_voices):
+        echo_ok = any(v.startswith(src + "_echo") for src in allowed_new)
+        if not echo_ok:
+            problems.append(f"a voice {v} appeared")
+    for v in sorted(set(a)):
+        kind = allowed.get(v)
+        if kind == "onsets":
+            continue
+        if kind == "pitches":
+            if [r for r, _pc in a[v]] != [r for r, _pc in b.get(v, [])]:
+                problems.append(f"{v}'s onsets moved")
+            continue
+        if a[v] != b.get(v):
+            problems.append(f"{v}'s onsets or pitch classes changed")
+    return problems
+
+
+def guards(base_tl, cand_tl, base_h, cand_h, rng, obs,
+           chain=None) -> List[dict]:
     target = obs["voices"][0] if obs.get("voices") else None
     out = []
     bp = base_h["measurements"]["mix"]["peak_db"]
@@ -148,10 +185,21 @@ def guards(base_tl, cand_tl, base_h, cand_h, rng, obs) -> List[dict]:
                 "ok": not clipped or cp <= bp,
                 "detail": f"mix peak {bp:.2f} -> {cp:.2f} dBFS"})
     a, b = _onsets(base_tl, rng), _onsets(cand_tl, rng)
-    out.append({"name": "notes_kept", "ok": a == b,
-                "detail": "every note keeps its onset row and pitch class; "
-                          "none added or removed" if a == b else
-                "a note's onset, pitch class or count changed"})
+    allowed = _allowed(chain)
+    if allowed:
+        problems = _notes_kept(a, b, allowed)
+        out.append({"name": "notes_kept", "ok": not problems,
+                    "detail": "every voice the patch does not re-time "
+                              "keeps its onsets and pitch classes ("
+                              + ", ".join(f"{v}: {k}" for v, k in
+                                          sorted(allowed.items()))
+                              + " allowed)" if not problems
+                    else "; ".join(problems)})
+    else:
+        out.append({"name": "notes_kept", "ok": a == b,
+                    "detail": "every note keeps its onset row and pitch "
+                              "class; none added or removed" if a == b else
+                    "a note's onset, pitch class or count changed"})
     melodic = [v for v, ins in base_tl.content["instruments"].items()
                if ins.get("role") in D.MELODIC_ROLES]
     same = all(_pitches(base_tl, rng, v) == _pitches(cand_tl, rng, v)
@@ -272,7 +320,7 @@ class Search:
         value = self.read(hearing)
         start = self.read(self.base_h)
         checks = guards(self.base_tl, tl, self.base_h, hearing, self.rng,
-                        self.obs)
+                        self.obs, chain)
         failed = [g for g in checks if not g["ok"]]
         gain = None if value is None or start is None else \
             round(value - start, 2)

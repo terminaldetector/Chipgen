@@ -21,6 +21,31 @@ tracker cells and directives the piece is kept in:
                 built-in bank or a bank the project loaded; a forge
                 instrument's detune layer comes with it)
 
+and the musical ones, for when the timing, the line or the texture
+explains a problem rather than a level:
+
+    articulation  notes in a range shortened to a share of their written
+                  length (`gate`: a key-off written inside the note, on the
+                  row grid), or `legato`: a key-off between two notes a row
+                  apart removed so they touch
+    density       an accompanying voice thinned (every other onset taken
+                  out) or doubled (a repeat of each note half-way to the
+                  next, where the grid has room)
+    rhythm        an accompanying voice's on-beat onsets pushed a row
+                  early (`anticipate`), or its off-beat onsets delayed by
+                  a share of a row with the cell's delay command (`swing`)
+    voicing       a pad's notes moved to the nearest tone of the chord the
+                  section's harmony names there, so it moves by the
+                  smallest step (voice leading); onsets kept
+    pan           an FM voice's place in the stereo field (the YM2612's
+                  left/right bits; the PSG has none)
+    echo          a voice's notes copied to a free FM channel a few rows
+                  later, quieter, panned the other way: a new voice of
+                  role "echo"
+
+The melody's pitches and onsets are not the musical ops' to change:
+density and rhythm refuse a melodic voice, voicing works on pads.
+
 The realised change is reported next to the asked one: the steps the chip
 has, the cells that could not move (a velocity already at 127, a PSG
 already silent, a note that would leave the register), and every edit.
@@ -420,8 +445,373 @@ def instrument(content: dict, voice: str, patch: str) -> Tuple[dict, dict]:
                  "native": f"inst {ins['channel']} {patch}"}
 
 
+# -- the musical operations -----------------------------------------------------------
+_MELODIC = ("lead", "melody", "counter")
+_HOLD = tracker.HOLD_TOKENS
+
+
+def _is_hold(cell: str) -> bool:
+    return cell.strip() in _HOLD
+
+
+def _is_off(cell: str) -> bool:
+    return cell.strip().lower() in tracker.OFF_TOKENS
+
+
+def _onset(column: str, cell: str) -> bool:
+    """A cell that starts a sound in this column."""
+    token, _codes = _split(cell)
+    if _is_hold(token) or _is_off(token):
+        return False
+    if column.startswith(("fm", "psg")):
+        return _pitch(token) is not None
+    return True                         # noise wN/pN, dac sample names
+
+
+def _accompaniment(content: dict, voice: str, op: str):
+    role = content["instruments"].get(voice, {}).get("role", "")
+    if role in _MELODIC:
+        raise AgenticError("melodic_voice", f"{op} changes onsets; {voice} "
+                           f"is the {role}, whose notes are the melody and "
+                           f"not this op's to move", voice=voice, op=op)
+
+
+def articulation(content: dict, voice: str, rng: dict, gate: float = None,
+                 legato: bool = False,
+                 scope: str = "occurrence") -> Tuple[dict, dict]:
+    """Notes of `voice` in the range shortened to `gate` of their written
+    length (a key-off inside the note, on the row grid), or, with
+    `legato`, the one-row gaps between notes closed."""
+    if (gate is None) == (not legato):
+        raise AgenticError("bad_patch", "articulation takes gate (0-1) or "
+                           "legato=true")
+    if gate is not None and not 0.1 <= gate < 1.0:
+        raise AgenticError("bad_patch", "gate is a share of the written "
+                           "length, 0.1-0.99")
+    new = copy.deepcopy(content)
+    column, k = _column(new, voice)
+    targets, notes = _targets(new, rng, scope)
+    edits, stuck, lengths = [], 0, []
+    for section, a, b, slot in targets:
+        rows = section["rows"]
+        for r in range(a, b):
+            if not _onset(column, rows[r][k]):
+                continue
+            end = r + 1
+            while end < len(rows) and _is_hold(rows[end][k]):
+                end += 1
+            length = end - r
+            if gate is not None:
+                cut = r + max(1, int(round(length * gate)))
+                if cut >= end:
+                    stuck += 1          # one row: the grid cannot shorten it
+                    continue
+                edits.append({"section": section["id"], "slot": slot,
+                              "row": cut, "column": column,
+                              "from": rows[cut][k], "to": "==="})
+                rows[cut][k] = "==="
+                lengths.append([length, cut - r])
+            elif end < len(rows) and _is_off(rows[end][k]) and \
+                    end + 1 < len(rows) and _onset(column, rows[end + 1][k]):
+                edits.append({"section": section["id"], "slot": slot,
+                              "row": end, "column": column,
+                              "from": rows[end][k], "to": "..."})
+                rows[end][k] = "..."
+                lengths.append([length, length + 1])
+    if not edits:
+        raise AgenticError("nothing_to_change", f"no note of {voice} in "
+                           f"{rng['spec']} could change its length "
+                           f"({stuck} are one row long)", voice=voice)
+    return new, {"op": "articulation", "voice": voice, "column": column,
+                 "range": rng["spec"], "rows": [rng["row0"], rng["row1"]],
+                 "scope": scope, "gate": gate, "legato": legato,
+                 "lengths_rows": lengths[:16], "cells": len(edits),
+                 "too_short": stuck, "copies": notes,
+                 "edits": edits[:12], "edits_total": len(edits),
+                 "native": "a key-off (===) written inside the note"
+                 if gate is not None else "a key-off removed: the notes "
+                                          "touch"}
+
+
+def density(content: dict, voice: str, rng: dict, mode: str = "thin",
+            scope: str = "occurrence") -> Tuple[dict, dict]:
+    """An accompanying voice with every other onset taken out (`thin`) or
+    each note repeated half-way to the next where there is room
+    (`double`)."""
+    if mode not in ("thin", "double"):
+        raise AgenticError("bad_patch", "density mode is thin or double")
+    _accompaniment(content, voice, "density")
+    new = copy.deepcopy(content)
+    column, k = _column(new, voice)
+    targets, notes = _targets(new, rng, scope)
+    edits = []
+    for section, a, b, slot in targets:
+        rows = section["rows"]
+        onsets = [r for r in range(a, b) if _onset(column, rows[r][k])]
+        if mode == "thin":
+            for i, r in enumerate(onsets):
+                if i % 2 == 1:
+                    prev_sounding = i > 0
+                    to = "===" if prev_sounding and \
+                        column.startswith(("fm", "psg")) else "..."
+                    edits.append({"section": section["id"], "slot": slot,
+                                  "row": r, "column": column,
+                                  "from": rows[r][k], "to": to})
+                    rows[r][k] = to
+        else:
+            percussive = not column.startswith(("fm", "psg"))
+            for i, r in enumerate(onsets):
+                nxt = onsets[i + 1] if i + 1 < len(onsets) else b
+                mid = r + (nxt - r) // 2
+                if nxt - r < 2 or mid <= r:
+                    continue
+                free = _is_hold(rows[mid][k]) or (
+                    percussive and _is_off(rows[mid][k]))
+                if not free:
+                    continue
+                edits.append({"section": section["id"], "slot": slot,
+                              "row": mid, "column": column,
+                              "from": rows[mid][k], "to": rows[r][k]})
+                was_off = _is_off(rows[mid][k])
+                rows[mid][k] = rows[r][k]
+                # a hit that replaced a key-off ends where the old one
+                # ended: the burst stays as short as the others
+                if was_off and mid + 1 < len(rows) and \
+                        _is_hold(rows[mid + 1][k]):
+                    rows[mid + 1][k] = "==="
+    if not edits:
+        raise AgenticError("nothing_to_change", f"{voice} has no onset in "
+                           f"{rng['spec']} to {mode}", voice=voice)
+    return new, {"op": "density", "voice": voice, "column": column,
+                 "mode": mode, "range": rng["spec"],
+                 "rows": [rng["row0"], rng["row1"]], "scope": scope,
+                 "cells": len(edits), "copies": notes,
+                 "onsets_changed": len(edits) * (1 if mode == "double"
+                                                 else -1),
+                 "edits": edits[:12], "edits_total": len(edits)}
+
+
+def rhythm(content: dict, voice: str, rng: dict, mode: str = "anticipate",
+           share: float = 0.33,
+           scope: str = "occurrence") -> Tuple[dict, dict]:
+    """An accompanying voice's on-beat onsets a row early (`anticipate`,
+    where that row is free), or its off-beat onsets delayed by `share`
+    of a row (`swing`, the cell's delay command)."""
+    if mode not in ("anticipate", "swing"):
+        raise AgenticError("bad_patch", "rhythm mode is anticipate or swing")
+    _accompaniment(content, voice, "rhythm")
+    new = copy.deepcopy(content)
+    column, k = _column(new, voice)
+    lpb = int(new["structure"]["lpb"])
+    ticks_per_row = int(round(float(new["structure"]["ticks"]) * 60.0
+                              / float(new["structure"]["bpm"]) / lpb))
+    targets, notes = _targets(new, rng, scope)
+    edits = []
+    for section, a, b, slot in targets:
+        rows = section["rows"]
+        for r in range(a, b):
+            cell = rows[r][k]
+            if not _onset(column, cell):
+                continue
+            if mode == "anticipate":
+                if r % lpb == 0 and r - 1 >= a and \
+                        _is_hold(rows[r - 1][k]) and r % (2 * lpb) != 0:
+                    edits.append({"section": section["id"], "slot": slot,
+                                  "row": r, "column": column, "from": cell,
+                                  "to": "...", "moved_to": r - 1})
+                    rows[r - 1][k] = cell
+                    rows[r][k] = "..."
+            else:
+                half = max(1, lpb // 2)
+                if r % half == 0 and (r // half) % 2 == 1:
+                    ticks = max(1, min(ticks_per_row - 1,
+                                       int(round(share * ticks_per_row))))
+                    token, _codes = _split(cell)
+                    if any(c.upper().startswith("C") for c in _codes):
+                        continue        # a delay is there already
+                    to = f"{cell}/C{ticks:02X}"
+                    edits.append({"section": section["id"], "slot": slot,
+                                  "row": r, "column": column, "from": cell,
+                                  "to": to})
+                    rows[r][k] = to
+    if not edits:
+        raise AgenticError("nothing_to_change", f"{voice} has no onset in "
+                           f"{rng['spec']} that {mode} can move",
+                           voice=voice)
+    return new, {"op": "rhythm", "voice": voice, "column": column,
+                 "mode": mode, "range": rng["spec"],
+                 "rows": [rng["row0"], rng["row1"]], "scope": scope,
+                 "share_of_row": share if mode == "swing" else None,
+                 "cells": len(edits), "copies": notes,
+                 "edits": edits[:12], "edits_total": len(edits)}
+
+
+def voicing(content: dict, voice: str, rng: dict,
+            scope: str = "occurrence") -> Tuple[dict, dict]:
+    """A pad's notes moved to the nearest tone of the chord the section's
+    harmony names at each (within its register), so the line moves by the
+    smallest steps; onsets and lengths kept."""
+    from . import compose as C
+    ins = content["instruments"].get(voice, {})
+    if ins.get("role") not in ("pad", "chords", "arp"):
+        raise AgenticError("not_a_pad", f"voicing re-voices a pad, chords "
+                           f"or arp; {voice} is {ins.get('role')!r}",
+                           voice=voice)
+    new = copy.deepcopy(content)
+    column, k = _column(new, voice)
+    lo, hi = (ins.get("register") or [36, 84])[:2]
+    targets, notes = _targets(new, rng, scope)
+    edits, prev = [], None
+    for section, a, b, slot in targets:
+        harmony = section.get("harmony") or []
+        rows = section["rows"]
+        if not harmony:
+            continue
+        per = max(1, len(rows) // len(harmony))
+        for r in range(a, b):
+            token, codes = _split(rows[r][k])
+            p = _pitch(token)
+            if p is None:
+                continue
+            pitch, param = p
+            root, _q, pcs = C.chord(harmony[min(len(harmony) - 1, r // per)])
+            near = prev if prev is not None else pitch
+            choices = [x for x in range(lo, hi + 1) if x % 12 in pcs]
+            if not choices:
+                prev = pitch
+                continue
+            best = min(choices, key=lambda x: (abs(x - near),
+                                               abs(x - pitch)))
+            if best != pitch:
+                cell = _name(best) + (f":{param}" if param else "") + codes
+                edits.append({"section": section["id"], "slot": slot,
+                              "row": r, "column": column,
+                              "from": rows[r][k], "to": cell,
+                              "chord": harmony[min(len(harmony) - 1,
+                                                   r // per)]})
+                rows[r][k] = cell
+            prev = best
+    if not edits:
+        raise AgenticError("nothing_to_change", f"{voice}'s notes in "
+                           f"{rng['spec']} already move by the nearest "
+                           f"chord tones", voice=voice)
+    return new, {"op": "voicing", "voice": voice, "column": column,
+                 "range": rng["spec"], "rows": [rng["row0"], rng["row1"]],
+                 "scope": scope, "cells": len(edits), "copies": notes,
+                 "edits": edits[:12], "edits_total": len(edits)}
+
+
+def pan(content: dict, voice: str, side: str) -> Tuple[dict, dict]:
+    """An FM voice panned L, R or C for the whole piece."""
+    side = side.upper()
+    if side not in ("L", "R", "C"):
+        raise AgenticError("bad_patch", "pan side is L, R or C")
+    new = copy.deepcopy(content)
+    ins = new["instruments"].get(voice)
+    if ins is None:
+        raise AgenticError("no_voice", f"no voice {voice!r}", voice=voice)
+    if not ins["channel"].startswith("fm"):
+        raise AgenticError("no_pan", f"{voice} plays {ins['channel']}: the "
+                           f"SN76489 is mono on the Mega Drive, only the "
+                           f"YM2612's channels pan", voice=voice)
+    old = ins.get("pan") or "C"
+    if old == side:
+        raise AgenticError("nothing_to_change", f"{voice} is already "
+                           f"{side}", voice=voice)
+    ins["pan"] = side
+    return new, {"op": "pan", "voice": voice, "from": old, "to": side,
+                 "scope": "piece", "native": f"pan {ins['channel']} {side} "
+                 f"(register 0xB4: the left and right output bits)"}
+
+
+def echo(content: dict, voice: str, rng: dict, rows: int = 3,
+         db: float = -9.0, column: Optional[str] = None,
+         scope: str = "occurrence") -> Tuple[dict, dict]:
+    """`voice`'s notes in the range copied `rows` later to a free FM
+    channel, `db` quieter (velocity), with the same patch, panned the
+    other way: a new voice of role "echo". Notes that would fall past the
+    section's end are left out."""
+    if not 1 <= rows <= 16:
+        raise AgenticError("bad_patch", "an echo is 1-16 rows late")
+    new = copy.deepcopy(content)
+    src_col, k = _column(new, voice)
+    ins = new["instruments"][voice]
+    if not src_col.startswith("fm") or not ins.get("patch"):
+        raise AgenticError("not_fm", f"an echo copies an FM voice; {voice} "
+                           f"plays {src_col}", voice=voice)
+    used = {i["channel"] for i in new["instruments"].values()}
+    from . import banks
+    used |= set(banks.layers(new))
+    free = [f"fm{c}" for c in range(6) if f"fm{c}" not in used
+            and not (f"fm{c}" == "fm5" and "dac" in new["columns"])]
+    column = column or (free[0] if free else None)
+    if column is None or column not in free:
+        raise AgenticError("no_channel", f"no free FM channel for the echo "
+                           f"(free: {free or 'none'}; fm5 is the DAC's when "
+                           f"the piece has drums)", voice=voice)
+    name = f"{voice}_echo"
+    while name in new["instruments"]:
+        name += "_"
+    side = {"L": "R", "R": "L"}.get((ins.get("pan") or "C").upper(), "R")
+    new["instruments"][name] = {"channel": column, "patch": ins["patch"],
+                                "role": "echo", "pan": side,
+                                "register": ins.get("register"),
+                                "echo_of": voice}
+    if column not in new["columns"]:
+        new["columns"].append(column)
+        for s in new["sections"]:
+            for row in s["rows"]:
+                row.append("...")
+    e = new["columns"].index(column)
+    targets, notes = _targets(new, rng, scope)
+    edits = []
+    for section, a, b, slot in targets:
+        srows = section["rows"]
+        for r in range(a, b):
+            cell = srows[r][k]
+            token, codes = _split(cell)
+            d = r + rows
+            if d >= len(srows):
+                break
+            if _is_off(token):
+                if _is_hold(srows[d][e]):
+                    srows[d][e] = "==="
+                continue
+            p = _pitch(token)
+            if p is None:
+                continue
+            pitch, param = p
+            vel = _velocity_for(int(param) if param else 127, db)
+            srows[d][e] = f"{_name(pitch)}:{vel}"
+            edits.append({"section": section["id"], "slot": slot, "row": d,
+                          "column": column, "from": "...",
+                          "to": srows[d][e]})
+        # the copy ends where the section does
+        if edits and len(srows) and not _is_off(srows[-1][e]):
+            last = len(srows) - 1
+            if _is_hold(srows[last][e]):
+                srows[last][e] = "==="
+    if not edits:
+        raise AgenticError("nothing_to_change", f"{voice} has no note in "
+                           f"{rng['spec']} to echo", voice=voice)
+    return new, {"op": "echo", "voice": voice, "new_voice": name,
+                 "column": column, "range": rng["spec"],
+                 "rows": [rng["row0"], rng["row1"]], "delay_rows": rows,
+                 "db": db, "pan": side, "scope": scope,
+                 "cells": len(edits), "copies": notes,
+                 "edits": edits[:12], "edits_total": len(edits)}
+
+
 OPS = {"level": level, "transpose": transpose, "param": param, "vol": vol,
-       "instrument": instrument}
+       "instrument": instrument, "articulation": articulation,
+       "density": density, "rhythm": rhythm, "voicing": voicing, "pan": pan,
+       "echo": echo}
+
+#: what each op may change, for the guards (loop.guards): "onsets" (the
+#: voice's onsets and their count), "pitches" (pitch classes, onsets
+#: kept), "new_voice" (a voice added), "lengths" (note ends only)
+CHANGES = {"articulation": "lengths", "density": "onsets",
+           "rhythm": "onsets", "voicing": "pitches", "echo": "new_voice"}
 
 
 def apply(content: dict, spec: dict, timeline=None) -> Tuple[dict, dict]:

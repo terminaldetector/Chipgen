@@ -340,6 +340,23 @@ def measure(project, f: dict, voice: Optional[str] = None,
     (features.note_profile) on that voice rendered alone."""
     out = F.fragment(f["samples"], RATE, f.get("beat_s"))
     out["development"] = _halves(f["samples"], f.get("beat_s"))
+    # onsets per beat: from the score when there is one (the piece's notes,
+    # a reference's source), the audio's count kept next to it. The audio
+    # detector is set for precision: on 16th-note textures it found a
+    # third of the onsets (recall 0.31 and 0.38, measured), so a dense
+    # passage reads sparser than it is from the audio alone
+    out["onsets_per_beat_audio"] = out.get("onsets_per_beat")
+    starts = _score_starts(project, f)
+    if starts is not None and f.get("beat_s"):
+        merged = []
+        for t in sorted(starts):
+            if not merged or t - merged[-1] > 0.03:
+                merged.append(t)
+        out["onsets_per_beat"] = round(len(merged) / (f["seconds"]
+                                                      / f["beat_s"]), 2)
+        out["onsets_from"] = "score"
+    else:
+        out["onsets_from"] = "audio"
     if voice and f["kind"] in ("ours", "sketch"):
         stem = (f.get("stems") or {}).get(voice)
         if stem is None:
@@ -357,6 +374,22 @@ def measure(project, f: dict, voice: Optional[str] = None,
             project, f, reference_voice, mono))
         out["voice"]["name"] = reference_voice
     return out
+
+
+def _score_starts(project, f: dict) -> Optional[List[float]]:
+    """Note starts inside the fragment, from its score, in seconds from
+    the fragment's start; None for a recording."""
+    if f["kind"] in ("ours", "sketch") and f.get("_timeline") is not None:
+        tl, rng = f["_timeline"], f["_range"]
+        return [n["start"] - rng["t0"] for n in tl.notes
+                if rng["t0"] - 1e-6 <= n["start"] < rng["t1"] - 1e-6]
+    if f["kind"] == "reference":
+        notes = REF.notes(project, f["source"])
+        if not notes:
+            return None
+        return [n["start"] - f["t0"] for n in notes
+                if f["t0"] <= n["start"] < f["t1"]]
+    return None
 
 
 def match_voice(project, rid: str, role: str) -> dict:
@@ -529,8 +562,14 @@ def compare(project, fragments: List[dict], folder: str, name: str,
             use = dims or f.get("tags") or list(F.DIMENSIONS)
         else:
             use = dims or list(F.DIMENSIONS)
-        for d in _differences(readings[ours["label"]],
-                              readings[f["label"]], use):
+        mine = readings[ours["label"]]
+        theirs = readings[f["label"]]
+        if theirs.get("onsets_from") == "audio" and \
+                mine.get("onsets_from") == "score":
+            # a recording has no score: both are counted from the audio
+            mine = dict(mine, onsets_per_beat=mine["onsets_per_beat_audio"],
+                        onsets_from="audio")
+        for d in _differences(mine, theirs, use):
             if not _gap_is_large(d["reading"], d["ours"], d["reference"]):
                 continue
             k += 1
@@ -548,8 +587,16 @@ def compare(project, fragments: List[dict], folder: str, name: str,
                     "voice") if per_voice else None,
                 "ours": d["ours"], "theirs": d["reference"],
                 "gap": d["gap"],
+                "counted_from": theirs.get("onsets_from")
+                if d["reading"] == "onsets_per_beat" else None,
                 "statement": f"{words}: ours {d['ours']:g}, the {whose} "
-                             f"{d['reference']:g}",
+                             f"{d['reference']:g}" + (
+                                 f" (counted from the "
+                                 f"{theirs.get('onsets_from')}, on beats of "
+                                 f"{ours.get('bpm') or 0:.0f} and "
+                                 f"{f.get('bpm') or 0:.0f} BPM)"
+                                 if d["reading"] == "onsets_per_beat"
+                                 else ""),
                 "confidence": 0.7,
                 "evidence": {"method": "features.py on both fragments "
                                        "(loudness-matched copies; the "

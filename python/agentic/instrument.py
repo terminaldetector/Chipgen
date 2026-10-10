@@ -61,6 +61,8 @@ READINGS = {
     "vibrato_rate_hz": (0.8, 2.0),
     "vibrato_delay_ms": (60.0, 150.0),
     "brightness_development": (0.08, 0.25),
+    "brightness_attack": (0.3, 1.0),
+    "brightness_body": (0.3, 1.0),
     "attack_rise_ms": (5.0, 15.0),
     "release_ms": (40.0, 120.0),
 }
@@ -82,7 +84,7 @@ def goal_from(profile: dict, dims=("modulation", "timbre"),
         want |= {"vibrato_depth_cents", "vibrato_rate_hz",
                  "vibrato_delay_ms"}
     if "timbre" in dims:
-        want |= {"brightness_development"}
+        want |= {"brightness_development", "brightness_body"}
     if "rhythm" in dims or "arrangement" in dims:
         want |= {"attack_rise_ms"}
     if "space" in dims:
@@ -220,6 +222,14 @@ def hypotheses(compiled, profile: dict, goal: dict, voice: str,
         for k, steps in enumerate((2, 4)):
             out.append(_tl_hypothesis(base, a, steps, now, target,
                                       f"tl{k + 1}"))
+    level = goal.get("brightness_body")
+    now_level = profile.get("brightness_body")
+    if level is not None and now_level is not None and \
+            abs(level - now_level) > READINGS["brightness_body"][0]:
+        sign = 1 if level < now_level else -1     # + is darker
+        for k, steps in enumerate((3, 6)):
+            out.append(_level_hypothesis(base, sign * steps, now_level,
+                                         level, f"br{k + 1}"))
     rise = goal.get("attack_rise_ms")
     now_rise = profile.get("attack_rise_ms")
     if rise is not None and now_rise is not None and \
@@ -293,6 +303,25 @@ def _tl_hypothesis(base, attack_ms: float, steps: int, now: float,
             "_attack_ms": attack_ms}
 
 
+def _level_hypothesis(base, steps: int, now: float, target: float,
+                      hid: str) -> dict:
+    """The modulators held `steps` quieter (darker; negative: brighter)
+    for the whole note: the timbre's overall brightness."""
+    from synthesis import program as P
+    p = base.copy()
+    p.tracks = [t for t in p.tracks if t.target != "mod.tl"]
+    p.tracks.append(P.Track("mod.tl", [(0, steps)], "ms", "step", None,
+                            None, "program"))
+    return {"id": hid, "family": "brightness", "amount": steps,
+            "scope": "program", "program": p,
+            "parameter": "mod.tl (modulator level) for the whole note",
+            "change": {"mod.tl": [[0, steps]]},
+            "expected": f"{'darker' if steps > 0 else 'brighter'} by "
+                        f"{abs(steps)} steps ({0.75 * abs(steps):.1f} dB "
+                        f"on the modulators): body brightness from "
+                        f"{now:.2f} toward {target:.2f}"}
+
+
 def _setting_hypothesis(base, key: str, cur: int, new: int, hid: str,
                         parameter: str, expected: str) -> dict:
     p = base.copy()
@@ -305,11 +334,13 @@ def _setting_hypothesis(base, key: str, cur: int, new: int, hid: str,
 
 #: the reading each family of amounts moves
 _FAMILY_READING = {"mod.tl": "brightness_development",
+                   "brightness": "brightness_body",
                    "car.ar": "attack_rise_ms", "car.rr": "release_ms"}
 #: the readings each family is meant to move
 _FAMILY_READINGS = {"vibrato": ("vibrato_depth_cents", "vibrato_rate_hz",
                                 "vibrato_delay_ms"),
                     "mod.tl": ("brightness_development",),
+                    "brightness": ("brightness_body", "brightness_attack"),
                     "car.ar": ("attack_rise_ms",),
                     "car.rr": ("release_ms",)}
 
@@ -335,18 +366,30 @@ def combine(compiled, goal: dict, hyps: List[dict],
               if v[2].get("closed", 0) > 0.0}
     if len(useful) < 2:
         return None
+    from synthesis import program as P
     p = _program_of(compiled)
     parts = []
+    shape, offset = None, 0
     for fam, (_part, h, _c) in sorted(useful.items()):
         q = h["program"]
         if fam == "vibrato":
             p.vibrato = dict(q.vibrato)
         elif fam == "mod.tl":
-            p.tracks = [t for t in p.tracks if t.target != "mod.tl"] + \
-                [t for t in q.tracks if t.target == "mod.tl"]
+            shape = q.track("mod.tl")
+        elif fam == "brightness":
+            offset = int(q.track("mod.tl").points[0][1])
         else:
             p.settings[fam] = q.settings[fam]
         parts.append(h["id"])
+    if shape is not None or offset:
+        # one modulator track: the development's shape, moved by the
+        # overall level's offset
+        points = [(t, v + offset) for t, v in shape.points] \
+            if shape is not None else [(0, offset)]
+        p.tracks = [t for t in p.tracks if t.target != "mod.tl"] + [
+            P.Track("mod.tl", points, "ms",
+                    "linear" if shape is not None else "step", None, None,
+                    "program")]
     return {"id": "+".join(parts), "family": "combined", "round": 3,
             "scope": "program", "program": p,
             "parameter": "together: " + ", ".join(
@@ -390,6 +433,13 @@ def refine(compiled, base_prof: dict, goal: dict, hyps: List[dict],
                 continue
             g = _tl_hypothesis(_program_of(compiled), h["_attack_ms"],
                                amount, base_v, goal_v, f"{h['id']}r")
+        elif family == "brightness":
+            amount = int(round(h["amount"] * (goal_v - base_v) / moved))
+            amount = max(-24, min(24, amount))
+            if amount == 0 or amount in {x["amount"] for x, _ in pairs}:
+                continue
+            g = _level_hypothesis(_program_of(compiled), amount, base_v,
+                                  goal_v, f"{h['id']}r")
         else:
             span = h["amount"] - h["_from"]
             amount = int(round(h["_from"] + span * (goal_v - base_v)
@@ -553,6 +603,26 @@ def design(project, voice: str, goal: dict, spec: str,
                                             f"{str(error)[:160]}")
             return cand
         prof = listen_voice(tl, spec, voice, cache)
+        moved = prof["rms_db"] - base_prof["rms_db"]
+        if h["scope"] == "program" and abs(moved) > LEVEL_LIMIT_DB:
+            # an FM timbre change moves the level too (less modulation is
+            # more fundamental): bring the voice back by velocity, so the
+            # candidate is heard for its timbre, not for being louder
+            try:
+                from . import patch as PATCH
+                c, delta = PATCH.apply(c, {"op": "level", "voice": voice,
+                                           "range": "all", "db": -moved,
+                                           "scope": "section"}, tl)
+                tl = T.build(c)
+                prof = listen_voice(tl, spec, voice, cache)
+                cand["level_matched"] = {
+                    "moved_db": round(moved, 2),
+                    "velocity_db": delta["realised_db"]["mean"],
+                    "now_db": round(prof["rms_db"] - base_prof["rms_db"],
+                                    2)}
+            except AgenticError as error:
+                cand["level_matched"] = {"moved_db": round(moved, 2),
+                                         "refused": str(error)[:120]}
         h_c = tool.hear(tl, tl.range(spec))
         dist = distance(prof, goal)
         guards = [g for g in L.guards(base_tl, tl, base_h, h_c,
