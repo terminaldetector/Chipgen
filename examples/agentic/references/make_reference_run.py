@@ -275,6 +275,9 @@ def _write_md(out, report, guided):
         for sk in c.get("sketches") or []:
             lines.append(f"- sketch {sk['id']}: " + (
                 "compared, its D played with the piece's instruments now"
+                + (f" ({', '.join(sk['silent_in_it'])} silent in it: the "
+                   f"piece gained that voice after the sketch)"
+                   if sk.get("silent_in_it") else "")
                 if sk["compared"] else f"not compared — {sk['why']}"))
         for text in c.get("against_sketches") or []:
             lines.append(f"  - [measured] {text}")
