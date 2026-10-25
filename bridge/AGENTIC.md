@@ -456,6 +456,19 @@ The clear anchors beat "every four bars" in 9 modules and lose in 5
 always a phrase end, so this measures agreement with the author's own
 segmentation, not with a listener's.
 
+P10 — what the anchors' misses showed. Three IT modules had lost their
+own bars: each states its beat (the header's row highlight, 4 rows a
+beat), libopenmpt plays its rows, and the audio's beat came out 1.5 times
+as long (6 rows: a dotted or triplet reading). The grid check accepted
+only the same, double or half time, so the audio's grid replaced the
+module's and no bar line met a pattern start. A module that states its
+beat now keeps its own rows and records what the audio heard beside them
+(`grid.audio_disagrees`); a transcription's grid still gives way to the
+audio's. On the 28 modules: the three became informative (clear anchors
+7/9, 3/3, 5/7 on a pattern start), the other 25 read exactly as before;
+over 27 informative modules the clear anchors' precision is 0.861
+(chance 0.282, every four bars 0.625), recall 0.594.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core

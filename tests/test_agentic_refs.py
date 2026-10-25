@@ -1661,3 +1661,31 @@ def test_candidates_measured_side_by_side_give_the_same_record():
     assert same[0] == same[1]
     assert recs["1"]["chosen"] == recs["3"]["chosen"]
     shutil.rmtree(root)
+
+
+# -- P10: a module that states its beat keeps its own grid --------------------------------------------
+def test_a_module_that_states_its_beat_keeps_its_rows_when_the_audio_hears_dotted():
+    from agentic import references as REF
+    beat = 0.32
+    rows = [{"t": round(i * beat / 4, 5), "row": i % 64} for i in range(256)]
+    score = {"source": "score", "bpm": 60 / beat, "beat_s": beat,
+             "rows_per_beat": 4, "rows_per_bar": 16, "beats_per_bar": 4,
+             "beat_known": True, "how": "the IT header's row highlight",
+             "bars": [round(i * beat * 4, 4) for i in range(16)]}
+    keep = REF._audio_grid
+    REF._audio_grid = lambda *a: {"bpm": 60 / (1.5 * beat),
+                                  "beat_s": 1.5 * beat, "confidence": 0.95,
+                                  "first_downbeat_s": 0.7}
+    try:
+        for kind, kept in (("module", True), ("trk", False)):
+            record = {"kind": kind, "seconds": 20.0, "grid": dict(score)}
+            REF._settle_grid(None, record, rows)
+            if kept:
+                assert record["grid"]["source"] == "score"
+                assert record["grid"]["bars"] == score["bars"]
+                assert record["grid"]["audio_disagrees"]["ratio"] == 1.5
+                assert "rows are kept" in record["grid_check"]["verdict"]
+            else:                      # a transcription's grid gives way
+                assert record["grid"]["source"] == "audio"
+    finally:
+        REF._audio_grid = keep

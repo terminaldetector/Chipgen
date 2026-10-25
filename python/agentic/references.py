@@ -768,7 +768,9 @@ def _settle_grid(project, record: dict, rows: List[dict]):
       the source gives a beat the audio does not have (a transcription
       whose grid does not fit the music)
             -> the audio's grid (constant tempo from its first downbeat),
-               the source's kept for the record."""
+               the source's kept for the record — except a module that
+               states its beat (IT): its own rows are kept, the audio's
+               reading recorded beside them."""
     score = dict(record["grid"])
     window = min(record["seconds"], 40.0)
     g = _audio_grid(project, record, 0.0, window)
@@ -838,6 +840,21 @@ def _settle_grid(project, record: dict, rows: List[dict]):
                     if r["t"] < record["seconds"]],
                     how=score["how"] + f"; bars moved {k} beat(s) to the "
                                        f"audio's downbeat")
+        return
+    if record["kind"] == "module" and score.get("beat_known") and \
+            score.get("bars"):
+        # a module that states its beat (the IT header's row highlight)
+        # and is played by its own row clock: the bars are where its author
+        # put them. The audio's beat is kept as what it heard — on real
+        # modules it is most often a dotted or triplet reading, 1.5 or
+        # 2/3 of the stated beat (bridge/AGENTIC.md, P10)
+        record["grid_check"]["verdict"] = (
+            f"not confirmed: the audio hears {g['bpm']:.1f} BPM, "
+            f"{ratio:.2f} of the module's stated beat; the module's own "
+            f"rows are kept")
+        record["grid"] = dict(score, audio_disagrees={
+            "bpm": g["bpm"], "ratio": round(ratio, 3),
+            "confidence": g.get("confidence")})
         return
     bar_s = g["beat_s"] * score.get("beats_per_bar", 4)
     starts = []
