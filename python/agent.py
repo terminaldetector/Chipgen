@@ -41,6 +41,8 @@ References, parallel listening, sketches and instruments:
     listen_compare         project_id, range, refs      aligned fragments,
                                                         reel, observations
     check_listening        -                            is a model hearing?
+    audible_session        project_id                   what a model was
+                                                        sent, and its cost
     phrase_anchors         project_id, reference?       where phrases end
     correct_module         path, channel                an IT's buried
                                                         channel, by its
@@ -88,6 +90,7 @@ from agentic import instrument as INS            # noqa: E402
 from agentic import intent as INT                # noqa: E402
 from agentic import listen as LI                 # noqa: E402
 from agentic import references as REF            # noqa: E402
+from agentic import session as SESSION          # noqa: E402
 from agentic import sketches as SK               # noqa: E402
 from agentic import loop as L                    # noqa: E402
 from agentic import memory as MEM                # noqa: E402
@@ -409,8 +412,18 @@ class Agent:
     def _ear(self, mode, p):
         if self.adapter is not None and self.verification is None:
             self.verification = self._cached_verification()
-        return EAR.choose(mode, self.adapter, self.verification,
-                          self._cache(p))
+        # what the project's ear sends is kept in its audible session
+        adapter = None if self.adapter is None else \
+            SESSION.RecordingAdapter(self.adapter, p.root, revision=p.head)
+        return EAR.choose(mode, adapter, self.verification, self._cache(p))
+
+    def op_audible_session(self, project_id: str, last: int = 10) -> dict:
+        """What was sent to a listening model for this project and what
+        it cost (calls, audio seconds, clips by hash), and the last
+        decisions as clip / observation / action plan / experiment."""
+        p = self._project(project_id)
+        return {"summary": SESSION.summary(p.root),
+                "decisions": SESSION.contract(p, int(last))}
 
     def _cached_verification(self) -> dict:
         """The adapter's probe check, kept per adapter (its name names the
@@ -827,10 +840,12 @@ class Agent:
             raise AgenticError("no_file", f"{path}: no such module")
         if self.adapter is not None and self.verification is None:
             self.verification = self._cached_verification()
-        ear = EAR.choose(mode, self.adapter, self.verification, R.Cache())
         stem = os.path.splitext(os.path.basename(path))[0]
         folder = os.path.join(self.root, "modules", stem,
                               time.strftime("%Y%m%d-%H%M%S"))
+        adapter = None if self.adapter is None else \
+            SESSION.RecordingAdapter(self.adapter, folder)
+        ear = EAR.choose(mode, adapter, self.verification, R.Cache())
         rec = IT.correct_buried(path, int(channel) - 1, folder, ear=ear,
                                 seconds=float(seconds) if seconds else None)
         return {k: rec.get(k) for k in

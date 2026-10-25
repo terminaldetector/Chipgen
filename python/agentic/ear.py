@@ -33,6 +33,7 @@ What caused it is diagnose.py's question.
 
 import array
 import base64
+import hashlib
 import io
 import json
 import math
@@ -411,14 +412,26 @@ def _music_clip(kind: str, rate: int = 16000) -> bytes:
         for v in tone:
             stereo += [0.0, v]
         return wav_bytes(stereo, rate, stereo=True)
+    if kind in ("tone_only", "tone_and_drums"):
+        tone = _square(330, 1.2, rate)
+        if kind == "tone_and_drums":
+            import random
+            rnd = random.Random(7)
+            for k in range(4):
+                a = int((0.1 + 0.3 * k) * rate)
+                for j in range(int(0.06 * rate)):
+                    tone[a + j] += 0.5 * (rnd.random() * 2 - 1) * \
+                        (1.0 - j / (0.06 * rate))
+        return wav_bytes(tone, rate)
     raise ValueError(kind)
 
 
 #: (name, clip, question, accepted). What a model must hear to be trusted
 #: to choose among versions: two identical versions are the same, two that
 #: differ by one note are not, which of two notes starts sharply (both
-#: orders), and where a stereo tone sits. A model that answers from the
-#: text alone gets about 1 in 32.
+#: orders), where a stereo tone sits, and drums named in the question that
+#: do not play (and, paired, ones that do). A model that answers from the
+#: text alone gets about 1 in 100.
 MUSIC_PROBES = [
     ("identity", "same", "Two versions play one after the other. Are they "
      "the same or different? Answer with one word: same or different.",
@@ -435,6 +448,15 @@ MUSIC_PROBES = [
     ("pan", "left_first", "Two tones play one after the other. Is the first "
      "one on the left or on the right? Answer with one word: left or "
      "right.", {"left"}),
+    # the question suggests drums that are not there (audit section 7: a
+    # listener made to "hear" an instrument that does not play); its pair
+    # has them, so "none" every time does not pass
+    ("absent_drums", "tone_only", "The drums in this clip: are they loud "
+     "or soft? If there are no drums, say none. Answer with one word: "
+     "loud, soft or none.", {"none"}),
+    ("present_drums", "tone_and_drums", "The drums in this clip: are they "
+     "loud or soft? If there are no drums, say none. Answer with one word: "
+     "loud, soft or none.", {"loud", "soft"}),
 ]
 
 
@@ -461,6 +483,17 @@ def answer_by_dsp(wav: bytes, prompt: str) -> Optional[str]:
             start = None
     if "How many" in prompt:
         return str(len(spans))
+    if "drums in this clip" in prompt:
+        # noise among the tone: 10 ms frames whose zero-crossing rate is
+        # far above the tone's
+        rates = []
+        for i in range(0, len(mono) - hop, hop):
+            seg = mono[i:i + hop]
+            rates.append(sum(1 for j in range(1, len(seg))
+                             if (seg[j - 1] < 0) != (seg[j] < 0)) / len(seg))
+        base = sorted(rates)[len(rates) // 2] if rates else 0.0
+        return "loud" if any(r > max(0.2, 3 * base) for r in rates) \
+            else "none"
     if len(spans) < 2:
         return None
 
@@ -938,9 +971,11 @@ def ab_verdict(ear, a, b, goal: str, voices=(), rate: int = R.RATE,
     out = {"available": True, "model": native.adapter.name,
            "basis": "heard by model", "clip": marks,
            "audio_seconds": round(len(clip) / marks["channels"] / rate, 2)}
+    wav = wav_bytes(clip, rate, stereo=marks["channels"] == 2)
+    # the file's own hash: the audible session keeps the clip under it
+    out["clip_sha"] = hashlib.sha256(wav).hexdigest()[:16]
     try:
-        reply = native.adapter.listen(
-            wav_bytes(clip, rate, stereo=marks["channels"] == 2), prompt)
+        reply = native.adapter.listen(wav, prompt)
     except Exception as error:          # a refusal is recorded, not hidden
         out.update(preference=None, problem=f"the model did not answer: "
                                             f"{str(error)[:160]}")
@@ -1016,9 +1051,10 @@ def ab_choose(ear, versions, goal: str, voices=(), rate: int = R.RATE,
            "basis": "heard by model", "labels": [l for l, _v in versions],
            "clip": marks, "audio_seconds": round(
                len(clip) / marks["channels"] / rate, 2), "choice": None}
+    wav = wav_bytes(clip, rate, stereo=marks["channels"] == 2)
+    out["clip_sha"] = hashlib.sha256(wav).hexdigest()[:16]
     try:
-        reply = native.adapter.listen(
-            wav_bytes(clip, rate, stereo=marks["channels"] == 2), prompt)
+        reply = native.adapter.listen(wav, prompt)
         text = reply[reply.index("{"):reply.rindex("}") + 1]
         data = json.loads(text)
         raw = data.get("choice")

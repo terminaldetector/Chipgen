@@ -30,7 +30,9 @@ PLAN = [
            "vibrato; identical and swapped controls",
      ["test_agentic.test_an_ear_is_native_only_when_it_answers_from_the_audio",
       "test_agentic_refs.test_a_choice_is_obeyed_only_from_an_ear_that_"
-      "passed_the_music_probes"], "live model needed"),
+      "passed_the_music_probes",
+      "test_agentic_refs.test_an_ear_that_hears_drums_that_are_not_there_"
+      "is_not_trusted"], "live model needed"),
     ("T2", "a heard complaint with no metric warning becomes an FM "
            "program change, not no_metric",
      ["test_agentic_refs.test_a_heard_instrument_problem_becomes_a_program_"
@@ -78,8 +80,10 @@ PLAN = [
       "in_its_header",
       "test_agentic_refs.test_what_the_module_loop_does_not_change_is_"
       "refused_by_name"], "measured; partial (header levels and pans)"),
-    ("T10", "the cost is counted and the engine's own tests stay green",
-     [], "the full suite"),
+    ("T10", "the cost is counted (calls, audio seconds sent, clips by "
+            "hash) and the engine's own tests stay green",
+     ["test_agentic_refs.test_the_audible_session_keeps_what_the_model_was_"
+      "sent"], "stand-in; and the full suite"),
 ]
 
 

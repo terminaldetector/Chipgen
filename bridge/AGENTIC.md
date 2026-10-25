@@ -366,6 +366,13 @@ envelope, NNA or sample work on an IT (the Schism forge's, on its own
 branch); a phrase anchor is a heuristic, not a harmonic analysis; still no
 live audio model has listened to any of it.
 
+P4 — what the audit's sections 5 to 7 still asked for:
+
+| what | where |
+|---|---|
+| the audible session: every clip a project's ear sends to a model is kept by the hash of the file (audible/clips), with the channels, rate and seconds read from the WAV itself, why it was sent (a probe, a hearing, a choice, a reel), the reply and the wait, in audible/session.jsonl; a choice's verdict names its clip's hash. `audible_session` adds up the cost (calls, audio seconds, clips, characters; tokens when the endpoint reports them, and says when it does not) and lays the last decisions out as clip / observation / action plan / experiment (section 6), "no model heard this decision" where none did | `session.py`, `agent._ear`, `ear.ab_choose` |
+| a listener that hears what the question names: two more music probes — "the drums in this clip, loud or soft?" over a tone with no drums ("none" is right) and over one with them — so an ear that finds drums everywhere, or answers "none" every time, is not trusted to choose | `ear.MUSIC_PROBES`, `answer_by_dsp` |
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core

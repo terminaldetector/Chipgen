@@ -1380,3 +1380,66 @@ def test_what_the_module_loop_does_not_change_is_refused_by_name():
         except S.AgenticError as error:
             assert error.code == "pan_locked"
         shutil.rmtree(root)
+
+
+# -- P4: what was sent to the ear, and an ear that hears what is not there -------------------------
+class _Suggestible(_ChoosingEar):
+    """Hears whatever the question names: right on every probe but the
+    drums, which it always finds."""
+
+    name = "test-suggestible-ear"
+
+    def listen(self, wav, prompt):
+        if "drums in this clip" in prompt:
+            return "soft"
+        return super().listen(wav, prompt)
+
+
+def test_an_ear_that_hears_drums_that_are_not_there_is_not_trusted():
+    from agentic import ear as EAR
+    v = EAR.verify(_Suggestible())
+    assert v["verified"]                  # it hears tones
+    assert v["music"]["probes"]["absent_drums"] is False
+    assert v["music"]["probes"]["present_drums"] is True
+    ear = EAR.choose("native", _Suggestible(), v)
+    t = EAR.trusted_to_choose(ear)
+    assert not t["trusted"] and "absent_drums" in t["why"]
+    # the positive control hears the difference
+    good = EAR.verify(_ChoosingEar())
+    assert good["music"]["passed"], good["music"]
+
+
+def test_the_audible_session_keeps_what_the_model_was_sent():
+    from agent import Agent
+    from agentic import session as SESSION
+    with _Banks():
+        root = _tmp()
+        adapter = _ChoosingEar(pick=1)
+        a = Agent(root, adapter=adapter)
+        a.call("create_musical_state", preset="masked_lead", project_id="m")
+        empty = a.call("audible_session", project_id="m")
+        assert empty["summary"]["calls"] == 0 and \
+            not empty["summary"]["heard"]
+        r = a.call("design_instrument", project_id="m", voice="lead",
+                   goal={"vibrato_depth_cents": 30.0, "vibrato_rate_hz": 6.0,
+                         "vibrato_delay_ms": 0.0}, candidates=2)
+        assert r["listening_verdict"]["choice"] == 1, r
+        s = a.call("audible_session", project_id="m")
+        summ = s["summary"]
+        assert summ["heard"] and summ["calls"] >= 1
+        choose = summ["by_purpose"]["choose among versions"]
+        assert choose["channels"] == [2] and choose["audio_seconds"] > 1.0
+        assert summ["tokens"] == "not reported by the endpoint"
+        p = a._project("m")
+        sent = [e for e in SESSION.entries(p.root)
+                if e["purpose"] == "choose among versions"]
+        clip = os.path.join(p.root, "audible", "clips",
+                            sent[-1]["clip"] + ".wav")
+        assert os.path.exists(clip)
+        assert SESSION.wav_facts(open(clip, "rb").read())["channels"] == 2
+        last = s["decisions"][-1]
+        assert last["clip"]["hash"] == sent[-1]["clip"]
+        assert last["experiment"]["approval"] == "heard by model"
+        assert last["action_plan"]["preserve"] == ["notes", "rhythm",
+                                                   "harmony"]
+        shutil.rmtree(root)
