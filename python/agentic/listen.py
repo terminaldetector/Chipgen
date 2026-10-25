@@ -220,6 +220,31 @@ def of_reference(project, rid: str, first_bar: Optional[int] = None,
     return out
 
 
+def reference_for(project, rid: str, tl, rng: dict, n_bars: int,
+                  align: str = "phrase") -> dict:
+    """A reference's fragment to set beside the range `rng` of the piece:
+    `align="phrase"` starts it at a phrase (anchors.phrase_span: the start
+    of a phrase near its first region, or, beside a cadence, the bars that
+    end on its strongest phrase end); a region a person chose is kept as
+    chosen. `align="region"` takes the region's bars as they are. The
+    fragment says how it was aligned (`aligned`)."""
+    from . import anchors as A
+    ref = REF.get(project, rid)
+    reg = ref["regions"][0]
+    if align == "phrase" and reg.get("chosen_by") != "the user":
+        span = A.phrase_span(project, rid, n_bars, A.function_of(tl, rng),
+                             near_bar=reg["bars"][0])
+        f = of_reference(project, rid, span["first_bar"], n_bars)
+        f["aligned"] = span
+        return f
+    f = of_reference(project, rid, reg["bars"][0], n_bars)
+    f["aligned"] = {"first_bar": reg["bars"][0], "aligned_by": "region",
+                    "why": "the region a person chose" if reg.get(
+                        "chosen_by") == "the user" else "the region's bars "
+                    "(align=region)"}
+    return f
+
+
 # -- loudness ------------------------------------------------------------------------------
 def match(fragments: List[dict], target: float = TARGET_LUFS) -> dict:
     """Bring every fragment to `target` LUFS; if a peak would then pass
@@ -296,6 +321,7 @@ def write(fragments: List[dict], folder: str, name: str,
                  "lufs_as_rendered": f["lufs"], "gain_db": f["gain_db"],
                  "playback": f.get("playback"),
                  "grid_uncertain": f.get("grid_uncertain"),
+                 "aligned": f.get("aligned"),
                  "files": files}
         if f.get("stems"):
             entry["stems"] = {}

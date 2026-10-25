@@ -334,6 +334,38 @@ or OPL2 path; the stand-in ears show the plumbing (mono clips, the
 choice). Still open from the audit: phrase anchors at cadences (H08's
 second half), instrument intents beyond the eight categories (H11).
 
+P3 — what was still open after P2 (the audit has no P3 of its own; these
+are its open items: H11, the second half of H08, Schism, the acceptance
+tests):
+
+| what | where |
+|---|---|
+| an instrument said phase by phase — "a short sting, then a dark body, vibrato only on the long notes" (English or Russian, or a model's own `phases`) — becomes a goal on the phases named and a hold on the rest: the attack (to 60 ms: sharpness, brightness), the body (to 350 ms), the held part of long notes (vibrato, `only_long`), the release. A phase already as far as a step takes it (an attack rising in 0 ms) is held and said; each candidate reports what each phase did; the kept one comes with solo and in-mix reels, matched and raw (T7) | `intent.py`, `instrument.design(hold, intent)`, `design_instrument intent=` |
+| a body darkened without the attack: the modulator track waits for the attack's window; an attack brightened without the body (`attack_tl`) | `instrument._tl_hypothesis`, `_attack_hypothesis` |
+| phrase anchors: each bar line scored for settling (a quiet last beat), change (the two bars either side) and arrival (the downbeat), with a stated prior for fours and eights; from a source's notes, else from its audio (first 240 s); a person's marks replace them. A reference fragment starts at a phrase near its region, and beside a cadence ends on its strongest phrase end; a region a person chose is kept (`align="phrase"`, the default; `"region"` as before) | `anchors.py`, `listen.reference_for`, `phrase_anchors`, `mark_reference` |
+| an Impulse Tracker module's buried channel brought out by the header's channel volumes and pans: played from the first row by libopenmpt every time (no chase: effect memory and NNA tails), voices by channel mute, measured in band, guarded, chosen among by a verified ear (stereo); samples, envelopes, NNA, filters and patterns refused by name; the module is never rewritten (rev1.it beside it) | `itloop.py`, `correct_module` |
+| the audit's T1-T10 run against the suite's own tests, with the ear in each named (stand-in, live, none) | `examples/agentic/acceptance.py` |
+
+Measured: on `fixtures.held_lead` the phrase-by-phrase intent above kept
+`tl1+vib3` (97 % of the distance closed; 10 candidates, 63 renders,
+108 s): body brightness 6.86 -> 4.17 (goal 4.46), a 15-cent vibrato on
+two notes in three — the long ones, as asked (the depth short of its
+25-cent goal), the attack's rise 0 -> 0 ms, its brightness 6.84 -> 6.40
+(hold 1.71), the release 48 -> 43 ms; on `masked_lead` the same
+statement was rolled back — every darker body also darkened the attack
+past its hold, and the reply says which. On the masked lead exported to
+IT, the lead -9.5 -> -6.4 dB in its band (the rest -3 dB in the header);
+raising the lead was refused (its channel volume is already 64), -6 dB
+broke the mix level, a pan moved nothing the in-band measure reads (it is
+mono; a pan is for the ear). On a four-phrase score the anchors found
+the phrase ends at bars 4, 8 and 12, clear, from the notes, and 4 (weak),
+8 and 12 (clear) from the audio alone.
+
+Not done: the module loop changes levels and pans only — no instrument,
+envelope, NNA or sample work on an IT (the Schism forge's, on its own
+branch); a phrase anchor is a heuristic, not a harmonic analysis; still no
+live audio model has listened to any of it.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
@@ -393,10 +425,11 @@ has what was observed, tried, kept and rolled back.
 - Recall matches by role, patch and starting margin. A record is one
   measured case in one arrangement; it is re-rendered and re-guarded
   before it is kept, and never declared a rule.
-- The loop runs on the Mega Drive only. NES, OPL2 and Schism render in
-  their own layers; this loop is not ported to them. What a port needs,
-  engine by engine, is proposed in `bridge/AGENTIC_PORTING.md` — a
-  proposal, not a port.
+- The loop runs on the Mega Drive, the NES and the OPL2 (P2); on an
+  Impulse Tracker module only its header's levels and pans are changed
+  (P3, `itloop.py`). The rest of a Schism port — samples, envelopes, NNA,
+  effect memory as things to change — is proposed in
+  `bridge/AGENTIC_PORTING.md`, not done.
 - Not realtime: composition is incremental by sections with checkpoints;
   nothing streams audio and no latency is claimed.
 - A render costs 1-2.5 s for a few seconds of music here, and every stem

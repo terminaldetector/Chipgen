@@ -815,9 +815,11 @@ def improve_toward(project, spec: str, references: List[str],
                    sketch_ids=(), voice: Optional[str] = None,
                    folder: Optional[str] = None,
                    cache: Optional[R.Cache] = None,
-                   max_gaps: int = 3, instrument_budget: int = 6) -> dict:
-    """One guided round on the range `spec` toward the references (ids).
-    -> the report."""
+                   max_gaps: int = 3, instrument_budget: int = 6,
+                   align: str = "phrase") -> dict:
+    """One guided round on the range `spec` toward the references (ids),
+    each cut where its phrases fit the range (`align`, see
+    listen.reference_for). -> the report."""
     started = time.time()
     cache = cache or R.Cache(project.path("renders"))
     ear = ear or EAR.ToolEar(cache)
@@ -835,10 +837,8 @@ def improve_toward(project, spec: str, references: List[str],
     fragments = [LI.of_project(project, spec, stems=True, cache=cache,
                                method=method)]
     for rid in references:
-        ref = REF.get(project, rid)
-        reg = ref["regions"][0]
-        fragments.append(LI.of_reference(project, rid, reg["bars"][0],
-                                         n_bars))
+        fragments.append(LI.reference_for(project, rid, base_tl, rng, n_bars,
+                                          align))
     for sid in sketch_ids:
         fragments.append(LI.of_sketch(project, sid, spec, cache=cache,
                                       method=method))

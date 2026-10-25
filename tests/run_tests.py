@@ -81,6 +81,8 @@ def _state_path(pattern, quick):
 #: every chip, in well under a minute — and says it was the quick set.
 #: test_studio checks that every name here is still a real test.
 SLOW = {
+    "test_agentic_refs.test_phrase_ends_are_found_in_a_scores_notes_and_in_its_audio",
+    "test_agentic_refs.test_a_reference_is_cut_from_a_phrase_and_a_cadence_ends_on_one",
     "test_agentic_refs.test_phases_the_model_heard_change_the_instrument_it_then_picks",
     "test_agentic_refs.test_an_instrument_said_phase_by_phase_moves_those_phases_only",
     "test_agentic_refs.test_the_loop_hears_and_corrects_a_buried_lead_on_the_nes_and_the_opl2",

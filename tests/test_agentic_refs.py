@@ -1201,3 +1201,182 @@ def test_phases_the_model_heard_change_the_instrument_it_then_picks():
                      if x["reading"] == "vibrato_share")
         assert 0.0 < share["after"] < 1.0
         shutil.rmtree(os.path.dirname(p.root))
+
+
+# -- P3: phrase anchors ------------------------------------------------------------------------
+def _phrase_score():
+    """Four phrases of four bars: three busy bars, then one that settles
+    on a held note; each phrase on its own notes; a pad and a hit on each
+    phrase's first downbeat, a drum on every downbeat."""
+    sets = (("A-4", "C-5", "E-5", "D-5"), ("F-4", "A-4", "C-5", "G-4"),
+            ("A-4", "C-5", "E-5", "D-5"), ("G-4", "B-4", "D-5", "E-5"))
+    lines = ["bpm 150", "lpb 4", "inst fm0 square_lead",
+             "inst fm1 slap_bass", "inst fm2 strings",
+             "cols fm0 fm1 fm2 noise"]
+    for notes in sets:
+        for bar in range(4):
+            for r in range(16):
+                lead = "..."
+                if bar < 3 and r % 2 == 0:
+                    lead = notes[(r // 2 + bar) % 4]
+                elif bar == 3:
+                    lead = {0: notes[0], 2: notes[1], 4: notes[2],
+                            15: "==="}.get(r, "...")
+                bass = notes[0][0:2] + "3" if r == 0 else "..."
+                pad = notes[1] if bar == 0 and r == 0 else (
+                    "===" if bar == 0 and r == 8 else "...")
+                drum = "w1" if r == 0 else ("===" if r == 2 else "...")
+                lines.append(f"{lead}  {bass}  {pad}  {drum}")
+    return "\n".join(lines) + "\n"
+
+
+def _phrased_reference():
+    from agentic import references as REF
+    root = _tmp()
+    path = os.path.join(root, "phrases.trk")
+    with open(path, "w") as handle:
+        handle.write(_phrase_score())
+    p = _project(_composed().state)
+    REF.add(p, path, tags=["rhythm"])
+    return p, REF.all_(p)[0]["id"], root
+
+
+def test_phrase_ends_are_found_in_a_scores_notes_and_in_its_audio():
+    from agentic import anchors as A, references as REF
+    p, rid, root = _phrased_reference()
+    rec = A.of_reference(p, rid)
+    assert rec["basis"] == "the source's notes"
+    clear = {a["bar"] for a in rec["anchors"] if a["certainty"] == "clear"}
+    assert {4, 8, 12} <= clear, rec["anchors"]
+    assert all(a["parts"]["settling"] == 1.0 for a in rec["anchors"]
+               if a["bar"] in (4, 8, 12))
+    # the same from the audio alone (no notes to read)
+    REF.get(p, rid).pop("anchors")
+    keep = REF.notes
+    REF.notes = lambda *a: []
+    try:
+        audio = A.of_reference(p, rid, refresh=True)
+    finally:
+        REF.notes = keep
+    assert audio["basis"] == "the audio"
+    assert {8, 12} <= {a["bar"] for a in audio["anchors"]}, audio
+    shutil.rmtree(root)
+
+
+def test_a_reference_is_cut_from_a_phrase_and_a_cadence_ends_on_one():
+    from agentic import anchors as A, fixtures, listen as LI, \
+        references as REF, state as S, timeline as T
+    p, rid, root = _phrased_reference()
+    s = A.phrase_span(p, rid, 4, "statement", near_bar=6)
+    assert s["first_bar"] == 5 and s["aligned_by"] == "phrase anchors"
+    s = A.phrase_span(p, rid, 2, "cadence", near_bar=3)
+    assert (s["first_bar"] + 1) in (4, 8, 12) and \
+        s["certainty"] == "clear", s
+    # a person's marks replace the computed ones
+    A.mark(p, rid, [6], note="the turn is at bar 6")
+    s = A.phrase_span(p, rid, 2, "statement", near_bar=6)
+    assert s["first_bar"] == 7 and s["basis"] == "manual"
+    try:
+        A.mark(p, rid, [99])
+        assert False
+    except S.AgenticError as error:
+        assert error.code == "bad_anchor"
+    # the piece's own sections carry their functions
+    tl = T.build(S.content(fixtures.masked_lead()))
+    assert A.function_of(tl, tl.range("A")) == "statement"
+    assert A.of_piece(tl)["sections"][0]["function"] == "statement"
+    # a region a person chose is kept as chosen
+    REF.get(p, rid)["regions"][0]["chosen_by"] = "the user"
+    tl = T.build(S.content(p.state))
+    f = LI.reference_for(p, rid, tl, tl.range("all"), 2)
+    assert f["aligned"]["aligned_by"] == "region"
+    shutil.rmtree(root)
+
+
+# -- P3: the loop on an Impulse Tracker module --------------------------------------------------
+def _masked_it(root):
+    from agentic import capabilities as CAP, fixtures
+    p = _project(fixtures.masked_lead())
+    out = CAP.export(p, "it", os.path.join(root, "masked.it"))
+    shutil.rmtree(os.path.dirname(p.root))
+    return out["path"]
+
+
+def test_an_it_modules_buried_channel_is_brought_out_in_its_header():
+    from agentic import itloop as IT, openmpt as O
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    root = _tmp()
+    path = _masked_it(root)
+    with open(path, "rb") as handle:
+        original = handle.read()
+    rec = IT.correct_buried(path, 1, os.path.join(root, "out"))
+    assert rec["playback"].startswith("full") and "none" in rec["chase"]
+    assert rec["outcome"] == "committed", rec["why"]
+    assert rec["after"]["band_margin_db"] - \
+        rec["before"]["band_margin_db"] >= 2.5
+    # the lead's volume was already 64: raising it is refused by name
+    refused = [c for c in rec["candidates"] if "refused" in c["why"]]
+    assert refused and all("outside 1-64" in c["why"] for c in refused)
+    with open(rec["file"], "rb") as handle:
+        after = handle.read()
+    changed = [i for i, (a, b) in enumerate(zip(original, after)) if a != b]
+    assert changed and all(0x80 <= i < 0xC0 for i in changed)  # volumes only
+    with open(path, "rb") as handle:
+        assert handle.read() == original                 # never rewritten
+    assert os.path.exists(rec["ab_reel"]) and os.path.exists(rec["ab_reel_raw"])
+    assert rec["judged_by"] == "measured"
+    with O.Module(after) as m:                     # libopenmpt plays it
+        assert m.channels == 3
+    from agent import Agent
+    r = Agent(os.path.join(root, "agent")).call("correct_module", path=path,
+                                                channel=2)
+    assert r["outcome"] == "committed" and r["chosen"] == rec["chosen"]
+    assert Agent(root).call("correct_module", path="/no/such.it",
+                            channel=1)["error"] == "no_file"
+    shutil.rmtree(root)
+
+
+def test_an_it_change_is_chosen_by_the_ear_it_is_sent_in_stereo():
+    from agentic import itloop as IT, openmpt as O, render as R
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    root = _tmp()
+    path = _masked_it(root)
+    adapter = _ChoosingEar(pick=1)
+    rec = IT.correct_buried(path, 1, os.path.join(root, "out"),
+                            ear=_choosing(adapter, R.Cache()))
+    assert rec["judged_by"] == "heard by model", rec
+    assert rec["listening_verdict"]["choice"] == 1 and adapter.choices
+    assert set(adapter.channels) == {2}
+    assert rec["outcome"] == "committed"
+    shutil.rmtree(root)
+
+
+def test_what_the_module_loop_does_not_change_is_refused_by_name():
+    from agentic import capabilities as CAP, itloop as IT, openmpt as O, \
+        state as S
+    for op in ("envelope", "nna", "sample", "notes"):
+        try:
+            IT.refuse(op)
+            assert False
+        except S.AgenticError as error:
+            assert error.code == "not_on_it" and op in str(error)
+    try:
+        IT.Piece(b"Extended Module: ...")
+        assert False
+    except S.AgenticError as error:
+        assert error.code == "not_an_it"
+    caps = CAP.inspect("schism")
+    assert caps["agentic_loop"] == "Unsupported"
+    assert caps["actions"]["module_loop"]["status"] == "Partial"
+    if O.available():
+        root = _tmp()
+        piece = IT.Piece.open(_masked_it(root))
+        surround = piece._with(IT.CHANNEL_PAN + 0, 100, "surround")
+        try:
+            IT.pan(surround, 0, 0.5)
+            assert False
+        except S.AgenticError as error:
+            assert error.code == "pan_locked"
+        shutil.rmtree(root)

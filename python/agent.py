@@ -41,6 +41,12 @@ References, parallel listening, sketches and instruments:
     listen_compare         project_id, range, refs      aligned fragments,
                                                         reel, observations
     check_listening        -                            is a model hearing?
+    phrase_anchors         project_id, reference?       where phrases end
+    correct_module         path, channel                an IT's buried
+                                                        channel, by its
+                                                        header
+    mark_reference         project_id, reference,       a person's phrase
+                           phrase_ends                  ends
     design_instrument      project_id, voice, goal|ref  a voice's sound;
                            |intent                      phase by phase
     save_sketch            project_id, label, rev?      keep a draft
@@ -70,6 +76,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
+from agentic import anchors as ANCH              # noqa: E402
 from agentic import banks as BANKS               # noqa: E402
 from agentic import capabilities as CAP          # noqa: E402
 from agentic import compose as COMP              # noqa: E402
@@ -808,6 +815,60 @@ class Agent:
                     check=check)
         return {"reference": REF.card(r)}
 
+    def op_correct_module(self, path: str, channel: int,
+                          mode: str = "auto", seconds: float = None) -> dict:
+        """An Impulse Tracker module's buried channel (1-based) brought out
+        by the header's channel volumes and pans, played from the first
+        row by libopenmpt each time; the ear chooses when one is verified.
+        The module is not rewritten: a kept change is a new file. ->
+        the candidates, the kept one, the A/B reels."""
+        from agentic import itloop as IT
+        if not os.path.exists(path):
+            raise AgenticError("no_file", f"{path}: no such module")
+        if self.adapter is not None and self.verification is None:
+            self.verification = self._cached_verification()
+        ear = EAR.choose(mode, self.adapter, self.verification, R.Cache())
+        stem = os.path.splitext(os.path.basename(path))[0]
+        folder = os.path.join(self.root, "modules", stem,
+                              time.strftime("%Y%m%d-%H%M%S"))
+        rec = IT.correct_buried(path, int(channel) - 1, folder, ear=ear,
+                                seconds=float(seconds) if seconds else None)
+        return {k: rec.get(k) for k in
+                ("module", "lead", "outcome", "why", "chosen", "changes",
+                 "before", "after", "file", "ab_reel", "ab_reel_raw",
+                 "playback", "chase", "judged_by", "listening",
+                 "listening_verdict", "cost")
+                if rec.get(k) is not None} | {
+            "candidates": [{k: c.get(k) for k in
+                            ("id", "accepted", "why", "gain_db")
+                            if c.get(k) is not None}
+                           for c in rec["candidates"]]}
+
+    def op_mark_reference(self, project_id: str, reference: str,
+                          phrase_ends=(), note: str = "") -> dict:
+        """A person's phrase ends in a reference (the bars that end a
+        phrase), used in place of the computed ones."""
+        p = self._project(project_id)
+        rec = ANCH.mark(p, reference, [int(b) for b in phrase_ends], note)
+        p.save()
+        return {"reference": reference, "anchors": rec["anchors"],
+                "basis": rec["basis"]}
+
+    def op_phrase_anchors(self, project_id: str, reference: str = None,
+                          refresh: bool = False) -> dict:
+        """Where phrases end: in a reference (computed from its notes or
+        its audio, or as marked), or, without one, in the piece (the plan's
+        sections and the phrase ends inside them)."""
+        p = self._project(project_id)
+        if reference is None:
+            return ANCH.of_piece(self._timeline(p))
+        rec = ANCH.of_reference(p, reference, refresh=bool(refresh))
+        p.save()
+        return {k: rec.get(k) for k in ("anchors", "basis", "method",
+                                        "over_s", "note",
+                                        "grid_uncertain_after_s")
+                if rec.get(k) is not None}
+
     def op_list_references(self, project_id: str) -> dict:
         p = self._project(project_id)
         return {"references": [REF.card(r) for r in REF.all_(p)]}
@@ -839,7 +900,7 @@ class Agent:
     def op_listen_compare(self, project_id: str, range: str,
                           references=(), bars: int = None, sketches=(),
                           dims=None, voice: str = None,
-                          mode: str = "auto") -> dict:
+                          mode: str = "auto", align: str = "phrase") -> dict:
         """The range of the piece (its mix and its voices), each
         reference's matching bars, the sketches' same range: aligned on
         bars, loudness-matched, written one by one and as a reel;
@@ -852,8 +913,7 @@ class Agent:
         n_bars = bars or (rng["bars"][1] - rng["bars"][0] + 1)
         frags = [LI.of_project(p, range, stems=True, cache=cache)]
         for rid in references or []:
-            reg = REF.get(p, rid)["regions"][0]
-            frags.append(LI.of_reference(p, rid, reg["bars"][0], n_bars))
+            frags.append(LI.reference_for(p, rid, tl, rng, n_bars, align))
         for sid in sketches or []:
             frags.append(LI.of_sketch(p, sid, range, cache=cache))
         name = f"cmp_r{p.head}_" + "".join(ch if ch.isalnum() else "_"
@@ -864,7 +924,9 @@ class Agent:
         return {"reel": rep["reel"], "index": rep["index"],
                 "fragments": [{k: e.get(k) for k in
                                ("n", "label", "bars", "bpm", "seconds",
-                                "in_reel", "lufs_as_rendered", "gain_db")}
+                                "in_reel", "lufs_as_rendered", "gain_db",
+                                "aligned")
+                               if e.get(k) is not None}
                               for e in rep["fragments"]],
                 "observations": [{k: o.get(k) for k in
                                   ("id", "basis", "dimension", "feature",
@@ -1003,7 +1065,8 @@ class Agent:
                                     references=(), sketches=None,
                                     bars: int = None, dims=None,
                                     voice: str = None, mode: str = "auto",
-                                    gaps: int = 3) -> dict:
+                                    gaps: int = 3,
+                                    align: str = "phrase") -> dict:
         """One guided round on the range toward the references: listen
         side by side, trace each gap, try changes that carry the
         principle over, keep what moves its reading with every guard
@@ -1015,7 +1078,7 @@ class Agent:
         rep = G.improve_toward(p, range, list(references or []), bars=bars,
                                dims=dims, ear=ear, sketch_ids=sketches,
                                voice=voice, cache=self._cache(p),
-                               max_gaps=int(gaps))
+                               max_gaps=int(gaps), align=align)
         return {"head": rep["head"], "reel": rep["reel"],
                 "listening": rep["listening"],
                 "statement": rep["statement"],

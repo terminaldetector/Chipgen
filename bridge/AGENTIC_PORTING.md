@@ -1,7 +1,9 @@
 # Porting the reference-and-listening interface: Schism, NES, OPL2
 
 **Status: the NES and the OPL2 are wired (measured, not yet heard by a
-model); Schism is still a proposal.** On the NES and the OPL2 the
+model); on Schism/IT a module's buried channel can be brought out by its
+header's channel volumes and pans, played from the top (`agentic/itloop.py`,
+P3) — the rest of Schism is still a proposal.** On the NES and the OPL2 the
 MusicalState, the range render (its chase error measured), the Tool ear,
 the correction loop and the patch ops that fit one mono chip run, and
 what does not fit is refused by name (bridge/AGENTIC.md, "P2"). The

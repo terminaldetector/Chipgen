@@ -219,7 +219,18 @@ _OTHER = {
                                 "compose) is not ported to IT samples, "
                                 "envelopes, NNA or effect memory (proposed "
                                 "in bridge/AGENTIC_PORTING.md); modules are "
-                                "read as references", None, None)},
+                                "read as references", None, None),
+               "module_loop": ("Partial", "Native",
+                               "an IT module's buried channel brought out "
+                               "by the header's channel volumes and pans "
+                               "(agentic/itloop.py): played from the first "
+                               "row by libopenmpt, voices by channel mute, "
+                               "measured in band, chosen among by a verified "
+                               "ear; samples, envelopes, NNA, filters and "
+                               "patterns refused by name. Not yet heard by "
+                               "a model",
+                               "about 7 full renders per candidate",
+                               "tests/test_agentic_refs.py")},
 }
 
 TARGETS = ("megadrive", "nes", "opl2", "schism")

@@ -1369,4 +1369,8 @@ def card(ref: dict) -> dict:
             "regions": [{k: r.get(k) for k in ("name", "bars", "t0", "t1",
                                                "chosen_by")}
                         for r in ref["regions"]],
-            "voices": len(ref.get("voices", {})), "claims": claims}
+            "voices": len(ref.get("voices", {})), "claims": claims,
+            "phrase_ends": [{k: a.get(k) for k in ("bar", "score",
+                                                    "certainty", "basis")}
+                            for a in (ref.get("anchors") or {}).get(
+                                "anchors", [])] or None}
