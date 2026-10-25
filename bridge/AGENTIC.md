@@ -403,8 +403,9 @@ P6:
 | **found on the way:** the IT export's samples kept the emulators' DC offset (strings: a third of its peak; every sample began at 504 of 32767), so each note-on and note-off stepped. A one-pole DC blocker at 20 Hz, started at the first frame's level, and the loop's remaining mean taken out: samples start at zero, the loop still joins | `it_export._without_dc`, `test_it.test_a_sample_carries_no_dc_offset_and_starts_at_zero` |
 
 On the masked lead played four times (eight bars), an observation about
-bar 5 is chosen about over bars 5-6: four versions of two bars, about
-17 s of audio instead of about 56 s for the whole range.
+bar 5 is chosen about over bars 5-6: 7.2 s of audio sent to the ear
+instead of 26.4 s for the same choice over the whole range (measured
+with the stand-in ear).
 
 ## Measured
 
