@@ -141,8 +141,11 @@ def main(argv=None) -> int:
     for r in rows:
         if r["id"] in ("T1", "T3") and not (live["ran"] and
                                             live.get("verified")):
-            r["live"] = ("not done: " + live["why"]) if not live["ran"] \
-                else f"the live model did not pass: {live['why']}"
+            if r["result"] == "passed":
+                r["result"] = "stand-in tests passed"
+            r["live"] = ("with a live model: not done (" + live["why"] + ")"
+                         ) if not live["ran"] else \
+                f"the live model did not pass: {live['why']}"
     rows[-1]["note"] = ("run python3 tests/run_tests.py for the engine; "
                         "model audio seconds here: 0 (no live model); "
                         "renders and runtime are in each record's cost")
