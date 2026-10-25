@@ -657,7 +657,8 @@ def platform_of(content_or_timeline) -> dict:
 #: what a heard observation is about, in words the loop can act on: the
 #: router (guided.route) turns a category and a direction into changes
 CATEGORIES = ("attack", "body_brightness", "vibrato", "articulation",
-              "space", "density", "groove", "balance", "other")
+              "space", "density", "groove", "balance", "transition",
+              "other")
 
 
 NATIVE_PROMPT = """You are listening to {seconds:.1f} s of a chiptune piece \
@@ -670,8 +671,9 @@ For each thing you would change, say what it is about and which way: \
 category is one of attack (how the notes start), body_brightness (how \
 bright the held part of the notes is), vibrato, articulation (how long or \
 detached the notes are), space (stereo width), density (how busy), groove \
-(placement against the beat), balance (a voice too loud or soft), other; \
-direction is "more" or "less" of it. When it is about how one voice's \
+(placement against the beat), balance (a voice too loud or soft), \
+transition (how one section hands over to the next: "less" is smoother, \
+"more" a sharper contrast), other; direction is "more" or "less" of it. When it is about how one voice's \
 notes sound, you may also say it phase by phase ("phases"): the attack \
 (first 60 ms; quality sharpness or brightness), the body (to 350 ms; \
 brightness), the held part of long notes (vibrato; only_long when it \

@@ -407,6 +407,18 @@ bar 5 is chosen about over bars 5-6: 7.2 s of audio sent to the ear
 instead of 26.4 s for the same choice over the whole range (measured
 with the stand-in ear).
 
+P7 — a heard transition acted on (the rest of H02's "transition"):
+
+| what | where |
+|---|---|
+| "transition" is a category the ear can name ("less": smoother, "more": a sharper contrast); the router finds the join nearest the bars it heard, and its changes come from what the join flags — the accompaniment thinner where the next section enters busier (or thinner before it, for contrast), the first bar after the join softer, the lead joined up to the bar line across a silence, the pad moved by the smallest steps when no pitch class is shared. Each is measured by how abrupt the join reads (`joins.roughness`: the density ratio in octaves, the velocity jump, the silence in beats, the lead's jump, no shared pitch class), guarded as every change is, and chosen among by the ear over the phrases on both sides of the join; one section is "no join" | `guided.route`, `joins.changes`, `joins.roughness` |
+
+On the masked lead followed by a section whose bass strikes every row
+(the join flags "density x2.17"), a heard "B comes in too abruptly": the
+bass thinned in the first bar of B read 2.08 -> 1.51, the softer entry
+2.08 -> 1.95, the pad had no onset there to thin (refused by name); the
+stand-in ear chose over bars 2-4 (15.9 s of audio).
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core

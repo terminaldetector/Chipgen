@@ -328,6 +328,24 @@ def route(o: dict, tl, lead: Optional[str] = None) -> dict:
     if cat in (None, "other") or way not in ("more", "less"):
         return {"route": None, "why": "the model named no category and "
                                       "direction the changes here have"}
+    if cat == "transition":
+        from . import joins as JN
+        bars = (o.get("where") or {}).get("bars") or o.get("bars") or [1]
+        j = JN.at(tl, int(bars[0]))
+        if j is None:
+            return {"route": None, "why": "one section plays: there is no "
+                                          "join to make smoother or sharper"}
+        chains = JN.changes(tl, j, way)
+        if not chains:
+            return {"route": None, "why": f"the join at bar {j['bar']} "
+                    f"flags nothing a change here eases ({j['flags']})"}
+        return {"route": "arrangement", "dimension": "transition",
+                "kind": "transition", "feature": f"join@{j['bar']}",
+                "gap": -1.0 if way == "less" else 1.0,
+                "sign": -1.0 if way == "less" else 1.0,
+                "where": {"bars": [j["bar"] - 1, j["bar"]]},
+                "join": {k: j[k] for k in ("from", "to", "bar", "flags")},
+                "chains": chains}
     if (cat, way) in HEARD_INSTRUMENT:
         v = voice or lead
         ins = tl.content["instruments"].get(v or "", {})
@@ -404,8 +422,15 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     if path in ("onsets_per_beat", "offbeat_share") and \
             obs.get("counted_from") == "audio":
         path += "_audio"                    # as the reference was counted
-    before = _reading(base_m, path) if path else None
-    after = _reading(cand_m, path) if path else None
+    if path and path.startswith("join@"):
+        # how abrupt the join reads, from the score (joins.roughness)
+        from . import joins as JN
+        bar = int(path.split("@")[1])
+        before = JN.roughness(JN.at(base_tl, bar))
+        after = JN.roughness(JN.at(tl, bar))
+    else:
+        before = _reading(base_m, path) if path else None
+        after = _reading(cand_m, path) if path else None
     h = tool.hear(tl, tl.range(spec))
     checks = L.guards(base_tl, tl, base_h, h, rng, obs | {"voices": []},
                       hyp["chain"])
@@ -622,7 +647,7 @@ def _work_gap(project, spec: str, rng: dict, o: dict, r: dict, ref_f,
     heard_gap = o.get("basis") != "measured"
     oid = o.get("id") or f"H{len(project.state.get('decisions', [])) + 1}"
     o = dict(o, id=oid, feature=r.get("feature"), gap=r.get("gap"),
-             sign=r.get("sign"))
+             sign=r.get("sign"), where=r.get("where") or o.get("where"))
     dim = r["dimension"]
     trace = trace_gap(base_tl, rng, dict(o, feature=o["feature"] or ""))
     if r.get("chains"):

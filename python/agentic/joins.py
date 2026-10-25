@@ -113,3 +113,82 @@ def measure(tl, lead: Optional[str] = None) -> List[dict]:
         j["flags"] = flags
         out.append(j)
     return out
+
+
+def roughness(j: dict) -> float:
+    """One number for how abrupt a join reads: the density ratio in
+    octaves, the velocity jump in quarters of the limit's, the silence in
+    beats, the lead's jump in octaves, and one for no shared pitch class."""
+    import math
+    r = abs(math.log2(max(0.01, j["density_ratio"])))
+    r += abs(j["velocity"] or 0.0) / LIMITS["velocity"]
+    r += j["gap_beats"]
+    r += abs(j["register_semitones"] or 0) / 12.0
+    r += 1.0 if j["harmony"]["last_beat"] and j["harmony"]["first_beat"] \
+        and not j["harmony"]["shared"] else 0.0
+    return round(r, 3)
+
+
+def at(tl, bar: int) -> Optional[dict]:
+    """The join nearest to `bar` (the first bar of the section after it)."""
+    js = measure(tl)
+    return min(js, key=lambda j: abs(j["bar"] - bar)) if js else None
+
+
+def changes(tl, j: dict, direction: str) -> List[dict]:
+    """Changes that could make the join smoother ("less") or sharper
+    ("more"), from what it flags: the voices around it at the bar either
+    side. Each is {id, chain, principle, expect}."""
+    last = f"bars {j['bar'] - 1}-{j['bar'] - 1}"
+    first = f"bars {j['bar']}-{j['bar']}"
+    ins = tl.content["instruments"]
+    lead = next((v for v, i in ins.items() if i.get("role") == "lead"), None)
+    pads = [v for v, i in ins.items() if i.get("role") in ("pad", "chords")]
+    accomp = [v for v, i in ins.items() if i.get("role") not in
+              ("lead", "melody", "drums", "hats", "kick", "snare")]
+    tonal = [v for v, i in ins.items() if i.get("role") not in
+             ("drums", "hats", "kick", "snare")]
+    out = []
+    if direction == "less":
+        if j["density_ratio"] >= 1.3:
+            for v in accomp:
+                out.append({"id": f"thin_{v}_in", "chain": [
+                    {"op": "density", "voice": v, "range": first,
+                     "mode": "thin"}],
+                    "principle": f"{v} enters thinner: the busier side "
+                                 f"eased in", "expect": "a smaller jump"})
+        if j["density_ratio"] <= 1 / 1.3:
+            for v in accomp:
+                out.append({"id": f"thin_{v}_out", "chain": [
+                    {"op": "density", "voice": v, "range": last,
+                     "mode": "thin"}],
+                    "principle": f"{v} thins before the join",
+                    "expect": "a smaller jump"})
+        if (j["velocity"] or 0) >= 6:
+            out.append({"id": "soft_entry", "chain": [
+                {"op": "level", "voice": v, "range": first, "db": -3.0}
+                for v in tonal], "principle": "the first bar after the "
+                "join 3 dB softer", "expect": "a smaller step in level"})
+        if j["gap_beats"] >= 0.5 and lead:
+            out.append({"id": "legato_lead", "chain": [
+                {"op": "articulation", "voice": lead, "range": last,
+                 "legato": True}], "principle": "the lead's last notes "
+                "joined up to the bar line", "expect": "less silence"})
+        if not j["harmony"]["shared"] and pads:
+            out.append({"id": f"voice_{pads[0]}", "chain": [
+                {"op": "voicing", "voice": pads[0], "range": first}],
+                "principle": "the pad moves by the smallest steps into the "
+                             "new section", "expect": "a pitch class held "
+                                                      "across"})
+    else:
+        for v in accomp:
+            out.append({"id": f"breath_{v}", "chain": [
+                {"op": "density", "voice": v, "range": last,
+                 "mode": "thin"}],
+                "principle": f"{v} thins before the join: a breath before "
+                             f"the entry", "expect": "a sharper contrast"})
+        out.append({"id": "drop_before", "chain": [
+            {"op": "level", "voice": v, "range": last, "db": -3.0}
+            for v in tonal], "principle": "the bar before the join 3 dB "
+            "softer", "expect": "a sharper contrast"})
+    return out

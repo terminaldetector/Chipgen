@@ -1580,3 +1580,53 @@ def test_a_join_says_what_jumps_where_one_section_hands_over():
     r = a.call("measure_joins", project_id="m")
     assert r["joins"] == [] and r["limits"]["gap_beats"] == 1.0
     shutil.rmtree(root)
+
+
+# -- P7: a heard transition acted on --------------------------------------------------------------
+def _abrupt_join():
+    import copy
+    from agentic import fixtures
+    st = fixtures.masked_lead()
+    b = copy.deepcopy(st["sections"][0])
+    b["id"] = "B"
+    for i, row in enumerate(b["rows"]):          # the bass on every row
+        if i % 2 == 1:
+            row[0] = row[0] if row[0] not in ("===", "...") else \
+                st["sections"][0]["rows"][i - 1][0]
+        if row[1] not in ("...", "==="):
+            row[1] = row[1].replace(":80", ":120") if ":" in row[1] else \
+                row[1]
+    st["sections"].append(b)
+    st["order"] = ["A", "B"]
+    st["structure"]["plan"].append({"id": "B", "function": "development",
+                                    "bars": 2})
+    return st
+
+
+def test_a_heard_abrupt_transition_is_eased_and_measured_at_the_join():
+    from agentic import fixtures, guided as G, joins as J, render as R, \
+        state as S, timeline as T
+    st = _abrupt_join()
+    j0 = J.measure(T.build(S.content(st)))[0]
+    assert j0["bar"] == 3 and j0["density_ratio"] >= 1.3, j0
+    tl1 = T.build(S.content(fixtures.masked_lead()))
+    assert G.route({"basis": "heard by model", "about_the_piece": True,
+                    "category": "transition", "direction": "less"}, tl1,
+                   "lead")["route"] is None           # one section: no join
+    p = _project(st)
+    cache = R.Cache(p.path("renders"))
+    adapter = _ChoosingEar(pick=1)
+    obs = {"basis": "heard by model", "about_the_piece": True,
+           "category": "transition", "direction": "less",
+           "where": {"bars": [3, 3]}, "confidence": 0.7,
+           "statement": "B comes in too abruptly"}
+    rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                        cache=cache)
+    w = rv["worked_on"][0]
+    assert w["dimension"] == "transition", w
+    assert w["outcome"] == "committed", w.get("why")
+    kept = next(h for h in w["hypotheses"] if h["id"] == w["chosen"])
+    assert kept["after"] < kept["before"], kept    # the join reads smoother
+    window = w["listening_verdict"]["window"]["bars"]
+    assert window[0] <= 2 and window[1] >= 3       # both sides of the join
+    shutil.rmtree(os.path.dirname(p.root))

@@ -606,7 +606,8 @@ seconds from the start of this clip.
 For what you would change in the piece, also say what it is about and \
 which way: category is one of attack, body_brightness (the held part of \
 the notes), vibrato, articulation (note length), space (stereo width), \
-density, groove (placement against the beat), balance, other; direction \
+density, groove (placement against the beat), balance, transition (how \
+one section hands over to the next: less is smoother), other; direction \
 is "more" or "less" of it. When it is about how one voice's notes sound, \
 you may also say it phase by phase ("phases"): the attack (first 60 ms; \
 sharpness or brightness), the body (to 350 ms; brightness), the held part \
