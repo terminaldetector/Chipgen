@@ -419,6 +419,20 @@ bass thinned in the first bar of B read 2.08 -> 1.51, the softer entry
 2.08 -> 1.95, the pad had no onset there to thin (refused by name); the
 stand-in ear chose over bars 2-4 (15.9 s of audio).
 
+P8 — independent candidates measured side by side (the audit's "safe
+parallel exploration of candidates"):
+
+| what | where |
+|---|---|
+| a round's candidates are rendered and measured in forked workers (CHIPGEN_WORKERS, else the cores, at most 4) and put back in order; deciding, committing and writing stay in one process; one worker, a platform without fork or a pool that fails runs them one after another and says so (`parallel`). The render cache's temporary file is per process | `parallel.py`, `itloop`, `itshape`, `instrument.design`, `guided._work_gap`, `render.Cache.put` |
+
+The same records either way (compared field by field). On this 4-core
+sandbox: the IT shape 43 -> 19 s, the IT buried channel 14.6 -> 6.2 s,
+instrument.design on held_lead 101 -> 52 s (renders 63 -> 66: the workers
+do not share the in-memory cache, and the count says so); the guided
+round's test 52 -> 51 s — its time is in listening and measuring the
+fragments, not in its few hypotheses.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
