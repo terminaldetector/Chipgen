@@ -211,9 +211,13 @@ def _release_seconds(body, tail, rate: float, drop_db: float = 30.0) -> float:
     def level(frames):
         # the first channel of (left, right) pairs, its mean taken out: the
         # emulator's output carries a DC offset that a key-off leaves behind
-        xs = [v[0] if isinstance(v, (tuple, list)) else v for v in frames]
-        if not xs:
+        if len(frames) == 0:
             return 0.0
+        try:                         # pairs, as _mono16 tells them apart
+            stereo = len(frames[0]) >= 2
+        except TypeError:
+            stereo = False
+        xs = [float(v[0]) if stereo else float(v) for v in frames]
         mean = sum(xs) / len(xs)
         return math.sqrt(sum((x - mean) ** 2 for x in xs) / len(xs))
     hop = max(1, int(rate * 0.005))
