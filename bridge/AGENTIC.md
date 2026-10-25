@@ -282,6 +282,31 @@ What the readings can and cannot say:
   passed the probes heard it — and none was reachable from this sandbox
   (`check_listening`).
 
+## Hearing that decides
+
+Audit of 22 October: the listening model only vetoed a winner the numbers
+had chosen, and what it heard started nothing. Now (P0 of that audit):
+
+| what | where |
+|---|---|
+| the model's observations carry a `category` (attack, body_brightness, vibrato, articulation, space, density, groove, balance) and a `direction` (more, less); `guided.route` sends each to what can act on it — a sound goal for the voice's instrument, or the patch ops — and reports what nothing can act on (`not_acted_on`) | `ear.py` prompts, `guided.route` |
+| a guided round works on what the ear heard first, then on the measured gaps; `revise_heard` does it without a reference, and `continue_composition(listen=true)` listens to the new section and revises it when a model listens | `guided.improve_toward`, `revise_heard`, `agent.py` |
+| the ear chooses: after the guards, the original and up to three candidates go out as one clip and the model picks one, the original, or "uncertain" (`ear.ab_choose`, `loop.listen_choose`), in the guided round and in `instrument.design`. A gap the ear raised is acted on only when it chooses a change; for a measured gap "uncertain" leaves it to the measurements | `guided._decide`, `instrument.design` |
+| the clips are the machine's own output: stereo for the Mega Drive (a pan or an echo is part of what is heard), mono for the NES and the OPL2; the prompts name the machine (`ear.platform_of`). A balance change is compared at its rendered level, the rest at one loudness | `ear.py`, `listen.py` |
+| a LearningRecord keeps the model's judgement as given (verdict or choice, the clip's layout, confidence) and whether it agreed with the measurements | `memory._auditory` |
+
+Tested with stand-in ears that decide from the audio they are sent (one
+picks by its zero crossings, one answers "uncertain", one is scripted):
+the router, the choice in both directions, the stereo channel count, a
+heard "less bright" turned into a darker program the ear picked. **No live
+audio model was available here**, so whether a real model's ear chooses
+well is untested; the acceptance tests T1 and T3 of the audit need one
+(`examples/agentic/references/check_listening.py` with
+`CHIPGEN_AUDIO_ENDPOINT`). Still open from the audit: full-length
+references and later phrases (H07), range renders marked approximate
+against full playback (H09), richer probes of musical hearing (H12), the
+verification cache (H15), and the port to Schism, NES and OPL2.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
@@ -312,9 +337,11 @@ has what was observed, tried, kept and rolled back.
 
 ## What it does not do
 
-- **It does not listen.** The Tool ear measures. Whether a fix sounds
-  better is a listening question; the A/B files are there for it, matched
-  in level so the louder one does not win.
+- **It does not listen by itself.** The Tool ear measures. With a
+  verified audio model the ear raises gaps and chooses among candidates
+  ("Hearing that decides"); without one, whether a fix sounds better is a
+  listening question, and the A/B files are there for it, matched in level
+  so the louder one does not win.
 - No Native ear has been run against a real audio model from here; the
   adapter and its probe are tested with a stand-in.
 - The in-band margin is a heuristic over a wide band, not a masking model
