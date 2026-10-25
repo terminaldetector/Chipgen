@@ -139,7 +139,13 @@ def test_archive_is_lean_and_reproducible():
         # script and the porting proposal — 72 KB compressed, the largest
         # references.py at 15 KB. References themselves never ship: they
         # are other people's music.
-        assert size < 1100 * 1024, f"the bridge archive grew to {size // 1024} KB"
+        # Then to 1200 KB for the hearing audit's P3-P6: intent.py (a sound
+        # said phase by phase), anchors.py (phrase ends), itloop.py and
+        # itshape.py (the loop on an IT module's header and instruments),
+        # session.py (what a model was sent), joins.py, the acceptance
+        # script — 30 KB compressed — and the tests and AGENTIC.md they
+        # grew; at 1116 KB the archive passed the old limit.
+        assert size < 1200 * 1024, f"the bridge archive grew to {size // 1024} KB"
 
         with zipfile.ZipFile(first) as archive:
             names = archive.namelist()
