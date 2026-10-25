@@ -44,6 +44,8 @@ References, parallel listening, sketches and instruments:
     audible_session        project_id                   what a model was
                                                         sent, and its cost
     phrase_anchors         project_id, reference?       where phrases end
+    measure_joins          project_id                   how sections hand
+                                                        over
     correct_module         path, channel                an IT's buried
                                                         channel, by its
                                                         header
@@ -893,6 +895,15 @@ class Agent:
                             ("id", "phase", "change", "accepted", "why")
                             if c.get(k) is not None}
                            for c in rec["candidates"]]}
+
+    def op_measure_joins(self, project_id: str) -> dict:
+        """Where each section hands over to the next: density, the lead's
+        register, the score's level, silence at the bar line, shared pitch
+        classes — and which jumps pass their limits (a reading to weigh: a
+        dramatic entry is often meant). From the score; nothing rendered."""
+        from agentic import joins as JOINS
+        return {"joins": JOINS.measure(self._timeline(self._project(
+            project_id))), "limits": JOINS.LIMITS}
 
     def op_mark_reference(self, project_id: str, reference: str,
                           phrase_ends=(), note: str = "") -> dict:

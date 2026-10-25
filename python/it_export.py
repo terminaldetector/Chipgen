@@ -323,10 +323,40 @@ def _build(frames, native_rate: float, rate: float, attack: float,
         pcm = _crossfade_loop(pcm, start, start + loop_len, fade)
         loop = (start, start + loop_len)
         total = start + loop_len
+    pcm = _without_dc(pcm, rate, loop)
 
     return {"data": pcm, "loop": loop, "frames": total,
             "c5speed": _c5speed(rate, note[0], note[1]),
             "frequency": frequency}
+
+
+#: below this the emulators' output offset is taken out of a sample (Hz)
+DC_CUTOFF_HZ = 20.0
+
+
+def _without_dc(pcm16: bytes, rate: float, loop=None) -> bytes:
+    """The emulator's DC offset out of a sample: a one-pole DC blocker
+    (DC_CUTOFF_HZ), started at the first frame's level so the sample
+    begins at zero, then the loop's remaining mean taken out of the whole
+    so a held note sits on zero. On the chip the output capacitor does
+    this; left in, the offset steps at every note-on and note-off (a click)
+    and adds up across channels. (strings: 32 % of its peak.)"""
+    import math
+    total = len(pcm16) // 2
+    if total == 0:
+        return pcm16
+    x = struct.unpack_from(f"<{total}h", pcm16)
+    r = math.exp(-2.0 * math.pi * DC_CUTOFF_HZ / rate)
+    y, prev_x, prev_y = [], float(x[0]), 0.0
+    for v in x:
+        prev_y = v - prev_x + r * prev_y
+        prev_x = v
+        y.append(prev_y)
+    # a one-shot decays to silence: only the blocker, no mean taken out
+    mean = sum(y[loop[0]:loop[1]]) / max(1, loop[1] - loop[0]) \
+        if loop else 0.0
+    out = [int(round(max(-32768.0, min(32767.0, v - mean)))) for v in y]
+    return struct.pack(f"<{total}h", *out)
 
 
 def _crossfade_loop(pcm16: bytes, start: int, end: int, fade: int) -> bytes:

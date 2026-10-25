@@ -1513,3 +1513,70 @@ def test_an_it_channel_said_phase_by_phase_moves_those_phases_only():
     assert any("as bright as it was rendered" in c["why"]
                for c in r["candidates"])
     shutil.rmtree(root)
+
+
+# -- P6: the ear is sent the phrase it heard, not the whole range again ------------------------------
+def _four_times(st):
+    st["order"] = ["A", "A", "A", "A"]
+    return st
+
+
+def test_the_window_an_ear_hears_is_the_phrase_around_the_observation():
+    from agentic import anchors as A, fixtures, state as S, timeline as T
+    tl = T.build(S.content(_four_times(fixtures.masked_lead())))
+    w = A.window_for(tl, "all", {"where": {"bars": [5, 5]}})
+    assert w["spec"] == "bars 5-6", w        # the third time A plays
+    w = A.window_for(tl, "all", {"where": {"bars": [4, 5]}})
+    assert w["spec"] == "bars 3-6", w        # across a join: both phrases
+    assert A.window_for(tl, "all", {})["spec"] == "all"
+    assert A.window_for(tl, "bars 7-8", {"where": {"bars": [1, 8]}})[
+        "spec"] == "bars 7-8"
+
+
+def test_a_heard_gap_is_chosen_about_over_its_phrase_only():
+    from agentic import fixtures, guided as G, render as R
+    p = _project(_four_times(fixtures.masked_lead()))
+    cache = R.Cache(p.path("renders"))
+    adapter = _ChoosingEar(pick=1)
+    obs = {"basis": "heard by model", "about_the_piece": True,
+           "category": "balance", "direction": "less", "voices": ["pad"],
+           "where": {"bars": [5, 5]}, "confidence": 0.7,
+           "statement": "the pad covers the lead in the third phrase"}
+    rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                        cache=cache)
+    w = rv["worked_on"][0]
+    v = w["listening_verdict"]
+    assert v["window"]["spec"] == "bars 5-6", v.get("window")
+    # four versions of two bars (3.2 s each at 150 BPM) and their gaps,
+    # not four of the whole eight bars
+    assert v["audio_seconds"] < 4 * 3.2 + 4 * 1.0, v["audio_seconds"]
+    shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_a_join_says_what_jumps_where_one_section_hands_over():
+    import copy
+    from agent import Agent
+    from agentic import fixtures, joins as J, state as S, timeline as T
+    tl = T.build(S.content(_four_times(fixtures.masked_lead())))
+    joins = J.measure(tl)
+    assert [j["bar"] for j in joins] == [3, 5, 7]
+    assert all(not j["flags"] for j in joins)        # A into A, smooth
+    st = fixtures.masked_lead()
+    b = copy.deepcopy(st["sections"][0])
+    b["id"] = "B"
+    for row in b["rows"]:                            # the lead an octave up,
+        if row[1] not in ("...", "==="):             # every row struck
+            row[1] = row[1].replace("-5", "-6").replace("-4", "-5")
+    st["sections"].append(b)
+    st["order"] = ["A", "B"]
+    st["structure"]["plan"].append({"id": "B", "function": "development",
+                                    "bars": 2})
+    j = J.measure(T.build(S.content(st)))[0]
+    assert j["register_semitones"] >= 12
+    assert any("jumps" in f for f in j["flags"]), j["flags"]
+    root = _tmp()
+    a = Agent(root)
+    a.call("create_musical_state", preset="masked_lead", project_id="m")
+    r = a.call("measure_joins", project_id="m")
+    assert r["joins"] == [] and r["limits"]["gap_beats"] == 1.0
+    shutil.rmtree(root)

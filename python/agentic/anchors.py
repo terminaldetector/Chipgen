@@ -312,3 +312,36 @@ def phrase_span(project, rid: str, n_bars: int,
                                                  "certainty", "basis")},
             "certainty": best["certainty"], "basis": rec["basis"],
             "why": why}
+
+
+# -- the window an ear is sent ----------------------------------------------------------------
+#: the fewest bars a choice is listened to over
+WINDOW_MIN_BARS = 2
+
+
+def window_for(tl, spec: str, o: dict) -> dict:
+    """The bars an ear is played to choose about an observation: the
+    phrase (or phrases) around where it was heard, inside the round's range
+    — not the whole range again. Played from the top as ever; only the clip
+    is shorter. -> {"spec", "bars", "why"}; the range itself when the
+    observation says nowhere."""
+    rng = tl.range(spec)
+    r0 = rng["row0"] // tl.rows_per_bar + 1
+    r1 = (rng["row1"] - 1) // tl.rows_per_bar + 1
+    where = (o.get("where") or {}).get("bars") or o.get("bars")
+    if not where or r1 - r0 + 1 <= WINDOW_MIN_BARS:
+        return {"spec": spec, "bars": [r0, r1],
+                "why": "the whole range (the observation names no bars)"
+                if not where else "the range is already short"}
+    b0, b1 = max(r0, int(where[0])), min(r1, int(where[-1]))
+    piece = of_piece(tl)
+    ends = sorted({a["bar"] for a in piece["anchors"]} |
+                  {s["bar"] - 1 for s in piece["sections"] if s["bar"] > 1})
+    start = max([e + 1 for e in ends if e + 1 <= b0] + [r0])
+    end = min([e for e in ends if e >= b1] + [r1])
+    if end - start + 1 < WINDOW_MIN_BARS:
+        end = min(r1, start + WINDOW_MIN_BARS - 1)
+        start = max(r0, end - WINDOW_MIN_BARS + 1)
+    return {"spec": f"bars {start}-{end}", "bars": [start, end],
+            "why": f"the phrase around bars {b0}-{b1}, where it was heard "
+                   f"(of bars {r0}-{r1})"}

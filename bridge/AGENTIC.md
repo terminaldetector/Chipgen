@@ -394,6 +394,18 @@ buried lead of the IT masked lead came out by one channel at a time
 (the loop now tries each, and does not guard the channel it turned down,
 as the Mega Drive loop guards the melodic roles only).
 
+P6:
+
+| what | where |
+|---|---|
+| the ear chooses over the phrase where it heard the problem: the clip of a choice is the phrase (or phrases) around the observation's bars inside the round's range, by the piece's anchors — still played from the top, only shorter; the choice says which window it heard and why | `anchors.window_for`, `guided._decide` |
+| how sections hand over, from the score: density either side, the lead's register, the score's velocity, silence at the bar line, pitch classes shared across it, and which jumps pass their limits — a reading for heard "transition" problems to be weighed against, not a verdict and not yet a guard | `joins.py`, `measure_joins` |
+| **found on the way:** the IT export's samples kept the emulators' DC offset (strings: a third of its peak; every sample began at 504 of 32767), so each note-on and note-off stepped. A one-pole DC blocker at 20 Hz, started at the first frame's level, and the loop's remaining mean taken out: samples start at zero, the loop still joins | `it_export._without_dc`, `test_it.test_a_sample_carries_no_dc_offset_and_starts_at_zero` |
+
+On the masked lead played four times (eight bars), an observation about
+bar 5 is chosen about over bars 5-6: four versions of two bars, about
+17 s of audio instead of about 56 s for the whole range.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core

@@ -377,3 +377,20 @@ def test_a_note_off_releases_the_note_as_the_chip_did():
     body = level(n["start"] + 0.02, n["end"] - 0.005)
     later = level(n["end"] + 0.25, n["end"] + 0.3)
     assert later < body - 6.0, (body, later)
+
+
+def test_a_sample_carries_no_dc_offset_and_starts_at_zero():
+    # The emulators' output sits on an offset (the strings patch: about a
+    # third of its peak); a sample that keeps it steps at every note-on and
+    # note-off. Taken out, the loop still joins.
+    import struct
+    import instruments
+    for name in ("slap_bass", "strings"):
+        s = it_export.render_fm_sample(instruments.get(name))
+        pcm = struct.unpack(f"<{len(s['data']) // 2}h", s["data"])
+        a, b = s["loop"]
+        peak = max(abs(v) for v in pcm)
+        assert abs(sum(pcm[a:b]) / (b - a)) < 0.01 * peak, name
+        assert abs(pcm[0]) < 0.02 * peak, (name, pcm[0])
+        steps = max(abs(pcm[i] - pcm[i - 1]) for i in range(a + 1, b))
+        assert abs(pcm[b - 1] - pcm[a - 1]) <= steps, name

@@ -568,15 +568,20 @@ def _decide(ear, base_tl, tried: List[dict], spec: str, cache, o: dict,
     if not EAR.listening(ear)["available"]:
         return measured_best, None, "measured", None
     top = ok[:CHOOSE_AMONG]
+    # the ear hears the phrase where the observation was, not the whole
+    # range again (anchors.window_for)
+    from . import anchors as A
+    window = A.window_for(base_tl, spec, o)
     choice = L.listen_choose(
         ear, base_tl, [(f"{t['id']}: {t['principle']}", t["_timeline"])
-                       for t in top], spec, cache,
+                       for t in top], window["spec"], cache,
         goal=o.get("statement") or o.get("feature") or "",
         voices=list(o.get("voices") or []) or base_tl.voices(),
         # a change of balance is heard at the level it was rendered; the
         # rest at one loudness, so the louder version does not win
         matched=o.get("category") != "balance")
     model = choice.get("model")
+    choice["window"] = window
     trust = EAR.trusted_to_choose(ear)
     choice["trusted"] = trust
     if not trust["trusted"] and choice.get("choice") is not None:
