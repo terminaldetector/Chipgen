@@ -583,11 +583,11 @@ class _ChoosingEar:
         with _wave.open(_io.BytesIO(wav)) as w:
             rate, ch = w.getframerate(), w.getnchannels()
             pcm = array("h", w.readframes(w.getnframes()))
-        self.channels.append(ch)
         mono = [sum(pcm[i:i + ch]) / ch for i in range(0, len(pcm), ch)]
-        if "How many" in prompt or "higher or lower" in prompt:
-            from test_agentic import _DSPEar
-            return _DSPEar().listen(wav, prompt)
+        if "Answer with one word" in prompt or "single digit" in prompt:
+            from agentic import ear as EAR
+            return EAR.answer_by_dsp(wav, prompt) or ""
+        self.channels.append(ch)        # the music it was sent, not probes
         if "versions of the same passage" in prompt:
             spans = [(float(a), float(b)) for a, b in re.findall(
                 r"^\d+\. ([\d.]+)-([\d.]+) s:", prompt, re.M)]
@@ -728,7 +728,7 @@ def test_a_heard_gap_is_acted_on_only_when_the_ear_chooses_a_change():
         w = rv["worked_on"][0]
         assert w["outcome"] == outcome, w
         assert w["judged_by"] == "heard by model"
-        assert adapter.channels and set(adapter.channels[3:]) == {2}
+        assert adapter.channels and set(adapter.channels) == {2}
         if outcome == "committed":
             assert w["chosen"] == "level_pad_-3" and p.head == 1
             d = p.state["decisions"][-1]
@@ -759,7 +759,7 @@ def test_a_heard_instrument_problem_becomes_a_program_the_ear_picks():
         assert w["outcome"] == "committed", w["why"]
         assert w["chosen"].startswith("br"), w["chosen"]
         assert w["listening_verdict"]["choice"] >= 1
-        assert adapter.choices and set(adapter.channels[3:]) == {2}
+        assert adapter.choices and set(adapter.channels) == {2}
         assert p.state["instruments"]["lead"]["patch"] != "square_lead"
         shutil.rmtree(os.path.dirname(p.root))
 
@@ -796,3 +796,153 @@ def test_a_guided_round_works_first_on_what_the_ear_heard():
             assert p.head == 0
         assert rep["listening"]["available"] is True
         shutil.rmtree(root)
+
+
+# -- references at their full length, VGM, tempo, probes, playback, raw levels ---------------------
+def _vgm_of(project, root):
+    """The project's music as a VGM (this engine's own register log): a
+    VGM reference made of nobody else's music."""
+    import chipgen
+    from agentic import state as S, timeline as T
+    path = os.path.join(root, "ours.vgm")
+    chipgen.compose(T.build(S.content(project.state)).text, vgm=path)
+    return path
+
+
+def test_a_vgm_reference_plays_its_own_log_and_reads_its_notes():
+    from agentic import references as REF
+    with _Banks():
+        src = _composed()
+        root = _tmp()
+        path = _vgm_of(src, root)
+        p = _project(src.state)
+        r = REF.add(p, path, tags=["rhythm"], check=False)
+        assert r["kind"] == "vgm" and "VGM replayed" in r["engine"], r
+        assert r["kept"]["why"] == "the whole of it" and not r["cut"]
+        assert r["source_notes"] > 20 and r["voices"]
+        assert os.path.exists(p.path(r["files"]["score"]))
+        assert r["transcription"]["notes"] > 20
+        voice = sorted(r["voices"])[0]
+        stem = REF.stem(p, "ref1", voice, 2.0)
+        assert len(stem) > 2 * 44100       # interleaved stereo, 2 s
+        shutil.rmtree(root)
+
+
+def test_a_format_nothing_here_plays_is_refused_by_name():
+    from agentic import references as REF, state as S
+    for name, word in (("x.nsf", "NSF"), ("x.fur", "Furnace"),
+                       ("x.ftm", "FamiTracker")):
+        try:
+            REF.kind_of(name)
+            assert False, name
+        except S.AgenticError as error:
+            assert error.code == "unsupported_reference" and \
+                word in str(error), str(error)
+    assert REF.kind_of("x.vgz") == "vgm"
+
+
+def test_a_reference_is_kept_whole_and_says_when_it_was_cut():
+    from agentic import openmpt as O, references as REF
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    src = _composed()
+    root = _tmp()
+    path = _module_of(src, root)
+    p = _project(src.state)
+    whole = REF.add(p, path, check=False)
+    assert whole["kept"]["why"] == "the whole of it" and not whole["cut"]
+    assert abs(whole["seconds"] - whole["full_seconds"]) < 0.5
+    cut = REF.add(p, path, seconds=4, check=False)
+    assert cut["cut"] and "as asked" in cut["kept"]["why"]
+    shutil.rmtree(root)
+
+
+def test_a_tempo_change_in_a_recording_is_found_and_said():
+    from agentic import listen as LI, references as REF
+    rate = 44100
+    stereo = []
+    for bpm, seconds in ((120.0, 62.0), (150.0, 40.0)):
+        beat = int(rate * 60.0 / bpm)
+        n = int(seconds * rate)
+        for i in range(n):
+            k = i % beat
+            v = 0.6 * (1.0 - k / 400.0) if k < 400 else 0.0
+            stereo += [v, v]
+    root = _tmp()
+    wav = os.path.join(root, "clicks.wav")
+    REF._write_wav(wav, stereo)
+    p = _project(_composed().state)
+    r = REF.add(p, wav, tags=["rhythm"], check=False)
+    g = r["grid"]
+    assert g["constant_tempo"] is False, g.get("windows")
+    assert 50.0 <= g["uncertain_after_s"] <= 70.0, g["uncertain_after_s"]
+    late = LI.of_reference(p, "ref1", len(g["bars"]) - 3, 2)
+    assert "grid_uncertain" in late
+    early = LI.of_reference(p, "ref1", 1, 2)
+    assert "grid_uncertain" not in early
+    shutil.rmtree(root)
+
+
+class _HearsTonesOnly:
+    """Hears tones (the basic probes, from the samples) but answers the
+    music probes from the text: it may say which tone is higher, not
+    choose among versions."""
+
+    name = "test-tones-only"
+
+    def declares_audio(self):
+        return True
+
+    def listen(self, wav, prompt):
+        from agentic import ear as EAR
+        if "How many" in prompt or "higher or lower" in prompt:
+            return EAR.answer_by_dsp(wav, prompt)
+        return "same" if "same or" in prompt else "first"
+
+
+def test_a_choice_is_obeyed_only_from_an_ear_that_passed_the_music_probes():
+    from agentic import ear as EAR
+    from test_agentic import _DSPEar
+    good = EAR.verify(_DSPEar())
+    assert good["verified"] and good["music"]["passed"], good["music"]
+    tones = EAR.verify(_HearsTonesOnly())
+    assert tones["verified"] and not tones["music"]["passed"]
+    assert not tones["music"]["probes"]["difference"]
+    ear = EAR.choose("hybrid", _DSPEar(), good)
+    assert EAR.trusted_to_choose(ear)["trusted"]
+    weak = EAR.choose("hybrid", _HearsTonesOnly(), tones)
+    t = EAR.trusted_to_choose(weak)
+    assert not t["trusted"] and "difference" in t["why"]
+    assert EAR.listening(weak)["trusted_to_choose"] is False
+
+
+def test_what_the_ear_hears_is_played_from_the_top():
+    from agentic import fixtures, listen as LI, render as R
+    p = _project(fixtures.masked_lead())
+    cache = R.Cache(p.path("renders"))
+    chased = LI.of_project(p, "bars 2-2", cache=cache)
+    full = LI.of_project(p, "bars 2-2", cache=cache, method="full")
+    assert chased["playback"]["approximate"] is True
+    assert full["playback"] == {"method": "full", "approximate": False,
+                                "how": LI.PLAYBACK["full"]}
+    root = _tmp()
+    idx = LI.write([chased, full], root, "pb", mp3=False, raw=True)
+    assert [e["playback"]["method"] for e in idx["fragments"]] == [
+        "chase", "full"]
+    assert os.path.exists(idx["reel_raw"]["wav"])
+    assert idx["reel_raw"]["common_gain_db"] <= 0.0
+    shutil.rmtree(root)
+    shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_compose_range_can_hear_the_section_it_wrote():
+    from agent import Agent
+    root = _tmp()
+    a = Agent(root)
+    a.call("create_musical_state", preset="etude", project_id="e")
+    r = a.call("compose_range", project_id="e", listen=True)
+    assert r.get("composed"), r
+    heard = r["heard"]
+    assert heard["listening"]["available"] is False
+    assert "revised" not in heard
+    shutil.rmtree(root)

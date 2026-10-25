@@ -17,7 +17,8 @@ Operations (the spec's facade, plus `improve`, `trace` and `export`):
     inspect_capabilities   target                       what can be done, how
     create_musical_state   intent, target, preset|...   a new project
     inspect_musical_state  project_id, scope            a short card
-    compose_range          project_id, section, rows?   write one section
+    compose_range          project_id, section, rows?,  write one section
+                           listen?, revise?             (and hear it)
     render_range           project_id, range, stems?    audio files
     hear_range             project_id, range, mode      observations
     trace                  project_id, t0, t1, voice    audio -> notes -> regs
@@ -280,19 +281,28 @@ class Agent:
 
     def op_compose_range(self, project_id: str, section: str = None,
                          rows=None, harmony=None, function: str = None,
-                         seed: int = None) -> dict:
+                         seed: int = None, listen: bool = False,
+                         revise: bool = False, mode: str = "auto") -> dict:
         """Rows from the agent for `section` (new or replacing), checked
         and committed; without rows, the built-in composer writes the
-        next planned section."""
+        next planned section. With `listen`, the section is then heard
+        with the one before it, the join and the chosen sketches (the
+        same as continue_composition's listening), and with `revise` what
+        a verified model heard is acted on; the raw compose is unchanged
+        without them."""
         p = self._project(project_id)
         if rows is None:
             r = COMP.continue_composition(p, stop_after=1, seed=seed,
                                           hear=False)
-            return {"composed": [x["section"] for x in r["done"]],
-                    "status": r["status"], "next": r["next"],
-                    "steps": [{k: x.get(k) for k in
-                               ("section", "rev", "function", "motif",
-                                "transition")} for x in r["done"]]}
+            out = {"composed": [x["section"] for x in r["done"]],
+                   "status": r["status"], "next": r["next"],
+                   "steps": [{k: x.get(k) for k in
+                              ("section", "rev", "function", "motif",
+                               "transition")} for x in r["done"]]}
+            if listen and r["done"]:
+                out["heard"] = self._listen_to_section(
+                    p, r["done"][-1]["section"], mode, revise)
+            return out
         c = S.content(p.state)
         sec = {"id": section, "rows": rows, "directives": [],
                "harmony": harmony or [], "composed_by": "agent",
@@ -315,6 +325,35 @@ class Agent:
                                                 section)
         if harmony:
             out["harmony"] = COMP.harmony_check(c, section)
+        if listen:
+            out["heard"] = self._listen_to_section(p, section, mode, revise)
+        return out
+
+    def _listen_to_section(self, p, section: str, mode: str,
+                           revise: bool) -> dict:
+        """A section just written, heard (guided.hear_continuation) and,
+        with `revise` and a verified model, revised by what it heard."""
+        ear = self._ear(mode, p)
+        h = G.hear_continuation(p, section, ear=ear,
+                                sketch_ids=[s["id"] for s in SK.chosen(p)],
+                                cache=self._cache(p))
+        out = {"listening": h["listening"], "reel": h["reel"],
+               "join": h.get("join"),
+               "observations": [{k: o.get(k) for k in
+                                 ("basis", "category", "direction",
+                                  "statement", "voices")}
+                                for o in h["observations"]][:12]}
+        if revise and h["listening"].get("available"):
+            heard = [o for o in h["observations"]
+                     if str(o.get("basis", "")).startswith("heard")
+                     and o.get("about_the_piece")]
+            rv = G.revise_heard(p, h["range"], heard, ear=ear,
+                                cache=self._cache(p))
+            out["revised"] = {"worked_on": [{k: w.get(k) for k in
+                                             ("dimension", "outcome",
+                                              "chosen", "why", "judged_by")}
+                                            for w in rv["worked_on"]],
+                              "not_acted_on": rv["not_acted_on"]}
         return out
 
     def op_render_range(self, project_id: str, range: str = "all",
@@ -714,7 +753,7 @@ class Agent:
                          note: str = "", kind: str = None, title: str = "",
                          author: str = "", licence: str = "",
                          url: str = "", regions=None, bank: str = None,
-                         seconds: float = REF.DEFAULT_SECONDS,
+                         seconds: float = REF.DEFAULT_SECONDS,  # None: whole
                          check: bool = True) -> dict:
         """Keep someone else's music in the project as a reference (never
         committed, never copied): what it is for (tags), the user's note,
@@ -723,7 +762,8 @@ class Agent:
         p = self._project(project_id)
         r = REF.add(p, path, kind=kind, tags=list(tags or []), note=note,
                     title=title, author=author, licence=licence, url=url,
-                    regions=regions, bank=bank, seconds=float(seconds),
+                    regions=regions, bank=bank,
+                    seconds=float(seconds) if seconds else None,
                     check=check)
         return {"reference": REF.card(r)}
 

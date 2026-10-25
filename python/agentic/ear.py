@@ -375,6 +375,139 @@ PROBES = [
 ]
 
 
+def _square(freq: float, seconds: float, rate: int, attack_s: float = 0.003,
+            level: float = 0.35) -> list:
+    """A chip-like square note with a linear attack and a short release."""
+    n = int(seconds * rate)
+    a = max(1, int(attack_s * rate))
+    period = rate / freq
+    return [level * (1.0 if (i % period) < period / 2 else -1.0)
+            * min(1.0, i / a, (n - i) / 200.0) for i in range(n)]
+
+
+def _music_clip(kind: str, rate: int = 16000) -> bytes:
+    gap = [0.0] * int(0.4 * rate)
+    if kind in ("same", "different"):
+        a = _square(440, 0.25, rate) + _square(554.4, 0.25, rate) + \
+            _square(659.3, 0.25, rate)
+        b = list(a) if kind == "same" else \
+            _square(440, 0.25, rate) + _square(523.3, 0.25, rate) + \
+            _square(659.3, 0.25, rate)
+        return wav_bytes(a + gap + b, rate)
+    if kind in ("sharp_first", "sharp_second"):
+        sharp = _square(330, 0.6, rate, attack_s=0.002)
+        soft = _square(330, 0.6, rate, attack_s=0.18)
+        first, second = (sharp, soft) if kind == "sharp_first" else \
+            (soft, sharp)
+        return wav_bytes(first + gap + second, rate)
+    if kind == "left_first":
+        tone = _square(392, 0.5, rate)
+        stereo = []
+        for v in tone:
+            stereo += [v, 0.0]
+        stereo += [0.0] * (2 * len(gap))
+        for v in tone:
+            stereo += [0.0, v]
+        return wav_bytes(stereo, rate, stereo=True)
+    raise ValueError(kind)
+
+
+#: (name, clip, question, accepted). What a model must hear to be trusted
+#: to choose among versions: two identical versions are the same, two that
+#: differ by one note are not, which of two notes starts sharply (both
+#: orders), and where a stereo tone sits. A model that answers from the
+#: text alone gets about 1 in 32.
+MUSIC_PROBES = [
+    ("identity", "same", "Two versions play one after the other. Are they "
+     "the same or different? Answer with one word: same or different.",
+     {"same"}),
+    ("difference", "different", "Two versions play one after the other. "
+     "Are they the same or different? Answer with one word: same or "
+     "different.", {"different"}),
+    ("attack", "sharp_first", "Two notes play one after the other. Which "
+     "starts more sharply? Answer with one word: first or second.",
+     {"first"}),
+    ("attack_swapped", "sharp_second", "Two notes play one after the "
+     "other. Which starts more sharply? Answer with one word: first or "
+     "second.", {"second"}),
+    ("pan", "left_first", "Two tones play one after the other. Is the first "
+     "one on the left or on the right? Answer with one word: left or "
+     "right.", {"left"}),
+]
+
+
+def answer_by_dsp(wav: bytes, prompt: str) -> Optional[str]:
+    """The probes answered from the samples by signal processing — not a
+    model: the positive control the probes are checked against (tests,
+    check_listening.py). Tones by their energy, pitch by zero crossings,
+    same/different by the samples, attack by the rise of the envelope,
+    left/right by the channels' energy. None for a question that is not a
+    probe."""
+    with wave.open(io.BytesIO(wav)) as w:
+        rate, ch = w.getframerate(), w.getnchannels()
+        pcm = array.array("h", w.readframes(w.getnframes()))
+    mono = [sum(pcm[i:i + ch]) / ch for i in range(0, len(pcm), ch)]
+    hop = rate // 100
+    loud = [max(abs(v) for v in mono[i:i + hop]) > 2000
+            for i in range(0, len(mono) - hop, hop)]
+    spans, start = [], None
+    for i, on in enumerate(loud + [False]):
+        if on and start is None:
+            start = i
+        if not on and start is not None:
+            spans.append((start * hop, i * hop))
+            start = None
+    if "How many" in prompt:
+        return str(len(spans))
+    if len(spans) < 2:
+        return None
+
+    def zc(a, b):
+        return sum(1 for j in range(a + 1, b)
+                   if (mono[j - 1] < 0) != (mono[j] < 0)) / (b - a)
+    if "higher or lower" in prompt:
+        return "higher" if zc(*spans[1]) > zc(*spans[0]) else "lower"
+    if "same or different" in prompt:
+        (a0, a1), (b0, b1) = spans[0], spans[1]
+        n = min(a1 - a0, b1 - b0)
+        diff = sum(abs(mono[a0 + k] - mono[b0 + k]) for k in range(n))
+        size = sum(abs(mono[a0 + k]) for k in range(n)) or 1.0
+        return "same" if diff / size < 0.05 else "different"
+    if "starts more sharply" in prompt:
+        def rise(a, b):
+            peak = max(abs(v) for v in mono[a:b]) or 1.0
+            return next((k for k in range(a, b)
+                         if abs(mono[k]) >= 0.8 * peak), b) - a
+        return "first" if rise(*spans[0]) < rise(*spans[1]) else "second"
+    if "left or on the right" in prompt and ch == 2:
+        a, b = spans[0]
+        left = sum(abs(pcm[2 * k]) for k in range(a, b))
+        right = sum(abs(pcm[2 * k + 1]) for k in range(a, b))
+        return "left" if left > right else "right"
+    return None
+
+
+def verify_music(adapter) -> dict:
+    """The music probes: whether a model that hears tones also hears what
+    a choice among versions rests on. -> {"passed", "probes": {name:
+    right}, "answers"}."""
+    probes, answers = {}, []
+    for name, kind, question, accepted in MUSIC_PROBES:
+        try:
+            reply = adapter.listen(_music_clip(kind), question)
+        except Exception as error:
+            answers.append({"probe": name, "error": str(error)[:160]})
+            probes[name] = False
+            continue
+        word = reply.strip().lower().split()[0].strip(".,!") if \
+            reply.strip() else ""
+        probes[name] = word in accepted
+        answers.append({"probe": name, "reply": reply[:60],
+                        "right": probes[name]})
+    return {"passed": all(probes.values()), "probes": probes,
+            "answers": answers}
+
+
 class AudioAdapter:
     """Something that can be sent audio and a question. `listen` returns
     the reply text. An OpenAI-compatible endpoint is below; a test can pass
@@ -437,9 +570,30 @@ def verify(adapter: AudioAdapter) -> dict:
         answers.append({"question": question, "reply": reply[:80],
                         "right": right})
         ok = ok and right
-    return {"verified": ok, "adapter": adapter.name, "answers": answers,
-            "why": "answered every probe" if ok else
-            "did not answer every probe correctly"}
+    out = {"verified": ok, "adapter": adapter.name, "answers": answers,
+           "why": "answered every probe" if ok else
+           "did not answer every probe correctly"}
+    if ok:
+        # it hears tones; whether it can be trusted to choose among
+        # versions is the music probes' question
+        out["music"] = verify_music(adapter)
+    return out
+
+
+def trusted_to_choose(ear) -> dict:
+    """Whether the listening model behind `ear` passed the music probes:
+    its choice among versions decides only then; otherwise it is recorded
+    and not obeyed."""
+    native = ear.native if isinstance(ear, HybridEar) else ear
+    v = getattr(native, "verification", None) or {}
+    music = v.get("music")
+    if music is None:
+        return {"trusted": False, "why": "the music probes were not run"}
+    if music["passed"]:
+        return {"trusted": True, "why": "passed the music probes"}
+    failed = [k for k, ok in music["probes"].items() if not ok]
+    return {"trusted": False, "why": f"failed the music probes: "
+                                     f"{', '.join(failed)}"}
 
 
 #: the chips a piece plays, by the first letters of its channels, and
@@ -508,7 +662,9 @@ class NativeEar:
 
     def hear(self, timeline, rng: dict, focus: Optional[List[str]] = None,
              intent: str = "") -> dict:
-        mix = R.render_range(timeline, rng, cache=self.cache)
+        # played from the top: what is heard is the piece, not a chased
+        # window's approximation of it
+        mix = R.render_range(timeline, rng, cache=self.cache, method="full")
         plat = platform_of(timeline)
         # the machine's own output: stereo for the Mega Drive (its pans are
         # part of what is heard), mono for a mono machine
@@ -556,7 +712,7 @@ class NativeEar:
                 "observations": observations, "reply_problem": problem,
                 "measurements": {}, "audio": {
                     "channels": 2 if plat["stereo"] else 1, "rate": R.RATE,
-                    "format": "wav"},
+                    "format": "wav", "playback": "full"},
                 "cost": {"audio_seconds": round(rng["t1"] - rng["t0"], 2)}}
 
 
@@ -653,9 +809,12 @@ def listening(ear) -> dict:
     if isinstance(ear, HybridEar):
         ear = ear.native
     if isinstance(ear, NativeEar):
+        music = ear.verification.get("music") or {}
         return {"mode": "native", "available": True,
                 "model": ear.adapter.name, "verified": True,
-                "why": ear.verification.get("why", "answered the probes")}
+                "why": ear.verification.get("why", "answered the probes"),
+                "music_probes": music.get("probes"),
+                "trusted_to_choose": bool(music.get("passed"))}
     return {"mode": "tool", "available": False, "model": None,
             "verified": False,
             "why": "no audio model that passed the probes is configured: "

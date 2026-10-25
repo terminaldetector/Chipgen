@@ -283,25 +283,10 @@ class _DSPEar:
         return True
 
     def listen(self, wav, prompt):
-        rate, pcm = _read_wav(wav)
-        hop = rate // 100
-        loud = [max(abs(v) for v in pcm[i:i + hop]) > 2000
-                for i in range(0, len(pcm) - hop, hop)]
-        tones, spans, start = 0, [], None
-        for i, on in enumerate(loud + [False]):
-            if on and start is None:
-                start = i
-            if not on and start is not None:
-                tones += 1
-                spans.append((start * hop, i * hop))
-                start = None
-        if "How many" in prompt:
-            return str(tones)
-        if "higher or lower" in prompt:
-            def zc(a, b):
-                return sum(1 for j in range(a + 1, b)
-                           if (pcm[j - 1] < 0) != (pcm[j] < 0)) / (b - a)
-            return "higher" if zc(*spans[1]) > zc(*spans[0]) else "lower"
+        from agentic import ear as EAR
+        answer = EAR.answer_by_dsp(wav, prompt)
+        if answer is not None:
+            return answer
         return json.dumps({"observations": self.script})
 
 
@@ -312,6 +297,12 @@ class _TextOnly:
         return True             # it claims to hear
 
     def listen(self, wav, prompt):
+        if "same or different" in prompt:
+            return "same"
+        if "first or second" in prompt:
+            return "first"
+        if "left or" in prompt:
+            return "left"
         return "3" if "How many" in prompt else "higher"
 
 

@@ -509,8 +509,12 @@ def _listen_ab(ear, tl_a, tl_b, spec: str, cache, obs: dict) -> dict:
 
 
 def _clip(tl, spec: str, cache, stereo: bool = True):
+    """What the ear is sent: the range played from the top of the piece
+    (method "full"), not the chased window — a chase restarts the PSG's
+    phase and cuts a DAC tail from before the window, which a listener
+    could hear and a measurement does not need."""
     rng = tl.range(spec)
-    r = R.render_range(tl, rng, cache=cache)
+    r = R.render_range(tl, rng, cache=cache, method="full")
     return r.segment(rng["t0"], rng["t1"], mono=not stereo)
 
 

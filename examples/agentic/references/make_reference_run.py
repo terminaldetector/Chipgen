@@ -190,9 +190,11 @@ def main(argv=None) -> int:
     frags.append(LI.of_project(p, "B", rev=rev_before,
                                label="B before"))
     frags.append(LI.of_project(p, "B", label="B after"))
-    final = LI.write(frags, os.path.join(out, "ab"), "B_before_after")
-    report["ab_final"] = {k: final[k] for k in ("reel", "fragments",
-                                                "loudness", "path")}
+    final = LI.write(frags, os.path.join(out, "ab"), "B_before_after",
+                     raw=True)
+    report["ab_final"] = {k: final.get(k) for k in ("reel", "reel_raw",
+                                                    "fragments", "loudness",
+                                                    "path")}
     step("sketches at the end", _ok(agent.call(
         "list_sketches", project_id="piece")))
     # 9. the audio model

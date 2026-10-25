@@ -734,7 +734,15 @@ def design(project, voice: str, goal: dict, spec: str,
             goal=f"{voice}'s notes should sound like this: {why or goal}",
             voices=[voice])
         model = verdict.get("model")
-        if verdict.get("choice") == 0:
+        trust = EAR.trusted_to_choose(ear)
+        verdict["trusted"] = trust
+        if not trust["trusted"] and verdict.get("choice") is not None:
+            verdict = dict(verdict, choice=None, obeyed=False,
+                           recorded_choice=verdict["choice"])
+            ear_why = f"{model} {trust['why']}: its choice was recorded"
+            if heard_goal:
+                best = None
+        elif verdict.get("choice") == 0:
             best, ear_why = None, f"{model} chose the instrument as it is"
         elif verdict.get("choice") is not None:
             best = top[verdict["choice"] - 1]

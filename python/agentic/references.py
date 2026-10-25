@@ -50,12 +50,26 @@ from . import features as F
 from .state import AgenticError
 
 RATE = 44100
-KINDS = ("audio", "trk", "module")
+KINDS = ("audio", "trk", "module", "vgm")
 TAGS = tuple(F.DIMENSIONS)
 _AUDIO = (".mp3", ".wav")
 _MODULES = (".it", ".xm", ".s3m", ".mod", ".mptm")
-#: Seconds of a reference kept (rendered or decoded) unless asked for more.
-DEFAULT_SECONDS = 90.0
+_VGM = (".vgm", ".vgz")
+#: formats a reference could be in that no backend here plays: refused by
+#: name, never imported half-way
+_UNPLAYED = {".nsf": "an NSF is a 6502 program; no NSF player is here",
+             ".nsfe": "an NSFe is a 6502 program; no NSF player is here",
+             ".fur": "no Furnace module reader is here",
+             ".ftm": "no FamiTracker module reader is here",
+             ".dmf": "no DefleMask module reader is here",
+             ".spc": "no SPC700 emulator is here",
+             ".gym": "no GYM player is here (a VGM of it would play)",
+             ".sid": "no SID emulator is here"}
+#: Seconds of a reference kept (rendered or decoded) by default: the whole
+#: of it, so its later phrases and its form can be heard (None), up to
+#: MAX_SECONDS; the record says when it was cut and why.
+DEFAULT_SECONDS = None
+MAX_SECONDS = 600.0
 #: Bars in an automatically chosen region.
 REGION_BARS = 8
 #: Voices whose claims are checked against their own audio, at most.
@@ -79,9 +93,16 @@ def kind_of(path: str) -> str:
         return "trk"
     if ext in _MODULES:
         return "module"
+    if ext in _VGM:
+        return "vgm"
+    if ext in _UNPLAYED:
+        raise AgenticError("unsupported_reference",
+                           f"{os.path.basename(path)}: {_UNPLAYED[ext]}; "
+                           f"render it to a WAV and add that", path=path)
     raise AgenticError("bad_reference", f"{os.path.basename(path)}: a "
-                       f"reference is an MP3 or WAV recording, a .trk score "
-                       f"or a module (.it .xm .s3m .mod)", path=path)
+                       f"reference is an MP3 or WAV recording, a .trk score, "
+                       f"a module (.it .xm .s3m .mod) or a VGM (.vgm .vgz)",
+                       path=path)
 
 
 # -- audio files --------------------------------------------------------------------
@@ -377,6 +398,63 @@ def _trk_source(path: str, bank: Optional[str], seconds: float) -> dict:
                             f"no metre)"},
             "title": meta.title or os.path.splitext(
                 os.path.basename(path))[0]}
+
+
+# -- sources: a VGM ----------------------------------------------------------------------------
+def _vgm_source(path: str, folder: str, seconds: float) -> dict:
+    """A register log: its audio replayed by the emulators (vgm_player),
+    its notes from the same log (vgm_transcribe) written as a score with
+    the FM bank it used, kept next to it. The audio is the file's own; the
+    notes, the grid and the voices' stems are the transcription's, and the
+    record says so."""
+    import vgm_player
+    import vgm_transcribe
+    from . import render as R
+    audio = R._flat(vgm_player.render(path, max_seconds=seconds)).data
+    t = vgm_transcribe.transcribe_file(path, max_seconds=seconds)
+    if not t.get("tracker"):
+        raise AgenticError("no_grid", f"{os.path.basename(path)}: its notes "
+                           f"fit no row grid, so there is no score to read "
+                           f"voices from; add its render as a WAV")
+    score = os.path.join(folder, "transcription.trk")
+    with open(score, "w", encoding="utf-8") as handle:
+        handle.write(t["tracker"])
+    import instruments
+    bank = os.path.join(folder, "bank.json")
+    if t["bank"]:
+        instruments.save_bank(bank, t["bank"])     # as the corpus banks are
+    else:                   # (save_bank would write the global bank)
+        with open(bank, "w", encoding="utf-8") as handle:
+            json.dump([], handle)
+    text = t["tracker"]
+    events, meta, rows, row_times, notes, directives, end = _trk_parse(text)
+    lpb = int(meta.lpb)
+    per_bar = lpb * 4
+    starts = [row_times[k] for k in range(0, len(rows), per_bar)]
+    kept = len(audio) / 2 / RATE
+    return {"audio": audio, "notes": [n for n in notes if n["start"] < kept],
+            "rows": [{"t": round(t_, 5), "row": k}
+                     for k, t_ in enumerate(row_times) if t_ < kept],
+            "directives": directives, "full_seconds": t["duration"],
+            "score": score, "bank": bank,
+            "transcription": {k: t.get(k) for k in
+                              ("notes", "grid_fit", "row_seconds", "bpm",
+                               "lpb", "vibrato_spans", "patches")},
+            "engine": "the VGM replayed by Chipgen's emulators (Nuked-OPN2 "
+                      "+ SN76489, and the NES or OPL2 core if it names "
+                      "one); notes, grid and voice stems from its register "
+                      "log's transcription",
+            "grid": {"source": "score", "bpm": float(meta.bpm),
+                     "rows_per_beat": lpb, "rows_per_bar": per_bar,
+                     "beats_per_bar": 4, "beat_known": True,
+                     "beat_s": round(60.0 / float(meta.bpm), 5),
+                     "bars": [round(x, 4) for x in starts if x < kept],
+                     "how": f"the transcription's rows (bpm {meta.bpm:g}, "
+                            f"lpb {lpb}, fitting {t.get('grid_fit', 0):.0%} "
+                            f"of the onsets); 4 beats a bar assumed"},
+            "title": ((t.get("gd3") or {}).get("track") or
+                      os.path.splitext(os.path.basename(path))[0]),
+            "author": (t.get("gd3") or {}).get("author", "")}
 
 
 # -- sources: a module ----------------------------------------------------------------------
@@ -743,7 +821,8 @@ def _settle_grid(project, record: dict, rows: List[dict]):
         record["grid_check"]["verdict"] = (
             "confirmed" if agrees == 1.0 else
             f"confirmed at {'half' if agrees == 2.0 else 'double'} time")
-        if record["kind"] == "trk" and g.get("confidence", 0) >= 0.5 and \
+        if record["kind"] in ("trk", "vgm") and \
+                g.get("confidence", 0) >= 0.5 and \
                 score["bars"]:
             # move the bars by whole beats onto the audio's downbeat
             bar = beat * score["beats_per_bar"]
@@ -776,6 +855,46 @@ def _settle_grid(project, record: dict, rows: List[dict]):
                              f"source's grid ({60.0 / beat:.1f} BPM) does "
                              f"not fit it"}
     record["grid_check"]["verdict"] = "not confirmed: the audio's grid is used"
+
+
+#: Seconds of audio each tempo check reads.
+TEMPO_WINDOW_S = 30.0
+
+
+def _tempo_windows(project, record: dict):
+    """A grid estimated from audio assumes one tempo from its first
+    downbeat on. Check that over the whole kept audio, window by window:
+    each window's own beat against the grid's (the same, half or double
+    within 3%). The grid keeps its bars; the record says where the tempo
+    stops agreeing, and fragments cut after that say their grid is
+    uncertain there."""
+    grid = record["grid"]
+    if grid.get("source") != "audio" or \
+            record["seconds"] < 2 * TEMPO_WINDOW_S:
+        return
+    out, first_bad = [], None
+    t = 0.0
+    while t + TEMPO_WINDOW_S <= record["seconds"] + 1e-6:
+        g = F.beat_grid(F.mono_of(read_wav(project.path(
+            record["files"]["audio"]), t, t + TEMPO_WINDOW_S)))
+        entry = {"t0": round(t, 2), "t1": round(t + TEMPO_WINDOW_S, 2),
+                 "bpm": g.get("bpm"), "confidence": g.get("confidence")}
+        ok = None
+        if g.get("beat_s"):
+            r = g["beat_s"] / grid["beat_s"]
+            ok = any(abs(r / k - 1.0) <= 0.03 for k in (1.0, 2.0, 0.5))
+        entry["agrees"] = ok
+        if ok is False and first_bad is None:
+            first_bad = t
+        out.append(entry)
+        t += TEMPO_WINDOW_S
+    grid["windows"] = out
+    grid["constant_tempo"] = first_bad is None
+    if first_bad is not None:
+        grid["uncertain_after_s"] = round(first_bad, 2)
+        grid["how"] += (f"; from {first_bad:.0f} s the audio's own beat no "
+                        f"longer agrees with it (window by window): bars "
+                        f"after that are uncertain")
 
 
 def snap(project, rid: str, t: float, window: float = 4.0) -> dict:
@@ -823,7 +942,10 @@ def stem(project, rid: str, voice: str, t1: float) -> list:
     path = os.path.join(folder, f"{voice}_{t1:.2f}.wav")
     if os.path.exists(path):
         return read_wav(path)
-    source = project.path(ref["files"]["source"])
+    # a VGM's voices come from its transcription: the register log cannot
+    # be muted voice by voice as a module's channels can
+    source = project.path(ref["files"]["score" if ref["kind"] == "vgm"
+                                     else "source"])
     if ref["kind"] == "module":
         from . import openmpt as O
         ch = int(voice[2:]) - 1
@@ -1102,7 +1224,7 @@ def _region_of(ref: dict, spec: dict) -> dict:
 def add(project, path: str, kind: Optional[str] = None, tags=(),
         note: str = "", title: str = "", author: str = "",
         licence: str = "", url: str = "", regions=None,
-        bank: Optional[str] = None, seconds: float = DEFAULT_SECONDS,
+        bank: Optional[str] = None, seconds: Optional[float] = DEFAULT_SECONDS,
         check: bool = True) -> dict:
     """Keep a reference in the project: copy it, decode or render it,
     read its grid and voices from the source when there is one, choose or
@@ -1118,6 +1240,8 @@ def add(project, path: str, kind: Optional[str] = None, tags=(),
     if bad:
         raise AgenticError("bad_tag", f"{bad}: a reference is for "
                            f"{', '.join(TAGS)}", tags=bad)
+    asked = seconds
+    seconds = min(float(seconds), MAX_SECONDS) if seconds else MAX_SECONDS
     refs = all_(project)
     rid = f"ref{len(refs) + 1}"
     folder = _folder(project, rid)
@@ -1161,13 +1285,21 @@ def add(project, path: str, kind: Optional[str] = None, tags=(),
                           "how": "estimated from the first 40 s of the "
                                  "audio (onset autocorrelation, comb "
                                  "phase, low-band accents); constant tempo "
-                                 "assumed after that; 4 beats a bar "
-                                 "assumed"}
+                                 "assumed after that and checked window by "
+                                 "window; 4 beats a bar assumed"}
     else:
         src = os.path.join(folder, "source" + os.path.splitext(base)[1])
         shutil.copy(path, src)
         record["files"]["source"] = os.path.relpath(src, project.root)
-        if kind == "trk":
+        if kind == "vgm":
+            got = _vgm_source(src, folder, seconds)
+            record["files"]["score"] = os.path.relpath(got["score"],
+                                                       project.root)
+            record["files"]["bank"] = os.path.relpath(got["bank"],
+                                                      project.root)
+            record["directives"] = got["directives"]
+            record["transcription"] = got["transcription"]
+        elif kind == "trk":
             bank_rel = None
             if bank:
                 if not os.path.isfile(bank):
@@ -1200,8 +1332,15 @@ def add(project, path: str, kind: Optional[str] = None, tags=(),
         record["echoes"] = _echoes(ns, {})
         record["source_notes"] = len(ns)
     record["cut"] = record["full_seconds"] > record["seconds"] + 0.05
+    record["kept"] = {
+        "seconds": record["seconds"], "of": record["full_seconds"],
+        "why": ("the whole of it" if not record["cut"] else
+                f"the first {record['seconds']:.0f} s, as asked" if asked
+                else f"the first {MAX_SECONDS:.0f} s: the most kept "
+                     f"without asking")}
     if kind != "audio":
         _settle_grid(project, record, got["rows"])
+    _tempo_windows(project, record)
     record["regions"] = [_region_of(record, r) for r in (regions or [])] \
         or [_auto_region(record, ns, audio_path)]
     refs.append(record)

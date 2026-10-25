@@ -425,14 +425,15 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     ab = LI.write(([dict(ref_f)] if ref_f is not None else [])
                   + [dict(ours_f, label="original", stems=None),
                      dict(cand_f, label=f"candidate {hyp['id']}")],
-                  folder, f"{obs['id']}_{hyp['id']}", mp3=True)
+                  folder, f"{obs['id']}_{hyp['id']}", mp3=True, raw=True)
     out.update(deltas=[L._compact_delta(d) for d in deltas],
                before=before, after=after, reference=ref_reading,
                closed=round(closed, 3) if closed is not None else None,
                closed_of_gap=round(of_gap, 3) if of_gap is not None
                else None,
                guards=checks, ab_reel=ab["reel"].get("mp3")
-               or ab["reel"]["wav"], ab_index=ab["path"],
+               or ab["reel"]["wav"], ab_reel_raw=(ab.get("reel_raw") or {})
+               .get("mp3"), ab_index=ab["path"],
                _content=content, _timeline=tl)
     out["moved"] = moved
     if failed:
@@ -501,7 +502,7 @@ def _instrument_ab(project, spec: str, voice: str, before_rev: int,
                           source=f"{f['source']}_{voice}", samples=solo))
         mixed.append(f)
     out = LI.write(frags + alone + mixed, folder, f"instrument_{voice}",
-                   mp3=True)
+                   mp3=True, raw=True)
     return {"reel": out["reel"].get("mp3") or out["reel"]["wav"],
             "index": out["path"]}
 
@@ -561,6 +562,20 @@ def _decide(ear, base_tl, tried: List[dict], spec: str, cache, o: dict,
         # rest at one loudness, so the louder version does not win
         matched=o.get("category") != "balance")
     model = choice.get("model")
+    trust = EAR.trusted_to_choose(ear)
+    choice["trusted"] = trust
+    if not trust["trusted"] and choice.get("choice") is not None:
+        # recorded, not obeyed: the ear has not shown it hears what a
+        # choice among versions rests on
+        choice = dict(choice, obeyed=False)
+        if heard_gap:
+            return None, choice, "heard by model, not trusted", (
+                f"{model} chose version {choice['choice'] + 1}, but it "
+                f"{trust['why']}; a gap the ear raised is acted on only by "
+                f"a choice it can be trusted with")
+        return measured_best, choice, "measured; the model not trusted", (
+            f"{model} {trust['why']}: its choice was recorded and the "
+            f"measurements decided")
     if choice.get("choice") == 0:
         return None, choice, "heard by model", (
             f"{model} chose the piece as it is over "
@@ -779,14 +794,19 @@ def improve_toward(project, spec: str, references: List[str],
     base_tl = T.build(state_content(project.state))
     rng = base_tl.range(spec)
     n_bars = bars or (rng["bars"][1] - rng["bars"][0] + 1)
-    fragments = [LI.of_project(project, spec, stems=True, cache=cache)]
+    # what a model listens to is played from the top; a measurement is
+    # served by the chased window
+    method = "full" if EAR.listening(ear)["available"] else "chase"
+    fragments = [LI.of_project(project, spec, stems=True, cache=cache,
+                               method=method)]
     for rid in references:
         ref = REF.get(project, rid)
         reg = ref["regions"][0]
         fragments.append(LI.of_reference(project, rid, reg["bars"][0],
                                          n_bars))
     for sid in sketch_ids:
-        fragments.append(LI.of_sketch(project, sid, spec, cache=cache))
+        fragments.append(LI.of_sketch(project, sid, spec, cache=cache,
+                                      method=method))
     heard = LI.compare(project, fragments, os.path.join(folder, "listen"),
                        "compare", ear=ear, voice=voice, dims=dims)
     ours_f = fragments[0]
@@ -920,15 +940,17 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
         raise AgenticError("no_section", f"{section_id!r} does not play")
     new = slots[k]
     spec = f"rows {new['row0']}-{new['row1'] - 1}"
+    method = "full" if EAR.listening(ear)["available"] else "chase"
     fragments = [LI.of_timeline(tl, spec, f"new section {section_id}",
-                                "ours", f"r{project.head}", cache=cache)]
+                                "ours", f"r{project.head}", cache=cache,
+                                method=method)]
     out = {"section": section_id, "range": spec}
     if k > 0:
         prev = slots[k - 1]
         fragments.append(LI.of_timeline(
             tl, f"rows {prev['row0']}-{prev['row1'] - 1}",
             f"previous section {prev['section']}", "previous",
-            prev["section"], cache=cache))
+            prev["section"], cache=cache, method=method))
         rpb = tl.rows_per_bar
         a = max(prev["row0"], new["row0"] - rpb)
         b = min(new["row1"], new["row0"] + rpb)
@@ -990,7 +1012,7 @@ def hear_continuation(project, section_id: str, ear=None, sketch_ids=None,
         fragments.append(LI.of_timeline(
             stl, spec, f"sketch {sid} ({s['label']}), its {section_id} played "
             f"with the piece's instruments now", "sketch", sid,
-            cache=cache))
+            cache=cache, method=method))
         out["sketches"].append({"id": sid, "label": s["label"],
                                 "compared": True}
                                | ({"silent_in_it": silent} if silent

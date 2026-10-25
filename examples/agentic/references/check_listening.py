@@ -31,8 +31,10 @@ from agentic import ear as EAR              # noqa: E402
 
 
 class ReadsTheWav:
-    """Answers the probes from the samples: tones by their energy, pitch by
-    zero crossings. Not a model — the probes' positive control."""
+    """Answers the probes from the samples (ear.answer_by_dsp): tones by
+    their energy, pitch by zero crossings, same or different by the
+    samples, attack by the envelope, left or right by the channels. Not a
+    model — the probes' positive control."""
 
     name = "stand-in that reads the WAV"
 
@@ -40,27 +42,7 @@ class ReadsTheWav:
         return True
 
     def listen(self, wav, prompt):
-        with wave.open(io.BytesIO(wav)) as w:
-            rate = w.getframerate()
-            pcm = array.array("h", w.readframes(w.getnframes()))
-        hop = rate // 100
-        loud = [max(abs(v) for v in pcm[i:i + hop]) > 2000
-                for i in range(0, len(pcm) - hop, hop)]
-        spans, start = [], None
-        for i, on in enumerate(loud + [False]):
-            if on and start is None:
-                start = i
-            if not on and start is not None:
-                spans.append((start * hop, i * hop))
-                start = None
-        if "How many" in prompt:
-            return str(len(spans))
-
-        def crossings(a, b):
-            return sum(1 for j in range(a + 1, b)
-                       if (pcm[j - 1] < 0) != (pcm[j] < 0)) / (b - a)
-        return "higher" if crossings(*spans[1]) > crossings(*spans[0]) \
-            else "lower"
+        return EAR.answer_by_dsp(wav, prompt) or ""
 
 
 class OnlyClaims:
@@ -73,6 +55,10 @@ class OnlyClaims:
         return True
 
     def listen(self, wav, prompt):
+        if "same or different" in prompt:
+            return "same"
+        if "first or second" in prompt:
+            return "first"
         return "3" if "How many" in prompt else "higher"
 
 
@@ -99,10 +85,13 @@ def main(argv=None) -> int:
         v = EAR.verify(stand_in)
         controls[stand_in.name] = {
             "verified": v["verified"], "should_be": should,
-            "answers": v["answers"]}
+            "answers": v["answers"],
+            "music": EAR.verify_music(stand_in)}
     report["probe_controls"] = controls
     report["probes_tell_them_apart"] = all(
-        c["verified"] == c["should_be"] for c in controls.values())
+        c["verified"] == c["should_be"]
+        and c["music"]["passed"] == c["should_be"]
+        for c in controls.values())
     report["what_follows"] = (
         "an audio model answered the probes: its observations are reported "
         "as heard by model, apart from the measurements"

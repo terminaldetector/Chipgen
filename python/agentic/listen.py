@@ -112,14 +112,21 @@ def _stereo_list(samples) -> list:
     return samples.tolist() if hasattr(samples, "tolist") else list(samples)
 
 
+#: how a fragment of the piece was played, as its record says
+PLAYBACK = {"chase": "approximate: the window with the chip state chased "
+                     "in (the PSG's phase and a DAC tail from before the "
+                     "window can differ from the piece played through)",
+            "full": "the piece played from the top and cut"}
+
+
 def of_timeline(tl, spec: str, label: str, kind: str, source: str,
                 stems: bool = False, cache: Optional[R.Cache] = None,
-                voices=None) -> dict:
+                voices=None, method: str = "chase") -> dict:
     """A range of a timeline (the project at a revision, or a sketch's
     content) as a fragment; with `stems`, each sounding voice (or the
     given `voices`) rendered alone over the same range."""
     rng = tl.range(spec)
-    r = R.render_range(tl, rng, cache=cache)
+    r = R.render_range(tl, rng, cache=cache, method=method)
     s = tl.content["structure"]
     beat = 60.0 / float(s["bpm"])
     out = {"label": label, "kind": kind, "source": source, "spec": spec,
@@ -132,13 +139,16 @@ def of_timeline(tl, spec: str, label: str, kind: str, source: str,
                                          tl.rows_per_bar)],
            "samples": _stereo_list(r.segment(rng["t0"], rng["t1"],
                                              mono=False)),
+           "playback": {"method": method, "approximate": method == "chase",
+                        "how": PLAYBACK.get(method, method)},
            "_timeline": tl, "_range": rng}
     if stems:
         out["stems"] = {}
         wanted = voices or [v for v in tl.voices()
                             if tl.sounding(rng["t0"], rng["t1"], v)]
         for v in wanted:
-            sr = R.render_range(tl, rng, voices=[v], cache=cache)
+            sr = R.render_range(tl, rng, voices=[v], cache=cache,
+                                method=method)
             out["stems"][v] = _stereo_list(sr.segment(rng["t0"], rng["t1"],
                                                       mono=False))
     return out
@@ -146,23 +156,24 @@ def of_timeline(tl, spec: str, label: str, kind: str, source: str,
 
 def of_project(project, spec: str, rev: Optional[int] = None,
                stems: bool = False, cache: Optional[R.Cache] = None,
-               label: str = "", voices=None) -> dict:
+               label: str = "", voices=None, method: str = "chase") -> dict:
     c = project.checkout(rev) if rev is not None else \
         state_content(project.state)
     rev = project.head if rev is None else rev
     return of_timeline(T.build(c), spec, label or f"ours r{rev} {spec}",
                        "ours", f"r{rev}", stems, cache
-                       or R.Cache(project.path("renders")), voices)
+                       or R.Cache(project.path("renders")), voices, method)
 
 
 def of_sketch(project, sid: str, spec: str, stems: bool = False,
-              cache: Optional[R.Cache] = None) -> dict:
+              cache: Optional[R.Cache] = None, method: str = "chase") -> dict:
     from . import sketches as SK
     s = SK.get(project, sid)
     tl = T.build(SK.content_of(project, sid))
     return of_timeline(tl, spec, f"sketch {sid} ({s['label']}) {spec}",
                        "sketch", sid, stems,
-                       cache or R.Cache(project.path("renders")))
+                       cache or R.Cache(project.path("renders")),
+                       method=method)
 
 
 def of_reference(project, rid: str, first_bar: Optional[int] = None,
@@ -200,6 +211,12 @@ def of_reference(project, rid: str, first_bar: Optional[int] = None,
            "grid": ref["grid"]["source"], "snapped_ms": start["moved_ms"],
            "bar_starts": bar_starts, "tags": ref["tags"],
            "samples": REF.read(project, rid, t0, t1)}
+    after = ref["grid"].get("uncertain_after_s")
+    if after is not None and t1 > after:
+        out["grid_uncertain"] = (f"the reference's tempo stops agreeing "
+                                 f"with its estimated grid from {after:.0f} "
+                                 f"s; these bars may not be where the grid "
+                                 f"puts them")
     return out
 
 
@@ -251,7 +268,7 @@ def _safe(text: str) -> str:
 
 
 def write(fragments: List[dict], folder: str, name: str,
-          mp3: bool = True) -> dict:
+          mp3: bool = True, raw: bool = False) -> dict:
     """Each fragment (and the piece's stems) loudness-matched, then the
     reel: the fragments in order with GAP_S of silence between. -> the
     index: files, where each fragment sits in the reel, its bars."""
@@ -277,6 +294,8 @@ def write(fragments: List[dict], folder: str, name: str,
                  "bar_starts_in_reel": [round(start + b, 3)
                                         for b in f.get("bar_starts", [])],
                  "lufs_as_rendered": f["lufs"], "gain_db": f["gain_db"],
+                 "playback": f.get("playback"),
+                 "grid_uncertain": f.get("grid_uncertain"),
                  "files": files}
         if f.get("stems"):
             entry["stems"] = {}
@@ -290,6 +309,22 @@ def write(fragments: List[dict], folder: str, name: str,
         index["fragments"].append(entry)
     index["reel"] = _write(os.path.join(folder, f"{name}_reel.wav"), reel,
                            mp3)
+    if raw:
+        # the same reel at the levels the fragments were rendered at (one
+        # reduction for all only if a peak passed -1 dBFS): a change of
+        # balance or dynamics is heard here, the timbre in the matched one
+        import math
+        peak = max((abs(v) for f in fragments for v in f["samples"]),
+                   default=0.0)
+        g = min(1.0, 10 ** (-1.0 / 20.0) / peak) if peak > 0 else 1.0
+        flat = []
+        for f in fragments:
+            flat.extend(v * g for v in f["samples"])
+            flat.extend([0.0] * int(GAP_S * RATE) * 2)
+        index["reel_raw"] = _write(os.path.join(folder,
+                                                f"{name}_reel_raw.wav"),
+                                   flat, mp3)
+        index["reel_raw"]["common_gain_db"] = round(20 * math.log10(g), 2)
     index["reel_seconds"] = round(len(reel) / 2 / RATE, 3)
     with open(os.path.join(folder, f"{name}_index.json"), "w",
               encoding="utf-8") as handle:
