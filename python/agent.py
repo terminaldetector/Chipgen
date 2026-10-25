@@ -583,7 +583,7 @@ class Agent:
                                 budget: str = "3x2",
                                 mode: str = "auto",
                                 listen: bool = False,
-                                sketches=None) -> dict:
+                                sketches=None, revise: bool = True) -> dict:
         p = self._project(project_id)
         ear = self._ear(mode, p)
         fixes = []
@@ -647,6 +647,22 @@ class Agent:
                                 "more than its threshold"] if compared
                                else []),
                            "sketches": h.get("sketches", [])}
+                if revise and h["listening"].get("available"):
+                    # listen and revise: what the verified model heard in
+                    # the new section, routed to changes it then chooses
+                    # among (guided.revise_heard); nothing when nothing
+                    # listened
+                    heard_obs = [o for o in h["observations"]
+                                 if str(o.get("basis", "")).startswith(
+                                     "heard") and o.get("about_the_piece")]
+                    rv = G.revise_heard(project, h["range"], heard_obs,
+                                        ear=ear, cache=self._cache(project))
+                    summary["revised"] = {
+                        "worked_on": [{k: w.get(k) for k in
+                                       ("dimension", "statement", "outcome",
+                                        "chosen", "why", "judged_by")}
+                                      for w in rv["worked_on"]],
+                        "not_acted_on": rv["not_acted_on"]}
                 heard_on.append(summary)
                 out["continuation"] = summary
             return out
@@ -888,16 +904,17 @@ class Agent:
                                    "statement", "bars", "confidence")}
                                  for o in rep["observations"]],
                 "not_compared": rep.get("not_compared", []),
+                "not_acted_on": rep.get("not_acted_on", []),
                 "worked_on": [{k: w.get(k) for k in
                                ("observation", "dimension", "statement",
-                                "outcome", "why", "committed_rev",
+                                "basis", "outcome", "why", "committed_rev",
                                 "chosen", "goal", "goal_note", "note",
-                                "ab_reel")} | {
+                                "ab_reel", "judged_by")} | {
                     "hypotheses": [{k: h.get(k) for k in
                                     ("id", "principle", "parameter",
                                      "chain", "before", "after",
                                      "reference", "closed", "closed_of_gap",
-                                     "accepted", "why", "ab_reel",
+                                     "moved", "accepted", "why", "ab_reel",
                                      "sketch")}
                                    for h in w.get("hypotheses", [])]}
                     for w in rep["worked_on"]],

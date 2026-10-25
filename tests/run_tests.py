@@ -76,11 +76,14 @@ def _state_path(pattern, quick):
 
 
 #: The tests that render enough audio to take a second or more each,
-#: measured on a pure-Python sandbox: 76 of the suite, and about
+#: measured on a pure-Python sandbox: 79 of the suite, and about
 #: nine tenths of its time. `--quick` runs everything else — every module,
 #: every chip, in well under a minute — and says it was the quick set.
 #: test_studio checks that every name here is still a real test.
 SLOW = {
+    "test_agentic_refs.test_a_heard_gap_is_acted_on_only_when_the_ear_chooses_a_change",
+    "test_agentic_refs.test_a_heard_instrument_problem_becomes_a_program_the_ear_picks",
+    "test_agentic_refs.test_a_guided_round_works_first_on_what_the_ear_heard",
     "test_analysis.test_envelope_times_separate_a_pad_from_a_stab",
     "test_analysis.test_pitch_is_accurate_across_the_chips_musical_range",
     "test_arrange.test_a_score_json_renders_instead_of_producing_silence",

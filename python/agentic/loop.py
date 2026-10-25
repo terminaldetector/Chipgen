@@ -498,16 +498,38 @@ def _listen_ab(ear, tl_a, tl_b, spec: str, cache, obs: dict) -> dict:
     when nothing can listen."""
     if not EAR.listening(ear)["available"]:
         return EAR.ab_verdict(ear, [], [], "")
-    clips = []
-    for tl in (tl_a, tl_b):
-        rng = tl.range(spec)
-        r = R.render_range(tl, rng, cache=cache)
-        clips.append(r.segment(rng["t0"], rng["t1"], mono=False))
+    plat = EAR.platform_of(tl_a)
+    clips = [_clip(tl, spec, cache, plat["stereo"]) for tl in (tl_a, tl_b)]
     voices = list(obs.get("voices") or [])
     goal = (obs.get("statement") or obs["kind"]) + \
         " — the change should correct this without harming the rest"
     return EAR.ab_verdict(ear, clips[0], clips[1], goal,
-                          voices=voices or tl_a.voices())
+                          voices=voices or tl_a.voices(),
+                          stereo=plat["stereo"], platform=plat["name"])
+
+
+def _clip(tl, spec: str, cache, stereo: bool = True):
+    rng = tl.range(spec)
+    r = R.render_range(tl, rng, cache=cache)
+    return r.segment(rng["t0"], rng["t1"], mono=not stereo)
+
+
+def listen_choose(ear, base_tl, candidates, spec: str, cache,
+                  goal: str, voices=(), matched: bool = True) -> dict:
+    """The listening model chooses among the original and the candidates
+    that passed every guard (candidates: [(label, timeline)]), each heard
+    over the same range. The ear decides here, not only vetoes; without a
+    verified model, {"available": False} and the measurements decide."""
+    if not EAR.listening(ear)["available"] or not candidates:
+        return EAR.ab_choose(ear, [], goal)
+    plat = EAR.platform_of(base_tl)
+    versions = [("the piece as it is", _clip(base_tl, spec, cache,
+                                             plat["stereo"]))]
+    versions += [(label, _clip(tl, spec, cache, plat["stereo"]))
+                 for label, tl in candidates]
+    return EAR.ab_choose(ear, versions, goal, voices=voices,
+                         stereo=plat["stereo"], platform=plat["name"],
+                         matched=matched)
 
 
 def improve(project, oid: str, budget: Optional[Budget] = None,

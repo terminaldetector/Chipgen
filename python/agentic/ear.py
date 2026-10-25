@@ -442,14 +442,51 @@ def verify(adapter: AudioAdapter) -> dict:
             "did not answer every probe correctly"}
 
 
+#: the chips a piece plays, by the first letters of its channels, and
+#: whether that machine has a stereo output a listener should get
+PLATFORMS = (("fm", "Sega Mega Drive: YM2612 FM + SN76489", True),
+             ("psg", "Sega Mega Drive: YM2612 FM + SN76489", True),
+             ("dac", "Sega Mega Drive: YM2612 FM + SN76489", True),
+             ("nes", "Nintendo NES: the 2A03's pulses, triangle, noise and "
+                     "DMC (mono)", False),
+             ("opl", "AdLib: the YM3812 (OPL2), 2-operator FM (mono)",
+              False))
+
+
+def platform_of(content_or_timeline) -> dict:
+    """{"name", "stereo"} of the machine a piece plays on, read from its
+    channels: the prompts name it, and a mono machine is sent mono."""
+    content = getattr(content_or_timeline, "content", content_or_timeline)
+    cols = [c for c in (content or {}).get("columns", []) if c]
+    for prefix, name, stereo in PLATFORMS:
+        if prefix in ("nes", "opl") and any(c.startswith(prefix)
+                                            for c in cols):
+            return {"name": name, "stereo": stereo}
+    return {"name": PLATFORMS[0][1], "stereo": True}
+
+
+#: what a heard observation is about, in words the loop can act on: the
+#: router (guided.route) turns a category and a direction into changes
+CATEGORIES = ("attack", "body_brightness", "vibrato", "articulation",
+              "space", "density", "groove", "balance", "other")
+
+
 NATIVE_PROMPT = """You are listening to {seconds:.1f} s of a chiptune piece \
-(Sega Mega Drive: YM2612 FM + SN76489). Its intent: {intent}.
-Time 0 of the clip is {t0:.2f} s into the piece. Voices: {voices}.
+({platform}). Its intent: {intent}.
+Time 0 of the clip is {t0:.2f} s into the piece. Voices: {voices}. \
+The clip is {channels}.
 Listen for melody, rhythm, timbre, harmony, phrasing, clarity of each \
 voice, transitions, form and dynamics. Report only what you hear.
+For each thing you would change, say what it is about and which way: \
+category is one of attack (how the notes start), body_brightness (how \
+bright the held part of the notes is), vibrato, articulation (how long or \
+detached the notes are), space (stereo width), density (how busy), groove \
+(placement against the beat), balance (a voice too loud or soft), other; \
+direction is "more" or "less" of it.
 Answer with JSON only: {{"observations": [{{"kind": "<buried|harsh|\
-muddy|too_loud|too_quiet|timing|transition|form|other>", "voices": \
-["<voice>"], "t0": <s from clip start>, "t1": <s>, "statement": "<short>", \
+muddy|too_loud|too_quiet|timing|transition|form|other>", "category": \
+"<category>", "direction": "<more|less|null>", "voices": ["<voice>"], \
+"t0": <s from clip start>, "t1": <s>, "statement": "<short>", \
 "confidence": <0..1>, "cause": "<your guess or null>"}}]}}"""
 
 
@@ -472,11 +509,17 @@ class NativeEar:
     def hear(self, timeline, rng: dict, focus: Optional[List[str]] = None,
              intent: str = "") -> dict:
         mix = R.render_range(timeline, rng, cache=self.cache)
-        samples = mix.in_range()
+        plat = platform_of(timeline)
+        # the machine's own output: stereo for the Mega Drive (its pans are
+        # part of what is heard), mono for a mono machine
+        samples = mix.in_range(mono=not plat["stereo"])
         prompt = NATIVE_PROMPT.format(
             seconds=rng["t1"] - rng["t0"], intent=intent or "not stated",
-            t0=rng["t0"], voices=", ".join(timeline.voices()))
-        reply = self.adapter.listen(wav_bytes(samples), prompt)
+            t0=rng["t0"], voices=", ".join(timeline.voices()),
+            platform=plat["name"],
+            channels="stereo" if plat["stereo"] else "mono")
+        reply = self.adapter.listen(wav_bytes(samples,
+                                              stereo=plat["stereo"]), prompt)
         observations, problem = [], None
         try:
             text = reply[reply.index("{"):reply.rindex("}") + 1]
@@ -484,8 +527,12 @@ class NativeEar:
             for o in data.get("observations", []):
                 a = rng["t0"] + float(o.get("t0", 0.0))
                 b = rng["t0"] + float(o.get("t1", rng["t1"] - rng["t0"]))
+                cat = str(o.get("category") or "other")
+                way = o.get("direction")
                 observations.append({
                     "kind": str(o.get("kind", "other")),
+                    "category": cat if cat in CATEGORIES else "other",
+                    "direction": way if way in ("more", "less") else None,
                     "voices": [v for v in o.get("voices", [])
                                if isinstance(v, str)],
                     "where": _where(timeline, max(rng["t0"], a),
@@ -507,8 +554,10 @@ class NativeEar:
                 "range": {k: rng[k] for k in ("spec", "t0", "t1", "bars",
                                                "sections")},
                 "observations": observations, "reply_problem": problem,
-                "measurements": {}, "cost": {"audio_seconds": round(
-                    rng["t1"] - rng["t0"], 2)}}
+                "measurements": {}, "audio": {
+                    "channels": 2 if plat["stereo"] else 1, "rate": R.RATE,
+                    "format": "wav"},
+                "cost": {"audio_seconds": round(rng["t1"] - rng["t0"], 2)}}
 
 
 #: what a model's kind claims, and the measured reading that can check it
@@ -629,7 +678,7 @@ VETO_CONFIDENCE = 0.6
 #: Silence between the two versions in an A/B clip (seconds).
 AB_GAP_S = 0.75
 
-AB_PROMPT = """You are listening to two versions of the same {seconds:.1f} s passage of a chiptune piece (Sega Mega Drive: YM2612 FM + SN76489), one after the other, matched in loudness. Version A plays from {a0:.2f} s to {a1:.2f} s of this clip, version B from {b0:.2f} s to {b1:.2f} s; silence between them. Voices: {voices}.
+AB_PROMPT = """You are listening to two versions of the same {seconds:.1f} s passage of a chiptune piece ({platform}), one after the other, matched in loudness ({channels}). Version A plays from {a0:.2f} s to {a1:.2f} s of this clip, version B from {b0:.2f} s to {b1:.2f} s; silence between them. Voices: {voices}.
 What the change is meant to improve: {goal}.
 Which version does that better? Report only what you hear.
 Answer with JSON only: {{"preference": "<A|B|same>", "confidence": <0..1>, "statement": "<short: what you heard>", "observations": [{{"version": "<A|B>", "t0": <s from that version's start>, "t1": <s>, "feature": "<what you heard>", "voices": ["<voice>"], "confidence": <0..1>}}]}}"""
@@ -642,30 +691,54 @@ def _mono(samples, stereo: bool):
             for i in range(0, len(samples) - 1, 2)]
 
 
-def ab_clip(a, b, rate: int = R.RATE, stereo: bool = True):
-    """A, silence, B as one mono clip, B matched to A's loudness (BS.1770,
-    one channel) and both scaled down together if a peak would pass -1
-    dBFS. -> (samples, {a0, a1, b0, b1, gain_db})."""
+def _sequence(versions, rate: int, stereo: bool, matched: bool = True):
+    """The versions one after another with AB_GAP_S of silence between,
+    each matched to the first's loudness (BS.1770, on as many channels as
+    they have) and all scaled down together if a peak would pass -1 dBFS.
+    Stereo stays stereo: a pan is part of what is compared. -> (samples,
+    marks: each version's start and end in the clip, its gain)."""
     from . import features as F
-    a, b = _mono(a, stereo), _mono(b, stereo)
-    la = F.loudness(a, rate, channels=1)["lufs"]
-    lb = F.loudness(b, rate, channels=1)["lufs"]
-    gain_b = la - lb if la > -70.0 and lb > -70.0 else 0.0
-    fb = 10 ** (gain_b / 20.0)
-    peak = max([abs(v) for v in a] + [abs(v) * fb for v in b] + [1e-9])
+    ch = 2 if stereo else 1
+    versions = [list(v) for v in versions]
+    louds = [F.loudness(v, rate, channels=ch)["lufs"] for v in versions]
+    # matched: each at the first's loudness (timbre, form); not matched:
+    # as rendered (a change of balance or dynamics is the point)
+    gains = [louds[0] - lv if matched and louds[0] > -70.0 and lv > -70.0
+             else 0.0 for lv in louds]
+    peak = max([abs(x) * 10 ** (g / 20.0) for v, g in zip(versions, gains)
+                for x in v] + [1e-9])
     common = min(1.0, 10 ** (-1.0 / 20.0) / peak)
-    gap = [0.0] * int(AB_GAP_S * rate)
-    clip = [v * common for v in a] + gap + [v * fb * common for v in b]
-    a1 = len(a) / rate
-    b0 = a1 + AB_GAP_S
-    return clip, {"a0": 0.0, "a1": round(a1, 3), "b0": round(b0, 3),
-                  "b1": round(b0 + len(b) / rate, 3),
-                  "gain_b_db": round(gain_b, 2),
+    gap = [0.0] * int(AB_GAP_S * rate) * ch
+    clip, spans, t = [], [], 0.0
+    for k, (v, g) in enumerate(zip(versions, gains)):
+        if k:
+            clip.extend(gap)
+            t += AB_GAP_S
+        f = 10 ** (g / 20.0) * common
+        clip.extend(x * f for x in v)
+        dur = len(v) / ch / rate
+        spans.append({"t0": round(t, 3), "t1": round(t + dur, 3),
+                      "gain_db": round(g, 2)})
+        t += dur
+    return clip, {"versions": spans, "channels": ch, "matched": matched,
                   "common_gain_db": round(20 * math.log10(common), 2)}
 
 
+def ab_clip(a, b, rate: int = R.RATE, stereo: bool = True):
+    """A, silence, B as one clip — stereo when they are — B matched to A's
+    loudness and both scaled down together if a peak would pass -1 dBFS.
+    -> (samples, {a0, a1, b0, b1, gain_b_db, channels})."""
+    clip, m = _sequence([a, b], rate, stereo)
+    va, vb = m["versions"]
+    return clip, {"a0": va["t0"], "a1": va["t1"], "b0": vb["t0"],
+                  "b1": vb["t1"], "gain_b_db": vb["gain_db"],
+                  "common_gain_db": m["common_gain_db"],
+                  "channels": m["channels"]}
+
+
 def ab_verdict(ear, a, b, goal: str, voices=(), rate: int = R.RATE,
-               stereo: bool = True) -> dict:
+               stereo: bool = True,
+               platform: str = PLATFORMS[0][1]) -> dict:
     """Ask the listening model behind `ear` which of two versions does
     `goal` better. Without a verified model: {"available": False, why} —
     and nothing is put in its place. The reply is the model's, recorded
@@ -679,12 +752,15 @@ def ab_verdict(ear, a, b, goal: str, voices=(), rate: int = R.RATE,
                               a1=marks["a1"], b0=marks["b0"],
                               b1=marks["b1"],
                               voices=", ".join(voices) or "not listed",
-                              goal=goal)
+                              goal=goal, platform=platform,
+                              channels="stereo" if marks["channels"] == 2
+                              else "mono")
     out = {"available": True, "model": native.adapter.name,
            "basis": "heard by model", "clip": marks,
-           "audio_seconds": round(len(clip) / rate, 2)}
+           "audio_seconds": round(len(clip) / marks["channels"] / rate, 2)}
     try:
-        reply = native.adapter.listen(wav_bytes(clip, rate), prompt)
+        reply = native.adapter.listen(
+            wav_bytes(clip, rate, stereo=marks["channels"] == 2), prompt)
     except Exception as error:          # a refusal is recorded, not hidden
         out.update(preference=None, problem=f"the model did not answer: "
                                             f"{str(error)[:160]}")
@@ -723,3 +799,63 @@ def vetoes(verdict: Optional[dict]) -> bool:
     return bool(verdict and verdict.get("available")
                 and verdict.get("preference") == "A"
                 and verdict.get("confidence", 0.0) >= VETO_CONFIDENCE)
+
+
+CHOOSE_PROMPT = """You are listening to {n} versions of the same passage of a chiptune piece ({platform}), one after another with {gap:.2f} s of silence between, {levels} ({channels}).
+{index}
+Version 1 is the piece as it is; the others are candidate changes. What the change is meant to do: {goal}.
+Which version does that best, keeping the music as good as it was? Report only what you hear; if you cannot tell them apart, say "uncertain".
+Answer with JSON only: {{"choice": <the version's number, or "uncertain">, "confidence": <0..1>, "statement": "<short: what you heard>", "ranking": [<version numbers, best first>]}}"""
+
+
+def ab_choose(ear, versions, goal: str, voices=(), rate: int = R.RATE,
+              stereo: bool = True, platform: str = PLATFORMS[0][1],
+              matched: bool = True) -> dict:
+    """Let the listening model behind `ear` choose among the original and
+    several candidates (versions: [(label, samples)], the original first)
+    — the ear choosing, not vetoing a winner the numbers chose. -> {
+    available, choice (0 = the original, None = uncertain or no answer),
+    confidence, statement, ranking, clip}. Without a verified model:
+    {"available": False} and nothing in its place."""
+    status = listening(ear)
+    if not status["available"]:
+        return {"available": False, "why": status["why"], "basis": None}
+    native = ear.native if isinstance(ear, HybridEar) else ear
+    clip, marks = _sequence([v for _l, v in versions], rate, stereo,
+                            matched)
+    lines = [f"{k + 1}. {m['t0']:.2f}-{m['t1']:.2f} s: {label}"
+             for k, ((label, _v), m) in enumerate(zip(versions,
+                                                     marks["versions"]))]
+    prompt = CHOOSE_PROMPT.format(
+        n=len(versions), platform=platform, gap=AB_GAP_S,
+        levels="matched in loudness" if matched else
+        "each at the level it was rendered (the balance is what changed)",
+        channels="stereo" if marks["channels"] == 2 else "mono",
+        index="\n".join(lines), goal=goal)
+    out = {"available": True, "model": native.adapter.name,
+           "basis": "heard by model", "labels": [l for l, _v in versions],
+           "clip": marks, "audio_seconds": round(
+               len(clip) / marks["channels"] / rate, 2), "choice": None}
+    try:
+        reply = native.adapter.listen(
+            wav_bytes(clip, rate, stereo=marks["channels"] == 2), prompt)
+        text = reply[reply.index("{"):reply.rindex("}") + 1]
+        data = json.loads(text)
+        raw = data.get("choice")
+        conf = max(0.0, min(1.0, float(data.get("confidence", 0.5))))
+        ranking = [int(x) - 1 for x in data.get("ranking", [])
+                   if isinstance(x, (int, float))
+                   and 1 <= int(x) <= len(versions)]
+        if isinstance(raw, str) and raw.strip().lower() == "uncertain":
+            choice = None
+        else:
+            choice = int(raw) - 1
+            if not 0 <= choice < len(versions):
+                raise ValueError(f"choice {raw!r} is not a version")
+        out.update(choice=choice, confidence=conf, ranking=ranking,
+                   uncertain=choice is None,
+                   statement=str(data.get("statement", ""))[:240])
+    except Exception as error:          # recorded, never replaced
+        out.update(problem=f"no usable answer: {str(error)[:160]}",
+                   uncertain=True)
+    return out

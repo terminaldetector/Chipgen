@@ -535,16 +535,22 @@ def _differences(ours: dict, theirs: dict, dims: List[str]) -> List[dict]:
 
 COMPARE_PROMPT = """You are listening to {n} fragments of chip or tracker \
 music, one after another with {gap:.1f} s of silence between, matched in \
-loudness. Each is the same musical span ({bars}) cut from its own grid: \
-tempos differ and were not changed.
+loudness ({channels}). Each is the same musical span ({bars}) cut from its \
+own grid: tempos differ and were not changed. The piece plays on {platform}.
 {index}
 The piece being made is fragment {ours}. Its voices: {voices}.
 Listen for: {dims}. Compare the piece with each reference on those, and \
 with the agent's own sketches. Report only what you hear. Times are in \
 seconds from the start of this clip.
+For what you would change in the piece, also say what it is about and \
+which way: category is one of attack, body_brightness (the held part of \
+the notes), vibrato, articulation (note length), space (stereo width), \
+density, groove (placement against the beat), balance, other; direction \
+is "more" or "less" of it.
 Answer with JSON only: {{"observations": [{{"fragment": <n>, "t0": <s>, \
 "t1": <s>, "feature": "<timbre|modulation|rhythm|arrangement|development|\
-space|other>", "statement": "<short>", "voices": ["<a voice of the piece, \
+space|other>", "category": "<category>", "direction": "<more|less|null>", \
+"statement": "<short>", "voices": ["<a voice of the piece, \
 if it is about one>"], "confidence": <0..1>}}], "closest_to_goal": \
 <the n of the piece or of a sketch, or null>}}"""
 
@@ -563,9 +569,16 @@ def _listen_reel(ear, fragments: List[dict], index: dict, dims: List[str],
         tempo = f", {e['bpm']:.0f} BPM" if e.get("bpm") else ""
         lines.append(f"{e['n']}. {e['in_reel'][0]:.2f}-{e['in_reel'][1]:.2f}"
                      f" s: {e['kind'].upper()} {e['label']}{tempo}")
-    wav = EAR.wav_bytes(F.mono_of(REF.read_wav(index["reel"]["wav"])), RATE)
+    plat = EAR.platform_of(next((f["_timeline"] for f in fragments
+                                 if f.get("_timeline") is not None), None))
+    reel = REF.read_wav(index["reel"]["wav"])
+    # the reel as written, stereo: the pans and widths are part of what
+    # the fragments are compared on (a mono machine's reel is sent mono)
+    wav = EAR.wav_bytes(reel if plat["stereo"] else F.mono_of(reel), RATE,
+                        stereo=plat["stereo"])
     prompt = COMPARE_PROMPT.format(
-        n=len(index["fragments"]), gap=GAP_S,
+        n=len(index["fragments"]), gap=GAP_S, platform=plat["name"],
+        channels="stereo" if plat["stereo"] else "mono",
         bars=", ".join(sorted({f"{e['bars'][1] - e['bars'][0] + 1} bars"
                                for e in index["fragments"]})),
         index="\n".join(lines), ours=ours_n, voices=", ".join(voices),
@@ -589,6 +602,11 @@ def _listen_reel(ear, fragments: List[dict], index: dict, dims: List[str],
                         "t0": round(max(0.0, a - entry["in_reel"][0]), 3),
                         "t1": round(max(0.0, b - entry["in_reel"][0]), 3),
                         "feature": str(o.get("feature", "other")),
+                        "category": str(o.get("category") or "other")
+                        if o.get("category") in EAR.CATEGORIES else "other",
+                        "direction": o.get("direction")
+                        if o.get("direction") in ("more", "less") else None,
+                        "about_the_piece": n == ours_n,
                         "statement": str(o.get("statement", ""))[:240],
                         "voices": [v for v in o.get("voices", [])
                                    if isinstance(v, str)],

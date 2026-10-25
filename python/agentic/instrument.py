@@ -560,7 +560,7 @@ def _bank_file(project, entry) -> dict:
 def design(project, voice: str, goal: dict, spec: str,
            cache: Optional[R.Cache] = None, ear=None,
            section: Optional[str] = None, max_candidates: int = 6,
-           why: str = "") -> dict:
+           why: str = "", heard_goal: bool = False) -> dict:
     """Work on `voice`'s instrument toward `goal` over the range `spec`
     (where it plays in the piece): hypotheses, each rendered alone and in
     the arrangement, the best that closes MIN_CLOSED of the distance with
@@ -719,22 +719,38 @@ def design(project, voice: str, goal: dict, spec: str,
                     continue
                 tried_ids.add(alt["id"])
                 record["candidates"].append(evaluate(alt))
-    best = None
-    for cand in record["candidates"]:
-        if cand.get("accepted") and (best is None or cand["distance"]["total"]
-                                     < best["distance"]["total"]):
-            best = cand
-    verdict = None
-    if best is not None:
-        verdict = L._listen_ab(ear, base_tl, best["_timeline"], spec, cache,
-                               {"voices": [voice], "kind": "instrument",
-                                "statement": f"{voice}'s notes should do "
-                                             f"this: {goal}"})
-        if EAR.vetoes(verdict):
-            best["accepted"] = False
-            best["why"] += f"; but {verdict['model']} preferred the " \
-                           f"original (confidence {verdict['confidence']:.2f})"
-            best = None
+    # the ear chooses among the original and the nearest candidates that
+    # kept every guard; without a verified model the nearest is kept. A
+    # goal the ear raised (heard_goal) is met only by a change it chooses
+    ok = sorted((c for c in record["candidates"] if c.get("accepted")),
+                key=lambda c: c["distance"]["total"])
+    best = ok[0] if ok else None
+    verdict, ear_why = None, None
+    if ok and EAR.listening(ear)["available"]:
+        top = ok[:3]
+        verdict = L.listen_choose(
+            ear, base_tl, [(f"{c['id']}: {c['parameter']}", c["_timeline"])
+                           for c in top], spec, cache,
+            goal=f"{voice}'s notes should sound like this: {why or goal}",
+            voices=[voice])
+        model = verdict.get("model")
+        if verdict.get("choice") == 0:
+            best, ear_why = None, f"{model} chose the instrument as it is"
+        elif verdict.get("choice") is not None:
+            best = top[verdict["choice"] - 1]
+            ear_why = (f"{model} chose {best['id']} among {len(top)} that "
+                       f"kept every guard")
+        elif heard_goal:
+            best, ear_why = None, (f"{model} could not tell the versions "
+                                   f"apart; a goal the ear raised is met "
+                                   f"only by a change it chooses")
+        else:
+            ear_why = f"{model} could not tell; the nearest was kept"
+        if best is not None:
+            best["why"] += f"; {ear_why}"
+    record["judged_by"] = "measured" if verdict is None else (
+        "heard by model" if verdict.get("choice") is not None or heard_goal
+        else "measured; the model uncertain")
     record["listening_verdict"] = verdict
     for cand in record["candidates"]:
         if cand is best or not cand.get("_content"):
@@ -749,9 +765,11 @@ def design(project, voice: str, goal: dict, spec: str,
             why=f"a candidate for {voice}'s sound goal")
     if best is None:
         record.update(outcome="rolled_back", committed_rev=None,
-                      why="no candidate closed enough of the distance with "
-                          "every guard kept; the instrument stays "
-                          f"{ins['patch']}")
+                      why=(ear_why + "; " if ear_why else "")
+                      + ("no candidate closed enough of the distance with "
+                         "every guard kept" if not ok else
+                         "nothing was kept") + f"; the instrument stays "
+                      f"{ins['patch']}")
     else:
         c = best["_content"]
         if best["scope"] == "program":
@@ -779,6 +797,8 @@ def design(project, voice: str, goal: dict, spec: str,
                                 "voices": [voice], "outcome":
                                 record["outcome"], "range": {"spec": spec},
                                 "rounds": [], "stopped": "candidates tried",
+                                "listening_verdict": verdict,
+                                "judged_by": record["judged_by"],
                                 "instrument": record})
     project.save()
     record["decision"] = did

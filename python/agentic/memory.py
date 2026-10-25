@@ -80,6 +80,39 @@ def _from_roles(spec: dict, content: dict, rng_spec: str) -> Optional[dict]:
     return out
 
 
+
+def _auditory(d: dict) -> dict:
+    """What a listening model said about the decision, as it said it (its
+    A/B verdict or its choice among candidates, with the clip's layout),
+    whether it agreed with the measurements, and how far to trust it — or,
+    when nothing listened, that nothing did."""
+    v = d.get("listening_verdict") or {}
+    out = {"mode": d.get("ear", {}).get("mode"),
+           "statement": d.get("ear", {}).get("statement"),
+           "judged_by": d.get("judged_by")}
+    if not v.get("available"):
+        out.update(judgement=None,
+                   uncertainty="nothing listened; the result is a "
+                               "measurement of the render")
+        return out
+    judgement = {k: v.get(k) for k in
+                 ("model", "basis", "preference", "choice", "labels",
+                  "confidence", "statement", "ranking", "uncertain",
+                  "problem", "audio_seconds") if v.get(k) is not None}
+    judgement["clip"] = v.get("clip")
+    committed = d.get("outcome") == "committed"
+    if "preference" in v:
+        agrees = (v.get("preference") == "B") == committed
+    elif "choice" in v and v.get("choice") is not None:
+        agrees = (v["choice"] != 0) == committed
+    else:
+        agrees = None
+    out.update(judgement=judgement, agrees_with_measurement=agrees,
+               uncertainty="one model's judgement of one clip at "
+                           f"confidence {v.get('confidence')}; recall plays "
+                           "the change again and asks again")
+    return out
+
 class Memory:
     """A store of LearningRecords (JSON lines)."""
 
@@ -177,11 +210,7 @@ class Memory:
                        "guards": [{"name": g["name"], "ok": g["ok"]}
                                   for g in d.get("guards", [])]},
             "tried": tried,
-            "auditory": {"mode": d.get("ear", {}).get("mode"),
-                         "statement": d.get("ear", {}).get("statement"),
-                         "judgement": None,
-                         "uncertainty": "nothing listened; the result is "
-                                        "a measurement of the render"},
+            "auditory": _auditory(d),
             "decision": {"outcome": d["outcome"], "why": d.get("why")
                          or (f"gain {d.get('gain_db')} dB, every guard "
                              f"passed" if committed else "")},

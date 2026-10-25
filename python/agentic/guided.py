@@ -262,6 +262,108 @@ def hypotheses(tl, rng: dict, obs: dict, trace: dict) -> List[dict]:
     return out
 
 
+# -- routing: what heard or measured observation asks for which change -------------------
+#: a heard category and direction -> the reading that checks a change went
+#: the way asked (and the hypotheses that move it). The instrument's own
+#: categories go to a sound goal instead (HEARD_INSTRUMENT).
+HEARD_READINGS = {("space", "more"): ("stereo.side_over_mid_db", 1.0),
+                  ("density", "more"): ("notes_per_beat", 1.0),
+                  ("density", "less"): ("notes_per_beat", -1.0),
+                  ("groove", "more"): ("offbeat_share", 1.0)}
+#: how far a heard instrument category moves the voice's own reading: a
+#: model says "less bright", not "2.28"; the step is a start, measured
+#: back, and the ear chooses among the candidates
+HEARD_INSTRUMENT = {("attack", "more"): {"attack_rise_ms": 0.4,
+                                         "brightness_attack": 1.4},
+                    ("attack", "less"): {"attack_rise_ms": 3.0},
+                    ("body_brightness", "less"): {"brightness_body": 0.6},
+                    ("body_brightness", "more"): {"brightness_body": 1.5},
+                    ("vibrato", "more"): {"vibrato_depth_cents": 1.5},
+                    ("vibrato", "less"): {"vibrato_depth_cents": 0.4}}
+
+
+def route(o: dict, tl, lead: Optional[str] = None) -> dict:
+    """Where an observation goes. Measured gaps against a reference go by
+    their reading (PRINCIPLES); an observation heard by a verified model
+    goes by its category and direction — to a sound goal for a voice's
+    instrument, to the patch ops for space, density, groove, articulation
+    and balance. -> {"route": "instrument"|"arrangement"|None, ...}; None
+    says why nothing can act on it (and it is reported, not dropped)."""
+    if o.get("basis") == "measured":
+        if o.get("against_kind") != "reference" or \
+                o.get("feature") not in PRINCIPLES:
+            return {"route": None, "why": "not a gap against a reference "
+                                          "this layer has a principle for"}
+        dim, kind = PRINCIPLES[o["feature"]]
+        if kind == "instrument":
+            return {"route": "instrument", "voice": lead,
+                    "goal": {o["feature"].split(".", 1)[1]: o["theirs"]}}
+        return {"route": "arrangement", "dimension": dim, "kind": kind,
+                "feature": o["feature"], "gap": o.get("gap") or 0.0}
+    if not str(o.get("basis", "")).startswith("heard by model") and \
+            not str(o.get("basis", "")).startswith("auditory model"):
+        return {"route": None, "why": f"{o.get('basis')}: an assumption "
+                                      f"is tested, not acted on"}
+    if o.get("about_the_piece") is False:
+        return {"route": None, "why": "about a reference or a sketch, not "
+                                      "the piece"}
+    cat, way = o.get("category"), o.get("direction")
+    if cat in (None, "other") or way not in ("more", "less"):
+        return {"route": None, "why": "the model named no category and "
+                                      "direction the changes here have"}
+    named = [v for v in o.get("voices") or []
+             if v in tl.content["instruments"]]
+    voice = named[0] if named else None
+    if (cat, way) in HEARD_INSTRUMENT:
+        v = voice or lead
+        ins = tl.content["instruments"].get(v or "", {})
+        if not ins.get("channel", "").startswith("fm"):
+            return {"route": None, "why": f"{v}: the instrument programs "
+                                          f"are the YM2612's"}
+        return {"route": "instrument", "voice": v,
+                "relative": HEARD_INSTRUMENT[(cat, way)]}
+    if cat == "articulation" and voice:
+        return {"route": "arrangement", "dimension": "articulation",
+                "kind": "articulation", "feature": None, "sign": None,
+                "chains": [{"id": f"gate_{voice}", "chain": [
+                    {"op": "articulation", "voice": voice,
+                     "range": "@", "gate": 0.6} if way == "less" else
+                    {"op": "articulation", "voice": voice, "range": "@",
+                     "legato": True}],
+                    "principle": "shorter, detached notes" if way == "less"
+                    else "the notes joined", "expect": "as heard"}]}
+    if cat == "balance" and voice:
+        db = 3.0 if way == "more" else -3.0
+        return {"route": "arrangement", "dimension": "balance",
+                "kind": "balance", "feature": None, "sign": None,
+                "chains": [{"id": f"level_{voice}_{db:+.0f}", "chain": [
+                    {"op": "level", "voice": voice, "range": "@",
+                     "db": db}], "principle": f"{voice} "
+                    f"{'louder' if db > 0 else 'softer'} in the mix",
+                    "expect": "as heard"}]}
+    if (cat, way) in HEARD_READINGS:
+        feature, sign = HEARD_READINGS[(cat, way)]
+        return {"route": "arrangement", "dimension": cat, "kind": cat,
+                "feature": feature, "gap": sign, "sign": sign}
+    return {"route": None, "why": f"no change here makes {cat} {way}"}
+
+
+def _heard_goal(base_prof: dict, relative: Dict[str, float]) -> dict:
+    """A heard instrument category as a sound goal: the voice's own
+    readings moved by the category's step."""
+    goal = {}
+    for k, f in relative.items():
+        now = base_prof.get(k)
+        if k == "vibrato_depth_cents":
+            now = now or 0.0
+            goal[k] = max(25.0, now * f) if f > 1 else now * f
+            if f > 1:
+                goal.setdefault("vibrato_share", 0.6)
+        elif isinstance(now, (int, float)):
+            goal[k] = round(max(0.5, now * f), 3)
+    return {k: v for k, v in goal.items() if v is not None}
+
+
 # -- testing one ---------------------------------------------------------------------------
 def _reading(profile: dict, path: str):
     return F.get(profile, path)
@@ -288,8 +390,8 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
     if path in ("onsets_per_beat", "offbeat_share") and \
             obs.get("counted_from") == "audio":
         path += "_audio"                    # as the reference was counted
-    before = _reading(base_m, path)
-    after = _reading(cand_m, path)
+    before = _reading(base_m, path) if path else None
+    after = _reading(cand_m, path) if path else None
     h = tool.hear(tl, tl.range(spec))
     checks = L.guards(base_tl, tl, base_h, h, rng, obs | {"voices": []},
                       hyp["chain"])
@@ -314,10 +416,15 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
         if scale < gap0 - 1e-9:
             step_note = (f" (a step of {closed:.0%} of the reading itself, "
                          f"the measure where the gap is larger than it)")
+    moved = None
+    if obs.get("sign") is not None and before is not None and \
+            after is not None:
+        moved = round(obs["sign"] * (after - before), 4)
     failed = [g for g in checks if not g["ok"]]
     # the original's voices were written once, with the listening reel
-    ab = LI.write([dict(ref_f), dict(ours_f, label="original", stems=None),
-                   dict(cand_f, label=f"candidate {hyp['id']}")],
+    ab = LI.write(([dict(ref_f)] if ref_f is not None else [])
+                  + [dict(ours_f, label="original", stems=None),
+                     dict(cand_f, label=f"candidate {hyp['id']}")],
                   folder, f"{obs['id']}_{hyp['id']}", mp3=True)
     out.update(deltas=[L._compact_delta(d) for d in deltas],
                before=before, after=after, reference=ref_reading,
@@ -327,9 +434,22 @@ def _test(project, base_tl, rng, hyp: dict, obs: dict, ours_f: dict,
                guards=checks, ab_reel=ab["reel"].get("mp3")
                or ab["reel"]["wav"], ab_index=ab["path"],
                _content=content, _timeline=tl)
+    out["moved"] = moved
     if failed:
         out.update(accepted=False, why="guard failed: " + "; ".join(
             f"{g['name']} ({g['detail']})" for g in failed))
+    elif ref_reading is None:
+        # heard, not measured against a reference: a candidate that kept
+        # every guard (and, where a reading can say, moved the way the
+        # model asked) goes to the ear, which chooses
+        if moved is not None and moved <= 0:
+            out.update(accepted=False, why=f"{path} {before:g} -> "
+                                           f"{after:g}: not the way the "
+                                           f"model asked")
+        else:
+            out.update(accepted=True, why="every guard kept" + (
+                f"; {path} {before:g} -> {after:g}, the way asked"
+                if moved is not None else ""))
     elif closed is None:
         out.update(accepted=False, why="the reading could not be measured "
                                        "on the candidate")
@@ -410,6 +530,235 @@ def _complete_goal(goal: Dict[str, float],
     return None
 
 
+# -- one gap, worked on --------------------------------------------------------------------
+#: candidates a listening model is asked to choose among (with the original)
+CHOOSE_AMONG = 3
+
+
+def _decide(ear, base_tl, tried: List[dict], spec: str, cache, o: dict,
+            heard_gap: bool):
+    """Which candidate, if any, is kept. With a verified listening model
+    the ear chooses among the original and the candidates that kept every
+    guard (the measurements rank them, they do not decide); without one
+    the measurements decide, as before. A gap the ear raised is acted on
+    only when the ear chooses a change: "uncertain" keeps the piece.
+    -> (best or None, choice record or None, judged_by, why)."""
+    ok = [t for t in tried if t.get("accepted")]
+    ok.sort(key=lambda t: -(t.get("closed") if t.get("closed") is not None
+                            else abs(t.get("moved") or 0.0)))
+    measured_best = ok[0] if ok else None
+    if not ok:
+        return None, None, "guards: no candidate kept them all", None
+    if not EAR.listening(ear)["available"]:
+        return measured_best, None, "measured", None
+    top = ok[:CHOOSE_AMONG]
+    choice = L.listen_choose(
+        ear, base_tl, [(f"{t['id']}: {t['principle']}", t["_timeline"])
+                       for t in top], spec, cache,
+        goal=o.get("statement") or o.get("feature") or "",
+        voices=list(o.get("voices") or []) or base_tl.voices(),
+        # a change of balance is heard at the level it was rendered; the
+        # rest at one loudness, so the louder version does not win
+        matched=o.get("category") != "balance")
+    model = choice.get("model")
+    if choice.get("choice") == 0:
+        return None, choice, "heard by model", (
+            f"{model} chose the piece as it is over "
+            f"{', '.join(t['id'] for t in top)}")
+    if choice.get("choice") is not None:
+        best = top[choice["choice"] - 1]
+        return best, choice, "heard by model", (
+            f"{model} chose {best['id']} among {len(top)} that kept every "
+            f"guard (confidence {choice.get('confidence', 0):.2f})")
+    if heard_gap:
+        return None, choice, "heard by model", (
+            f"{model} could not tell the versions apart; a gap the ear "
+            f"raised is acted on only when it chooses a change")
+    return measured_best, choice, "measured; the model uncertain", (
+        f"{model} could not tell; the measurements decided")
+
+
+def _work_gap(project, spec: str, rng: dict, o: dict, r: dict, ref_f,
+              ctx: dict, cache, tool, folder: str, ear, base_rev) -> dict:
+    """One observation: traced, its hypotheses rendered and guarded, one
+    kept (by the ear where one listens) or none, the rest kept as rejected
+    sketches. `ctx` carries the passage as the round has left it."""
+    base_tl, base_h, ours_f = ctx["base_tl"], ctx["base_h"], ctx["ours_f"]
+    heard_gap = o.get("basis") != "measured"
+    oid = o.get("id") or f"H{len(project.state.get('decisions', [])) + 1}"
+    o = dict(o, id=oid, feature=r.get("feature"), gap=r.get("gap"),
+             sign=r.get("sign"))
+    dim = r["dimension"]
+    trace = trace_gap(base_tl, rng, dict(o, feature=o["feature"] or ""))
+    if r.get("chains"):
+        hyps = [dict(h, chain=[dict(c, range=spec) if c.get("range") == "@"
+                               else c for c in h["chain"]])
+                for h in r["chains"]]
+    else:
+        hyps = hypotheses(base_tl, rng, o, trace)
+    work = {"observation": oid, "dimension": dim,
+            "statement": o.get("statement"), "basis": o.get("basis"),
+            "against": o.get("against"), "trace": trace,
+            "routed": {k: v for k, v in r.items() if k != "chains"},
+            "hypotheses": [], "outcome": None, "measured_on": project.head}
+    if project.head != base_rev:
+        # the observation was made on the original; the changes are
+        # measured on the passage as the round has left it so far
+        work["note"] = (f"before is the passage as the earlier changes "
+                        f"of this round left it (revision {project.head}), "
+                        f"not the original the observation was made on")
+    if not hyps:
+        work.update(outcome="no_hypothesis", why="no change this layer "
+                    "knows carries that over here")
+        return work
+    tried = [_test(project, base_tl, rng, h, o, ours_f, ref_f,
+                   o.get("theirs") if not heard_gap else None, cache, tool,
+                   base_h, folder, ear) for h in hyps]
+    best, choice, judged_by, why = _decide(ear, base_tl, tried, spec, cache,
+                                           o, heard_gap)
+    if best is not None and why:
+        best["why"] += f"; {why}"
+    for t in tried:
+        if t is not best and t.get("_content") is not None:
+            t["sketch"] = SK.save(
+                project, f"{oid}: {t['id']}", content=t["_content"],
+                status="rejected", reason=t["why"] if not (
+                    choice and choice.get("available")) else
+                f"{t['why']}; not the ear's choice", chain=t["chain"],
+                base_rev=project.head, section=spec,
+                measured={"reading": o.get("feature"),
+                          "before": t.get("before"), "after": t.get("after"),
+                          "reference": t.get("reference")},
+                why=t["principle"])
+    if best is not None:
+        parent = project.head
+        rev = project.commit(best["_content"], {
+            "kind": "guided", "observation": oid, "chain": best["chain"],
+            "principle": best["principle"], "reference": o.get("against"),
+            "basis": o.get("basis")})
+        did = project.add_decision({
+            "kind": "guided", "observation": None,
+            "voices": sorted({c.get("voice") for c in best["chain"]
+                              if c.get("voice")}),
+            "range": {"spec": spec}, "outcome": "committed",
+            "chain": best["chain"], "before": best.get("before"),
+            "after": best.get("after"), "reference": best.get("reference"),
+            "base_rev": parent, "committed_rev": rev, "rounds": [],
+            "stopped": "hypotheses tried", "why": best["why"],
+            "raised_by": o.get("basis"), "statement": o.get("statement"),
+            "listening_verdict": choice, "judged_by": judged_by})
+        work.update(outcome="committed", committed_rev=rev, decision=did,
+                    chosen=best["id"], why=best["why"])
+        ctx["base_tl"] = best["_timeline"]
+        ctx["base_h"] = tool.hear(ctx["base_tl"], ctx["base_tl"].range(spec))
+        ctx["ours_f"] = LI.of_timeline(ctx["base_tl"], spec, "ours (after)",
+                                       "ours", f"r{rev}", cache=cache)
+        ctx["ours_f"]["_measured"] = LI.measure(project, ctx["ours_f"])
+    else:
+        work.update(outcome="rolled_back", why=why or (
+            "no change closed a third of the gap with every guard kept; "
+            "the passage stays as it was" if not heard_gap else
+            "no change kept every guard and moved the way asked"))
+    work["listening_verdict"] = choice
+    work["judged_by"] = judged_by
+    work["hypotheses"] = [{k: v for k, v in t.items()
+                           if not k.startswith("_")} for t in tried]
+    return work
+
+
+def _heard_instrument(project, spec: str, o: dict, r: dict, base_tl, cache,
+                      ear, budget: int, fragments, heard, folder) -> dict:
+    """A voice's sound the model heard wrong: its readings moved by the
+    category's step as the goal, the design's candidates chosen among by
+    the ear (instrument.design, heard_goal=True)."""
+    voice = r["voice"]
+    base_prof = INS.listen_voice(base_tl, spec, voice, cache)
+    goal = _heard_goal(base_prof, r["relative"])
+    entry = {"observation": o.get("id") or o.get("statement"),
+             "dimension": "instrument", "statement": o.get("statement"),
+             "basis": o.get("basis"), "goal": goal,
+             "goal_note": "from what the model heard: the voice's own "
+                          "readings moved by a step, measured back; the "
+                          "ear chooses among the candidates",
+             "routed": r}
+    if not goal:
+        entry.update(outcome="no_hypothesis", why="the voice shows no "
+                     "reading that category moves", hypotheses=[])
+        return entry
+    before_rev = project.head
+    rec = INS.design(project, voice, goal, spec, cache=cache, ear=ear,
+                     max_candidates=budget, heard_goal=True,
+                     why=f"heard: {o.get('statement')}")
+    ab = None
+    if rec["outcome"] == "committed":
+        ab = _instrument_ab(project, spec, voice, before_rev, rec, [],
+                            fragments, heard, folder, cache)
+    entry.update(outcome=rec["outcome"], why=rec["why"],
+                 committed_rev=rec.get("committed_rev"),
+                 chosen=rec.get("chosen"),
+                 listening_verdict=rec.get("listening_verdict"),
+                 ab_reel=(ab or {}).get("reel"),
+                 hypotheses=rec["candidates"])
+    return entry
+
+
+def revise_heard(project, spec: str, observations: List[dict], ear=None,
+                 cache: Optional[R.Cache] = None,
+                 folder: Optional[str] = None, max_gaps: int = 2,
+                 instrument_budget: int = 4) -> dict:
+    """What a verified listening model heard in the piece, acted on over
+    `spec` without a reference: each observation routed (route), its
+    changes rendered, guarded and chosen among by the ear. The listen-and-
+    revise step of a continuation. -> {"worked_on", "not_acted_on"}."""
+    cache = cache or R.Cache(project.path("renders"))
+    ear = ear or EAR.ToolEar(cache)
+    out = {"range": spec, "worked_on": [], "not_acted_on": [],
+           "listening": EAR.listening(ear)}
+    if not out["listening"]["available"]:
+        out["why"] = "nothing listened: there is nothing heard to act on"
+        return out
+    tool = EAR.measurer(ear, cache)
+    folder = folder or project.path("out", "revise",
+                                    time.strftime("%Y%m%d-%H%M%S"))
+    os.makedirs(folder, exist_ok=True)
+    base_tl = T.build(state_content(project.state))
+    rng = base_tl.range(spec)
+    lead = next((v for v, i in base_tl.content["instruments"].items()
+                 if i.get("role") in ("lead", "melody")), None)
+    ours_f = LI.of_timeline(base_tl, spec, f"ours r{project.head}", "ours",
+                            f"r{project.head}", cache=cache)
+    ours_f["_measured"] = LI.measure(project, ours_f)
+    ctx = {"base_tl": base_tl, "base_h": tool.hear(base_tl, rng),
+           "ours_f": ours_f}
+    base_rev = project.head
+    kinds, done_instrument = set(), False
+    for o in observations:
+        r = route(o, ctx["base_tl"], lead)
+        if r["route"] is None or o.get("basis") == "measured":
+            out["not_acted_on"].append({"statement": o.get("statement"),
+                                        "why": r.get("why") or "measured: "
+                                        "the correction loop's to fix"})
+            continue
+        if r["route"] == "instrument":
+            if done_instrument:
+                continue
+            done_instrument = True
+            out["worked_on"].append(_heard_instrument(
+                project, spec, o, r, ctx["base_tl"], cache, ear,
+                instrument_budget, [], {}, folder))
+            ctx["base_tl"] = T.build(state_content(project.state))
+            continue
+        if r["kind"] in kinds or len(kinds) >= max_gaps:
+            continue
+        kinds.add(r["kind"])
+        out["worked_on"].append(_work_gap(project, spec, rng, o, r, None,
+                                          ctx, cache, tool, folder, ear,
+                                          base_rev))
+    out["head"] = project.head
+    project.save()
+    return out
+
+
 # -- one round --------------------------------------------------------------------------------
 def improve_toward(project, spec: str, references: List[str],
                    bars: Optional[int] = None, dims=None, ear=None,
@@ -453,121 +802,64 @@ def improve_toward(project, spec: str, references: List[str],
               "worked_on": [],
               "statement": EAR.statement(ear)}
     base_h = tool.hear(base_tl, rng)
-    measured = [o for o in heard["observations"]
-                if o["basis"] == "measured" and o["against_kind"] ==
-                "reference" and o["feature"] in PRINCIPLES]
-    # the largest gaps first, one per reading
-    measured.sort(key=lambda o: -abs(o.get("gap") or 0.0) /
-                  max(abs(o.get("ours") or 0.0), 1.0))
+    lead = voice
+    routed = []
+    for o in heard["observations"]:
+        r = route(o, base_tl, lead)
+        if r["route"] is None:
+            if str(o.get("basis", "")).startswith("heard"):
+                report.setdefault("not_acted_on", []).append(
+                    {"observation": o.get("id") or o.get("statement"),
+                     "why": r["why"]})
+            continue
+        routed.append((o, r))
+    heard_first = [x for x in routed if x[0]["basis"] != "measured"]
+    measured = [x for x in routed if x[0]["basis"] == "measured"]
+    # the largest measured gaps first, one per reading
+    measured.sort(key=lambda x: -abs(x[0].get("gap") or 0.0) /
+                  max(abs(x[0].get("ours") or 0.0), 1.0))
     seen, chosen = set(), []
     instrument_goal: Dict[str, float] = {}
     instrument_obs = []
+    heard_instrument = []
     kinds_taken = set()
-    for o in measured:
-        if o["feature"] in seen:
-            continue
-        seen.add(o["feature"])
-        kind = PRINCIPLES[o["feature"]][1]
-        if kind == "instrument":
+    for o, r in heard_first + measured:
+        if r["route"] == "instrument":
+            if o["basis"] != "measured":
+                heard_instrument.append((o, r))
+                continue
+            if o["feature"] in seen:
+                continue
+            seen.add(o["feature"])
             # every instrument gap goes to one design: one sound goal
-            instrument_goal[o["feature"].split(".", 1)[1]] = o["theirs"]
+            instrument_goal.update(r["goal"])
             instrument_obs.append(o)
-        elif kind not in kinds_taken:
+            continue
+        key = r["feature"] or r["kind"]
+        if key in seen or r["kind"] in kinds_taken:
             # one gap of each kind: two density gaps would try the same
             # changes twice, while a gap of another kind tries others
-            kinds_taken.add(kind)
-            chosen.append(o)
+            continue
+        seen.add(key)
+        kinds_taken.add(r["kind"])
+        chosen.append((o, r))
     goal_note = _complete_goal(instrument_goal, [
         (heard["readings"].get(o["against"]) or {}).get("voice") or {}
         for o in instrument_obs])
-    for o in chosen[:max_gaps]:
-        dim, kind = PRINCIPLES[o["feature"]]
-        ref_f = next(f for f in fragments if f["label"] == o["against"])
-        trace = trace_gap(base_tl, rng, o)
-        hyps = hypotheses(base_tl, rng, o, trace)
-        work = {"observation": o["id"], "dimension": dim,
-                "statement": o["statement"], "basis": o["basis"],
-                "against": o["against"], "trace": trace,
-                "hypotheses": [], "outcome": None,
-                "measured_on": project.head}
-        if project.head != base_rev:
-            # the observation was made on the original; the changes are
-            # measured on the passage as the round has left it so far
-            work["note"] = (f"before is the passage as the earlier changes "
-                            f"of this round left it (revision "
-                            f"{project.head}), not the original the "
-                            f"observation was made on")
-        if not hyps:
-            work.update(outcome="no_hypothesis", why="no change this layer "
-                        "knows carries that principle over here")
-            report["worked_on"].append(work)
-            continue
-        tried = []
-        for h in hyps:
-            t = _test(project, base_tl, rng, h, o, ours_f, ref_f,
-                      o["theirs"], cache, tool, base_h, folder, ear)
-            tried.append(t)
-        best = None
-        for t in tried:
-            if t.get("accepted") and (best is None or
-                                      t["closed"] > best["closed"]):
-                best = t
-        verdict = None
-        if best is not None:
-            verdict = L._listen_ab(ear, base_tl, best["_timeline"], spec,
-                                   cache, {"voices": [], "kind": dim,
-                                           "statement": o["statement"]})
-            if EAR.vetoes(verdict):
-                best["accepted"] = False
-                best["why"] += f"; but {verdict['model']} preferred the " \
-                               f"original"
-                best = None
-        for t in tried:
-            if t is not best and t.get("_content") is not None:
-                t["sketch"] = SK.save(
-                    project, f"{o['id']}: {t['id']}", content=t["_content"],
-                    status="rejected", reason=t["why"], chain=t["chain"],
-                    base_rev=project.head, section=spec,
-                    measured={"reading": o["feature"],
-                              "before": t.get("before"),
-                              "after": t.get("after"),
-                              "reference": t.get("reference")},
-                    why=t["principle"])
-        if best is not None:
-            parent = project.head
-            rev = project.commit(best["_content"], {
-                "kind": "guided", "observation": o["id"],
-                "chain": best["chain"], "principle": best["principle"],
-                "reference": o["against"]})
-            did = project.add_decision({
-                "kind": "guided", "observation": None,
-                "voices": sorted({c.get("voice") for c in best["chain"]
-                                  if c.get("voice")}),
-                "range": {"spec": spec}, "outcome": "committed",
-                "chain": best["chain"], "before": best["before"],
-                "after": best["after"], "reference": best["reference"],
-                "base_rev": parent,
-                "committed_rev": rev, "rounds": [],
-                "stopped": "hypotheses tried", "why": best["why"],
-                "listening_verdict": verdict,
-                "judged_by": "measured" if not (verdict or {}).get(
-                    "available") else "measured, then heard by model"})
-            work.update(outcome="committed", committed_rev=rev,
-                        decision=did, chosen=best["id"], why=best["why"])
-            base_tl = best["_timeline"]
-            base_h = tool.hear(base_tl, base_tl.range(spec))
-            ours_f = LI.of_timeline(base_tl, spec, "ours (after)", "ours",
-                                    f"r{rev}", cache=cache)
-            ours_f["_measured"] = LI.measure(project, ours_f)
-        else:
-            work.update(outcome="rolled_back",
-                        why="no change closed a third of the gap with "
-                            "every guard kept; the passage stays as it was")
-        work["listening_verdict"] = verdict
-        work["hypotheses"] = [{k: v for k, v in t.items()
-                               if not k.startswith("_")} for t in tried]
-        report["worked_on"].append(work)
-    if instrument_goal and voice:
+    ctx = {"base_tl": base_tl, "base_h": base_h, "ours_f": ours_f}
+    for o, r in chosen[:max_gaps]:
+        ref_f = next((f for f in fragments if f["label"] == o.get("against")),
+                     None) if o.get("basis") == "measured" else None
+        report["worked_on"].append(_work_gap(
+            project, spec, rng, o, r, ref_f, ctx, cache, tool, folder, ear,
+            base_rev))
+    base_tl = ctx["base_tl"]
+    for o, r in heard_instrument[:1]:
+        report["worked_on"].append(_heard_instrument(
+            project, spec, o, r, base_tl, cache, ear, instrument_budget,
+            fragments, heard, folder))
+        base_tl = T.build(state_content(project.state))
+    if instrument_goal and voice and not heard_instrument:
         before_rev = project.head
         rec = INS.design(project, voice, instrument_goal, spec, cache=cache,
                          ear=ear, max_candidates=instrument_budget,

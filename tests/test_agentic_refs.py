@@ -551,3 +551,248 @@ def test_the_facade_keeps_references_and_sketches_and_says_who_listened():
     assert r["sketches"][0]["status"] == "open"
     assert a.call("list_references", project_id="e")["references"] == []
     shutil.rmtree(root)
+
+
+# -- hearing that decides: the router, the ear's choice, stereo, memory ---------------------------
+class _ChoosingEar:
+    """A stand-in for a verified audio model that decides from the audio
+    it is sent. It answers the probes from the samples, reports a scripted
+    observation about the piece, and when asked to choose among versions
+    it reads each version's span (from the prompt's index) and picks the
+    one with the fewest zero crossings for a goal that asks for less
+    brightness (most otherwise) — or answers "uncertain" when told to.
+    It records the channel count of every clip it was sent."""
+
+    name = "test-choosing-ear"
+
+    def __init__(self, observation=None, uncertain=False, pick=None):
+        self.observation = observation
+        self.uncertain = uncertain
+        self.pick = pick
+        self.channels = []
+        self.choices = []
+
+    def declares_audio(self):
+        return True
+
+    def listen(self, wav, prompt):
+        import io as _io
+        import re
+        import wave as _wave
+        from array import array
+        with _wave.open(_io.BytesIO(wav)) as w:
+            rate, ch = w.getframerate(), w.getnchannels()
+            pcm = array("h", w.readframes(w.getnframes()))
+        self.channels.append(ch)
+        mono = [sum(pcm[i:i + ch]) / ch for i in range(0, len(pcm), ch)]
+        if "How many" in prompt or "higher or lower" in prompt:
+            from test_agentic import _DSPEar
+            return _DSPEar().listen(wav, prompt)
+        if "versions of the same passage" in prompt:
+            spans = [(float(a), float(b)) for a, b in re.findall(
+                r"^\d+\. ([\d.]+)-([\d.]+) s:", prompt, re.M)]
+            if self.uncertain:
+                return json.dumps({"choice": "uncertain", "confidence": 0.2,
+                                   "statement": "cannot tell"})
+            if self.pick is not None:
+                self.choices.append({"pick": self.pick,
+                                     "matched": "matched in loudness"
+                                     in prompt})
+                return json.dumps({"choice": self.pick + 1,
+                                   "confidence": 0.8, "statement": "scripted"})
+
+            def crossings(a, b):
+                seg = mono[int(a * rate):int(b * rate)]
+                return sum(1 for x, y in zip(seg, seg[1:])
+                           if (x < 0) != (y < 0)) / max(1, len(seg))
+            zc = [crossings(a, b) for a, b in spans]
+            darker = "less" in prompt or "darker" in prompt or \
+                "softer" in prompt
+            pick = (min if darker else max)(range(len(zc)),
+                                             key=lambda k: zc[k])
+            self.choices.append({"crossings": zc, "pick": pick})
+            return json.dumps({"choice": pick + 1, "confidence": 0.8,
+                               "statement": "by ear", "ranking": [pick + 1]})
+        if "fragments" in prompt or "Report only what you hear" in prompt:
+            return json.dumps({"observations": [self.observation]
+                               if self.observation else []})
+        return "{}"
+
+
+def _choosing(adapter, cache=None):
+    from agentic import ear as EAR, render as R
+    return EAR.choose("hybrid", adapter, EAR.verify(adapter),
+                      cache or R.Cache())
+
+
+def test_an_observation_goes_where_something_can_act_on_it():
+    from agentic import fixtures, guided as G, state as S, timeline as T
+    tl = T.build(S.content(fixtures.masked_lead()))
+    heard = {"basis": "heard by model", "about_the_piece": True,
+             "statement": "the lead's held notes are too bright"}
+    r = G.route(dict(heard, category="body_brightness", direction="less",
+                     voices=["lead"]), tl, "lead")
+    assert r["route"] == "instrument" and r["voice"] == "lead"
+    assert r["relative"] == {"brightness_body": 0.6}
+    r = G.route(dict(heard, category="space", direction="more"), tl, "lead")
+    assert r["route"] == "arrangement" and \
+        r["feature"] == "stereo.side_over_mid_db" and r["sign"] == 1.0
+    r = G.route(dict(heard, category="balance", direction="less",
+                     voices=["pad"]), tl, "lead")
+    assert r["chains"][0]["chain"][0] == {"op": "level", "voice": "pad",
+                                          "range": "@", "db": -3.0}
+    assert G.route(dict(heard, about_the_piece=False, category="space",
+                        direction="more"), tl, "lead")["route"] is None
+    assert G.route(dict(heard, category="other", direction="more"), tl,
+                   "lead")["route"] is None
+    measured = {"basis": "measured", "against_kind": "reference",
+                "feature": "voice.vibrato_depth_cents", "theirs": 50.0}
+    assert G.route(measured, tl, "lead") == {
+        "route": "instrument", "voice": "lead",
+        "goal": {"vibrato_depth_cents": 50.0}}
+    assert G.route({"basis": "assumed"}, tl, "lead")["route"] is None
+
+
+def test_the_ear_chooses_among_versions_it_is_sent_in_stereo():
+    from agentic import ear as EAR
+    import math as _m
+    rate = 8000
+
+    def tone(f, sec=0.5):
+        out = []
+        for i in range(int(sec * rate)):
+            v = 0.3 * _m.sin(2 * _m.pi * f * i / rate)
+            out += [v, 0.5 * v]          # left of centre
+        return out
+    adapter = _ChoosingEar()
+    ear = _choosing(adapter)
+    v = EAR.ab_choose(ear, [("as it is", tone(2000)), ("bright", tone(3000)),
+                            ("dark", tone(500))], "less bright, softer",
+                      rate=rate)
+    assert v["available"] and v["choice"] == 2, v
+    assert v["clip"]["channels"] == 2 and adapter.channels[-1] == 2
+    assert len(v["clip"]["versions"]) == 3
+    # stereo kept: an anti-phase side signal survives (a mono mix would
+    # cancel it to silence)
+    wide = [x for i in range(4000) for x in (0.3 * _m.sin(i / 3.0),
+                                             -0.3 * _m.sin(i / 3.0))]
+    a = EAR.ab_clip(wide, wide, rate)[0]
+    assert max(abs(x) for x in a) > 0.1
+    assert max(abs(a[i] + a[i + 1]) for i in range(0, 2000, 2)) < 1e-6
+    unsure = EAR.ab_choose(_choosing(_ChoosingEar(uncertain=True)),
+                           [("a", tone(500)), ("b", tone(900))], "x",
+                           rate=rate)
+    assert unsure["choice"] is None and unsure["uncertain"]
+    none = EAR.ab_choose(EAR.ToolEar(), [("a", tone(500))], "x")
+    assert none["available"] is False and "choice" not in none
+
+
+def test_a_mono_machine_is_named_and_sent_mono():
+    from agentic import ear as EAR
+    assert EAR.platform_of({"columns": ["fm0", "psg0", "noise"]}) == {
+        "name": EAR.PLATFORMS[0][1], "stereo": True}
+    nes = EAR.platform_of({"columns": ["nes0", "nes1", "nes2"]})
+    assert nes["stereo"] is False and "NES" in nes["name"]
+    assert EAR.platform_of({"columns": ["opl0"]})["stereo"] is False
+
+
+def test_a_learning_record_keeps_what_the_model_heard():
+    from agentic import memory as M
+    heard = {"available": True, "model": "m", "basis": "heard by model",
+             "choice": 2, "labels": ["as it is", "a", "b"],
+             "confidence": 0.8, "statement": "b is clearer",
+             "clip": {"channels": 2}}
+    a = M._auditory({"outcome": "committed", "listening_verdict": heard,
+                     "judged_by": "heard by model"})
+    assert a["judgement"]["choice"] == 2 and a["judgement"]["model"] == "m"
+    assert a["agrees_with_measurement"] is True
+    assert "nothing listened" not in a["uncertainty"]
+    none = M._auditory({"outcome": "committed", "listening_verdict":
+                        {"available": False}})
+    assert none["judgement"] is None and "nothing listened" in \
+        none["uncertainty"]
+
+
+def test_a_heard_gap_is_acted_on_only_when_the_ear_chooses_a_change():
+    from agentic import fixtures, guided as G, render as R
+    obs = {"basis": "heard by model", "about_the_piece": True,
+           "category": "balance", "direction": "less", "voices": ["pad"],
+           "statement": "the pad is too loud, softer please",
+           "confidence": 0.7}
+    for uncertain, outcome in ((True, "rolled_back"), (False, "committed")):
+        p = _project(fixtures.masked_lead())
+        cache = R.Cache(p.path("renders"))
+        adapter = _ChoosingEar(uncertain=uncertain, pick=1)
+        rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                            cache=cache)
+        w = rv["worked_on"][0]
+        assert w["outcome"] == outcome, w
+        assert w["judged_by"] == "heard by model"
+        assert adapter.channels and set(adapter.channels[3:]) == {2}
+        if outcome == "committed":
+            assert w["chosen"] == "level_pad_-3" and p.head == 1
+            d = p.state["decisions"][-1]
+            assert d["raised_by"] == "heard by model"
+            assert d["listening_verdict"]["choice"] == 1
+            # a balance change is heard at its rendered level
+            assert adapter.choices[-1]["matched"] is False
+            assert d["listening_verdict"]["clip"]["matched"] is False
+        else:
+            assert p.head == 0 and "acted on only when" in w["why"]
+        shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_a_heard_instrument_problem_becomes_a_program_the_ear_picks():
+    from agentic import fixtures, guided as G, render as R
+    with _Banks():
+        p = _project(fixtures.masked_lead())
+        cache = R.Cache(p.path("renders"))
+        adapter = _ChoosingEar()
+        obs = {"basis": "heard by model", "about_the_piece": True,
+               "category": "body_brightness", "direction": "less",
+               "voices": ["lead"], "statement": "the lead is harsh: "
+               "less bright in its held notes", "confidence": 0.7}
+        rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                            cache=cache, instrument_budget=2)
+        w = rv["worked_on"][0]
+        assert w["dimension"] == "instrument" and w["goal"], w
+        assert w["outcome"] == "committed", w["why"]
+        assert w["chosen"].startswith("br"), w["chosen"]
+        assert w["listening_verdict"]["choice"] >= 1
+        assert adapter.choices and set(adapter.channels[3:]) == {2}
+        assert p.state["instruments"]["lead"]["patch"] != "square_lead"
+        shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_a_guided_round_works_first_on_what_the_ear_heard():
+    from agentic import guided as G, openmpt as O, references as REF
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    with _Banks():
+        src = _composed()
+        root = _tmp()
+        path = _module_of(src, root)
+        p = _project(src.state)
+        REF.add(p, path, tags=["rhythm"], seconds=20, check=False)
+        heard = {"fragment": 1, "t0": 0.0, "t1": 2.0, "feature": "space",
+                 "category": "space", "direction": "more", "voices": [],
+                 "statement": "the piece is narrow; wider", "confidence": 0.7}
+        adapter = _ChoosingEar(observation=heard, pick=1)
+        rep = G.improve_toward(p, "A", ["ref1"], folder=os.path.join(root,
+                                                                     "g"),
+                               max_gaps=1, ear=_choosing(adapter))
+        w = rep["worked_on"][0]
+        # what the ear heard is worked on first, through the same changes
+        # and guards as a measured gap; here every candidate broke one, so
+        # nothing reached the ear and the piece stayed
+        assert w["basis"] == "heard by model" and w["dimension"] == "space"
+        assert [h["id"] for h in w["hypotheses"]] == [
+            "spread", "echo", "spread+echo"]
+        assert all(h["moved"] > 0 for h in w["hypotheses"])
+        if w["outcome"] == "committed":
+            assert w["judged_by"] == "heard by model"
+        else:
+            assert w["judged_by"].startswith("guards"), w["judged_by"]
+            assert p.head == 0
+        assert rep["listening"]["available"] is True
+        shutil.rmtree(root)
