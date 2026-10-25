@@ -638,12 +638,30 @@ category is one of attack (how the notes start), body_brightness (how \
 bright the held part of the notes is), vibrato, articulation (how long or \
 detached the notes are), space (stereo width), density (how busy), groove \
 (placement against the beat), balance (a voice too loud or soft), other; \
-direction is "more" or "less" of it.
+direction is "more" or "less" of it. When it is about how one voice's \
+notes sound, you may also say it phase by phase ("phases"): the attack \
+(first 60 ms; quality sharpness or brightness), the body (to 350 ms; \
+brightness), the held part of long notes (vibrato; only_long when it \
+belongs on the long notes only), the release (length).
 Answer with JSON only: {{"observations": [{{"kind": "<buried|harsh|\
 muddy|too_loud|too_quiet|timing|transition|form|other>", "category": \
 "<category>", "direction": "<more|less|null>", "voices": ["<voice>"], \
+"phases": [{{"phase": "<attack|body|held|release>", "quality": \
+"<sharpness|brightness|vibrato|length>", "direction": "<more|less>", \
+"only_long": <true|false>}}], \
 "t0": <s from clip start>, "t1": <s>, "statement": "<short>", \
 "confidence": <0..1>, "cause": "<your guess or null>"}}]}}"""
+
+
+def phases_of(o: dict) -> list:
+    """The phase clauses of a model's observation that name a phase, a
+    quality and a direction this layer has (intent.PHASES); the rest are
+    dropped, not guessed at."""
+    from .intent import parse
+    raw = o.get("phases")
+    if not isinstance(raw, list):
+        return []
+    return parse([c for c in raw if isinstance(c, dict)])["clauses"]
 
 
 class NativeEar:
@@ -693,6 +711,7 @@ class NativeEar:
                     "direction": way if way in ("more", "less") else None,
                     "voices": [v for v in o.get("voices", [])
                                if isinstance(v, str)],
+                    "phases": phases_of(o),
                     "where": _where(timeline, max(rng["t0"], a),
                                     min(rng["t1"], max(a, b))),
                     "statement": str(o.get("statement", ""))[:200],

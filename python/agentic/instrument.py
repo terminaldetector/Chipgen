@@ -188,10 +188,13 @@ def _delay_for_share(lengths: List[float], share: float) -> Optional[float]:
 
 def hypotheses(compiled, profile: dict, goal: dict, voice: str,
                channel: str, section: Optional[str] = None,
-               lengths: Optional[List[float]] = None) -> List[dict]:
+               lengths: Optional[List[float]] = None,
+               hold: Optional[dict] = None) -> List[dict]:
     """Changes that could bring the voice's notes to `goal`, each with the
     parameter, what should happen and its scope. `lengths` are the voice's
-    note lengths in the range (seconds)."""
+    note lengths in the range (seconds). When the attack's brightness is
+    held (`hold`), a modulator track waits for the attack's window to
+    end (intent.PHASES) before it moves."""
     from synthesis import program as P
     base = _program_of(compiled)
     out = []
@@ -241,9 +244,22 @@ def hypotheses(compiled, profile: dict, goal: dict, voice: str,
     if target is not None and now is not None and \
             abs(target - now) > READINGS["brightness_development"][0]:
         a = _attack_ms(profile)
+        if hold and "brightness_attack" in hold:
+            from .intent import PHASES
+            a = max(a, float(PHASES["attack"]["window_ms"][1]))
         for k, steps in enumerate((2, 4)):
             out.append(_tl_hypothesis(base, a, steps, now, target,
                                       f"tl{k + 1}"))
+    bright = goal.get("brightness_attack")
+    now_bright = profile.get("brightness_attack")
+    if bright is not None and now_bright is not None and \
+            "brightness_body" not in goal and \
+            abs(bright - now_bright) > READINGS["brightness_attack"][0]:
+        a = _attack_ms(profile)
+        sign = -1 if bright > now_bright else 1    # - opens the modulators
+        for k, steps in enumerate((3, 6)):
+            out.append(_attack_hypothesis(base, a, sign * steps, now_bright,
+                                          bright, f"at{k + 1}"))
     level = goal.get("brightness_body")
     now_level = profile.get("brightness_body")
     if level is not None and now_level is not None and \
@@ -323,6 +339,28 @@ def _tl_hypothesis(base, attack_ms: float, steps: int, now: float,
                         f"body over attack brightness from {now:.2f} "
                         f"toward {target:.2f}",
             "_attack_ms": attack_ms}
+
+
+def _attack_hypothesis(base, attack_ms: float, steps: int, now: float,
+                       target: float, hid: str) -> dict:
+    """The modulators moved `steps` for the attack only (negative: open,
+    brighter), back to the patch's own level 60 ms later: the attack's
+    brightness without the body's."""
+    from synthesis import program as P
+    p = base.copy()
+    p.tracks = [t for t in p.tracks if t.target != "mod.tl"]
+    points = [(0, steps), (attack_ms, steps), (attack_ms + 60, 0)]
+    p.tracks.append(P.Track("mod.tl", points, "ms", "linear", None, None,
+                            "program"))
+    return {"id": hid, "family": "attack_tl", "amount": steps,
+            "scope": "program", "program": p,
+            "parameter": "mod.tl (modulator level) over the attack only",
+            "change": {"mod.tl": points},
+            "expected": f"{'brighter' if steps < 0 else 'darker'} attack "
+                        f"({abs(steps)} steps for {attack_ms:.0f} ms, back "
+                        f"by {attack_ms + 60:.0f} ms): attack brightness "
+                        f"from {now:.2f} toward {target:.2f}, the body as "
+                        f"it was"}
 
 
 def _level_hypothesis(base, steps: int, now: float, target: float,
@@ -560,11 +598,16 @@ def _bank_file(project, entry) -> dict:
 def design(project, voice: str, goal: dict, spec: str,
            cache: Optional[R.Cache] = None, ear=None,
            section: Optional[str] = None, max_candidates: int = 6,
-           why: str = "", heard_goal: bool = False) -> dict:
+           why: str = "", heard_goal: bool = False,
+           hold: Optional[dict] = None,
+           intent: Optional[dict] = None) -> dict:
     """Work on `voice`'s instrument toward `goal` over the range `spec`
     (where it plays in the piece): hypotheses, each rendered alone and in
     the arrangement, the best that closes MIN_CLOSED of the distance with
-    every guard kept is committed. -> the record (also the decision)."""
+    every guard kept is committed. -> the record (also the decision).
+    `hold`: readings that may not move further than their limit (the
+    phases an intent did not name, intent.to_goal); without it, KEEP.
+    `intent`: the clauses, so each candidate says what each phase did."""
     from . import sketches as SK
     started = time.time()
     st = project.state
@@ -590,7 +633,7 @@ def design(project, voice: str, goal: dict, spec: str,
                                                            voice)]
     hyps = _interleave(hypotheses(compiled, base_prof, goal, voice,
                                   ins["channel"], section,
-                                  lengths))[:max_candidates]
+                                  lengths, hold))[:max_candidates]
     record = {"voice": voice, "patch_before": ins["patch"], "goal": goal,
               "range": spec, "why": why,
               "before": {"profile": _compact(base_prof),
@@ -600,6 +643,10 @@ def design(project, voice: str, goal: dict, spec: str,
                              "band_margin_db")},
               "candidates": [], "base_rev": project.head,
               "listening": EAR.listening(ear)}
+    if intent is not None:
+        record["intent"] = {"clauses": intent["clauses"],
+                            "unparsed": intent.get("unparsed", []),
+                            "hold": hold}
     n = sum(1 for s in st.get("sketches", []) if s.get("section")
             == "instrument") + len(st["revisions"])
     counter = [0]
@@ -657,7 +704,7 @@ def design(project, voice: str, goal: dict, spec: str,
                                    "no_new_faults", "voices_present",
                                    "mix_level")]
         kept = []
-        for key, limit in KEEP.items():
+        for key, limit in (KEEP if hold is None else hold).items():
             if key in goal:
                 continue
             a, b = base_prof.get(key), prof.get(key)
@@ -675,6 +722,10 @@ def design(project, voice: str, goal: dict, spec: str,
                                                     "did not name stay"})
         closed = (base_dist["total"] - dist["total"]) / base_dist["total"] \
             if base_dist["total"] > 0 else 0.0
+        if intent is not None:
+            from . import intent as INT
+            cand["phases"] = INT.report(intent, base_prof, prof, goal,
+                                        hold or {})
         cand.update(profile=_compact(prof), distance=dist,
                     closed=round(closed, 3), guards=guards,
                     band_margin_db=(h_c["measurements"]["voices"].get(voice)

@@ -581,10 +581,16 @@ For what you would change in the piece, also say what it is about and \
 which way: category is one of attack, body_brightness (the held part of \
 the notes), vibrato, articulation (note length), space (stereo width), \
 density, groove (placement against the beat), balance, other; direction \
-is "more" or "less" of it.
+is "more" or "less" of it. When it is about how one voice's notes sound, \
+you may also say it phase by phase ("phases"): the attack (first 60 ms; \
+sharpness or brightness), the body (to 350 ms; brightness), the held part \
+of long notes (vibrato; only_long when only there), the release (length).
 Answer with JSON only: {{"observations": [{{"fragment": <n>, "t0": <s>, \
 "t1": <s>, "feature": "<timbre|modulation|rhythm|arrangement|development|\
 space|other>", "category": "<category>", "direction": "<more|less|null>", \
+"phases": [{{"phase": "<attack|body|held|release>", "quality": \
+"<sharpness|brightness|vibrato|length>", "direction": "<more|less>", \
+"only_long": <true|false>}}], \
 "statement": "<short>", "voices": ["<a voice of the piece, \
 if it is about one>"], "confidence": <0..1>}}], "closest_to_goal": \
 <the n of the piece or of a sketch, or null>}}"""
@@ -642,6 +648,7 @@ def _listen_reel(ear, fragments: List[dict], index: dict, dims: List[str],
                         "direction": o.get("direction")
                         if o.get("direction") in ("more", "less") else None,
                         "about_the_piece": n == ours_n,
+                        "phases": EAR.phases_of(o),
                         "statement": str(o.get("statement", ""))[:240],
                         "voices": [v for v in o.get("voices", [])
                                    if isinstance(v, str)],

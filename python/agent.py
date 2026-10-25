@@ -41,7 +41,8 @@ References, parallel listening, sketches and instruments:
     listen_compare         project_id, range, refs      aligned fragments,
                                                         reel, observations
     check_listening        -                            is a model hearing?
-    design_instrument      project_id, voice, goal|ref  a voice's sound
+    design_instrument      project_id, voice, goal|ref  a voice's sound;
+                           |intent                      phase by phase
     save_sketch            project_id, label, rev?      keep a draft
     section_sketches       project_id, section, seeds   other drafts of it
     list_sketches          project_id                   drafts and why
@@ -77,6 +78,7 @@ from agentic import ear as EAR                   # noqa: E402
 from agentic import fixtures                     # noqa: E402
 from agentic import guided as G                  # noqa: E402
 from agentic import instrument as INS            # noqa: E402
+from agentic import intent as INT                # noqa: E402
 from agentic import listen as LI                 # noqa: E402
 from agentic import references as REF            # noqa: E402
 from agentic import sketches as SK               # noqa: E402
@@ -90,7 +92,8 @@ from agentic.state import AgenticError           # noqa: E402
 
 PRESETS = {"masked_lead": fixtures.masked_lead,
            "masked_lead_b": fixtures.masked_lead_b,
-           "etude": fixtures.etude}
+           "etude": fixtures.etude,
+           "held_lead": fixtures.held_lead}
 
 
 def _r(x, n=2):
@@ -877,14 +880,35 @@ class Agent:
     def op_design_instrument(self, project_id: str, voice: str,
                              range: str = "all", goal: dict = None,
                              reference: str = None, dims=None,
-                             mode: str = "auto", candidates: int = 6) -> dict:
-        """Work on a voice's instrument toward a sound goal: given, or read
+                             mode: str = "auto", candidates: int = 6,
+                             intent=None) -> dict:
+        """Work on a voice's instrument toward a sound goal: given, read
         off a reference's matching voice (on the dimensions it is tagged
-        for). -> the candidates, what each changed and measured, the one
-        kept or why none was."""
+        for), or said phase by phase (`intent`: "a short sting, then a dark
+        body, vibrato only on the long notes", or its clauses) — then the
+        phases not named are held. -> the candidates, what each changed and
+        measured, the one kept or why none was; with an intent, what each
+        phase did and the A/B reels (alone and in the mix, matched and at
+        the rendered levels)."""
         p = self._project(project_id)
         cache = self._cache(p)
         ear = self._ear(mode, p)
+        hold, parsed, notes = None, None, []
+        if intent is not None:
+            parsed = INT.parse(intent)
+            if not parsed["clauses"]:
+                raise AgenticError("no_intent", "no phase, quality and "
+                                   "direction could be read from the "
+                                   "intent", unparsed=parsed["unparsed"])
+            tl = self._timeline(p)
+            base = INS.listen_voice(tl, range, voice, cache)
+            lengths = [n["end"] - n["start"] for n in
+                       INS.voice_notes(tl, tl.range(range), voice)]
+            g = INT.to_goal(parsed, base, lengths)
+            goal, hold, notes = g["goal"], g["hold"], g["notes"]
+            if not goal:
+                raise AgenticError("no_goal", "nothing in the intent can "
+                                   "move this voice: " + "; ".join(notes))
         if goal is None:
             if reference is None:
                 raise AgenticError("no_goal", "give a goal (readings) or a "
@@ -910,16 +934,34 @@ class Agent:
                 raise AgenticError("no_goal", f"{reference}'s "
                                    f"{matched['voice']} gives no reading "
                                    f"on {dims or ref['tags']}")
+        before_rev = p.head
         rec = INS.design(p, voice, goal, range, cache=cache, ear=ear,
-                         max_candidates=int(candidates))
-        return {"goal": goal, "outcome": rec["outcome"], "why": rec["why"],
+                         max_candidates=int(candidates), hold=hold,
+                         intent=parsed)
+        extra = {}
+        if parsed is not None:
+            chosen = next((c for c in rec["candidates"]
+                           if c["id"] == rec.get("chosen")), None)
+            extra = {"intent": parsed["clauses"],
+                     "unparsed": parsed["unparsed"], "hold": hold,
+                     "notes": notes,
+                     "phases": (chosen or {}).get("phases")}
+            if rec["outcome"] == "committed":
+                ab = G._instrument_ab(
+                    p, range, voice, before_rev, rec, [], [], {},
+                    p.path("out", "instrument", f"{voice}_r{p.head}"),
+                    cache)
+                extra.update(ab_reel=ab["reel"], ab_reel_raw=ab["reel_raw"])
+        return {**extra, "goal": goal, "outcome": rec["outcome"],
+                "why": rec["why"],
                 "rev": rec.get("committed_rev"),
                 "patch": [rec["patch_before"], rec.get("patch_after")],
                 "before": rec["before"],
                 "candidates": [{k: c.get(k) for k in
                                 ("id", "round", "parameter", "change",
                                  "accepted", "why", "closed", "profile",
-                                 "level_matched", "sketch")}
+                                 "level_matched", "sketch")
+                                if c.get(k) is not None}
                                for c in rec["candidates"]],
                 "listening": rec["listening"],
                 "listening_verdict": rec.get("listening_verdict"),

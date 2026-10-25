@@ -175,3 +175,24 @@ def masked_lead_opl(prompt: str = "a lead over bass and pad; the lead must "
         "pad": {"channel": "opl2", "patch": "opl_pad", "role": "pad",
                 "register": [48, 72]}}
     return _two_bars(st, _masked_rows(56, 127))
+
+
+#: a lead with short notes and held ones (two rows against eight), for a
+#: sound that should do one thing on the attack and another on the long
+#: notes
+_LEAD_HELD = ["E-5", "...", "D-5", "...", "C-5", "...", "...", "...",
+              "...", "...", "...", "...", "B-4", "...", "C-5", "...",
+              "D-5", "...", "C-5", "...", "B-4", "...", "...", "...",
+              "...", "...", "...", "...", "A-4", "...", "...", "==="]
+
+
+def held_lead(prompt: str = "a lead of short notes and held ones over "
+                            "bass and pad") -> dict:
+    """masked_lead's ensemble with a lead that holds every third note for
+    eight rows (about 0.9 s) and keeps the rest to two."""
+    st = masked_lead(prompt)
+    rows = _masked_rows(110, 70)
+    for i, row in enumerate(rows):
+        lead = _LEAD_HELD[i]
+        row[1] = f"{lead}:110" if lead not in ("...", "===") else lead
+    return _two_bars(st, rows)

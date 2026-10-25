@@ -1070,3 +1070,134 @@ def test_the_ear_on_the_nes_is_sent_mono_and_chooses_the_change():
     assert set(adapter.channels) == {1}           # the 2A03 is mono
     assert "NES" in rv["listening"]["model"] or rv["listening"]["available"]
     shutil.rmtree(os.path.dirname(p.root))
+
+
+# -- P3: an instrument said phase by phase ---------------------------------------------------------
+def test_a_phase_by_phase_statement_is_read_into_clauses():
+    from agentic import intent as INT
+    r = INT.parse("короткий укол, затем тёмный корпус, вибрато только на "
+                  "длинной ноте")
+    assert [(c["phase"], c["quality"], c["direction"]) for c in
+            r["clauses"]] == [("attack", "sharpness", "more"),
+                              ("body", "brightness", "less"),
+                              ("held", "vibrato", "more")]
+    assert r["clauses"][2]["only_long"] is True and not r["unparsed"]
+    r = INT.parse("softer attack; brighter body; shorter tail")
+    assert [(c["phase"], c["direction"]) for c in r["clauses"]] == [
+        ("attack", "less"), ("body", "more"), ("release", "less")]
+    # what it cannot place it says, it does not guess
+    r = INT.parse("the lead sounds sad")
+    assert r["clauses"] == [] and r["unparsed"] == ["the lead sounds sad"]
+    # a model's clauses: only those with a phase, quality and direction
+    r = INT.parse([{"phase": "attack", "quality": "brightness",
+                    "direction": "more"},
+                   {"phase": "attack", "quality": "vibrato",
+                    "direction": "more"}])
+    assert len(r["clauses"]) == 1 and len(r["unparsed"]) == 1
+
+
+def test_the_phases_not_named_are_held_and_a_spent_step_is_said():
+    from agentic import intent as INT
+    base = {"attack_rise_ms": 0.0, "brightness_attack": 6.8,
+            "brightness_body": 6.8, "release_ms": 50.0,
+            "vibrato_depth_cents": 0.0, "vibrato_rate_hz": None}
+    it = INT.parse("a short sting, then a dark body, vibrato only on the "
+                   "long notes")
+    g = INT.to_goal(it, base, [0.2, 0.2, 0.8, 0.2, 0.8, 0.3])
+    # the attack already rises in 0 ms: no step makes it sharper, so it is
+    # held, and the reply says so
+    assert "attack_rise_ms" not in g["goal"] and \
+        "attack_rise_ms" in g["hold"]
+    assert any("already" in n for n in g["notes"])
+    assert g["goal"]["brightness_body"] < 6.8
+    assert g["hold"]["brightness_attack"] == 1.7       # 25 % of 6.8
+    # of the three notes the profile reads (0.25 s or longer), two are
+    # long: two in three should swing
+    assert g["goal"]["vibrato_share"] == 0.667
+    assert g["goal"]["vibrato_depth_cents"] >= 25.0
+    # no long note: no vibrato asked, and said
+    g = INT.to_goal(it, base, [0.2, 0.3, 0.3])
+    assert "vibrato_depth_cents" not in g["goal"]
+    assert any("no note" in n for n in g["notes"])
+    rep = INT.report(it, base, dict(base, brightness_body=4.0,
+                                    brightness_attack=6.0),
+                     {"brightness_body": 4.4}, {"brightness_attack": 1.7})
+    assert rep["asked"][0]["moved_the_asked_way"] and rep["all_held"]
+    rep = INT.report(it, base, dict(base, brightness_body=7.5,
+                                    brightness_attack=3.0),
+                     {"brightness_body": 4.4}, {"brightness_attack": 1.7})
+    assert not rep["all_asked_moved"] and not rep["all_held"]
+
+
+def test_a_model_that_heard_phases_routes_them_to_the_instrument():
+    from agentic import ear as EAR, fixtures, guided as G, state as S, \
+        timeline as T
+    tl = T.build(S.content(fixtures.masked_lead()))
+    phases = EAR.phases_of({"phases": [
+        {"phase": "body", "quality": "brightness", "direction": "less"},
+        {"phase": "held", "quality": "vibrato", "direction": "more",
+         "only_long": True}, {"phase": "nowhere"}]})
+    assert len(phases) == 2
+    o = {"basis": "heard by model", "about_the_piece": True,
+         "category": "other", "direction": None, "voices": ["lead"],
+         "phases": phases, "statement": "dark body, vibrato when held"}
+    r = G.route(o, tl, "lead")
+    assert r["route"] == "instrument" and r["intent"]["clauses"] == phases
+    assert G.route(dict(o, voices=["bass"], phases=phases), tl,
+                   "lead")["voice"] == "bass"
+    nes = T.build(S.content(fixtures.masked_lead_nes()))
+    assert G.route(dict(o, voices=[]), nes, "lead")["route"] is None
+
+
+def test_an_instrument_said_phase_by_phase_moves_those_phases_only():
+    # T7 of the audit: the body darker and a vibrato on the long notes, the
+    # attack and the release held; alone and in the mix, matched and raw
+    from agent import Agent
+    from test_agentic import _Banks
+    with _Banks():
+        root = _tmp()
+        a = Agent(root)
+        a.call("create_musical_state", preset="held_lead", project_id="h")
+        r = a.call("design_instrument", project_id="h", voice="lead",
+                   intent="a short sting, then a dark body, vibrato only "
+                          "on the long notes", candidates=8)
+        assert r["outcome"] == "committed", r.get("why") or r
+        assert any("already" in n for n in r["notes"])     # the sting
+        ph = r["phases"]
+        assert ph["all_held"] and ph["all_asked_moved"], ph
+        held = {h["reading"] for h in ph["held"]}
+        assert {"attack_rise_ms", "brightness_attack",
+                "release_ms"} <= held
+        body = next(x for x in ph["asked"] if x["phase"] == "body")
+        assert body["after"] < body["before"]
+        share = next(x for x in ph["asked"]
+                     if x["reading"] == "vibrato_share")
+        assert 0.0 < share["after"] < 1.0      # the long notes, not all
+        assert os.path.exists(r["ab_reel_raw"])
+        assert r["ab_reel"] and os.path.exists(r["ab_reel"])
+        shutil.rmtree(root)
+
+
+def test_phases_the_model_heard_change_the_instrument_it_then_picks():
+    from agentic import ear as EAR, fixtures, guided as G, render as R
+    with _Banks():
+        p = _project(fixtures.held_lead())
+        cache = R.Cache(p.path("renders"))
+        adapter = _ChoosingEar(pick=1)
+        obs = {"basis": "heard by model", "about_the_piece": True,
+               "category": "other", "direction": None, "voices": ["lead"],
+               "phases": EAR.phases_of({"phases": [
+                   {"phase": "held", "quality": "vibrato",
+                    "direction": "more", "only_long": True}]}),
+               "statement": "the long notes want a vibrato, the short ones "
+                            "not", "confidence": 0.7}
+        rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                            cache=cache, instrument_budget=3)
+        w = rv["worked_on"][0]
+        assert w["outcome"] == "committed", w["why"]
+        assert w["listening_verdict"]["choice"] == 1     # the ear picked it
+        assert w["phases"]["all_held"], w["phases"]
+        share = next(x for x in w["phases"]["asked"]
+                     if x["reading"] == "vibrato_share")
+        assert 0.0 < share["after"] < 1.0
+        shutil.rmtree(os.path.dirname(p.root))

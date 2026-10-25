@@ -41,6 +41,7 @@ from typing import Dict, List, Optional
 from . import ear as EAR
 from . import features as F
 from . import instrument as INS
+from . import intent as INT
 from . import listen as LI
 from . import loop as L
 from . import references as REF
@@ -311,12 +312,22 @@ def route(o: dict, tl, lead: Optional[str] = None) -> dict:
     if cat == "space" and not EAR.platform_of(tl)["stereo"]:
         return {"route": None, "why": "a mono machine: there is no stereo "
                                       "field to widen"}
-    if cat in (None, "other") or way not in ("more", "less"):
-        return {"route": None, "why": "the model named no category and "
-                                      "direction the changes here have"}
     named = [v for v in o.get("voices") or []
              if v in tl.content["instruments"]]
     voice = named[0] if named else None
+    if o.get("phases") and (voice or lead):
+        # said phase by phase: the intent goes to the voice's instrument,
+        # the phases not named held (intent.to_goal)
+        v = voice or lead
+        ins = tl.content["instruments"].get(v, {})
+        if not ins.get("channel", "").startswith("fm"):
+            return {"route": None, "why": f"{v}: the instrument programs "
+                                          f"are the YM2612's"}
+        return {"route": "instrument", "voice": v,
+                "intent": {"clauses": o["phases"], "unparsed": []}}
+    if cat in (None, "other") or way not in ("more", "less"):
+        return {"route": None, "why": "the model named no category and "
+                                      "direction the changes here have"}
     if (cat, way) in HEARD_INSTRUMENT:
         v = voice or lead
         ins = tl.content["instruments"].get(v or "", {})
@@ -507,6 +518,7 @@ def _instrument_ab(project, spec: str, voice: str, before_rev: int,
     out = LI.write(frags + alone + mixed, folder, f"instrument_{voice}",
                    mp3=True, raw=True)
     return {"reel": out["reel"].get("mp3") or out["reel"]["wav"],
+            "reel_raw": (out.get("reel_raw") or {}).get("wav"),
             "index": out["path"]}
 
 
@@ -691,7 +703,15 @@ def _heard_instrument(project, spec: str, o: dict, r: dict, base_tl, cache,
     the ear (instrument.design, heard_goal=True)."""
     voice = r["voice"]
     base_prof = INS.listen_voice(base_tl, spec, voice, cache)
-    goal = _heard_goal(base_prof, r["relative"])
+    hold, intent, notes = None, r.get("intent"), []
+    if intent:
+        rng = base_tl.range(spec)
+        lengths = [n["end"] - n["start"]
+                   for n in INS.voice_notes(base_tl, rng, voice)]
+        g = INT.to_goal(intent, base_prof, lengths)
+        goal, hold, notes = g["goal"], g["hold"], g["notes"]
+    else:
+        goal = _heard_goal(base_prof, r["relative"])
     entry = {"observation": o.get("id") or o.get("statement"),
              "dimension": "instrument", "statement": o.get("statement"),
              "basis": o.get("basis"), "goal": goal,
@@ -699,6 +719,8 @@ def _heard_instrument(project, spec: str, o: dict, r: dict, base_tl, cache,
                           "readings moved by a step, measured back; the "
                           "ear chooses among the candidates",
              "routed": r}
+    if notes:
+        entry["intent_notes"] = notes
     if not goal:
         entry.update(outcome="no_hypothesis", why="the voice shows no "
                      "reading that category moves", hypotheses=[])
@@ -706,7 +728,8 @@ def _heard_instrument(project, spec: str, o: dict, r: dict, base_tl, cache,
     before_rev = project.head
     rec = INS.design(project, voice, goal, spec, cache=cache, ear=ear,
                      max_candidates=budget, heard_goal=True,
-                     why=f"heard: {o.get('statement')}")
+                     why=f"heard: {o.get('statement')}", hold=hold,
+                     intent=intent)
     ab = None
     if rec["outcome"] == "committed":
         ab = _instrument_ab(project, spec, voice, before_rev, rec, [],
@@ -716,8 +739,17 @@ def _heard_instrument(project, spec: str, o: dict, r: dict, base_tl, cache,
                  chosen=rec.get("chosen"),
                  listening_verdict=rec.get("listening_verdict"),
                  ab_reel=(ab or {}).get("reel"),
+                 ab_reel_raw=(ab or {}).get("reel_raw"),
+                 phases=_chosen_phases(rec),
                  hypotheses=rec["candidates"])
     return entry
+
+
+def _chosen_phases(rec: dict) -> Optional[dict]:
+    """What each phase of the kept candidate did (intent.report)."""
+    chosen = next((c for c in rec["candidates"]
+                   if c["id"] == rec.get("chosen")), None)
+    return (chosen or {}).get("phases")
 
 
 def revise_heard(project, spec: str, observations: List[dict], ear=None,
