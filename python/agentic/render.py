@@ -240,7 +240,9 @@ class Cache:
     def put(self, key: str, buf):
         self.memory[key] = buf
         if self.folder:
-            tmp = os.path.join(self.folder, key + ".f32.tmp")
+            # one temporary name per process: candidates rendered side by
+            # side (parallel.py) may write the same key at once
+            tmp = os.path.join(self.folder, f"{key}.f32.{os.getpid()}.tmp")
             with open(tmp, "wb") as handle:
                 handle.write(buf.data.tobytes())
             os.replace(tmp, os.path.join(self.folder, key + ".f32"))

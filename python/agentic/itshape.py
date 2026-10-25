@@ -344,6 +344,15 @@ def listen_channel(data: bytes, ch: int, notes: List[dict],
     return prof
 
 
+def _shape_job(job):
+    """One candidate: the channel alone, the mix, the measures (for
+    parallel.run)."""
+    data, channel, busy, notes, seconds = job
+    prof = listen_channel(data, channel, notes, seconds)
+    mix = IT.play(IT.Piece(data), seconds=seconds)
+    return prof, mix, IT.measure(IT.Piece(data), busy, notes, seconds, mix)
+
+
 def shape(path: str, channel: int, statement, folder: str, ear=None,
           seconds: Optional[float] = None) -> dict:
     """The sound of the instrument on `channel` (0-based) moved as the
@@ -396,7 +405,13 @@ def shape(path: str, channel: int, statement, folder: str, ear=None,
               "listening": EAR.listening(ear)}
     renders = 1 + before["renders"] + 1
     tried = []
-    for c in _candidates(data, k, intent, tick_s):
+    cands = _candidates(data, k, intent, tick_s)
+    from . import parallel as P
+    done, record["parallel"] = P.run(_shape_job, [
+        (c["data"], channel, busy, notes, seconds) for c in cands
+        if "refused" not in c])
+    done = iter(done)
+    for c in cands:
         cand = {"id": c["id"]}
         if "refused" in c:
             cand.update(accepted=False, why="refused: " + c["refused"])
@@ -404,9 +419,7 @@ def shape(path: str, channel: int, statement, folder: str, ear=None,
             continue
         cand.update(change=c["change"], expected=c["expected"],
                     phase=c["phase"])
-        prof = listen_channel(c["data"], channel, notes, seconds)
-        mix = IT.play(IT.Piece(c["data"]), seconds=seconds)
-        m = IT.measure(IT.Piece(c["data"]), busy, notes, seconds, mix)
+        prof, mix, m = next(done)
         renders += 2 + m["renders"]
         rep = INT.report(intent, base, prof, goal, hold)
         moved = [r for r in rep["asked"] if "direction" in r]

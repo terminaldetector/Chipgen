@@ -652,8 +652,11 @@ def design(project, voice: str, goal: dict, spec: str,
     counter = [0]
 
     def evaluate(h: dict) -> dict:
-        counter[0] += 1
-        name = f"{voice}_d{n}{counter[0]}"
+        if "_n" not in h:
+            counter[0] += 1
+            h["_n"] = counter[0]
+        name = f"{voice}_d{n}{h['_n']}"
+        misses0 = cache.misses
         cand = {"id": h["id"], "scope": h["scope"],
                 "parameter": h["parameter"], "change": h["change"],
                 "expected": h["expected"], "round": h.get("round", 1)}
@@ -743,15 +746,33 @@ def design(project, voice: str, goal: dict, spec: str,
                                            f"distance, every guard kept")
         cand["_content"], cand["_timeline"], cand["_entry"] = c, tl, entry
         cand["_amount"] = h.get("amount")
+        cand["_misses"] = cache.misses - misses0
         return cand
 
-    for h in hyps:
-        record["candidates"].append(evaluate(h))
+    from . import parallel as PAR
+    forked = [0]
+
+    def batch(hs: List[dict]) -> List[dict]:
+        """A round's candidates side by side (parallel.py): numbered here,
+        rendered in forked workers, their instruments installed back in
+        this process so the kept one plays again here."""
+        for h in hs:
+            counter[0] += 1
+            h["_n"] = counter[0]
+        out, how = PAR.run_closure(evaluate, hs)
+        record.setdefault("parallel", how)
+        if how.endswith("processes"):
+            for c in out:
+                if c.get("_entry") is not None:
+                    _install(c["_entry"])
+                forked[0] += c.get("_misses", 0)
+        return out
+
+    record["candidates"].extend(batch(hyps))
     # round 2: where an amount (modulator steps, a rate) undershot or
     # overshot, one more candidate at the amount the two readings point to
     more = refine(compiled, base_prof, goal, hyps, record["candidates"])
-    for h in more:
-        record["candidates"].append(evaluate(h))
+    record["candidates"].extend(batch(more))
     # round 3: the best change of each family together, when more than
     # one family moved its own readings toward the goal. Two changes that
     # each kept every guard can break one together (a vibrato from the
@@ -846,11 +867,12 @@ def design(project, voice: str, goal: dict, spec: str,
                       chosen=best["id"],
                       patch_after=c["instruments"][voice]["patch"],
                       why=best["why"])
-    record["cost"] = {"renders": cache.misses - renders0,
+    record["cost"] = {"renders": cache.misses - renders0 + forked[0],
                       "runtime_s": round(time.time() - started, 2),
                       "candidates": len(record["candidates"])}
     for cand in record["candidates"]:
-        for key in ("_content", "_timeline", "_entry", "_amount"):
+        for key in ("_content", "_timeline", "_entry", "_amount",
+                    "_misses"):
             cand.pop(key, None)
     did = project.add_decision({"kind": "instrument", "observation": None,
                                 "voices": [voice], "outcome":

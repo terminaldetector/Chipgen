@@ -1630,3 +1630,34 @@ def test_a_heard_abrupt_transition_is_eased_and_measured_at_the_join():
     window = w["listening_verdict"]["window"]["bars"]
     assert window[0] <= 2 and window[1] >= 3       # both sides of the join
     shutil.rmtree(os.path.dirname(p.root))
+
+
+# -- P8: candidates side by side -------------------------------------------------------------------
+def test_candidates_measured_side_by_side_give_the_same_record():
+    import json
+    from agentic import itloop as IT, openmpt as O, parallel as PAR
+    assert PAR.run(abs, [-1, 2, -3], n=1) == ([1, 2, 3],
+                                              "in order (one worker)")
+    out, how = PAR.run(abs, [-1, 2, -3], n=3)
+    assert out == [1, 2, 3]
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    root = _tmp()
+    path = _masked_it(root)
+    keep = os.environ.get("CHIPGEN_WORKERS")
+    recs = {}
+    try:
+        for w in ("1", "3"):
+            os.environ["CHIPGEN_WORKERS"] = w
+            recs[w] = IT.correct_buried(path, 1, os.path.join(root, w))
+    finally:
+        if keep is None:
+            os.environ.pop("CHIPGEN_WORKERS", None)
+        else:
+            os.environ["CHIPGEN_WORKERS"] = keep
+    assert recs["1"]["parallel"].startswith("in order")
+    same = [json.dumps(r["candidates"], sort_keys=True) for r in
+            recs.values()]
+    assert same[0] == same[1]
+    assert recs["1"]["chosen"] == recs["3"]["chosen"]
+    shutil.rmtree(root)

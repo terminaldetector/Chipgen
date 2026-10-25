@@ -671,9 +671,13 @@ def _work_gap(project, spec: str, rng: dict, o: dict, r: dict, ref_f,
         work.update(outcome="no_hypothesis", why="no change this layer "
                     "knows carries that over here")
         return work
-    tried = [_test(project, base_tl, rng, h, o, ours_f, ref_f,
-                   o.get("theirs") if not heard_gap else None, cache, tool,
-                   base_h, folder, ear) for h in hyps]
+    # the hypotheses side by side (parallel.py): each renders, measures
+    # and writes its own reel; nothing is committed until all are back
+    from . import parallel as PAR
+    tried, work["parallel"] = PAR.run_closure(
+        lambda h: _test(project, base_tl, rng, h, o, ours_f, ref_f,
+                        o.get("theirs") if not heard_gap else None, cache,
+                        tool, base_h, folder, ear), hyps)
     best, choice, judged_by, why = _decide(ear, base_tl, tried, spec, cache,
                                            o, heard_gap)
     if best is not None and why:

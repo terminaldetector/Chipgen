@@ -235,6 +235,14 @@ def _candidates(piece: Piece, lead: int, others: List[int]) -> List[dict]:
     return out
 
 
+def _measure_job(job):
+    """One candidate, played from the top and measured (for parallel.run)."""
+    data, busy, notes, seconds = job
+    piece = Piece(data)
+    mix = play(piece, seconds=seconds)
+    return mix, measure(piece, busy, notes, seconds, mix)
+
+
 def correct_buried(path: str, lead: int, folder: str, ear=None,
                    seconds: Optional[float] = None,
                    min_gain_db: float = 1.0) -> dict:
@@ -272,15 +280,22 @@ def correct_buried(path: str, lead: int, folder: str, ear=None,
                       f"{margin0:+.1f} dB in its band, not buried")
         return record
     tried = []
-    for c in _candidates(base, lead, others):
+    cands = _candidates(base, lead, others)
+    # each candidate played and measured in a process of its own; the
+    # numbers are the same as one after another (parallel.py)
+    from . import parallel as P
+    done, record["parallel"] = P.run(_measure_job, [
+        (c["piece"].data, busy, notes, seconds) for c in cands
+        if "refused" not in c])
+    done = iter(done)
+    for c in cands:
         cand = {"id": c["id"]}
         if "refused" in c:
             cand.update(accepted=False, why=f"refused: "
                         f"{c['refused']['message']}")
             record["candidates"].append(cand)
             continue
-        mix = play(c["piece"], seconds=seconds)
-        m = measure(c["piece"], busy, notes, seconds, mix)
+        mix, m = next(done)
         renders += m["renders"]
         margin = m["channels"][lead].get("band_margin_db")
         guards = [{"name": "no_clipping", "ok": m["mix"]["peak"] < 0.98,
