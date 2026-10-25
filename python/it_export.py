@@ -23,6 +23,13 @@ lossless conversion:
 
   * IT's timing grid is coarser than the engine's. See `_it_timing`.
 
+  * A key-off is a release on the chip. Each sample gets an instrument
+    whose volume envelope falls to silence after a note-off in the time
+    the chip took (measured after its own key-off, to -30 dB), on IT's
+    tick grid and as a straight line: the release's length is the
+    patch's, its curve is not. (Written in sample mode, as it was
+    before, a note-off left a looped sample ringing until the next note.)
+
 What is NOT lossy: the notes, their order, the velocities, the panning,
 and the drums. Those are the arrangement, and they survive exactly.
 """
@@ -184,8 +191,40 @@ def render_fm_sample(instrument, attack: float = 0.25, note=REFERENCE_NOTE):
     rate = _sample_rate_for(actual)
     loop_seconds = LOOP_PERIODS / actual
     body = chip.render(int(native * (attack + loop_seconds + 0.05)))
+    chip.note_off(0)
+    tail = chip.render(int(native * RELEASE_LISTEN_S))
     chip.close()
-    return _build(body, native, rate, attack, note, actual)
+    out = _build(body, native, rate, attack, note, actual)
+    out["release_s"] = _release_seconds(body, tail, native)
+    return out
+
+
+#: how long after a key-off the chip is listened to for its release (s)
+RELEASE_LISTEN_S = 1.5
+
+
+def _release_seconds(body, tail, rate: float, drop_db: float = 30.0) -> float:
+    """How long the chip takes after its key-off to fall `drop_db` below
+    the level it held: the release an IT instrument's envelope will copy."""
+    import math
+
+    def level(frames):
+        # the first channel of (left, right) pairs, its mean taken out: the
+        # emulator's output carries a DC offset that a key-off leaves behind
+        xs = [v[0] if isinstance(v, (tuple, list)) else v for v in frames]
+        if not xs:
+            return 0.0
+        mean = sum(xs) / len(xs)
+        return math.sqrt(sum((x - mean) ** 2 for x in xs) / len(xs))
+    hop = max(1, int(rate * 0.005))
+    held = level(body[-int(rate * 0.02):])
+    if held <= 0.0:
+        return 0.0
+    floor = held * 10 ** (-drop_db / 20.0)
+    for start in range(0, len(tail) - hop, hop):
+        if level(tail[start:start + hop]) < floor:
+            return round(start / rate, 4)
+    return round(len(tail) / rate, 4)
 
 
 def render_opl_sample(instrument, attack: float = 0.25, note=REFERENCE_NOTE):
@@ -207,8 +246,12 @@ def render_opl_sample(instrument, attack: float = 0.25, note=REFERENCE_NOTE):
 
     rate = _sample_rate_for(actual)
     body = chip.render(int(native * (attack + LOOP_PERIODS / actual + 0.05)))
+    chip.note_off(0)
+    tail = chip.render(int(native * RELEASE_LISTEN_S))
     chip.close()
-    return _build(body, native, rate, attack, note, actual)
+    out = _build(body, native, rate, attack, note, actual)
+    out["release_s"] = _release_seconds(body, tail, native)
+    return out
 
 
 def render_psg_tone_sample(note=REFERENCE_NOTE, attack: float = 0.02):
@@ -730,9 +773,57 @@ def _sample_header(sample, offset: int) -> bytes:
         0, 0, 0, 0)                        # no vibrato
 
 
+#: In sample mode a note-off only leaves a sustain loop and the sample's
+#: ordinary loop rings on until the next note; an FM key-off is a release.
+#: So every sample gets an instrument whose volume envelope copies the
+#: chip's measured release after the note-off, and a fadeout as a backstop.
+FADEOUT = 256
+INSTRUMENT_BYTES = 554
+
+
+def _instrument(sample_number: int, name: str,
+                release_ticks: int = 1) -> bytes:
+    """An IT instrument (cmwt >= 2.00 layout) that plays one sample on every
+    note: the volume envelope held at 64 until the note-off (its sustain
+    point), then down to 0 over `release_ticks` — the chip's own release,
+    measured after its key-off (`_release_seconds`) — no filter, no default
+    pan, NNA cut (a tracker channel plays one note, as the chip's channel
+    does)."""
+    b = bytearray(INSTRUMENT_BYTES)
+    b[0:4] = b"IMPI"
+    b[0x11] = 0                          # NNA: cut
+    struct.pack_into("<H", b, 0x14, FADEOUT)
+    b[0x17] = 60                         # pitch-pan centre C-5
+    b[0x18] = 128                        # global volume
+    b[0x19] = 32 | 0x80                  # default pan not used
+    struct.pack_into("<H", b, 0x1C, 0x0214)
+    b[0x1E] = 1                          # samples used
+    text = name.encode("ascii", "replace")[:25]
+    b[0x20:0x20 + len(text)] = text
+    b[0x3D] = 0xFF                       # no MIDI program
+    struct.pack_into("<H", b, 0x3E, 0xFFFF)
+    for note in range(120):
+        b[0x40 + 2 * note] = note
+        b[0x41 + 2 * note] = sample_number
+    vol = 0x130
+    b[vol] = 1 | 4                       # on, with a sustain point
+    b[vol + 1] = 3
+    b[vol + 4] = b[vol + 5] = 1          # sustain at node 1
+    for k, (level, tick) in enumerate(((64, 0), (64, 1),
+                                       (0, 1 + max(1, release_ticks)))):
+        b[vol + 6 + 3 * k] = level
+        struct.pack_into("<H", b, vol + 7 + 3 * k, tick)
+    for env in (0x182, 0x1D4):           # pan and pitch: off, flat
+        b[env + 1] = 2
+        struct.pack_into("<H", b, env + 10, 100)
+    return bytes(b)
+
+
 def build(events, meta=None, title: str = "", message: str = "",
-          progress=None):
-    """Assemble the whole .it in memory. Returns (bytes, report)."""
+          progress=None, instruments: bool = True):
+    """Assemble the whole .it in memory. Returns (bytes, report).
+    `instruments=False` writes sample mode, as before: its note-offs leave
+    looped samples ringing (kept for players and tests that want it)."""
     import tracker as tracker_mod
 
     meta = meta or tracker_mod.Metadata()
@@ -760,12 +851,15 @@ def build(events, meta=None, title: str = "", message: str = "",
     if message_bytes:
         message_bytes += b"\0"
 
-    n_ord, n_ins, n_smp, n_pat = len(orders), 0, len(samples), len(patterns)
+    n_ord, n_smp, n_pat = len(orders), len(samples), len(patterns)
+    n_ins = n_smp if instruments else 0  # one instrument for each sample
     # 0xC0 header + orders + parapointers + a zero edit-history count.
     base = 0xC0 + n_ord + 4 * (n_ins + n_smp + n_pat) + 2
     message_offset = base if message_bytes else 0
     cursor = base + len(message_bytes)
 
+    ins_at = cursor
+    cursor += INSTRUMENT_BYTES * n_ins
     smp_headers_at = cursor
     cursor += 80 * n_smp
     pattern_offsets = []
@@ -777,7 +871,7 @@ def build(events, meta=None, title: str = "", message: str = "",
         sample_offsets.append(cursor)
         cursor += len(sample["data"])
 
-    flags = 1 | 8                       # stereo, linear slides (sample mode)
+    flags = 1 | (4 if instruments else 0) | 8   # stereo, instruments, linear
     special = 2 | (1 if message_bytes else 0)   # edit history present
 
     header = struct.pack(
@@ -802,12 +896,17 @@ def build(events, meta=None, title: str = "", message: str = "",
     # order list starts here and every parapointer is measured from it.
     assert len(out) == 0xC0, len(out)
     out += bytes(orders)
-    out += b"".join(struct.pack("<I", o) for o in [])          # no instruments
+    out += b"".join(struct.pack("<I", ins_at + INSTRUMENT_BYTES * i)
+                    for i in range(n_ins))
     out += b"".join(struct.pack("<I", smp_headers_at + 80 * i)
                     for i in range(n_smp))
     out += b"".join(struct.pack("<I", o) for o in pattern_offsets)
     out += struct.pack("<H", 0)                   # edit history: no entries
     out += message_bytes
+    tick_s = 2.5 / tempo
+    for i, sample in enumerate(samples[:n_ins]):
+        ticks = int(round(sample.get("release_s", 0.0) / tick_s))
+        out += _instrument(i + 1, sample.get("name", ""), ticks)
     for sample, offset in zip(samples, sample_offsets):
         out += _sample_header(sample, offset)
     for block in packed:

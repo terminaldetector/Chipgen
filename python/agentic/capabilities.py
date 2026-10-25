@@ -226,9 +226,13 @@ _OTHER = {
                                "(agentic/itloop.py): played from the first "
                                "row by libopenmpt, voices by channel mute, "
                                "measured in band, chosen among by a verified "
-                               "ear; samples, envelopes, NNA, filters and "
-                               "patterns refused by name. Not yet heard by "
-                               "a model",
+                               "ear; and a channel's sound said phase by "
+                               "phase (agentic/itshape.py): the volume "
+                               "envelope (attack, release), a filter "
+                               "envelope or cutoff (body), the sample's "
+                               "auto-vibrato (long notes), the phases not "
+                               "named held. Samples, NNA and patterns are "
+                               "not changed. Not yet heard by a model",
                                "about 7 full renders per candidate",
                                "tests/test_agentic_refs.py")},
 }

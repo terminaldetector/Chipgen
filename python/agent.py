@@ -47,6 +47,9 @@ References, parallel listening, sketches and instruments:
     correct_module         path, channel                an IT's buried
                                                         channel, by its
                                                         header
+    shape_module           path, channel, intent        an IT channel's
+                                                        sound, phase by
+                                                        phase
     mark_reference         project_id, reference,       a person's phrase
                            phrase_ends                  ends
     design_instrument      project_id, voice, goal|ref  a voice's sound;
@@ -856,6 +859,38 @@ class Agent:
                 if rec.get(k) is not None} | {
             "candidates": [{k: c.get(k) for k in
                             ("id", "accepted", "why", "gain_db")
+                            if c.get(k) is not None}
+                           for c in rec["candidates"]]}
+
+    def op_shape_module(self, path: str, channel: int, intent,
+                        mode: str = "auto", seconds: float = None) -> dict:
+        """The sound of an IT module's channel (1-based) said phase by
+        phase — "a darker body, vibrato only on the long notes" — and made
+        with the instrument's volume and filter envelopes and the sample's
+        auto-vibrato; the phases not named held, every candidate played
+        from the first row. The module is not rewritten: a kept change is
+        a new file, with solo and mix reels, matched and raw."""
+        from agentic import itshape as ITS
+        if not os.path.exists(path):
+            raise AgenticError("no_file", f"{path}: no such module")
+        if self.adapter is not None and self.verification is None:
+            self.verification = self._cached_verification()
+        stem = os.path.splitext(os.path.basename(path))[0]
+        folder = os.path.join(self.root, "modules", stem,
+                              "shape-" + time.strftime("%Y%m%d-%H%M%S"))
+        adapter = None if self.adapter is None else \
+            SESSION.RecordingAdapter(self.adapter, folder)
+        ear = EAR.choose(mode, adapter, self.verification, R.Cache())
+        rec = ITS.shape(path, int(channel) - 1, intent, folder, ear=ear,
+                        seconds=float(seconds) if seconds else None)
+        keep = ("module", "channel", "instrument", "also_plays_on",
+                "converted_to_instruments", "intent", "unparsed", "goal",
+                "hold", "notes", "before", "outcome", "why", "chosen",
+                "phases", "file", "ab_reel", "ab_reel_raw", "judged_by",
+                "listening", "listening_verdict", "cost")
+        return {k: rec.get(k) for k in keep if rec.get(k) is not None} | {
+            "candidates": [{k: c.get(k) for k in
+                            ("id", "phase", "change", "accepted", "why")
                             if c.get(k) is not None}
                            for c in rec["candidates"]]}
 

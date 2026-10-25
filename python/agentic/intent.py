@@ -218,6 +218,10 @@ def to_goal(intent: dict, base: dict, lengths: List[float] = ()) -> dict:
             named.discard(reading)
             continue
         target = round(max(0.5, now * factor), 3)
+        if key == "attack_rise_ms" and c["direction"] == "less":
+            # softer from an attack that rises in a millisecond or two:
+            # a factor of its own value moves nothing; a step does
+            target = round(max(now * factor, now + 25.0), 3)
         from .instrument import READINGS
         if abs(target - now) <= READINGS.get(key, (0.0,))[0]:
             # already as far that way as a step can take it (an attack

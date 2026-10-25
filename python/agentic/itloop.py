@@ -205,12 +205,16 @@ def _candidates(piece: Piece, lead: int, others: List[int]) -> List[dict]:
     """Level and pan changes that could bring the lead out: the lead up,
     the channels that fill its band down, both; a pan apart."""
     out = []
-    for name, steps in (("lead +3 dB", [(lead, 3.0)]),
-                        ("lead +6 dB", [(lead, 6.0)]),
-                        ("the rest -3 dB", [(c, -3.0) for c in others]),
-                        ("the rest -6 dB", [(c, -6.0) for c in others]),
-                        ("lead +3, the rest -3 dB",
-                         [(lead, 3.0)] + [(c, -3.0) for c in others])):
+    plans = [("lead +3 dB", [(lead, 3.0)]), ("lead +6 dB", [(lead, 6.0)])]
+    # one channel at a time first: the one that fills the lead's band can
+    # come down without burying the others
+    for c in others:
+        plans += [(f"ch{c + 1} -3 dB", [(c, -3.0)]),
+                  (f"ch{c + 1} -6 dB", [(c, -6.0)])]
+    plans += [("the rest -3 dB", [(c, -3.0) for c in others]),
+              ("lead +3, the rest -3 dB",
+               [(lead, 3.0)] + [(c, -3.0) for c in others])]
+    for name, steps in plans:
         p, deltas = piece, []
         try:
             for ch, db in steps:
@@ -285,12 +289,22 @@ def correct_buried(path: str, lead: int, folder: str, ear=None,
                                                    before["mix"]["rms_db"])
                    <= L.MIX_LEVEL_LIMIT_DB, "detail": f"mix {before['mix']['rms_db']:+.1f} "
                    f"-> {m['mix']['rms_db']:+.1f} dB"}]
-        newly = [f"ch{ch + 1}" for ch in others
-                 if (before["channels"][ch].get("band_margin_db") or -99)
+        # a channel the candidate turned down was asked to be quieter: its
+        # own margin is reported, not guarded (the Mega Drive loop guards
+        # the melodic roles only; a module has no roles). Every channel it
+        # left alone may not end up buried
+        lowered = {d["channel"] for d in c["changes"]
+                   if d["op"] == "level" and d["to"] < d["from"]}
+        newly = [f"ch{ch + 1}" for ch in others if ch not in lowered and
+                 (before["channels"][ch].get("band_margin_db") or -99)
                  >= EAR.BURIED_BODY_DB > (m["channels"][ch].get(
                      "band_margin_db") or -99)]
         guards.append({"name": "no_new_buried", "ok": not newly,
                        "detail": ", ".join(newly) or "none"})
+        cand["lowered"] = {f"ch{ch + 1}": {
+            "band_margin_db": [before["channels"][ch].get("band_margin_db"),
+                               m["channels"][ch].get("band_margin_db")]}
+            for ch in sorted(lowered)}
         gain = margin - margin0 if margin is not None else None
         cand.update(changes=c["changes"], band_margin_db=margin,
                     gain_db=None if gain is None else round(gain, 2),

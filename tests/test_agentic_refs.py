@@ -1443,3 +1443,73 @@ def test_the_audible_session_keeps_what_the_model_was_sent():
         assert last["action_plan"]["preserve"] == ["notes", "rhythm",
                                                    "harmony"]
         shutil.rmtree(root)
+
+
+# -- P5: an IT instrument shaped phase by phase ----------------------------------------------------
+def _held_it(root, instruments=True):
+    from agentic import fixtures, timeline as T, state as S
+    import it_export
+    import tracker
+    tl = T.build(S.content(fixtures.held_lead()))
+    events, meta = tracker.loads(tl.text)
+    data, _report = it_export.build(events, meta=meta, title="held",
+                                    instruments=instruments)
+    path = os.path.join(root, "held.it" if instruments else "held_smp.it")
+    with open(path, "wb") as handle:
+        handle.write(data)
+    return path
+
+
+def test_a_sample_mode_module_gets_instruments_and_plays_the_same():
+    from agentic import itloop as IT, itshape as ITS, openmpt as O
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    root = _tmp()
+    with open(_held_it(root, instruments=False), "rb") as handle:
+        smp = handle.read()
+    assert not ITS.layout(smp)["instrument_mode"]
+    ins = ITS.with_instruments(smp)
+    lay = ITS.layout(ins)
+    assert lay["instrument_mode"] and lay["instruments"] == lay["samples"]
+    a = IT.play(IT.Piece(smp))["samples"]
+    b = IT.play(IT.Piece(ins))["samples"]
+    assert len(a) == len(b)
+    err = sum((x - y) ** 2 for x, y in zip(a[::5], b[::5]))
+    ref = sum(x * x for x in a[::5]) or 1.0
+    assert 10 * math.log10(err / ref + 1e-15) < -100.0    # the same audio
+    assert ITS.with_instruments(ins) is ins                 # already there
+    shutil.rmtree(root)
+
+
+def test_an_it_channel_said_phase_by_phase_moves_those_phases_only():
+    from agent import Agent
+    from agentic import openmpt as O
+    if not O.available():
+        support.skip("libopenmpt is not installed")
+    root = _tmp()
+    path = _held_it(root)
+    with open(path, "rb") as handle:
+        original = handle.read()
+    r = Agent(os.path.join(root, "a")).call(
+        "shape_module", path=path, channel=2,
+        intent="a darker body, vibrato only on the long notes")
+    assert r["outcome"] == "committed", r
+    ph = r["phases"]
+    assert ph["all_held"], ph            # the attack's brightness, release
+    body = next(x for x in ph["asked"] if x["reading"] == "brightness_body")
+    assert body["after"] < body["before"] - 1.0
+    share = next(x for x in ph["asked"] if x["reading"] == "vibrato_share")
+    assert 0.0 < share["after"] < 1.0    # the long notes, not every note
+    # a static filter darkens the attack too: refused by the hold
+    ifc = [c for c in r["candidates"] if c["id"].startswith("ifc")]
+    assert ifc and not any(c["accepted"] for c in ifc)
+    with open(path, "rb") as handle:
+        assert handle.read() == original
+    assert os.path.exists(r["file"]) and os.path.exists(r["ab_reel_raw"])
+    # brighter than the sample is refused by name
+    r = Agent(os.path.join(root, "b")).call(
+        "shape_module", path=path, channel=2, intent="a brighter body")
+    assert r["outcome"] == "rolled_back"
+    assert any("as bright as it was rendered" in c["why"]
+               for c in r["candidates"])
+    shutil.rmtree(root)

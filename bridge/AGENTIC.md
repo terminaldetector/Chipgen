@@ -373,6 +373,27 @@ P4 — what the audit's sections 5 to 7 still asked for:
 | the audible session: every clip a project's ear sends to a model is kept by the hash of the file (audible/clips), with the channels, rate and seconds read from the WAV itself, why it was sent (a probe, a hearing, a choice, a reel), the reply and the wait, in audible/session.jsonl; a choice's verdict names its clip's hash. `audible_session` adds up the cost (calls, audio seconds, clips, characters; tokens when the endpoint reports them, and says when it does not) and lays the last decisions out as clip / observation / action plan / experiment (section 6), "no model heard this decision" where none did | `session.py`, `agent._ear`, `ear.ab_choose` |
 | a listener that hears what the question names: two more music probes — "the drums in this clip, loud or soft?" over a tone with no drums ("none" is right) and over one with them — so an ear that finds drums everywhere, or answers "none" every time, is not trusted to choose | `ear.MUSIC_PROBES`, `answer_by_dsp` |
 
+P5 — the instrument loop (the audit's Loop B) on an Impulse Tracker
+module, with what IT has:
+
+| what | where |
+|---|---|
+| a channel's sound said phase by phase on an IT: the attack by the volume envelope's ramp, the release by its node after the sustain point, a darker body by a filter envelope open through the attack's window and closing after it (or the cutoff for the whole note), a vibrato on the long notes by the sample's auto-vibrato with a slow sweep; brighter than the sample is refused by name. Each candidate is played from the first row, the channel alone and in the mix, read by the same note_profile as on the Mega Drive; the phases not named are held; one change per phase is kept (the nearest its goal, after moving at least its tolerance), then all of them together; the ear chooses when trusted | `itshape.py`, `shape_module` |
+| a sample-mode module gets one instrument per sample first, and plays the same (null under -100 dB) | `itshape.with_instruments` |
+| **found on the way:** the IT export wrote sample mode, where a note-off only leaves a sustain loop — every looped FM sample rang on to the next note (a staccato bass held through its rests: the gap after each note-off as loud as the note). The export now writes one instrument per sample whose volume envelope copies the chip's own release after its key-off (measured to -30 dB with the emulator's DC offset taken out: slap_bass 150 ms, square_lead 95 ms, strings past 1.5 s); `instruments=False` keeps the old form | `it_export.py`, `test_it.test_a_note_off_releases_the_note_as_the_chip_did` |
+
+Measured on `fixtures.held_lead` exported to IT, "a darker body, vibrato
+only on the long notes, a softer attack": body brightness 6.15 -> 3.98 by
+the filter envelope (attack brightness 6.17 -> 6.17); a static cutoff
+darkened the attack too (6.17 -> 3.42) and was refused by the hold; the
+auto-vibrato depth 20 with sweep 64 swung two notes in three, the long
+ones (sweep 255 swings all of them); the attack's rise 1 -> 47 ms by a
+3-tick ramp (a 1-tick ramp moved it 1 ms, under its tolerance, and was
+not kept); 10 candidates, about 40 s. With the fix to the export, the
+buried lead of the IT masked lead came out by one channel at a time
+(the loop now tries each, and does not guard the channel it turned down,
+as the Mega Drive loop guards the melodic roles only).
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
