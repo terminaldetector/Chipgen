@@ -162,7 +162,7 @@ under that root.
 | | `python/agent.py` | the facade and its CLI |
 | | `tests/test_agentic.py` | the spec's tests A-F and their foundations (19 tests) |
 | | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
-| | `tests/test_agentic_refs.py` | their tests (17) |
+| | `tests/test_agentic_refs.py` | their tests (31) |
 | | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
@@ -302,10 +302,24 @@ heard "less bright" turned into a darker program the ear picked. **No live
 audio model was available here**, so whether a real model's ear chooses
 well is untested; the acceptance tests T1 and T3 of the audit need one
 (`examples/agentic/references/check_listening.py` with
-`CHIPGEN_AUDIO_ENDPOINT`). Still open from the audit: full-length
-references and later phrases (H07), range renders marked approximate
-against full playback (H09), richer probes of musical hearing (H12), the
-verification cache (H15), and the port to Schism, NES and OPL2.
+`CHIPGEN_AUDIO_ENDPOINT`).
+
+P1 of the audit:
+
+| what | where |
+|---|---|
+| a reference is kept whole by default (up to 600 s), and the record says what was kept and why (`kept`) | `references.add` |
+| a VGM/VGZ is a reference: the log replayed by the emulators is its audio; notes, grid and voice stems come from its transcription with its FM bank, and the record says which. NSF, Furnace, FamiTracker, DefleMask, SPC, GYM, SID are refused by name, not half-imported | `references._vgm_source`, `kind_of` |
+| an audio-estimated grid is checked in 30 s windows over the whole file; where the audio's own beat stops agreeing the grid says so (`uncertain_after_s`) and later fragments are marked `grid_uncertain` | `references._tempo_windows`, `listen.of_reference` |
+| what a model hears is played from the top of the piece (`method="full"`); a chased window is recorded as approximate (`playback`) | `loop._clip`, `NativeEar.hear`, `listen.of_timeline` |
+| music probes beside the tone probes: identical versions are the same, versions a note apart are not, which of two notes starts sharply (both orders), where a stereo tone sits. A model's choice among versions is obeyed only when it passed them (`trusted_to_choose`), recorded otherwise | `ear.verify_music`, `answer_by_dsp` (the positive control) |
+| `compose_range` takes `listen` and `revise` | `agent.py` |
+| every A/B reel also at its rendered levels (`reel_raw`) | `listen.write` |
+
+Still open: phrase alignment by anchors at cadences rather than bar
+numbers (the second half of H08), the verification cache (H15),
+instrument intents beyond the eight categories (H11), and the port to
+Schism, NES and OPL2 (P2).
 
 ## Measured
 
