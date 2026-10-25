@@ -162,7 +162,7 @@ under that root.
 | | `python/agent.py` | the facade and its CLI |
 | | `tests/test_agentic.py` | the spec's tests A-F and their foundations (19 tests) |
 | | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
-| | `tests/test_agentic_refs.py` | their tests (31) |
+| | `tests/test_agentic_refs.py` | their tests (38) |
 | | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
 | | `examples/agentic/` | the examples below, made by `make_examples.py` |
 | remains | — | see "What it does not do" |
@@ -316,10 +316,23 @@ P1 of the audit:
 | `compose_range` takes `listen` and `revise` | `agent.py` |
 | every A/B reel also at its rendered levels (`reel_raw`) | `listen.write` |
 
-Still open: phrase alignment by anchors at cadences rather than bar
-numbers (the second half of H08), the verification cache (H15),
-instrument intents beyond the eight categories (H11), and the port to
-Schism, NES and OPL2 (P2).
+P2 of the audit:
+
+| what | where |
+|---|---|
+| a project targets the Mega Drive, the NES or the OPL2 (one machine a piece, its own columns); the score, the chase, the notes and the Tool ear know their voices (`timeline.column_of` names the NES voices by their columns) | `state.new_state`, `render.chased_events`, `timeline` |
+| on the masked-lead fixtures: chase null -18.9 dB on the NES (level envelope within 0.2 dB), -32 dB on the OPL2; the correction loop raises the buried lead -7.1 -> -2.4 dB (NES, the pad's 4-bit volume down) and -16.8 -> -10.8 dB (OPL2, the lead's velocity up) | `fixtures.masked_lead_nes`, `masked_lead_opl` |
+| refused by name there: the triangle's level (it has none), pan and echo (mono, no voice to spare), instrument programs (YM2612 only); a heard "wider" is not routed on a mono machine; the ear is sent mono | `patch.level`, `guided.route` |
+| a passed probe check is kept per adapter and probe set for a day; `forget_verification` drops it | `agent._cached_verification` |
+| commits, rollbacks and saves hold a file lock and refuse to write over revisions another process made after the project was read (`stale_state`) | `state.Project._locked`, `_check_fresh` |
+
+Not done, and not claimed: Schism. Its modules are references here; the
+loop is not ported to IT samples, envelopes, NNA or effect memory, which
+need the Schism project's own compiler and a played-from-the-top render
+(bridge/AGENTIC_PORTING.md). Nor heard: no model has listened to the NES
+or OPL2 path; the stand-in ears show the plumbing (mono clips, the
+choice). Still open from the audit: phrase anchors at cadences (H08's
+second half), instrument intents beyond the eight categories (H11).
 
 ## Measured
 

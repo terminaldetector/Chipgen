@@ -1,6 +1,14 @@
 # Porting the reference-and-listening interface: Schism, NES, OPL2
 
-**Status: a proposal. Nothing on this page is done.** The interface —
+**Status: the NES and the OPL2 are wired (measured, not yet heard by a
+model); Schism is still a proposal.** On the NES and the OPL2 the
+MusicalState, the range render (its chase error measured), the Tool ear,
+the correction loop and the patch ops that fit one mono chip run, and
+what does not fit is refused by name (bridge/AGENTIC.md, "P2"). The
+listening check below (a verified audio model or a person) has not been
+done for them. The rest of this page is the plan as it was written.
+
+**The plan, as proposed.** The interface —
 references kept with their sources checked against their audio, fragments
 cut on bars and matched in loudness, observations that say whether they
 were heard, measured or assumed, a voice's instrument moved toward a sound
