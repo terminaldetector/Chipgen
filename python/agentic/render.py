@@ -46,10 +46,13 @@ DEFAULT_PREROLL_S = 2.0
 DEFAULT_TAIL_S = 0.5
 
 #: Note events: re-keyed at the window if held, never replayed otherwise.
-_ONS = (E.FMNoteOn, E.PSGToneOn, E.PSGNoiseOn)
-_OFFS = (E.FMNoteOff, E.PSGToneOff, E.PSGNoiseOff)
+_ONS = (E.FMNoteOn, E.PSGToneOn, E.PSGNoiseOn, E.OPLNoteOn, E.NESNoteOn,
+        E.NESNoiseOn)
+_OFFS = (E.FMNoteOff, E.PSGToneOff, E.PSGNoiseOff, E.OPLNoteOff,
+         E.NESNoteOff, E.NESNoiseOff)
 #: Never replayed from before the window: timing, markers, one-shot PCM.
-_SKIP = (E.Wait, E.Marker, E.LoopPoint, E.End, E.DACSample, E.Tempo)
+_SKIP = (E.Wait, E.Marker, E.LoopPoint, E.End, E.DACSample, E.NESSample,
+         E.Tempo)
 
 
 class Render:
@@ -93,7 +96,8 @@ class Render:
 
 
 def _keep(event, keep: Optional[set], drop: Optional[set]) -> bool:
-    owner = levels._voice_of(event)
+    from .timeline import column_of
+    owner = column_of(event)
     if owner is None:
         return True
     if keep is not None:
@@ -140,7 +144,8 @@ def chased_events(timeline, row0: int, row1: int, keep=None, drop=None):
             continue
         if isinstance(ev, _SKIP):
             continue
-        column = levels._voice_of(ev)
+        from .timeline import column_of
+        column = column_of(ev)
         if isinstance(ev, _OFFS):
             held.pop(column, None)
             continue
@@ -159,11 +164,22 @@ def chased_events(timeline, row0: int, row1: int, keep=None, drop=None):
     window = [ev for ev in events[start:stop]
               if not isinstance(ev, E.End) and _keep(ev, keep, drop)]
     tail = []
-    for ch in range(6):
-        tail.append(E.FMNoteOff(channel=ch))
-    for ch in range(3):
-        tail.append(E.PSGToneOff(channel=ch))
-    tail.append(E.PSGNoiseOff())
+    # every voice released at the end, on the chips the piece plays only:
+    # a note-off to a chip it never uses would build that chip for nothing
+    cols = timeline.content.get("columns", [])
+    if any(c.startswith(("fm", "psg", "noise", "dac")) for c in cols):
+        for ch in range(6):
+            tail.append(E.FMNoteOff(channel=ch))
+        for ch in range(3):
+            tail.append(E.PSGToneOff(channel=ch))
+        tail.append(E.PSGNoiseOff())
+    if any(c.startswith("opl") for c in cols):
+        for ch in range(9):
+            tail.append(E.OPLNoteOff(channel=ch))
+    if any(c.startswith("nes") for c in cols):
+        for v in ("pulse1", "pulse2", "triangle"):
+            tail.append(E.NESNoteOff(voice=v))
+        tail.append(E.NESNoiseOff())
     tail.append(E.Wait(ticks=max(1, int(round(0.3 * tps)))))
     tail.append(E.End())
     tail = [ev for ev in tail if _keep(ev, keep, drop)

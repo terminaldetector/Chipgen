@@ -81,6 +81,20 @@ def ticks_per_second(bpm: float, lpb: int) -> float:
     return bpm * lpb / 60.0 * TICKS_PER_ROW
 
 
+#: the columns each machine has; a piece plays one of them
+MACHINE_COLUMNS = {
+    "megadrive": MEGADRIVE_COLUMNS,
+    "nes": ("nes0", "nes1", "nes2", "nes3", "nes4"),
+    "opl2": tuple(f"opl{i}" for i in range(9))}
+#: the columns a new project gets on each machine: the Mega Drive's FM,
+#: PSG, noise and DAC; the NES's two pulses, triangle and noise; six of
+#: the OPL2's nine 2-operator channels
+DEFAULT_COLUMNS = {
+    "megadrive": ("fm0", "fm1", "fm2", "fm3", "psg0", "noise", "dac"),
+    "nes": ("nes0", "nes1", "nes2", "nes3"),
+    "opl2": ("opl0", "opl1", "opl2", "opl3", "opl4", "opl5")}
+
+
 def new_state(prompt: str, target: str = "megadrive", intent: str = "",
               bpm: float = 150.0, lpb: int = 4,
               beats_per_bar: int = DEFAULT_BEATS_PER_BAR, key: str = "",
@@ -89,12 +103,12 @@ def new_state(prompt: str, target: str = "megadrive", intent: str = "",
               duration_s: Optional[float] = None,
               done_when: Optional[List[str]] = None,
               columns=None, project_id: str = None) -> dict:
-    if target != "megadrive":
+    if target not in DEFAULT_COLUMNS:
         raise AgenticError(
             "unsupported_target",
-            f"the agentic loop runs on the Mega Drive (YM2612 + SN76489) "
-            f"only; {target!r} is not wired to it yet (capabilities.py says "
-            f"what each backend can do)", target=target)
+            f"the agentic loop runs on the Mega Drive, the NES and the OPL2; "
+            f"{target!r} is not wired to it (capabilities.py says what each "
+            f"backend can do)", target=target)
     return {
         "format": FORMAT,
         "identity": {
@@ -112,8 +126,7 @@ def new_state(prompt: str, target: str = "megadrive", intent: str = "",
         "instruments": {},
         "sections": [],
         "order": [],
-        "columns": list(columns or ("fm0", "fm1", "fm2", "fm3", "psg0",
-                                    "noise", "dac")),
+        "columns": list(columns or DEFAULT_COLUMNS[target]),
         "motifs": {"motifs": {}, "instances": [], "open": []},
         "observations": [],
         "decisions": [],
@@ -141,11 +154,16 @@ def check_content(c: dict) -> List[dict]:
     timeline's job; this is about the shape of the state."""
     problems = []
     columns = c.get("columns") or []
+    machine = next((m for m, cols in MACHINE_COLUMNS.items()
+                    if columns and columns[0] in cols), "megadrive")
+    allowed = MACHINE_COLUMNS[machine]
     for column in columns:
-        if column not in MEGADRIVE_COLUMNS:
+        if column not in allowed:
             problems.append({"code": "bad_column", "where": column,
-                             "message": f"{column!r} is not a Mega Drive "
-                                        f"column ({', '.join(MEGADRIVE_COLUMNS)})"})
+                             "message": f"{column!r} is not a column of the "
+                                        f"{machine} piece this is "
+                                        f"({', '.join(allowed)}); one piece "
+                                        f"plays one machine"})
     if len(set(columns)) != len(columns):
         problems.append({"code": "duplicate_column", "where": "columns",
                          "message": "a column appears twice"})
@@ -281,8 +299,56 @@ class Project:
     def path(self, *parts) -> str:
         return os.path.join(self.root, *parts)
 
+    # one writer at a time, and never over a newer state
+    def _locked(self):
+        """The project's lock (a file lock on .lock), re-entrant within
+        this object: commit, rollback and save hold it while they check
+        that no other process changed the project since it was opened."""
+        project = self
+
+        class _Lock:
+            def __enter__(self):
+                depth = getattr(project, "_lock_depth", 0)
+                if depth == 0:
+                    project._lock_file = open(project.path(".lock"), "a")
+                    try:
+                        import fcntl
+                        fcntl.flock(project._lock_file, fcntl.LOCK_EX)
+                    except ImportError:     # no flock here: one process
+                        pass
+                project._lock_depth = depth + 1
+                return self
+
+            def __exit__(self, *exc):
+                project._lock_depth -= 1
+                if project._lock_depth == 0:
+                    project._lock_file.close()
+                return False
+        return _Lock()
+
+    def _check_fresh(self):
+        """Refuse to write over revisions another process made after this
+        one read the project: its music would be lost."""
+        path = os.path.join(self.root, "state.json")
+        if not os.path.exists(path):
+            return
+        with open(path, encoding="utf-8") as handle:
+            disk = json.load(handle)
+        theirs = len(disk.get("revisions", []))
+        if theirs > len(self.state.get("revisions", [])):
+            raise AgenticError(
+                "stale_state", f"another process committed to this project "
+                f"(revision {disk.get('head')}) after it was opened here; "
+                f"open it again and redo the change on that",
+                head_on_disk=disk.get("head"), head_here=self.state["head"])
+
     # saving
     def save(self):
+        with self._locked():
+            self._check_fresh()
+            self._save()
+
+    def _save(self):
         self.state["updated"] = _now()
         tmp = os.path.join(self.root, "state.json.tmp")
         with open(tmp, "w", encoding="utf-8") as handle:
@@ -333,24 +399,28 @@ class Project:
         if problems:
             raise AgenticError("bad_content", problems[0]["message"],
                                problems=problems)
-        parent = self.state["head"]
-        for key in CONTENT_KEYS:
-            self.state[key] = copy.deepcopy(new_content[key])
-        rev = max(r["rev"] for r in self.state["revisions"]) + 1
-        self._write_revision(rev, parent, why)
-        self.save()
+        with self._locked():
+            self._check_fresh()
+            parent = self.state["head"]
+            for key in CONTENT_KEYS:
+                self.state[key] = copy.deepcopy(new_content[key])
+            rev = max(r["rev"] for r in self.state["revisions"]) + 1
+            self._write_revision(rev, parent, why)
+            self._save()
         return rev
 
     def rollback(self, to_rev: int, why: dict) -> int:
         """A new revision whose content is `to_rev`'s, exactly."""
         target = self.checkout(to_rev)
         why = dict(why, kind="rollback", to=to_rev)
-        parent = self.state["head"]
-        for key in CONTENT_KEYS:
-            self.state[key] = copy.deepcopy(target[key])
-        rev = max(r["rev"] for r in self.state["revisions"]) + 1
-        self._write_revision(rev, parent, why)
-        self.save()
+        with self._locked():
+            self._check_fresh()
+            parent = self.state["head"]
+            for key in CONTENT_KEYS:
+                self.state[key] = copy.deepcopy(target[key])
+            rev = max(r["rev"] for r in self.state["revisions"]) + 1
+            self._write_revision(rev, parent, why)
+            self._save()
         return rev
 
     # knowledge about the music

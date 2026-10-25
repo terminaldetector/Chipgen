@@ -443,9 +443,10 @@ def test_the_backend_limits_are_refused_by_name():
     assert md["actions"]["render_range"]["mode"] == "Emulated"
     assert md["actions"]["export.it"]["mode"] == "Approximate"
     assert md["ears"]["native"].startswith("unavailable")
-    for target in ("nes", "opl2", "schism"):
-        assert CAP.inspect(target)["agentic_loop"] == "Unsupported"
-    refusals = [(lambda: S.new_state("x", target="nes"),
+    for target in ("nes", "opl2"):
+        assert CAP.inspect(target)["agentic_loop"] == "Supported"
+    assert CAP.inspect("schism")["agentic_loop"] == "Unsupported"
+    refusals = [(lambda: S.new_state("x", target="schism"),
                  "unsupported_target"),
                 (lambda: CAP.check_action("schism", "patch.level"),
                  "unsupported"),

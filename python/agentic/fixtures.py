@@ -118,3 +118,60 @@ def etude(prompt: str = "a short étude in A minor: a theme, its "
          "harmony": ["F", "G", "E", "Am"]}]
     st["structure"]["form"] = "A A' B C"
     return st
+
+
+def _masked_rows(lead_vel: int, loud: int) -> list:
+    roots = ["A-3", "A-3", "F-3", "G-3"]
+    rows = []
+    for i in range(32):
+        beat = i // 8
+        bass = roots[beat] if i % 2 == 0 else "==="
+        lead = _LEAD[i]
+        if lead not in ("...", "==="):
+            lead = f"{lead}:{lead_vel}"
+        pad = {0: f"C-5:{loud}", 16: f"A-4:{loud}"}.get(i, "...")
+        rows.append([bass, lead, pad])
+    return rows
+
+
+def _two_bars(st: dict, rows: list) -> dict:
+    st["sections"] = [{"id": "A", "name": "phrase", "rows": rows,
+                       "directives": [], "harmony": ["Am", "Am", "F", "G"],
+                       "intent": {"function": "statement", "energy": 0.6}}]
+    st["order"] = ["A"]
+    st["structure"]["plan"] = [{"id": "A", "function": "statement",
+                                "bars": 2, "energy": 0.6}]
+    return st
+
+
+def masked_lead_nes(prompt: str = "a lead over bass and a held pulse; the "
+                                  "lead must read clearly") -> dict:
+    """The same two bars on the NES: the lead on pulse 1 at a low volume
+    (velocity 48, volume 6 of 15), a held second pulse at full volume over
+    it, the bass on the triangle. Mono; the pulses' 4-bit volume is the
+    only level there is, and the triangle has none."""
+    st = S.new_state(prompt, target="nes", bpm=150, lpb=4, key="A minor",
+                     columns=["nes2", "nes0", "nes1"],
+                     constraints=["keep the melody and the harmony"])
+    st["instruments"] = {
+        "bass": {"channel": "nes2", "role": "bass", "register": [33, 52]},
+        "lead": {"channel": "nes0", "role": "lead", "register": [55, 76]},
+        "pad": {"channel": "nes1", "role": "pad", "register": [48, 72]}}
+    return _two_bars(st, _masked_rows(48, 127))
+
+
+def masked_lead_opl(prompt: str = "a lead over bass and pad; the lead must "
+                                  "read clearly") -> dict:
+    """The same two bars on the OPL2: a soft square lead under a loud
+    pad, the bass below. 2-operator FM, mono."""
+    st = S.new_state(prompt, target="opl2", bpm=150, lpb=4, key="A minor",
+                     columns=["opl0", "opl1", "opl2"],
+                     constraints=["keep the melody and the harmony"])
+    st["instruments"] = {
+        "bass": {"channel": "opl0", "patch": "opl_bass", "role": "bass",
+                 "register": [33, 52]},
+        "lead": {"channel": "opl1", "patch": "opl_square_lead",
+                 "role": "lead", "register": [55, 76]},
+        "pad": {"channel": "opl2", "patch": "opl_pad", "role": "pad",
+                "register": [48, 72]}}
+    return _two_bars(st, _masked_rows(56, 127))

@@ -308,6 +308,9 @@ def route(o: dict, tl, lead: Optional[str] = None) -> dict:
         return {"route": None, "why": "about a reference or a sketch, not "
                                       "the piece"}
     cat, way = o.get("category"), o.get("direction")
+    if cat == "space" and not EAR.platform_of(tl)["stereo"]:
+        return {"route": None, "why": "a mono machine: there is no stereo "
+                                      "field to widen"}
     if cat in (None, "other") or way not in ("more", "less"):
         return {"route": None, "why": "the model named no category and "
                                       "direction the changes here have"}

@@ -279,7 +279,8 @@ class ToolEar:
                     "severity": "high"})
             body = entry.get("band_margin_db")
             tonal = timeline.content["instruments"].get(v, {}).get(
-                "channel", v).startswith(("fm", "psg"))
+                "channel", v).startswith(("fm", "psg", "opl", "nes0",
+                                          "nes1", "nes2"))
             if body is not None and body < BURIED_BODY_DB and tonal and \
                     entry["role"] in ("lead", "melody", "counter", ""):
                 observations.append({
@@ -308,9 +309,10 @@ class ToolEar:
             if n.get("end_row") is None or n.get("row") is None:
                 continue
             length_rows = n["end_row"] - n["row"]
-            noise_long = (n["column"] == "noise"
+            noise_long = (n["column"] in ("noise", "nes3")
                           and length_rows >= LONG_HOLD_BARS * rows_per_bar)
-            tone_long = (n["column"].startswith(("fm", "psg"))
+            tone_long = (n["column"].startswith(("fm", "psg", "opl", "nes"))
+                         and n["column"] not in ("nes3", "nes4")
                          and length_rows >= 4 * rows_per_bar)
             if noise_long or tone_long:
                 crosses = n["section"] != timeline.rows[

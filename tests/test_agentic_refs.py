@@ -946,3 +946,127 @@ def test_compose_range_can_hear_the_section_it_wrote():
     assert heard["listening"]["available"] is False
     assert "revised" not in heard
     shutil.rmtree(root)
+
+
+# -- the loop and the ear on the NES and the OPL2 ----------------------------------------------
+def test_the_loop_hears_and_corrects_a_buried_lead_on_the_nes_and_the_opl2():
+    from agentic import fixtures, loop as L, patch as P, render as R
+    from agentic import state as S, timeline as T, ear as EAR
+    for fixture, machine in ((fixtures.masked_lead_nes, "NES"),
+                             (fixtures.masked_lead_opl, "OPL2")):
+        p = _project(fixture())
+        tl = T.build(S.content(p.state))
+        assert EAR.platform_of(tl)["stereo"] is False
+        assert machine in EAR.platform_of(tl)["name"]
+        cache = R.Cache(p.path("renders"))
+        err = R.chase_error(tl, tl.range("bars 2-2"), cache=cache)
+        assert err["envelope"]["mean_db"] < 1.0, err
+        h = EAR.ToolEar(cache).hear(tl, tl.range("all"))
+        ids = [p.add_observation(o) for o in h["observations"]]
+        buried = [i for i, o in zip(ids, h["observations"])
+                  if o["kind"] == "buried" and o["voices"] == ["lead"]]
+        assert buried, h["observations"]
+        d = L.improve(p, buried[0], cache=cache, hearing=h, ab=False)
+        assert d["outcome"] == "committed" and d["after"] > d["before"], d
+        assert d["chain"][0]["op"] == "level"
+        c = S.content(p.state)
+        for op in ({"op": "pan", "voice": "pad", "side": "L"},
+                   {"op": "echo", "voice": "lead", "range": "all",
+                    "rows": 3, "db": -9.0}):
+            try:
+                P.apply(c, op, T.build(c))
+                assert False, op
+            except S.AgenticError as error:
+                assert error.code in ("no_pan", "not_fm"), error.code
+        shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_the_nes_triangle_has_no_level_and_says_so():
+    from agentic import fixtures, patch as P, state as S, timeline as T
+    c = S.content(fixtures.masked_lead_nes())
+    try:
+        P.apply(c, {"op": "level", "voice": "bass", "range": "all",
+                    "db": -3.0}, T.build(c))
+        assert False
+    except S.AgenticError as error:
+        assert error.code == "no_volume" and "triangle" in str(error)
+
+
+def test_a_mono_machine_routes_no_stereo_change():
+    from agentic import fixtures, guided as G, state as S, timeline as T
+    tl = T.build(S.content(fixtures.masked_lead_nes()))
+    r = G.route({"basis": "heard by model", "about_the_piece": True,
+                 "category": "space", "direction": "more"}, tl, "lead")
+    assert r["route"] is None and "mono" in r["why"]
+
+
+def test_one_piece_plays_one_machine():
+    from agentic import state as S
+    st = S.new_state("x", target="nes")
+    assert st["columns"] == ["nes0", "nes1", "nes2", "nes3"]
+    c = S.content(st)
+    c["columns"] = ["nes0", "fm1"]
+    assert any(x["code"] == "bad_column" for x in S.check_content(c))
+
+
+def test_a_commit_over_a_newer_state_is_refused():
+    from agentic import fixtures, state as S
+    p = _project(fixtures.masked_lead())
+    other = S.Project.open(p.root)
+    c = S.content(other.state)
+    c["sections"][0]["rows"][0][1] = "A-5:80"
+    other.commit(c, {"kind": "test"})
+    c2 = S.content(p.state)
+    c2["sections"][0]["rows"][1][1] = "B-5:80"
+    try:
+        p.commit(c2, {"kind": "test"})
+        assert False
+    except S.AgenticError as error:
+        assert error.code == "stale_state"
+    again = S.Project.open(p.root)
+    assert again.head == 1 and again.checkout(1)["sections"][0]["rows"][0][1] \
+        == "A-5:80"
+    shutil.rmtree(os.path.dirname(p.root))
+
+
+def test_a_passed_probe_check_is_kept_and_can_be_forgotten():
+    from agent import Agent
+    from test_agentic import _DSPEar
+
+    class Counting(_DSPEar):
+        calls = 0
+
+        def listen(self, wav, prompt):
+            Counting.calls += 1
+            return super().listen(wav, prompt)
+    root = _tmp()
+    a = Agent(root, adapter=Counting())
+    a.call("create_musical_state", preset="etude", project_id="e")
+    v1 = a._cached_verification()
+    first = Counting.calls
+    assert v1["verified"] and first >= 8 and not v1.get("cached")
+    b = Agent(root, adapter=Counting())          # a new process
+    v2 = b._cached_verification()
+    assert v2.get("cached") and Counting.calls == first
+    b.forget_verification()
+    b._cached_verification()
+    assert Counting.calls > first
+    shutil.rmtree(root)
+
+
+def test_the_ear_on_the_nes_is_sent_mono_and_chooses_the_change():
+    from agentic import fixtures, guided as G, render as R
+    p = _project(fixtures.masked_lead_nes())
+    cache = R.Cache(p.path("renders"))
+    adapter = _ChoosingEar(pick=1)
+    obs = {"basis": "heard by model", "about_the_piece": True,
+           "category": "balance", "direction": "less", "voices": ["pad"],
+           "statement": "the held pulse covers the lead; softer",
+           "confidence": 0.7}
+    rv = G.revise_heard(p, "all", [obs], ear=_choosing(adapter, cache),
+                        cache=cache)
+    w = rv["worked_on"][0]
+    assert w["outcome"] == "committed" and w["judged_by"] == "heard by model"
+    assert set(adapter.channels) == {1}           # the 2A03 is mono
+    assert "NES" in rv["listening"]["model"] or rv["listening"]["available"]
+    shutil.rmtree(os.path.dirname(p.root))

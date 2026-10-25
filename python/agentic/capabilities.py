@@ -11,10 +11,10 @@ Every action is listed per target with:
     check       how the result can be verified
 
 The agentic loop (MusicalState, range render, ear, patch, loop, compose)
-runs on the Mega Drive. The engine renders NES and OPL2 as well, and the
-Schism project writes Impulse Tracker modules, but the loop is not wired
-to them: their rows say so instead of degrading silently, and asking for
-them is refused with the reason (state.new_state, `check_action`).
+runs on the Mega Drive, and on the NES and the OPL2 for what those chips
+can do (no stereo, no YM2612 instrument programs: refused by name). The
+Schism project writes Impulse Tracker modules on its own branch, and the
+loop is not wired to it: its row says so instead of degrading silently.
 
 `export` writes the project in the formats that exist and refuses the
 rest by name; nothing is dropped without a word.
@@ -182,18 +182,32 @@ _OTHER = {
     "nes": {"render": ("Supported", "Emulated",
                        "the 2A03 pulse, triangle, noise and DMC in Python "
                        "(nes_apu)", "one render", "nes_apu"),
-            "agentic_loop": ("Unsupported", None,
-                             "MusicalState and the range render know the "
-                             "Mega Drive's columns only; a port is "
-                             "proposed in bridge/AGENTIC_PORTING.md (no "
-                             "pan: the 2A03 is mono)", None, None)},
+            "agentic_loop": ("Supported", "Emulated",
+                             "MusicalState, the range render (chase "
+                             "error on the masked-lead fixture: null "
+                             "-18.9 dB, level envelope within 0.2 dB), "
+                             "the Tool ear, the correction loop (level on "
+                             "the pulses' 4-bit volume) and the guided "
+                             "patch ops that keep to one mono chip; "
+                             "refused by name: pan and echo (mono, no free "
+                             "voice to spare), the triangle's level (it "
+                             "has none), instrument programs (YM2612 "
+                             "only). Not yet heard by a model",
+                             "renders as on the Mega Drive",
+                             "tests/test_agentic_refs.py")},
     "opl2": {"render": ("Supported", "Emulated",
                         "YM3812 emulation (opl2.py)", "one render",
                         "opl2"),
-             "agentic_loop": ("Unsupported", None,
-                              "not wired: no OPL columns in the state; a "
-                              "port is proposed in bridge/AGENTIC_PORTING.md",
-                              None, None)},
+             "agentic_loop": ("Supported", "Emulated",
+                              "MusicalState, the range render (chase "
+                              "error on the masked-lead fixture: null -32 "
+                              "dB, envelope within 0.01 dB), the Tool ear, "
+                              "the correction loop (level by velocity) and "
+                              "the patch ops; refused by name: pan and "
+                              "echo (OPL2 is mono), instrument programs "
+                              "(YM2612 only). Not yet heard by a model",
+                              "renders as on the Mega Drive",
+                              "tests/test_agentic_refs.py")},
     "schism": {"render": ("Supported", "Native",
                           "Impulse Tracker modules rendered by libopenmpt "
                           "in the Schism project (a separate branch), "
@@ -227,8 +241,8 @@ def inspect(target: str = "megadrive", adapter=None,
                            target=target)
     rows = _MD if target == "megadrive" else _OTHER[target]
     out = {"target": target,
-           "agentic_loop": "Supported" if target == "megadrive"
-           else "Unsupported",
+           "agentic_loop": "Unsupported" if target == "schism"
+           else "Supported",
            "actions": {k: _row(v) for k, v in rows.items()}}
     ears = {"tool": "available"}
     if adapter is None:

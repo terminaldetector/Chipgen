@@ -30,8 +30,23 @@ import tracker
 from .state import AgenticError, rows_per_bar
 
 #: Events that start a sound on a voice, and those that end one.
-_ONS = (E.FMNoteOn, E.PSGToneOn, E.PSGNoiseOn)
-_OFFS = (E.FMNoteOff, E.PSGToneOff, E.PSGNoiseOff)
+_ONS = (E.FMNoteOn, E.PSGToneOn, E.PSGNoiseOn, E.OPLNoteOn, E.NESNoteOn,
+        E.NESNoiseOn)
+_OFFS = (E.FMNoteOff, E.PSGToneOff, E.PSGNoiseOff, E.OPLNoteOff,
+         E.NESNoteOff, E.NESNoiseOff)
+
+
+#: levels.py names the NES voices by the chip's own names; the score's
+#: columns are nes0..nes4
+_NES_COLUMN = {"pulse1": "nes0", "pulse2": "nes1", "triangle": "nes2",
+               "nesnoise": "nes3", "dmc": "nes4"}
+
+
+def column_of(event):
+    """The score column an event belongs to (levels._voice_of, with the
+    NES voices named by their columns), or None for a global event."""
+    owner = levels._voice_of(event)
+    return _NES_COLUMN.get(owner, owner)
 
 
 def _note_pitch(note: str, octave: int) -> int:
@@ -56,7 +71,7 @@ def trk(content: dict, title: str = "") -> str:
     for voice, ins in sorted(content["instruments"].items(),
                              key=lambda kv: kv[1]["channel"]):
         channel = ins["channel"]
-        if ins.get("patch") and channel.startswith("fm"):
+        if ins.get("patch") and channel.startswith(("fm", "opl", "nes")):
             lines.append(f"inst {channel} {ins['patch']}")
             for key, value in sorted(ins.get("overrides", {}).items()):
                 op, field = key.split(".")
@@ -252,7 +267,7 @@ def build(content: dict, title: str = "") -> Timeline:
         if isinstance(ev, E.FMInstrumentSelect):
             instrument[f"fm{ev.channel}"] = ev.instrument
             continue
-        column = levels._voice_of(ev)
+        column = column_of(ev)
         if column is None or column in layer_of:
             continue
         if isinstance(ev, _OFFS):
@@ -263,7 +278,7 @@ def build(content: dict, title: str = "") -> Timeline:
             row = row_of_event(index)
             if isinstance(ev, E.DACSample):
                 pitch, velocity, label = None, None, ev.name
-            elif isinstance(ev, E.PSGNoiseOn):
+            elif isinstance(ev, (E.PSGNoiseOn, E.NESNoiseOn)):
                 pitch, velocity, label = None, None, "noise"
             else:
                 pitch = _note_pitch(ev.note, ev.octave)

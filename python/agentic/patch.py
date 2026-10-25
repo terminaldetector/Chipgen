@@ -217,6 +217,32 @@ def level(content: dict, voice: str, rng: dict, db: float,
                 realised.append(-(new_att - att) * PSG_DB_PER_STEP)
                 new_cell = f"{m.group(1)}{m.group(2)}" + (
                     f":{new_att}" if new_att else "") + codes
+            elif column.startswith("opl") or column in ("nes0", "nes1"):
+                # the OPL2's velocity sets the carrier's level; the NES
+                # pulses' velocity sets their 4-bit volume (velocity // 8)
+                p = _pitch(token)
+                if p is None:
+                    continue
+                pitch, param = p
+                vel = int(param) if param else 127
+                amp = (vel / 127.0) * 10 ** (db / 20.0)
+                new_vel = max(8, min(127, int(round(amp * 127.0))))
+                if column.startswith("nes"):
+                    new_vel = max(8, min(127, (new_vel // 8) * 8 + 7
+                                         if new_vel < 127 else 127))
+                    before, after = max(1, vel // 8), max(1, new_vel // 8)
+                else:
+                    before, after = vel, new_vel
+                if after == before:
+                    stuck += 1
+                    continue
+                realised.append(20 * math.log10(after / before))
+                new_cell = f"{_name(pitch)}:{new_vel}{codes}"
+            elif column == "nes2":
+                raise AgenticError("no_volume", f"{voice} plays the NES "
+                                   f"triangle, which has no volume: it "
+                                   f"sounds at one level or not at all",
+                                   voice=voice)
             elif column == "dac":
                 if token in tracker.HOLD_TOKENS or \
                         token.lower() in tracker.OFF_TOKENS:
@@ -249,9 +275,13 @@ def level(content: dict, voice: str, rng: dict, db: float,
              "units": {"fm": "velocity -> carrier TL, 0.75 dB steps",
                        "psg": "attenuation, 2 dB steps",
                        "noise": "attenuation, 2 dB steps",
+                       "opl": "velocity -> carrier level",
+                       "nes": "velocity -> 4-bit volume (16 steps)",
                        "dac": "volume 0-1"}[
                  "fm" if column.startswith("fm") else
-                 "psg" if column.startswith("psg") else column],
+                 "psg" if column.startswith("psg") else
+                 "opl" if column.startswith("opl") else
+                 "nes" if column.startswith("nes") else column],
              "cells": len(edits), "at_limit": stuck, "copies": notes,
              "edits": edits[:12], "edits_total": len(edits)}
     return new, delta

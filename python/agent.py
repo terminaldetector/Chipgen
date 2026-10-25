@@ -393,11 +393,49 @@ class Agent:
                 "mix is not their sum (register-write timing)",
                 "cost": {"renders": cache.misses - before}}
 
+    #: how long a passed probe check is trusted before it is run again
+    VERIFY_TTL_S = 24 * 3600
+
     def _ear(self, mode, p):
         if self.adapter is not None and self.verification is None:
-            self.verification = EAR.verify(self.adapter)
+            self.verification = self._cached_verification()
         return EAR.choose(mode, self.adapter, self.verification,
                           self._cache(p))
+
+    def _cached_verification(self) -> dict:
+        """The adapter's probe check, kept per adapter (its name names the
+        endpoint's model) and probe set for VERIFY_TTL_S, so a new CLI
+        process does not play the probes again; a failed check is never
+        kept, and `forget_verification` drops a kept one."""
+        import hashlib
+        key = hashlib.sha256(json.dumps(
+            [self.adapter.name, [q for _f, q, _a in EAR.PROBES],
+             [q for _n, _k, q, _a in EAR.MUSIC_PROBES]]).encode()
+        ).hexdigest()[:16]
+        path = os.path.join(self.root, ".ear_verification.json")
+        try:
+            with open(path, encoding="utf-8") as handle:
+                kept = json.load(handle)
+        except (OSError, ValueError):
+            kept = {}
+        entry = kept.get(key)
+        if entry and time.time() - entry.get("at", 0) < self.VERIFY_TTL_S:
+            return dict(entry["verification"], cached=True)
+        v = EAR.verify(self.adapter)
+        if v.get("verified"):
+            kept[key] = {"at": time.time(), "verification": v}
+            os.makedirs(self.root, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(kept, handle)
+        return v
+
+    def forget_verification(self):
+        """Drop the kept probe check (an endpoint that changed or failed);
+        the next ear plays the probes again."""
+        self.verification = None
+        path = os.path.join(self.root, ".ear_verification.json")
+        if os.path.exists(path):
+            os.remove(path)
 
     def op_hear_range(self, project_id: str, range: str = "all",
                       mode: str = "auto", focus=None) -> dict:
