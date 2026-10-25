@@ -433,6 +433,29 @@ do not share the in-memory cache, and the count says so); the guided
 round's test 52 -> 51 s — its time is in listening and measuring the
 fragments, not in its few hypotheses.
 
+P9 — the phrase anchors measured on real music. A module's patterns are
+the one structure every file carries, and the nearest thing to marked
+phrases; `examples/agentic/references/anchors_eval.py` compares the
+anchors computed from a module's notes with the bar lines where its
+patterns start. On the 28 modules of the reference corpus (the first
+90 s of each; 24 informative — three whose grid came from their audio
+and one whose every bar starts a pattern say nothing either way):
+
+| | pooled over the 24 |
+|---|---|
+| clear anchors on a pattern start | 134 of 154, 0.87 |
+| all anchors on a pattern start | 0.705 |
+| pattern starts found | 0.586 |
+| chance (pattern starts among all bar lines) | 0.298 |
+| a bar line every four bars, on a pattern start | 0.639 |
+
+The clear anchors beat "every four bars" in 9 modules and lose in 5
+(the rest tie); where the patterns are not four bars long (4mat's
+"Driving", 3-bar patterns) they read 1.0 against 0.33; two modules
+(ICOMPLEX.XM, Art_of_Chrome.xm) they miss. A pattern start is not
+always a phrase end, so this measures agreement with the author's own
+segmentation, not with a listener's.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
