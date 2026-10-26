@@ -42,6 +42,7 @@ INCLUDE_FILES = [
     "bridge/AGENTIC.md",
     "bridge/AGENTIC_PORTING.md",
     "bridge/READINESS_RU.md",
+    "bridge/LIVE_EAR_RU.md",
     "corpus/STUDY.md",
     "examples/README.md",
     "examples/agentic/README.md",
