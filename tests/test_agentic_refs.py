@@ -1689,3 +1689,36 @@ def test_a_module_that_states_its_beat_keeps_its_rows_when_the_audio_hears_dotte
                 assert record["grid"]["source"] == "audio"
     finally:
         REF._audio_grid = keep
+
+
+# -- the live check's plumbing (no model here: a stand-in that cannot tell) --------------------------
+class _NeverSure(_ChoosingEar):
+    name = "test-never-sure"
+
+    def listen(self, wav, prompt):
+        if "versions of the same passage" in prompt:
+            self.channels.append(2)
+            # the versions' labels may not give the answer away
+            index = prompt.split("\n")[1:5]
+            assert not any(w in " ".join(index).lower()
+                           for w in ("vibrato", "soft", "copy")), index
+            return json.dumps({"choice": "uncertain", "confidence": 0.1,
+                               "statement": "cannot tell"})
+        return super().listen(wav, prompt)
+
+
+def test_the_live_check_asks_four_questions_and_scores_them_honestly():
+    from agentic import live as LIVE
+    root = _tmp()
+    rec = LIVE.run(_NeverSure(), os.path.join(root, "live"))
+    assert rec["verified"] and len(rec["questions"]) == 4
+    picks = {q["question"]: (q["picked"], q["right"])
+             for q in rec["questions"]}
+    # "uncertain" is right only where the versions are the same
+    assert picks["T1 identity"] == ("uncertain", True)
+    assert picks["T1 change"] == ("uncertain", False)
+    assert rec["passed"] == {"T1": False, "T3": False}
+    assert all(q["clip"] for q in rec["questions"])
+    assert rec["session"]["by_purpose"]["choose among versions"][
+        "calls"] == 4
+    shutil.rmtree(root)

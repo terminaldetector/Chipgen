@@ -105,20 +105,22 @@ def _run(name: str) -> dict:
             "seconds": round(time.time() - started, 1)}
 
 
-def _live_check() -> dict:
-    endpoint = os.environ.get("CHIPGEN_AUDIO_ENDPOINT")
-    if not endpoint:
+def _live_check(out: str) -> dict:
+    """The tone and music probes, then T1 and T3 asked of the model itself
+    (agentic/live.py), when CHIPGEN_AUDIO_ENDPOINT names one."""
+    from agentic import ear as EAR
+    adapter = EAR.adapter_from_env()
+    if adapter is None:
         return {"ran": False, "why": "CHIPGEN_AUDIO_ENDPOINT is not set: no "
                 "live audio model here"}
-    import llm
-    from agentic import ear as EAR
-    adapter = EAR.OpenAIAudioAdapter(llm.Endpoint(
-        url=endpoint, model=os.environ.get("CHIPGEN_AUDIO_MODEL")),
-        declared=True)
+    from agentic import live as LIVE
     v = EAR.verify(adapter)
+    rec = LIVE.run(adapter, os.path.join(out, "live"), verification=v)
     return {"ran": True, "adapter": adapter.name,
             "verified": v.get("verified"), "music": v.get("music"),
-            "why": v.get("why")}
+            "why": v.get("why"), "trusted": rec.get("trusted"),
+            "passed": rec.get("passed"), "questions": rec.get("questions"),
+            "session": rec.get("session")}
 
 
 def main(argv=None) -> int:
@@ -137,17 +139,31 @@ def main(argv=None) -> int:
                      "seconds": round(sum(r["seconds"] for r in runs), 1)})
         print(f"{tid}: {rows[-1]['result']} ({rows[-1]['seconds']} s)",
               flush=True)
-    live = _live_check()
+    live = _live_check(a.out)
     for r in rows:
-        if r["id"] in ("T1", "T3") and not (live["ran"] and
-                                            live.get("verified")):
-            if r["result"] == "passed":
-                r["result"] = "stand-in tests passed"
-            r["live"] = ("with a live model: not done (" + live["why"] + ")"
-                         ) if not live["ran"] else \
-                f"the live model did not pass: {live['why']}"
+        if r["id"] not in ("T1", "T3"):
+            continue
+        if r["result"] == "passed":
+            r["result"] = "stand-in tests passed"
+        if not live["ran"]:
+            r["live"] = f"with a live model: not done ({live['why']})"
+        elif not live.get("verified"):
+            r["live"] = f"the live model failed the tone probes: {live['why']}"
+        else:
+            ok = (live.get("passed") or {}).get(r["id"])
+            asked = [q for q in live.get("questions") or []
+                     if q["question"].startswith(r["id"])]
+            r["live"] = (f"live model {live['adapter']}: "
+                         f"{'PASSED' if ok else 'FAILED'} — " + "; ".join(
+                             f"{q['question']}: picked {q['picked']} "
+                             f"({'right' if q['right'] else 'wrong'})"
+                             for q in asked) +
+                         ("" if (live.get("trusted") or {}).get("trusted")
+                          else " (not trusted to choose: "
+                               f"{(live.get('trusted') or {}).get('why')})"))
+    seconds = (live.get("session") or {}).get("audio_seconds", 0)
     rows[-1]["note"] = ("run python3 tests/run_tests.py for the engine; "
-                        "model audio seconds here: 0 (no live model); "
+                        f"audio seconds sent to a live model: {seconds}; "
                         "renders and runtime are in each record's cost")
     report = {"date": time.strftime("%Y-%m-%d"), "live_model": live,
               "tests": rows}

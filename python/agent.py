@@ -41,6 +41,8 @@ References, parallel listening, sketches and instruments:
     listen_compare         project_id, range, refs      aligned fragments,
                                                         reel, observations
     check_listening        -                            is a model hearing?
+    live_check             folder?                      T1 and T3 with the
+                                                        configured model
     audible_session        project_id                   what a model was
                                                         sent, and its cost
     phrase_anchors         project_id, reference?       where phrases end
@@ -905,6 +907,22 @@ class Agent:
         return {"joins": JOINS.measure(self._timeline(self._project(
             project_id))), "limits": JOINS.LIMITS}
 
+    def op_live_check(self, folder: str = None) -> dict:
+        """The audit's T1 and T3 with the configured audio model: real Mega
+        Drive renders (a vibrato, a soft attack, an identical copy as a
+        control, the order swapped) sent as one WAV each question; right
+        or wrong per question; every clip kept by hash. Needs an audio
+        model (--audio-endpoint or CHIPGEN_AUDIO_ENDPOINT)."""
+        from agentic import live as LIVE
+        if self.adapter is None:
+            raise AgenticError("no_audio_model", "no audio model is "
+                               "configured: CHIPGEN_AUDIO_ENDPOINT, "
+                               "CHIPGEN_AUDIO_MODEL, CHIPGEN_AUDIO_KEY")
+        folder = folder or os.path.join(
+            self.root, "live_check", time.strftime("%Y%m%d-%H%M%S"))
+        return LIVE.run(self.adapter, folder,
+                        verification=self._cached_verification())
+
     def op_mark_reference(self, project_id: str, reference: str,
                           phrase_ends=(), note: str = "") -> dict:
         """A person's phrase ends in a reference (the bars that end a
@@ -1218,8 +1236,12 @@ def main(argv=None) -> int:
     if a.audio_endpoint:
         import llm
         endpoint = llm.Endpoint(url=a.audio_endpoint,
-                                model=a.audio_model)
+                                model=a.audio_model,
+                                api_key=os.environ.get("CHIPGEN_AUDIO_KEY"))
         adapter = EAR.OpenAIAudioAdapter(endpoint, declared=True)
+    else:
+        # CHIPGEN_AUDIO_ENDPOINT / _MODEL / _KEY (ear.adapter_from_env)
+        adapter = EAR.adapter_from_env()
     reply = Agent(a.root, adapter).call(a.operation, **kwargs)
     print(json.dumps(reply, ensure_ascii=False, indent=1))
     return 1 if "error" in reply else 0

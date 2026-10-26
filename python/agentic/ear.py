@@ -582,6 +582,24 @@ class OpenAIAudioAdapter(AudioAdapter):
                         max_tokens=600)
 
 
+def adapter_from_env() -> Optional["OpenAIAudioAdapter"]:
+    """The audio model the environment names, or None:
+    CHIPGEN_AUDIO_ENDPOINT (an OpenAI-compatible base URL, e.g.
+    https://api.openai.com/v1), CHIPGEN_AUDIO_MODEL (one that takes
+    `input_audio`, e.g. gpt-4o-audio-preview), and the key in
+    CHIPGEN_AUDIO_KEY, else CHIPGEN_API_KEY or OPENAI_API_KEY. Declared
+    only: `verify` finds out whether it hears."""
+    import os
+    url = os.environ.get("CHIPGEN_AUDIO_ENDPOINT")
+    if not url:
+        return None
+    import llm
+    endpoint = llm.Endpoint(url=url,
+                            model=os.environ.get("CHIPGEN_AUDIO_MODEL"),
+                            api_key=os.environ.get("CHIPGEN_AUDIO_KEY"))
+    return OpenAIAudioAdapter(endpoint, declared=True)
+
+
 def verify(adapter: AudioAdapter) -> dict:
     """Play the probes; Native only if every answer is right. A text-only
     model guessing has about a 1 in 40 chance (a digit, then two coin
