@@ -70,12 +70,20 @@ BINARY_EXTENSIONS = (".so", ".dylib", ".dll")
 #: `_work` is examples/agentic/make_examples.py's scratch (renders and
 #: revisions), left behind only by an interrupted run.
 SKIP_DIRECTORIES = {"__pycache__", ".git", ".pytest_cache", "_work"}
+#: What the examples' runs write (the reference run's output, the
+#: acceptance report): a full archive ships them beside the engine, and a
+#: bridge archive built from that copy leaves them out again, as it does
+#: from the repository, where they are not.
+SKIP_PATHS = {os.path.join("examples", "agentic", "references", "run"),
+              os.path.join("examples", "agentic", "acceptance")}
 
 
 def _walk(directory, extensions):
     base = os.path.join(ROOT, directory)
     for current, dirs, files in os.walk(base):
-        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRECTORIES)
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRECTORIES and
+                         os.path.relpath(os.path.join(current, d), ROOT)
+                         not in SKIP_PATHS)
         for name in sorted(files):
             if name.endswith(extensions):
                 path = os.path.join(current, name)
