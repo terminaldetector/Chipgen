@@ -166,9 +166,14 @@ def test_resampling_agrees_between_backends():
 
 def test_engine_runs_with_no_numpy_and_no_scipy():
     # The bridge's whole promise. Run it in a subprocess with the imports
-    # blocked, because there is no way back once numpy is loaded.
+    # blocked, because there is no way back once numpy is loaded. The
+    # subprocess starts isolated and without `site` (-I -S): an environment
+    # whose .pth files or sitecustomize import numpy at start-up loaded it
+    # before the blocker was installed, and the test failed for the
+    # environment's sake, not the engine's (an outside audit, 27 October).
     blocker = (
         "import sys\n"
+        "assert 'numpy' not in sys.modules, 'numpy was loaded at start-up'\n"
         "class Block:\n"
         "    def find_spec(self, name, path=None, target=None):\n"
         "        if name.split('.')[0] in ('numpy', 'scipy'):\n"
@@ -182,7 +187,7 @@ def test_engine_runs_with_no_numpy_and_no_scipy():
         "assert len(r.audio) > 1000 and r.peak > 0.05\n"
         "print('OK', len(r.audio), round(r.peak, 3))\n"
     )
-    proc = subprocess.run([sys.executable, "-c", blocker],
+    proc = subprocess.run([sys.executable, "-I", "-S", "-c", blocker],
                           capture_output=True, text=True)
     assert proc.returncode == 0, f"bare-python run failed:\n{proc.stderr}"
     assert proc.stdout.startswith("OK")
