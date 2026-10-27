@@ -309,7 +309,12 @@ def score(folder: str, answers: Optional[str] = None) -> dict:
     path = answers or os.path.join(folder, "packet", "answers.json")
     with open(path) as handle:
         given = json.load(handle)
-    out = {"probes": {}, "questions": [], "how": {}, "changed_files": []}
+    out = {"probes": {}, "questions": [], "how": {}, "changed_files": [],
+           # a packet is answered wherever the model is; how is its own
+           # word. Only `run` (input_audio through the adapter, logged by
+           # the audible session) is a channel this code has seen.
+           "channel": "packet: how each item was answered is the model's "
+                      "own word, not verified"}
     for qid, k in sorted(key.items()):
         a = given.get(qid) or {}
         if not isinstance(a, dict):
@@ -357,6 +362,7 @@ def score(folder: str, answers: Optional[str] = None) -> dict:
         "T3": all(q["right"] for q in out["questions"]
                   if q["question"].startswith("T3"))}
     listened = out["how"].get("listened", 0) == len(key)
+    # hearing as the model declares it; run() is the verified channel
     out["counts_as_hearing"] = bool(
         probes_ok and listened and not out["changed_files"] and
         out["passed"]["T1"] and out["passed"]["T3"])
