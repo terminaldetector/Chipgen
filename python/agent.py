@@ -43,6 +43,11 @@ References, parallel listening, sketches and instruments:
     check_listening        -                            is a model hearing?
     live_check             folder?                      T1 and T3 with the
                                                         configured model
+    live_export            folder                       the same, as a blind
+                                                        packet for a model
+                                                        that hears files
+    live_score             folder, answers?             its answers against
+                                                        the kept key
     audible_session        project_id                   what a model was
                                                         sent, and its cost
     phrase_anchors         project_id, reference?       where phrases end
@@ -946,6 +951,22 @@ class Agent:
             self.root, "live_check", time.strftime("%Y%m%d-%H%M%S"))
         return LIVE.run(self.adapter, folder,
                         verification=self._cached_verification())
+
+    def op_live_export(self, folder: str, seed: int = None) -> dict:
+        """T1, T3 and the probes as a blind packet for a model that hears a
+        file put in front of it (a multimodal chat, an agent running this
+        repository): WAVs and questions under neutral numbers, byte for
+        byte what an endpoint is sent; the key is kept outside the packet.
+        No endpoint needed."""
+        from agentic import live as LIVE
+        return LIVE.export(folder, seed=seed)
+
+    def op_live_score(self, folder: str, answers: str = None) -> dict:
+        """A packet's answers (packet/answers.json) against its key: the
+        probes, T1 and T3, how each item was answered; it counts as
+        hearing only if every item was listened to."""
+        from agentic import live as LIVE
+        return LIVE.score(folder, answers)
 
     def op_mark_reference(self, project_id: str, reference: str,
                           phrase_ends=(), note: str = "") -> dict:

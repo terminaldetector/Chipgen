@@ -1056,6 +1056,28 @@ def ab_choose(ear, versions, goal: str, voices=(), rate: int = R.RATE,
     if not status["available"]:
         return {"available": False, "why": status["why"], "basis": None}
     native = ear.native if isinstance(ear, HybridEar) else ear
+    wav, prompt, marks = choose_request(versions, goal, rate, stereo,
+                                        platform, matched)
+    out = {"available": True, "model": native.adapter.name,
+           "basis": "heard by model", "labels": [l for l, _v in versions],
+           "clip": marks, "audio_seconds": marks["seconds"],
+           "choice": None, "clip_sha": hashlib.sha256(wav).hexdigest()[:16]}
+    try:
+        reply = native.adapter.listen(wav, prompt)
+        out.update(read_choice(reply, len(versions)))
+    except Exception as error:          # recorded, never replaced
+        out.update(problem=f"no usable answer: {str(error)[:160]}",
+                   uncertain=True)
+    return out
+
+
+def choose_request(versions, goal: str, rate: int = R.RATE,
+                   stereo: bool = True, platform: str = PLATFORMS[0][1],
+                   matched: bool = True):
+    """What a listening model is sent to choose among versions: one WAV
+    (the versions in turn, AB_GAP_S apart) and the question. -> (wav
+    bytes, prompt, marks). ab_choose sends it; live.export writes it to a
+    packet, byte for byte the same."""
     clip, marks = _sequence([v for _l, v in versions], rate, stereo,
                             matched)
     lines = [f"{k + 1}. {m['t0']:.2f}-{m['t1']:.2f} s: {label}"
@@ -1067,31 +1089,27 @@ def ab_choose(ear, versions, goal: str, voices=(), rate: int = R.RATE,
         "each at the level it was rendered (the balance is what changed)",
         channels="stereo" if marks["channels"] == 2 else "mono",
         index="\n".join(lines), goal=goal)
-    out = {"available": True, "model": native.adapter.name,
-           "basis": "heard by model", "labels": [l for l, _v in versions],
-           "clip": marks, "audio_seconds": round(
-               len(clip) / marks["channels"] / rate, 2), "choice": None}
-    wav = wav_bytes(clip, rate, stereo=marks["channels"] == 2)
-    out["clip_sha"] = hashlib.sha256(wav).hexdigest()[:16]
-    try:
-        reply = native.adapter.listen(wav, prompt)
-        text = reply[reply.index("{"):reply.rindex("}") + 1]
-        data = json.loads(text)
-        raw = data.get("choice")
-        conf = max(0.0, min(1.0, float(data.get("confidence", 0.5))))
-        ranking = [int(x) - 1 for x in data.get("ranking", [])
-                   if isinstance(x, (int, float))
-                   and 1 <= int(x) <= len(versions)]
-        if isinstance(raw, str) and raw.strip().lower() == "uncertain":
-            choice = None
-        else:
-            choice = int(raw) - 1
-            if not 0 <= choice < len(versions):
-                raise ValueError(f"choice {raw!r} is not a version")
-        out.update(choice=choice, confidence=conf, ranking=ranking,
-                   uncertain=choice is None,
-                   statement=str(data.get("statement", ""))[:240])
-    except Exception as error:          # recorded, never replaced
-        out.update(problem=f"no usable answer: {str(error)[:160]}",
-                   uncertain=True)
-    return out
+    marks["seconds"] = round(len(clip) / marks["channels"] / rate, 2)
+    return wav_bytes(clip, rate, stereo=marks["channels"] == 2), prompt, \
+        marks
+
+
+def read_choice(reply: str, n: int) -> dict:
+    """A reply to CHOOSE_PROMPT -> {choice (0-based, None = uncertain),
+    confidence, ranking, uncertain, statement}; raises when it has none."""
+    text = reply[reply.index("{"):reply.rindex("}") + 1]
+    data = json.loads(text)
+    raw = data.get("choice")
+    conf = max(0.0, min(1.0, float(data.get("confidence", 0.5))))
+    ranking = [int(x) - 1 for x in data.get("ranking", [])
+               if isinstance(x, (int, float))
+               and 1 <= int(x) <= n]
+    if isinstance(raw, str) and raw.strip().lower() == "uncertain":
+        choice = None
+    else:
+        choice = int(raw) - 1
+        if not 0 <= choice < n:
+            raise ValueError(f"choice {raw!r} is not a version")
+    return {"choice": choice, "confidence": conf, "ranking": ranking,
+            "uncertain": choice is None,
+            "statement": str(data.get("statement", ""))[:240]}

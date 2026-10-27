@@ -1796,3 +1796,44 @@ def test_form_letters_the_sections_and_checks_the_plan_and_the_cadence():
     r = a.call("measure_form", project_id="m")
     assert r["form"]["score"] == "A" and r["sections"][0]["cadence"]
     shutil.rmtree(root)
+
+
+def test_a_blind_packet_is_scored_against_a_key_the_model_never_sees():
+    import json
+    from agent import Agent
+    from agentic import live as LIVE
+    root = _tmp()
+    folder = os.path.join(root, "packet_run")
+    r = Agent(root).call("live_export", folder=folder, seed=3)
+    assert r["items"] == 3 + 7 + 4
+    packet = os.listdir(os.path.join(folder, "packet"))
+    assert "key.json" not in packet
+    shown = open(os.path.join(folder, "packet", "questions.json")).read()
+    for word in ("vibrato\"", "soft\"", "copy", "T1", "T3", "probe"):
+        assert word not in shown, word          # nothing names the answer
+    key = json.load(open(os.path.join(folder, "key.json")))["items"]
+
+    def answers(how="listened", position=None):
+        out = {}
+        for qid, k in key.items():
+            if k["kind"] != "question":
+                out[qid] = {"answer": k["accepted"][0], "how": how}
+            elif position is not None:
+                out[qid] = {"answer": {"choice": position}, "how": how}
+            else:
+                n = k["versions"].index(k["want"]) + 1 \
+                    if k["want"] != "not copy" else "uncertain"
+                out[qid] = {"answer": {"choice": n, "confidence": 0.8,
+                                       "statement": "heard it"}, "how": how}
+        path = os.path.join(root, f"a_{how}_{position}.json")
+        json.dump(out, open(path, "w"))
+        return path
+
+    good = LIVE.score(folder, answers())
+    assert good["passed"] == {"probes": True, "T1": True, "T3": True}
+    assert good["counts_as_hearing"]
+    measured = LIVE.score(folder, answers(how="analysed"))
+    assert measured["passed"]["T3"] and not measured["counts_as_hearing"]
+    by_place = LIVE.score(folder, answers(position=2))   # always the 2nd
+    assert not by_place["passed"]["T3"] and not by_place["counts_as_hearing"]
+    shutil.rmtree(root)
