@@ -106,3 +106,14 @@ judge. The measurements have their own limits (`bridge/AGENTIC.md`,
 | `audio_model_check.json` | the listening boundary, as the run's `check_listening` replied |
 | `check_listening.json` | `check_listening.py`: the same, and the probes put to a stand-in that reads the WAV (passes) and one that only claims to hear (fails) |
 | `projects/piece/state.json` | the MusicalState: decisions, sketches with their reasons, revisions |
+
+## The form of a recording, from its audio
+
+`audio_form.py RECORDING --bpm 120` cuts a recording into 16-beat stretches. It letters them as `form.py` letters sections (A, A', B) and lists the sharp switches of density, brightness and level between neighbours.
+
+It reads audio only: it says nothing about which chips or commands made the sound. On the two FM recordings it was tried on:
+
+- the YM2612 + SN76489 track maps as a main body, a dark breakdown at 104–128 s (brightness ÷3.7), a bright climax at 240 s (×3.2), and a sparse low passage at 280 s, then a quiet outro;
+- the YM2151 + YMZ280B track holds one texture for its 194 s, with no switch until the fade.
+
+The recordings are not in the repository.

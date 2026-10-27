@@ -16,7 +16,9 @@ and every two slots are compared: 1.0 the same, 0.0 nothing shared. The
 slots are lettered in order: one as close as SAME to an earlier one takes
 its letter, one as close as VARIED takes it with a prime, the rest a new
 letter — "A A' B C", once from the score and once from the audio, and
-whether the two agree.
+whether the two agree. Where the density, brightness or level switches
+sharply between neighbouring sections is listed apart: the letters lean
+on the chroma, and a breakdown in the same key keeps its letter.
 
 The plan's functions are checked against it: a variation should sit near
 its statement (VARIED to SAME), a development further from it (under
@@ -35,6 +37,10 @@ from . import render as R
 
 SAME = 0.9
 VARIED = 0.7
+#: a switch between two neighbouring stretches of audio: this many times
+#: the onsets per beat or the brightness, or this many dB of level
+SWITCH_RATIO = 1.5
+SWITCH_DB = 4.0
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#",
               "B"]
 _FLAT = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
@@ -130,7 +136,7 @@ def _audio_sim(a: dict, b: dict) -> float:
     return round(sum(parts) / len(parts), 3)
 
 
-# -- letters, cadences, the plan --------------------------------------------------------------
+# -- letters, switches, cadences, the plan --------------------------------------------------------------
 def letters(sim: List[List[float]]) -> List[str]:
     out: List[str] = []
     next_letter = 0
@@ -143,6 +149,27 @@ def letters(sim: List[List[float]]) -> List[str]:
         else:
             out.append(chr(65 + next_letter))
             next_letter += 1
+    return out
+
+
+def switches(slots: List[dict]) -> List[dict]:
+    """Where the density, the brightness or the level changes sharply from
+    one stretch to the next (audio slots from _audio_slot). The letters
+    lean on the chroma, which a piece in one key shares throughout; a
+    breakdown or a sparse outro shows here even where it keeps its letter."""
+    out = []
+    for i in range(1, len(slots)):
+        a, b = slots[i - 1], slots[i]
+        what = []
+        for key, name in (("per_beat", "density"), ("centroid", "brightness")):
+            lo, hi = sorted((a[key], b[key]))
+            if lo > 0 and hi / lo >= SWITCH_RATIO:
+                what.append(f"{name} {'up' if b[key] > a[key] else 'down'} "
+                            f"x{hi / lo:.1f}")
+        if abs(b["level_db"] - a["level_db"]) >= SWITCH_DB:
+            what.append(f"level {b['level_db'] - a['level_db']:+.1f} dB")
+        if what:
+            out.append({"at": i, "what": what})
     return out
 
 
@@ -249,6 +276,10 @@ def measure(tl, cache=None) -> dict:
     return {"form": {"score": " ".join(form_score),
                      "audio": " ".join(form_audio),
                      "agree": form_score == form_audio},
+            "switches": [{"slot": slots[w["at"]]["slot"],
+                          "section": slots[w["at"]]["section"],
+                          "bar": rows[w["at"]]["bar"], "what": w["what"]}
+                         for w in switches(audio)],
             "sections": rows, "plan_checks": checks,
             "similarity": {"score": s_sim, "audio": a_sim},
             "thresholds": {"same": SAME, "varied": VARIED},

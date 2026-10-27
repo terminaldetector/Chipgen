@@ -1781,6 +1781,11 @@ def test_form_letters_the_sections_and_checks_the_plan_and_the_cadence():
     dev = m["plan_checks"][0]          # B is meant to develop, it varies
     assert dev["function"] == "development" and not dev["met"], dev
     assert dev["to_statement"]["score"] >= FM.VARIED
+    calm = {"per_beat": 4.0, "centroid": 600.0, "level_db": -13.0}
+    low = {"per_beat": 2.0, "centroid": 200.0, "level_db": -12.0}
+    sw = FM.switches([calm, dict(calm), low])
+    assert [w["at"] for w in sw] == [2]
+    assert sw[0]["what"] == ["density down x2.0", "brightness down x3.0"]
     assert FM.cadence(["Dm", "G", "C"], "C major")["kind"] == "full (V-I)"
     assert FM.cadence(["F", "C"], "C major")["closes"]
     assert not FM.cadence(["C", "G"], "C major")["closes"]
