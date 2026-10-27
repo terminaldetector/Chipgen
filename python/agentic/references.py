@@ -53,6 +53,9 @@ RATE = 44100
 KINDS = ("audio", "trk", "module", "vgm")
 TAGS = tuple(F.DIMENSIONS)
 _AUDIO = (".mp3", ".wav")
+#: recordings in other containers: decoded by ffmpeg when it is on PATH
+#: (AAC in an .m4a or .mp4, Ogg, FLAC, Opus), refused by name without it
+_AUDIO_FFMPEG = (".m4a", ".aac", ".mp4", ".ogg", ".oga", ".flac", ".opus")
 _MODULES = (".it", ".xm", ".s3m", ".mod", ".mptm")
 _VGM = (".vgm", ".vgz")
 #: formats a reference could be in that no backend here plays: refused by
@@ -87,7 +90,7 @@ def _sha(path: str) -> str:
 
 def kind_of(path: str) -> str:
     ext = os.path.splitext(path)[1].lower()
-    if ext in _AUDIO:
+    if ext in _AUDIO or ext in _AUDIO_FFMPEG:
         return "audio"
     if ext == ".trk":
         return "trk"
@@ -100,7 +103,8 @@ def kind_of(path: str) -> str:
                            f"{os.path.basename(path)}: {_UNPLAYED[ext]}; "
                            f"render it to a WAV and add that", path=path)
     raise AgenticError("bad_reference", f"{os.path.basename(path)}: a "
-                       f"reference is an MP3 or WAV recording, a .trk score, "
+                       f"reference is a recording (MP3, WAV; M4A, AAC, Ogg, "
+                       f"FLAC through ffmpeg), a .trk score, "
                        f"a module (.it .xm .s3m .mod) or a VGM (.vgm .vgz)",
                        path=path)
 
@@ -194,26 +198,40 @@ def _decode(src: str, dst: str, seconds: float) -> dict:
     ext = os.path.splitext(src)[1].lower()
     how = {}
     work = src
-    if ext == ".mp3":
-        tool = shutil.which("lame")
-        if tool:
-            tmp = dst + ".decoded.wav"
-            subprocess.run([tool, "--decode", "--silent", src, tmp],
-                           check=True, stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL, timeout=600)
-            version = subprocess.run([tool, "--version"], capture_output=True,
-                                     text=True).stdout.splitlines()
-            how["decoder"] = (version[0].strip() if version else "lame")
-        elif shutil.which("ffmpeg"):
-            tmp = dst + ".decoded.wav"
+    with open(src, "rb") as handle:
+        head = handle.read(12)
+    if head[4:8] == b"ftyp" and ext != ".m4a":
+        # what the file is, not what it is called: an MP4 (AAC) container
+        # named .mp3 is not something lame reads
+        how["container"] = f"MP4/AAC (named {ext})"
+    if ext != ".wav":
+        tmp = dst + ".decoded.wav"
+        lame = shutil.which("lame") if ext == ".mp3" and \
+            "container" not in how else None
+        done = False
+        if lame:
+            try:
+                subprocess.run([lame, "--decode", "--silent", src, tmp],
+                               check=True, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, timeout=600)
+                version = subprocess.run([lame, "--version"],
+                                         capture_output=True, text=True
+                                         ).stdout.splitlines()
+                how["decoder"] = (version[0].strip() if version else "lame")
+                done = True
+            except subprocess.CalledProcessError:
+                how["lame"] = "could not decode it"
+        if not done and shutil.which("ffmpeg"):
             subprocess.run(["ffmpeg", "-v", "quiet", "-y", "-i", src,
-                            "-acodec", "pcm_s16le", tmp], check=True,
-                           timeout=600)
+                            "-vn", "-acodec", "pcm_s16le", "-ar", str(RATE),
+                            "-ac", "2", tmp], check=True, timeout=600)
             how["decoder"] = "ffmpeg"
-        else:
-            raise AgenticError("no_decoder", "an MP3 reference needs lame "
-                               "or ffmpeg on PATH to be decoded; add it as "
-                               "a WAV instead")
+            done = True
+        if not done:
+            raise AgenticError("no_decoder", f"{os.path.basename(src)} needs "
+                               f"{'lame or ' if ext == '.mp3' else ''}ffmpeg "
+                               f"on PATH to be decoded; add it as a WAV "
+                               f"instead")
         work = tmp
     with wave.open(work, "rb") as handle:
         rate = handle.getframerate()

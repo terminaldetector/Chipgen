@@ -72,3 +72,9 @@ studio/studio.json
 # and revisions, made again by running it). The facade's own projects go
 # under work/agentic/ by default, which is ignored above.
 examples/agentic/_work/
+*.m4a
+*.aac
+*.ogg
+*.oga
+*.flac
+*.opus

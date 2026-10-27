@@ -48,6 +48,8 @@ References, parallel listening, sketches and instruments:
     phrase_anchors         project_id, reference?       where phrases end
     measure_joins          project_id                   how sections hand
                                                         over
+    measure_timing         project_id, voices?          ahead, behind,
+                                                        swing, by ear
     correct_module         path, channel                an IT's buried
                                                         channel, by its
                                                         header
@@ -897,6 +899,15 @@ class Agent:
                             ("id", "phase", "change", "accepted", "why")
                             if c.get(k) is not None}
                            for c in rec["candidates"]]}
+
+    def op_measure_timing(self, project_id: str, voices=None) -> dict:
+        """Where each voice's notes are heard against the grid, read from
+        its audio: ahead or behind (split into what the score writes and
+        what the sound adds), how evenly, and the off-beats' swing."""
+        from agentic import timing as TIMING
+        p = self._project(project_id)
+        return TIMING.measure(self._timeline(p), voices=voices,
+                              cache=self._cache(p))
 
     def op_measure_joins(self, project_id: str) -> dict:
         """Where each section hands over to the next: density, the lead's

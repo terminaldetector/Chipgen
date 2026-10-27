@@ -1722,3 +1722,49 @@ def test_the_live_check_asks_four_questions_and_scores_them_honestly():
     assert rec["session"]["by_purpose"]["choose among versions"][
         "calls"] == 4
     shutil.rmtree(root)
+
+
+# -- audit of 27 October: recordings in other containers; timing against the grid ------------------
+def test_an_aac_recording_is_decoded_by_ffmpeg_and_an_mp4_named_mp3_is_said():
+    import shutil as _sh
+    from agentic import references as REF, state as S
+    if not _sh.which("ffmpeg"):
+        support.skip("ffmpeg is not installed")
+    root = _tmp()
+    wav = os.path.join(root, "tone.wav")
+    rate = 44100
+    tone = []
+    for i in range(rate * 3):
+        v = 0.3 * math.sin(2 * math.pi * 220 * i / rate) * (1 if (i // 11025) % 2 == 0 else 0.2)
+        tone += [v, v]
+    REF._write_wav(wav, tone)
+    m4a = os.path.join(root, "tone.m4a")
+    subprocess.run(["ffmpeg", "-v", "quiet", "-y", "-i", wav, "-c:a", "aac",
+                    m4a], check=True)
+    named_mp3 = os.path.join(root, "tone_really_aac.mp3")
+    shutil.copy(m4a, named_mp3)
+    p = _project(_composed().state)
+    a = REF.add(p, m4a, tags=["timbre"])
+    assert a["kind"] == "audio" and 2.5 < a["seconds"] < 3.5
+    b = REF.add(p, named_mp3, tags=["timbre"])
+    assert b["kind"] == "audio" and 2.5 < b["seconds"] < 3.5
+    assert REF.kind_of("x.flac") == "audio"
+    shutil.rmtree(root)
+
+
+def test_timing_reads_a_swing_from_the_audio_and_keeps_a_straight_part_on_its_rows():
+    from agentic import fixtures, patch as P, state as S, timeline as T, \
+        timing as TM
+    st = fixtures.masked_lead()
+    tl = T.build(S.content(st))
+    straight = TM.measure(tl, voices=["bass"])["voices"]["bass"]
+    assert abs(straight["mean_ms"]) < 5 and straight["spread_ms"] < 5
+    assert abs(straight["swing"] - 0.5) < 0.03
+    c, _d = P.apply(S.content(st), {"op": "rhythm", "voice": "bass",
+                                    "range": "all", "mode": "swing",
+                                    "share": 0.5}, tl)
+    m = TM.measure(T.build(c), voices=["bass"])
+    swung = m["voices"]["bass"]
+    assert 0.6 <= swung["swing"] <= 0.65            # half a row late: 0.625
+    assert swung["written_ms"] > 20 and abs(swung["sounding_ms"]) < 5
+    assert any("off-beats" in n for n in m["notes"])
