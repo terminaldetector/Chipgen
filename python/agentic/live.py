@@ -215,6 +215,19 @@ def _level(wav: bytes, db: float) -> bytes:
     return out.getvalue()
 
 
+PROMPT_HEAD = """# Listening test — answer by ear only
+
+Attached are 14 audio files, q01.wav to q14.wav. For each, listen to the audio and answer its question below.
+
+Rules:
+- Do NOT run code, open the files in Python or any analyser, or measure them. Answer only from what you hear.
+- If you cannot hear audio directly (only through code), say so and do not answer.
+- "uncertain" is allowed where you cannot tell.
+
+Reply with one JSON object: {"q01": {"answer": "...", "how": "listened"}, ...}. For the questions that ask for JSON, put that JSON as the answer.
+"""
+
+
 def export(folder: str, seed: Optional[int] = None) -> dict:
     """Write the blind packet to `folder`/packet and its key to
     `folder`/key.json. Give the model the packet only. Each packet has
@@ -267,6 +280,11 @@ def export(folder: str, seed: Optional[int] = None) -> dict:
         json.dump(template, handle, indent=1)
     with open(os.path.join(packet, "README.md"), "w") as handle:
         handle.write(PACKET_README)
+    # everything in one paste, for a chat the WAVs are attached to
+    prompt = [PROMPT_HEAD] + [f"## {q['id']} — {q['file']}\n\n"
+                              f"{q['question']}\n" for q in questions]
+    with open(os.path.join(packet, "PROMPT.md"), "w") as handle:
+        handle.write("\n".join(prompt))
     with open(os.path.join(folder, "key.json"), "w") as handle:
         json.dump({"platform": plat["name"], "items": key}, handle,
                   indent=1)
