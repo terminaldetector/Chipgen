@@ -50,6 +50,9 @@ References, parallel listening, sketches and instruments:
                                                         over
     measure_timing         project_id, voices?          ahead, behind,
                                                         swing, by ear
+    measure_form           project_id                   A A' B: sections
+                                                        alike or not, the
+                                                        plan, cadences
     correct_module         path, channel                an IT's buried
                                                         channel, by its
                                                         header
@@ -908,6 +911,16 @@ class Agent:
         p = self._project(project_id)
         return TIMING.measure(self._timeline(p), voices=voices,
                               cache=self._cache(p))
+
+    def op_measure_form(self, project_id: str) -> dict:
+        """The piece's form read from the score and from the audio: each
+        played section lettered (A, A', B) by what it shares with the ones
+        before, the plan's functions checked against it (a variation near
+        its statement, a development away from it), each section's cadence
+        from its harmony and the tonic in its last beat."""
+        from agentic import form as FORM
+        p = self._project(project_id)
+        return FORM.measure(self._timeline(p), cache=self._cache(p))
 
     def op_measure_joins(self, project_id: str) -> dict:
         """Where each section hands over to the next: density, the lead's

@@ -1768,3 +1768,26 @@ def test_timing_reads_a_swing_from_the_audio_and_keeps_a_straight_part_on_its_ro
     assert 0.6 <= swung["swing"] <= 0.65            # half a row late: 0.625
     assert swung["written_ms"] > 20 and abs(swung["sounding_ms"]) < 5
     assert any("off-beats" in n for n in m["notes"])
+
+
+def test_form_letters_the_sections_and_checks_the_plan_and_the_cadence():
+    from agent import Agent
+    from agentic import fixtures, form as FM, state as S, timeline as T
+    m = FM.measure(T.build(S.content(_four_times(fixtures.masked_lead()))))
+    assert m["form"] == {"score": "A A A A", "audio": "A A A A",
+                         "agree": True}
+    m = FM.measure(T.build(S.content(_abrupt_join())))
+    assert m["form"]["score"] == "A A'" and m["form"]["agree"], m["form"]
+    dev = m["plan_checks"][0]          # B is meant to develop, it varies
+    assert dev["function"] == "development" and not dev["met"], dev
+    assert dev["to_statement"]["score"] >= FM.VARIED
+    assert FM.cadence(["Dm", "G", "C"], "C major")["kind"] == "full (V-I)"
+    assert FM.cadence(["F", "C"], "C major")["closes"]
+    assert not FM.cadence(["C", "G"], "C major")["closes"]
+    assert FM.cadence(["E", "F"], "A minor")["kind"].startswith("deceptive")
+    root = _tmp()
+    a = Agent(root)
+    a.call("create_musical_state", preset="masked_lead", project_id="m")
+    r = a.call("measure_form", project_id="m")
+    assert r["form"]["score"] == "A" and r["sections"][0]["cadence"]
+    shutil.rmtree(root)

@@ -469,6 +469,27 @@ audio's. On the 28 modules: the three became informative (clear anchors
 over 27 informative modules the clear anchors' precision is 0.861
 (chance 0.282, every four bars 0.625), recall 0.594.
 
+Audit of 27 October, P1 — time and form, each measured on its own rather
+than read off RMS or a spectrum. `measure_timing` (`timing.py`) plays each
+voice alone from the top and finds its onsets to the millisecond (the
+steepest rise of the envelope). It matches each written note within 60 ms
+and splits the lateness into what the score writes (Cxx, a swing the
+rhythm op wrote) and what the sound adds (the attack). Per voice it gives
+mean, median, spread, notes ahead and behind, and the off-beats' swing.
+The straight masked_lead bass reads −0.8 ms ± 0.4 at swing 0.50; after the
+rhythm op's half swing it reads 0.62, with 27 ms written and −1 ms
+sounding. On the étude the strings' pad sits 37 ms behind its rows, all
+of it in the sound. `measure_form` (`form.py`) letters each played
+section A, A' or B twice: from the score (pitch classes, struck rows,
+density, the lead's register) and from the audio (chroma 55 Hz–2 kHz,
+onsets per beat, brightness, level). It checks the plan's functions
+against those letters and reads each section's cadence from its harmony
+and from the tonic's share of the chroma in its last beat. On the étude
+B, planned as a development, reads as a variation (0.89 score, 0.95
+audio; under 0.7 expected), and C closes V–I. Recordings in AAC (M4A,
+or MP4 named .mp3) are decoded by ffmpeg as audio references. The
+execution levels and what each one proves are in `bridge/LEVELS_RU.md`.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
