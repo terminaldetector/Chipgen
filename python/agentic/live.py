@@ -38,13 +38,15 @@ does not run.
 A model that hears a file put in front of it — a multimodal chat, an
 agent that runs this repository itself — needs no endpoint: `export`
 writes a blind packet (the tone probes, the music probes and the four
-questions, each a WAV and its question, byte for byte what the endpoint
-would be sent, shuffled under neutral numbers) and keeps the key outside
+questions, each a WAV and its question as the endpoint would be sent
+them, under neutral numbers; each packet with its own order of items and
+of candidates and its own level, a fraction of a dB down) and keeps the key outside
 it; the model answers in `answers.json`, saying for each whether it
 listened or analysed the file with code; `score` reads the answers
 against the key. Only answers that were listened to count as hearing.
 """
 
+import array
 import copy
 import hashlib
 import json
@@ -179,11 +181,50 @@ answer from what you hear.
 """
 
 
+def _plan(rnd: random.Random):
+    """PLAN with the candidates in an order of this packet's own: each
+    packet puts the right version somewhere else, so the answers to one
+    are no use in another. T3 swapped stays T3 choice reversed."""
+    out = []
+    t3 = None
+    for name, keys, goal, want in PLAN:
+        rest = keys[1:]
+        if name == "T3 swapped" and t3:
+            rest = list(reversed(t3))
+        else:
+            rest = rnd.sample(rest, len(rest))
+        if name == "T3 choice":
+            t3 = rest
+        out.append((name, [keys[0]] + rest, goal, want))
+    return out
+
+
+def _level(wav: bytes, db: float) -> bytes:
+    """The WAV `db` quieter: no packet is byte for byte another's."""
+    import io
+    import wave
+    with wave.open(io.BytesIO(wav)) as handle:
+        params = handle.getparams()
+        pcm = array.array("h", handle.readframes(params.nframes))
+    f = 10 ** (-db / 20.0)
+    pcm = array.array("h", (int(round(x * f)) for x in pcm))
+    out = io.BytesIO()
+    with wave.open(out, "wb") as handle:
+        handle.setparams(params)
+        handle.writeframes(pcm.tobytes())
+    return out.getvalue()
+
+
 def export(folder: str, seed: Optional[int] = None) -> dict:
     """Write the blind packet to `folder`/packet and its key to
-    `folder`/key.json. Give the model the packet only. -> a summary."""
+    `folder`/key.json. Give the model the packet only. Each packet has
+    its own order of items, its own order of the candidates and its own
+    level (0.1-1.0 dB down per file), so nothing carries over from one to
+    the next. -> a summary."""
     packet = os.path.join(folder, "packet")
     os.makedirs(packet, exist_ok=True)
+    rnd = random.Random(seed if seed is not None else
+                        int.from_bytes(os.urandom(8), "big"))
     project = Project.create(os.path.join(folder, "project"),
                              fixtures.held_lead())
     cache = R.Cache(project.path("renders"))
@@ -197,16 +238,17 @@ def export(folder: str, seed: Optional[int] = None) -> dict:
         items.append({"kind": "music probe", "name": name,
                       "wav": EAR._music_clip(kind), "question": question,
                       "accepted": sorted(accepted)})
-    for name, keys, goal, want in PLAN:
+    for name, keys, goal, want in _plan(rnd):
         versions = [(label, v[k]) for label, k in zip(_labels(keys), keys)]
         wav, prompt, marks = EAR.choose_request(
             versions, goal, stereo=plat["stereo"], platform=plat["name"])
         items.append({"kind": "question", "name": name, "wav": wav,
                       "question": prompt, "versions": keys, "want": want,
                       "seconds": marks["seconds"]})
-    rnd = random.Random(seed if seed is not None else
-                        int.from_bytes(os.urandom(8), "big"))
     rnd.shuffle(items)
+    for it in items:
+        it["level_db"] = round(rnd.uniform(0.1, 1.0), 2)
+        it["wav"] = _level(it["wav"], it["level_db"])
     questions, key, template = [], {}, {}
     for n, it in enumerate(items, 1):
         qid = f"q{n:02d}"

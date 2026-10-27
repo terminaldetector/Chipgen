@@ -955,8 +955,8 @@ class Agent:
     def op_live_export(self, folder: str, seed: int = None) -> dict:
         """T1, T3 and the probes as a blind packet for a model that hears a
         file put in front of it (a multimodal chat, an agent running this
-        repository): WAVs and questions under neutral numbers, byte for
-        byte what an endpoint is sent; the key is kept outside the packet.
+        repository): WAVs and questions under neutral numbers, as an
+        endpoint is sent them, in an order and at a level of their own; the key is kept outside the packet.
         No endpoint needed."""
         from agentic import live as LIVE
         return LIVE.export(folder, seed=seed)

@@ -1836,4 +1836,11 @@ def test_a_blind_packet_is_scored_against_a_key_the_model_never_sees():
     assert measured["passed"]["T3"] and not measured["counts_as_hearing"]
     by_place = LIVE.score(folder, answers(position=2))   # always the 2nd
     assert not by_place["passed"]["T3"] and not by_place["counts_as_hearing"]
+    other = LIVE.export(os.path.join(root, "again"), seed=4)
+    key2 = json.load(open(other["key"]))["items"]
+    assert not {k["sha256"] for k in key.values()} & \
+        {k["sha256"] for k in key2.values()}      # nothing byte for byte
+    t3 = {k["name"]: k["versions"] for k in key2.values()
+          if k["kind"] == "question"}
+    assert t3["T3 swapped"][1:] == t3["T3 choice"][:0:-1]
     shutil.rmtree(root)
