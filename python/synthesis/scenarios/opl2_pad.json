@@ -1,0 +1,27 @@
+{
+ "name": "opl2_pad",
+ "backend": "opl2",
+ "role": "pad",
+ "note": "a soft AdLib pad with a chorus",
+ "seeds": [
+  "organ",
+  "pad"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.35,
+   "attack": 0.4,
+   "body": 0.9,
+   "detune": 0.5
+  }
+ },
+ "register": [
+  "A",
+  3
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 3,
+ "seed": 6,
+ "format": "chipgen-forge-scenario/1"
+}

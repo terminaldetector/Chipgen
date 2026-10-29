@@ -1,0 +1,568 @@
+# The agentic loop: compose, hear, fix, remember, continue
+
+Chipgen used to be a renderer an agent fed a score to. This layer makes
+it the place the agent works in: the piece lives in a project folder, not
+in the model's context; any range of it can be rendered with the chip's
+state chased in, measured voice by voice, traced from a second of audio
+back to the register writes that made it, corrected locally, compared at
+matched loudness, committed or undone, and continued section by section
+from what came before. What worked is kept as a measured record that the
+next run can use.
+
+    Intent -> Plan -> Compose -> Render -> Hear -> Diagnose -> Revise
+           -> Remember -> Continue
+
+One backend runs the whole loop: the Mega Drive (YM2612 through
+Nuked-OPN2, SN76489). The NES, OPL2 and Schism (IT) backends say
+"Unsupported" for it, with the reason, instead of degrading in silence.
+
+The ear in every example here is the **Tool ear**: measurements of the
+render. Its reports say "technically analysed the render ... nothing was
+listened to", and no file in this tree claims a listening verdict. (The
+tests also run the Native and Hybrid ears, with a stand-in adapter that
+reads the WAV for the probes and returns a scripted report for music.)
+
+## Using it
+
+```bash
+python3 python/agent.py create_musical_state preset=masked_lead project_id=demo
+python3 python/agent.py hear_range project_id=demo range=all
+python3 python/agent.py propose_patch project_id=demo observation_id=o1
+python3 python/agent.py improve project_id=demo observation_id=o1
+python3 python/agent.py compare_versions project_id=demo rev_a=0 rev_b=1
+python3 python/agent.py rollback_patch project_id=demo revision_id=0
+
+python3 python/agent.py create_musical_state preset=etude project_id=e
+python3 python/agent.py continue_composition project_id=e seed=7 correct=true
+python3 python/agent.py export project_id=e format=vgm
+```
+
+From Python: `Agent(root).call(op, **args)` returns the same dicts. Every
+reply is compact JSON with the ids to ask about next and its cost
+(renders, seconds, the reply's own size); a refusal is `{"error": code,
+"message": reason}`. Projects live under `--root` (default
+`work/agentic/`, inside the folder an agent's files go in), one folder
+each:
+
+    state.json        the MusicalState (atomic writes)
+    revisions/        r0000.json ... one per change, never rewritten
+    renders/          the render cache (float32), keyed by event hash
+    out/              A/B audio, exports
+    calls.jsonl       every facade call with its cost
+
+and `memory.jsonl` beside them holds the LearningRecords of every project
+under that root.
+
+| operation | arguments | does |
+|---|---|---|
+| `inspect_capabilities` | target | the manifest below, and whether an audio adapter passed the probes |
+| `create_musical_state` | intent, target, preset or key/bpm/plan/instruments | a project |
+| `inspect_musical_state` | project_id, scope: card, observations, decisions, revisions, motifs, trk, timeline, section:ID | a short card |
+| `compose_range` | project_id, section?, rows? | the agent's rows for a section (checked, committed), or the built-in composer's next section |
+| `render_range` | project_id, range, stems?, fmt, rev? | MP3/WAV of a range, the mix and each voice |
+| `hear_range` | project_id, range, mode auto/tool/native/hybrid, focus? | observations, stored with ids |
+| `trace` | project_id, t0, t1, voice? | notes sounding, source lines, instrument, decoded register writes |
+| `diagnose_range` | project_id, observation_id | the diagnostic card |
+| `propose_patch` | project_id, observation_id | hypotheses with patch ids (`o1.h2`) and expected effects |
+| `compare_versions` | project_id, rev_a, rev_b, range | both measured, guards of b against a, A/B loudness-matched |
+| `commit_patch` | project_id, patch_id or patch | apply, measure, guard, commit — or refuse with the failed guard |
+| `rollback_patch` | project_id, revision_id | a new revision equal to an old one |
+| `improve` | project_id, observation_id, budget 3x2, memory | the whole correction loop |
+| `continue_composition` | project_id, goal?, sections?, seed, correct? | compose the plan on from the cursor; resumable |
+| `learn_recipe` | project_id, decision_id | the decision's LearningRecord |
+| `load_bank` | project_id, path, kind forge/fm | a forge bank (`python/forge.py`) or an FM bank file, copied into the project and installed whenever it opens; then `commit_patch` with `{"op": "instrument", "voice": ..., "patch": ...}` puts a voice on one of its instruments |
+| `export` | project_id, format | trk, vgm, wav, mp3, it; others refused by name |
+| `add_reference` | project_id, path, tags, note, bank?, regions?, licence?, url? | a recording, score or module kept as a reference, its claims checked |
+| `list_references` | project_id | their cards: grid, regions, claims and verdicts |
+| `listen_compare` | project_id, range, references, sketches, bars?, dims?, mode | aligned fragments, the reel, observations with their basis |
+| `check_listening` | — | whether an audio model passed the probes, and what follows if not |
+| `design_instrument` | project_id, voice, range, goal or reference | a voice's instrument toward a sound goal, kept or rolled back |
+| `save_sketch`, `section_sketches`, `list_sketches`, `choose_sketch`, `reject_sketch` | project_id, ... | the agent's drafts, chosen or rejected with the reason |
+| `improve_toward_reference` | project_id, range, references, sketches?, mode | one guided round |
+| `hear_continuation` | project_id, section, sketches? | a new section with the previous one, the join and the sketches |
+| `continue_composition` | ... `listen=true`, `sketches` | each new section also heard that way |
+
+## Audit: capability, adapter, agent access, test, limit
+
+| capability (spec §) | adapter | agent access | test (`tests/test_agentic.py`) | limit |
+|---|---|---|---|---|
+| persistent MusicalState: identity, structure, plan, instruments with roles and registers, sections as tracker rows, order, motif graph, observations, decisions (§4) | `agentic/state.py` | `create_musical_state`, `inspect_musical_state` | `test_revisions_roll_back_exactly_and_an_interrupted_state_recovers` | one writer per project (no locking); schema v1, migrations refuse unknown formats |
+| revisions, rollback, resume after an interruption (§4, §8) | `Project.commit / rollback / open` (append-only revisions, atomic state, repair to the last whole revision) | `rollback_patch` | same, and `test_an_interrupted_composition_resumes_to_the_same_music` | — |
+| one clock: rows, ticks, seconds, bars, sections, slots, events, source lines (§4) | `agentic/timeline.py` over `tracker.loads(text, rows=...)` | every `range` argument (`all`, `B`, `B#2`, `B:bars 2-3`, `slot 4`, `bars 5-8`, `rows 32-63`, `t 3.2-5.0`) | `test_one_clock_from_rows_to_seconds_to_source_lines` | a range outside the piece is refused; one past its end is clamped and says `clamped` |
+| range render with the chip's state initialised (§8) | `agentic/render.py` (chase: state events replayed, held notes re-keyed, 2 s pre-roll) | `render_range` | `test_a_range_render_with_the_state_chased_in_sounds_like_the_song` | level envelope within 0.01-0.04 dB per voice and 0.26 dB for the mix (mean, measured); the PSG square and noise restart their phase (waveform null +2.5..+3 dB, envelope within 0.5 dB on average); a DAC hit before the window is not replayed |
+| stems and a cache (§8) | `render_range(voices=, exclude=)`, `Cache` keyed by the event list's hash | `render_range stems=true` | via tests A, D | each stem is a full render; the mix is not the sum of the stems (register writes take chip time: +2.9 dB measured) so backgrounds are rendered, never subtracted |
+| causal trace `audio time -> note -> voice -> pattern -> instrument -> register writes` (§6) | `agentic/trace.py` (`TraceWriter` stands where the VGM writer would) | `trace`; the card's `chain_at_worst` | `test_a_moment_of_audio_traces_back_to_its_note_and_register_writes` | DAC bytes are counted, not listed |
+| Tool ear (§5.2) | `agentic/ear.py ToolEar`: per note, the voice against everything else in its own band (0.8-6x f0, body 40-240 ms); who fills that band; notes not heard; long holds; clipping | `hear_range mode=tool` | tests A, D | a measurement, not a masking model; no click detector (it fired on every PSG square edge); thresholds are starting points (below) |
+| Native ear, honest detection (§5.1) | `OpenAIAudioAdapter` (`input_audio` part), `verify` (three probes answerable only from the audio) | `hear_range mode=native`, `--audio-endpoint` | `test_an_ear_is_native_only_when_it_answers_from_the_audio` | not run against a real audio model here (none reachable from this sandbox); the plumbing is tested with a stand-in that reads the WAV |
+| Hybrid ear (§5.3) | `HybridEar`: each auditory observation cross-checked (confirmed / not confirmed / not measurable) | `hear_range mode=hybrid` (auto picks it only with a verified adapter) | `test_hybrid_checks_what_was_heard_against_what_was_measured` | four kinds have a measured counterpart (buried, too_quiet, too_loud, muddy); others are "not measurable" |
+| diagnosis: established cause / plausible hypothesis / auditory opinion kept apart (§6) | `agentic/diagnose.py` | `diagnose_range`, `propose_patch` | test A | hypotheses are arrangement, level and timbre; never notes, rhythm or harmony |
+| patches addressed `section/bars -> voice -> instrument -> parameter -> time` with realised change and units (§10) | `agentic/patch.py`: level (FM velocity, 0.75 dB steps; PSG 2 dB; DAC volume), transpose, param (modulators, piece or range), vol, instrument | `commit_patch` | `test_a_patch_reports_what_it_realised_and_refuses_what_the_chip_cannot` | carrier TL refused (rewritten at key-on); PSG below A-2 refused |
+| instruments from outside the built-in bank (forge, FM bank files) | `agentic/banks.py` (copied into the project, recorded in the structure, installed on open; a detune layer measured as part of its voice) | `load_bank`, `commit_patch` op `instrument` | `test_a_forge_instrument_plays_in_its_voice_with_its_layer` | YM2612 instruments only; the facade loads banks, the forge designs them |
+| recursive local correction, 3 x 2, guards, A/B at matched loudness, commit/rollback (§10) | `agentic/loop.py` | `improve`, `compare_versions` | `test_a_local_correction_is_measured_guarded_committed_and_undone` | RMS matching, not LUFS; the guards are listed below |
+| motif graph and its transformations (§7) | `agentic/motif.py` (diatonic shift, transposition, inversion, retrograde, augmentation, diminution, fragment; recognition from the rows) | `inspect_musical_state scope=motifs` | `test_motif_transformations_are_recognised_from_the_notes` | one voice per motif; a rhythm-only motif is not a kind |
+| continuous composition with a sliding context: previous section, this one, the next (§7) | `agentic/compose.py` | `continue_composition`, `compose_range` | `test_a_variation_develops_the_theme_and_the_harmony_holds` (test B) | the built-in composer is plain rules; an agent's rows are checked the same way |
+| incremental work, checkpoint, resume (§8) | the composition cursor, one revision and one save per section | `continue_composition sections=N` | test C | not realtime: no streamed audio, no latency claimed |
+| memory of causal decisions (§11) | `agentic/memory.py` LearningRecord, recall by role | `improve memory=true`, `learn_recipe` | `test_memory_makes_a_similar_task_cheaper_and_is_checked_again` (test E) | one case, not a rule; recall needs the same kind and target role |
+| backend capability: Supported/Unsupported, Native/Emulated/Approximate (§12) | `agentic/capabilities.py` | `inspect_capabilities`, `export` | `test_the_backend_limits_are_refused_by_name` (test F) | the loop is Mega Drive only |
+| facade, short machine-readable errors, context economy (§13, §14) | `python/agent.py` | all | `test_the_facade_answers_with_data_and_refuses_with_a_reason` | a CLI and a class; no server |
+
+### Contradictions found and fixed
+
+- `README.md` listed `instruments.py` as a bank of 14 FM patches; the bank
+  holds 19 (the same README says 19 further down). Fixed.
+- `README.md` said the test suite is ~550 tests; it is 587 with this layer.
+- `README.md` said generation is batch only. Still true of realtime audio,
+  but composition is now incremental by sections with checkpoints; the
+  note says both.
+- A range past the end of the piece was clamped to the last row without a
+  word in the first version of `timeline.parse_range`; it is refused now
+  (`out_of_piece`), and a range that runs past the end says `clamped`.
+- The first Tool ear measured a voice against the whole mix (broadband):
+  on `fixtures.masked_lead` it read -5.8 dB for the lead whether the bass
+  sat in the lead's octave or an octave below, so a register fix was
+  invisible to it. The in-band margin replaced it; the broadband margins
+  are still reported as evidence.
+
+## What existed, what was fixed, what was added, what remains
+
+| | path | what |
+|---|---|---|
+| existed, reused | `python/tracker.py` | the notation; `loads` now also reports the row clock (`rows=`) |
+| | `python/sequencer.py` | the render; `_run(writer=...)` carries the register trace |
+| | `python/levels.py` | `isolate` / `_voice_of`: which event belongs to which voice |
+| | `python/synthesis/phases.py` | `in_context`: attack and body margins (reported as evidence) |
+| | `python/synthesis/improve.py` | the 3 x 2 budget and the commit/rollback idea, for instruments |
+| | `python/harmony.py` | `label` / `strong`: the harmony read back from the notes |
+| | `python/analysis.py` | the pure-Python FFT and window |
+| | `python/sanity.py` | DAC sample lengths; the FM6/DAC masking measurement |
+| | `python/opn2.py`, `python/instruments.py` | the velocity curve, the carriers |
+| | `python/chipgen.py`, `mp3.py`, `wavio.py` | export and the A/B files |
+| | `python/llm.py` | the endpoint the audio adapter calls |
+| fixed | `python/tracker.py` | `loads(text, rows=...)` records each grid row's line, tick and first event (the event list is unchanged); re-pointed after the forge's placement pass |
+| | `python/sequencer.py` | `reapply` writes the effect state when the chip still holds an offset (a delayed vibrato no longer leaves notes detuned) |
+| | `python/synthesis/placement.py` | the placement pass keeps a score's own Wait boundaries: it merged the Waits of empty rows, and once any program was installed that moved the arpeggio steps and vibrato ticks of every score |
+| | `python/agentic/loop.py`, `compose.py`, `agent.py` | `improve` and `continue_composition` took a Tool ear whatever ear was chosen; they take the chosen one now, its listening verdict recorded apart and able to veto |
+| | `python/agentic/state.py` | `Project.create` gives the new project its own copy of the state and its own history: a project made from another one's state numbered its first commit after that project's revisions, files its folder never had |
+| | `python/synthesis/backends/rp2a03.py` | the NES probe read a render's bytes as the pure-Python buffer does (`.data[0::2]`); with numpy installed that is a 2-D memoryview and raised. It reads the left channel through `analysis.split_stereo` now. Found by a reviewer who ran the suite with numpy; the whole suite now runs both ways |
+| | `README.md` | stale numbers and the batch note (above) |
+| added | `python/agentic/state.py` | MusicalState, project folder, revisions, rollback, repair, migrations |
+| | `python/agentic/timeline.py` | the one clock, ranges, notes with source lines |
+| | `python/agentic/render.py` | chased range renders, stems, cache, chase error |
+| | `python/agentic/trace.py` | register trace and the causal chain |
+| | `python/agentic/ear.py` | Tool, Native (probe-verified), Hybrid ears |
+| | `python/agentic/diagnose.py` | locate, causes with status, hypotheses with expected effects |
+| | `python/agentic/patch.py` | level, transpose, param, vol with realised reports |
+| | `python/agentic/loop.py` | the correction loop, guards, A/B |
+| | `python/agentic/motif.py` | motifs, transformations, recognition, the graph |
+| | `python/agentic/compose.py` | built-in composer, context window, transitions, harmony check, the composition loop |
+| | `python/agentic/memory.py` | LearningRecords and recall |
+| | `python/agentic/capabilities.py` | the backend manifest and export |
+| | `python/agentic/banks.py` | forge and FM banks in a project; a detune layer belongs to its voice |
+| | `python/agentic/fixtures.py` | `masked_lead`, `masked_lead_b`, `etude` |
+| | `python/agent.py` | the facade and its CLI |
+| | `tests/test_agentic.py` | the spec's tests A-F and their foundations (19 tests) |
+| | `python/agentic/{features,references,openmpt,listen,instrument,sketches,guided}.py` | references, parallel listening, instruments, drafts, guided rounds |
+| | `tests/test_agentic_refs.py` | their tests (38) |
+| | `examples/agentic/references/` | one run on the Mega Drive, made by `make_reference_run.py` |
+| | `examples/agentic/` | the examples below, made by `make_examples.py` |
+| remains | — | see "What it does not do" |
+
+## How a correction is decided
+
+1. **Observe.** The Tool ear hears the range: for each pitched voice, the
+   median over its notes of its energy against everything else between
+   0.8x and 6x the note's fundamental, over the note's body. A lead (or
+   melody, counter) more than 3 dB under is `buried`; a note more than
+   20 dB under at both attack and body is `unheard`.
+2. **Locate.** The card names the voice, its instrument, the worst notes
+   with their source lines, and for the worst one the register writes the
+   chip received.
+3. **Hypothesize.** For each voice holding at least 10% of the band (an
+   *established* cause, measured): lower it (the expected gain is
+   arithmetic on its share and the realised dB), move it an octave away
+   unless it is melodic or would leave its declared register (expected
+   gain: an *assumption*, said so), darken its loudest modulator (no
+   number: not estimated); and raise the target itself (exact: its
+   realised dB). Remembered recipes join them, expecting what they
+   measured before.
+4. **Patch, render, compare.** Each candidate is applied to a copy,
+   rendered in the range only (voices it did not touch come from the
+   cache) and heard again.
+5. **Evaluate.** Gain of at least 0.5 dB, and every guard: no new
+   clipping; every note keeps its onset and pitch class (nothing added or
+   removed — the music's dissonances, syncopations, echoes and density
+   stay); the melody keeps its pitches; no other voice newly buried or
+   unheard; an accompanying voice stays above -9 dB in its own band; the
+   bass is not put above another voice where it was not; the mix level
+   moves less than 4 dB.
+6. **Commit or roll back.** A candidate that reaches the goal ends the
+   search; otherwise the round's best is the next round's base. The best
+   is committed as a revision, the A/B is written loudness-matched, the
+   decision keeps every candidate. If nothing improved, nothing is
+   committed and the decision says so.
+7. **Learn.** The decision becomes a LearningRecord.
+
+In the composition loop a section is heard with the bar before it (the
+join is part of what is heard) and corrected in its own rows only; if,
+measured over those rows, the fault is not there, nothing is changed and
+the decision says `not_needed`.
+
+The thresholds (-3 dB buried, -20 dB unheard, -9 dB floor, 0.5 dB gain,
+4 dB mix) are starting points, not results of a listening test.
+
+## Improving by reference: listening side by side
+
+The loop above corrects faults the Tool ear measures. This layer works
+toward what other music does: the agent keeps references next to the
+piece, hears the same musical moment in each, in the piece and in its own
+drafts, traces a difference to the notes and instruments that make it, and
+tries changes that carry the reference's principle over — never its notes.
+
+    reference -> aligned fragments -> observations (heard / measured /
+    assumed) -> trace -> hypotheses -> local render -> A/B with the
+    original and the reference -> guards -> commit, or roll back as a
+    sketch with its reason
+
+| piece | what it does |
+|---|---|
+| `agentic/features.py` | one scale for every fragment: BS.1770 loudness (a -20 dBFS sine reads -20.04 LUFS), band balance, spectral-flux onsets, attack and tails, stereo, a beat grid for a recording with no score (128 BPM clicks read 127.8, downbeat within 10 ms), a voice's notes (attack, brightness at the attack and in the body, release, vibrato depth, rate and delay from a pitch track: 30 cents at 6 Hz after 200 ms reads 28, 5.94, 210) |
+| `agentic/references.py`, `openmpt.py` | `add_reference`: a recording (MP3 by LAME, WAV), a Chipgen score with its FM bank (installed for its render only), or a module played by libopenmpt with its row clock and cells. Kept with provenance (file, sha256, licence, URL), the dimensions it is a reference for (timbre, modulation, rhythm, arrangement, development, space), the user's note and regions. The source's claims — tempo, a voice's vibrato, its density, its pan, an echo between voices — are each checked against the audio, the voice rendered alone where it can be: confirmed, not confirmed, not measurable, with the reading |
+| `agentic/listen.py` | the same bars from each source on its own grid (tempos and lengths kept, nothing stretched), loudness-matched, written one by one and as one reel with an index; the piece's voices alone at the mix's gain. `compare` returns observations with their basis: heard by model, measured (a reading past its threshold, ours against theirs), assumed (a link the reference's source makes plausible) — and whether anything listened |
+| `agentic/instrument.py` | a voice's sound goal (vibrato, timbre and its development, attack, release) reached with a program on the voice's own patch (vibrato with its delay, a modulator-level track over the note, envelope rates) or the score's `vib` command; each candidate measured alone and in the arrangement, level-matched, guarded; an estimated second round, the families combined in a third; committed as a bank of its own, or rolled back |
+| `agentic/patch.py` | articulation, density, rhythm, voicing, pan, echo — the changes a timing, line or texture problem needs; the melody is not theirs to move |
+| `agentic/guided.py` | one round on a range (`improve_toward_reference`), and `hear_continuation`: a new section heard with the previous one, the join and the chosen sketches |
+| `agentic/sketches.py` | the agent's drafts: other seeds or energies for a section, rejected candidates with their reason, chosen directions |
+
+Three engine faults were found and fixed on the way, each with a test
+that fails without the fix:
+
+- a vibrato with a delay restarts at each key-on and adds nothing until
+  the delay ends, but the chip kept the offset where the last note's swing
+  stopped: every note after the first sat 9.3 cents sharp for the whole
+  0.3 s delay (`sequencer.reapply`; 1.2 cents, the fnum step, now);
+- the tracker's row clock named each row's first event by its index while
+  parsing; the forge's placement pass adds events, so with a program
+  instrument every later row pointed early and a range render cut by rows
+  started in the wrong place (`tracker._reindex_rows`);
+- the placement pass runs on every score once any program is installed,
+  and it merged the Waits of empty rows. The sequencer starts its effect
+  clock afresh at each Wait, so a score that never named the instrument
+  had its arpeggio steps and vibrato ticks moved: a held `A-4/047` lost
+  its +7 step. The pass keeps the score's own cuts of time now
+  (`placement._timeline`, `_rebuild`); a score it has nothing to place in
+  comes out exactly as it went in. A tracker test that left its probe
+  instrument installed is how it showed: four tests in other modules
+  failed after it.
+
+What the readings can and cannot say:
+
+- onsets per beat are counted from the score where there is one (the
+  piece, a reference's source); the audio detector is set for precision
+  (1.00 at 0.99 recall on a 74-onset Mega Drive mix) and finds about a
+  third of a 16th-note texture's onsets (recall 0.31 and 0.38, measured),
+  so a recording is compared with audio counts on both sides, and the
+  count says which it is;
+- a beat grid estimated from audio can lock to a dotted or half-time
+  period: a score's grid that the audio confirms is kept, one it does not
+  fit (a transcription's 50 ms grid: 150 BPM against the audio's 82) gives
+  way to the audio's, and the record says which;
+- where a score's grid gave way to the audio's, its notes still sit on
+  its own rows. The share of onsets between the eighths is then a
+  reading only where an eighth of the beat it is counted on is a whole
+  number of those rows: the Gunstar transcription's 52 ms rows make an
+  eighth of 164 BPM 3.5 rows, every other straight eighth sits 26 ms off
+  (the reading allows 22), and its 0.65 measured the grid. That reading
+  is left out, from the score and from its render, and the comparison
+  says so (`not_compared`); a first run had swung the piece's hats
+  toward it;
+- `brightness` is the power centroid over the fundamental: comparable
+  between two Mega Drive FM voices, a direction only between FM and a
+  sample;
+- an observation is "measured", never "heard", unless an audio model that
+  passed the probes heard it — and none was reachable from this sandbox
+  (`check_listening`).
+
+## Hearing that decides
+
+Audit of 22 October: the listening model only vetoed a winner the numbers
+had chosen, and what it heard started nothing. Now (P0 of that audit):
+
+| what | where |
+|---|---|
+| the model's observations carry a `category` (attack, body_brightness, vibrato, articulation, space, density, groove, balance) and a `direction` (more, less); `guided.route` sends each to what can act on it — a sound goal for the voice's instrument, or the patch ops — and reports what nothing can act on (`not_acted_on`) | `ear.py` prompts, `guided.route` |
+| a guided round works on what the ear heard first, then on the measured gaps; `revise_heard` does it without a reference, and `continue_composition(listen=true)` listens to the new section and revises it when a model listens | `guided.improve_toward`, `revise_heard`, `agent.py` |
+| the ear chooses: after the guards, the original and up to three candidates go out as one clip and the model picks one, the original, or "uncertain" (`ear.ab_choose`, `loop.listen_choose`), in the guided round and in `instrument.design`. A gap the ear raised is acted on only when it chooses a change; for a measured gap "uncertain" leaves it to the measurements | `guided._decide`, `instrument.design` |
+| the clips are the machine's own output: stereo for the Mega Drive (a pan or an echo is part of what is heard), mono for the NES and the OPL2; the prompts name the machine (`ear.platform_of`). A balance change is compared at its rendered level, the rest at one loudness | `ear.py`, `listen.py` |
+| a LearningRecord keeps the model's judgement as given (verdict or choice, the clip's layout, confidence) and whether it agreed with the measurements | `memory._auditory` |
+
+Tested with stand-in ears that decide from the audio they are sent (one
+picks by its zero crossings, one answers "uncertain", one is scripted):
+the router, the choice in both directions, the stereo channel count, a
+heard "less bright" turned into a darker program the ear picked. **No live
+audio model was available here**, so whether a real model's ear chooses
+well is untested; the acceptance tests T1 and T3 of the audit need one
+(`examples/agentic/references/check_listening.py` with
+`CHIPGEN_AUDIO_ENDPOINT`).
+
+P1 of the audit:
+
+| what | where |
+|---|---|
+| a reference is kept whole by default (up to 600 s), and the record says what was kept and why (`kept`) | `references.add` |
+| a VGM/VGZ is a reference: the log replayed by the emulators is its audio; notes, grid and voice stems come from its transcription with its FM bank, and the record says which. NSF, Furnace, FamiTracker, DefleMask, SPC, GYM, SID are refused by name, not half-imported | `references._vgm_source`, `kind_of` |
+| an audio-estimated grid is checked in 30 s windows over the whole file; where the audio's own beat stops agreeing the grid says so (`uncertain_after_s`) and later fragments are marked `grid_uncertain` | `references._tempo_windows`, `listen.of_reference` |
+| what a model hears is played from the top of the piece (`method="full"`); a chased window is recorded as approximate (`playback`) | `loop._clip`, `NativeEar.hear`, `listen.of_timeline` |
+| music probes beside the tone probes: identical versions are the same, versions a note apart are not, which of two notes starts sharply (both orders), where a stereo tone sits. A model's choice among versions is obeyed only when it passed them (`trusted_to_choose`), recorded otherwise | `ear.verify_music`, `answer_by_dsp` (the positive control) |
+| `compose_range` takes `listen` and `revise` | `agent.py` |
+| every A/B reel also at its rendered levels (`reel_raw`) | `listen.write` |
+
+P2 of the audit:
+
+| what | where |
+|---|---|
+| a project targets the Mega Drive, the NES or the OPL2 (one machine a piece, its own columns); the score, the chase, the notes and the Tool ear know their voices (`timeline.column_of` names the NES voices by their columns) | `state.new_state`, `render.chased_events`, `timeline` |
+| on the masked-lead fixtures: chase null -18.9 dB on the NES (level envelope within 0.2 dB), -32 dB on the OPL2; the correction loop raises the buried lead -7.1 -> -2.4 dB (NES, the pad's 4-bit volume down) and -16.8 -> -10.8 dB (OPL2, the lead's velocity up) | `fixtures.masked_lead_nes`, `masked_lead_opl` |
+| refused by name there: the triangle's level (it has none), pan and echo (mono, no voice to spare), instrument programs (YM2612 only); a heard "wider" is not routed on a mono machine; the ear is sent mono | `patch.level`, `guided.route` |
+| a passed probe check is kept per adapter and probe set for a day; `forget_verification` drops it | `agent._cached_verification` |
+| commits, rollbacks and saves hold a file lock and refuse to write over revisions another process made after the project was read (`stale_state`) | `state.Project._locked`, `_check_fresh` |
+
+Not done, and not claimed: Schism. Its modules are references here; the
+loop is not ported to IT samples, envelopes, NNA or effect memory, which
+need the Schism project's own compiler and a played-from-the-top render
+(bridge/AGENTIC_PORTING.md). Nor heard: no model has listened to the NES
+or OPL2 path; the stand-in ears show the plumbing (mono clips, the
+choice). Still open from the audit: phrase anchors at cadences (H08's
+second half), instrument intents beyond the eight categories (H11).
+
+P3 — what was still open after P2 (the audit has no P3 of its own; these
+are its open items: H11, the second half of H08, Schism, the acceptance
+tests):
+
+| what | where |
+|---|---|
+| an instrument said phase by phase — "a short sting, then a dark body, vibrato only on the long notes" (English or Russian, or a model's own `phases`) — becomes a goal on the phases named and a hold on the rest: the attack (to 60 ms: sharpness, brightness), the body (to 350 ms), the held part of long notes (vibrato, `only_long`), the release. A phase already as far as a step takes it (an attack rising in 0 ms) is held and said; each candidate reports what each phase did; the kept one comes with solo and in-mix reels, matched and raw (T7) | `intent.py`, `instrument.design(hold, intent)`, `design_instrument intent=` |
+| a body darkened without the attack: the modulator track waits for the attack's window; an attack brightened without the body (`attack_tl`) | `instrument._tl_hypothesis`, `_attack_hypothesis` |
+| phrase anchors: each bar line scored for settling (a quiet last beat), change (the two bars either side) and arrival (the downbeat), with a stated prior for fours and eights; from a source's notes, else from its audio (first 240 s); a person's marks replace them. A reference fragment starts at a phrase near its region, and beside a cadence ends on its strongest phrase end; a region a person chose is kept (`align="phrase"`, the default; `"region"` as before) | `anchors.py`, `listen.reference_for`, `phrase_anchors`, `mark_reference` |
+| an Impulse Tracker module's buried channel brought out by the header's channel volumes and pans: played from the first row by libopenmpt every time (no chase: effect memory and NNA tails), voices by channel mute, measured in band, guarded, chosen among by a verified ear (stereo); samples, envelopes, NNA, filters and patterns refused by name; the module is never rewritten (rev1.it beside it) | `itloop.py`, `correct_module` |
+| the audit's T1-T10 run against the suite's own tests, with the ear in each named (stand-in, live, none) | `examples/agentic/acceptance.py` |
+
+Measured: on `fixtures.held_lead` the phrase-by-phrase intent above kept
+`tl1+vib3` (97 % of the distance closed; 10 candidates, 63 renders,
+108 s): body brightness 6.86 -> 4.17 (goal 4.46), a 15-cent vibrato on
+two notes in three — the long ones, as asked (the depth short of its
+25-cent goal), the attack's rise 0 -> 0 ms, its brightness 6.84 -> 6.40
+(hold 1.71), the release 48 -> 43 ms; on `masked_lead` the same
+statement was rolled back — every darker body also darkened the attack
+past its hold, and the reply says which. On the masked lead exported to
+IT, the lead -9.5 -> -6.4 dB in its band (the rest -3 dB in the header);
+raising the lead was refused (its channel volume is already 64), -6 dB
+broke the mix level, a pan moved nothing the in-band measure reads (it is
+mono; a pan is for the ear). On a four-phrase score the anchors found
+the phrase ends at bars 4, 8 and 12, clear, from the notes, and 4 (weak),
+8 and 12 (clear) from the audio alone.
+
+Not done: the module loop changes levels and pans only — no instrument,
+envelope, NNA or sample work on an IT (the Schism forge's, on its own
+branch); a phrase anchor is a heuristic, not a harmonic analysis; still no
+live audio model has listened to any of it.
+
+P4 — what the audit's sections 5 to 7 still asked for:
+
+| what | where |
+|---|---|
+| the audible session: every clip a project's ear sends to a model is kept by the hash of the file (audible/clips), with the channels, rate and seconds read from the WAV itself, why it was sent (a probe, a hearing, a choice, a reel), the reply and the wait, in audible/session.jsonl; a choice's verdict names its clip's hash. `audible_session` adds up the cost (calls, audio seconds, clips, characters; tokens when the endpoint reports them, and says when it does not) and lays the last decisions out as clip / observation / action plan / experiment (section 6), "no model heard this decision" where none did | `session.py`, `agent._ear`, `ear.ab_choose` |
+| a listener that hears what the question names: two more music probes — "the drums in this clip, loud or soft?" over a tone with no drums ("none" is right) and over one with them — so an ear that finds drums everywhere, or answers "none" every time, is not trusted to choose | `ear.MUSIC_PROBES`, `answer_by_dsp` |
+
+P5 — the instrument loop (the audit's Loop B) on an Impulse Tracker
+module, with what IT has:
+
+| what | where |
+|---|---|
+| a channel's sound said phase by phase on an IT: the attack by the volume envelope's ramp, the release by its node after the sustain point, a darker body by a filter envelope open through the attack's window and closing after it (or the cutoff for the whole note), a vibrato on the long notes by the sample's auto-vibrato with a slow sweep; brighter than the sample is refused by name. Each candidate is played from the first row, the channel alone and in the mix, read by the same note_profile as on the Mega Drive; the phases not named are held; one change per phase is kept (the nearest its goal, after moving at least its tolerance), then all of them together; the ear chooses when trusted | `itshape.py`, `shape_module` |
+| a sample-mode module gets one instrument per sample first, and plays the same (null under -100 dB) | `itshape.with_instruments` |
+| **found on the way:** the IT export wrote sample mode, where a note-off only leaves a sustain loop — every looped FM sample rang on to the next note (a staccato bass held through its rests: the gap after each note-off as loud as the note). The export now writes one instrument per sample whose volume envelope copies the chip's own release after its key-off (measured to -30 dB with the emulator's DC offset taken out: slap_bass 150 ms, square_lead 95 ms, strings past 1.5 s); `instruments=False` keeps the old form | `it_export.py`, `test_it.test_a_note_off_releases_the_note_as_the_chip_did` |
+
+Measured on `fixtures.held_lead` exported to IT, "a darker body, vibrato
+only on the long notes, a softer attack": body brightness 6.15 -> 3.98 by
+the filter envelope (attack brightness 6.17 -> 6.17); a static cutoff
+darkened the attack too (6.17 -> 3.42) and was refused by the hold; the
+auto-vibrato depth 20 with sweep 64 swung two notes in three, the long
+ones (sweep 255 swings all of them); the attack's rise 1 -> 47 ms by a
+3-tick ramp (a 1-tick ramp moved it 1 ms, under its tolerance, and was
+not kept); 10 candidates, about 40 s. With the fix to the export, the
+buried lead of the IT masked lead came out by one channel at a time
+(the loop now tries each, and does not guard the channel it turned down,
+as the Mega Drive loop guards the melodic roles only).
+
+P6:
+
+| what | where |
+|---|---|
+| the ear chooses over the phrase where it heard the problem: the clip of a choice is the phrase (or phrases) around the observation's bars inside the round's range, by the piece's anchors — still played from the top, only shorter; the choice says which window it heard and why | `anchors.window_for`, `guided._decide` |
+| how sections hand over, from the score: density either side, the lead's register, the score's velocity, silence at the bar line, pitch classes shared across it, and which jumps pass their limits — a reading for heard "transition" problems to be weighed against, not a verdict and not yet a guard | `joins.py`, `measure_joins` |
+| **found on the way:** the IT export's samples kept the emulators' DC offset (strings: a third of its peak; every sample began at 504 of 32767), so each note-on and note-off stepped. A one-pole DC blocker at 20 Hz, started at the first frame's level, and the loop's remaining mean taken out: samples start at zero, the loop still joins | `it_export._without_dc`, `test_it.test_a_sample_carries_no_dc_offset_and_starts_at_zero` |
+
+On the masked lead played four times (eight bars), an observation about
+bar 5 is chosen about over bars 5-6: 7.2 s of audio sent to the ear
+instead of 26.4 s for the same choice over the whole range (measured
+with the stand-in ear).
+
+P7 — a heard transition acted on (the rest of H02's "transition"):
+
+| what | where |
+|---|---|
+| "transition" is a category the ear can name ("less": smoother, "more": a sharper contrast); the router finds the join nearest the bars it heard, and its changes come from what the join flags — the accompaniment thinner where the next section enters busier (or thinner before it, for contrast), the first bar after the join softer, the lead joined up to the bar line across a silence, the pad moved by the smallest steps when no pitch class is shared. Each is measured by how abrupt the join reads (`joins.roughness`: the density ratio in octaves, the velocity jump, the silence in beats, the lead's jump, no shared pitch class), guarded as every change is, and chosen among by the ear over the phrases on both sides of the join; one section is "no join" | `guided.route`, `joins.changes`, `joins.roughness` |
+
+On the masked lead followed by a section whose bass strikes every row
+(the join flags "density x2.17"), a heard "B comes in too abruptly": the
+bass thinned in the first bar of B read 2.08 -> 1.51, the softer entry
+2.08 -> 1.95, the pad had no onset there to thin (refused by name); the
+stand-in ear chose over bars 2-4 (15.9 s of audio).
+
+P8 — independent candidates measured side by side (the audit's "safe
+parallel exploration of candidates"):
+
+| what | where |
+|---|---|
+| a round's candidates are rendered and measured in forked workers (CHIPGEN_WORKERS, else the cores, at most 4) and put back in order; deciding, committing and writing stay in one process; one worker, a platform without fork or a pool that fails runs them one after another and says so (`parallel`). The render cache's temporary file is per process | `parallel.py`, `itloop`, `itshape`, `instrument.design`, `guided._work_gap`, `render.Cache.put` |
+
+The same records either way (compared field by field). On this 4-core
+sandbox: the IT shape 43 -> 19 s, the IT buried channel 14.6 -> 6.2 s,
+instrument.design on held_lead 101 -> 52 s (renders 63 -> 66: the workers
+do not share the in-memory cache, and the count says so); the guided
+round's test 52 -> 51 s — its time is in listening and measuring the
+fragments, not in its few hypotheses.
+
+P9 — the phrase anchors measured on real music. A module's patterns are
+the one structure every file carries, and the nearest thing to marked
+phrases; `examples/agentic/references/anchors_eval.py` compares the
+anchors computed from a module's notes with the bar lines where its
+patterns start. On the 28 modules of the reference corpus (the first
+90 s of each; 24 informative — three whose grid came from their audio
+and one whose every bar starts a pattern say nothing either way):
+
+| | pooled over the 24 |
+|---|---|
+| clear anchors on a pattern start | 134 of 154, 0.87 |
+| all anchors on a pattern start | 0.705 |
+| pattern starts found | 0.586 |
+| chance (pattern starts among all bar lines) | 0.298 |
+| a bar line every four bars, on a pattern start | 0.639 |
+
+The clear anchors beat "every four bars" in 9 modules and lose in 5
+(the rest tie); where the patterns are not four bars long (4mat's
+"Driving", 3-bar patterns) they read 1.0 against 0.33; two modules
+(ICOMPLEX.XM, Art_of_Chrome.xm) they miss. A pattern start is not
+always a phrase end, so this measures agreement with the author's own
+segmentation, not with a listener's.
+
+P10 — what the anchors' misses showed. Three IT modules had lost their
+own bars: each states its beat (the header's row highlight, 4 rows a
+beat), libopenmpt plays its rows, and the audio's beat came out 1.5 times
+as long (6 rows: a dotted or triplet reading). The grid check accepted
+only the same, double or half time, so the audio's grid replaced the
+module's and no bar line met a pattern start. A module that states its
+beat now keeps its own rows and records what the audio heard beside them
+(`grid.audio_disagrees`); a transcription's grid still gives way to the
+audio's. On the 28 modules: the three became informative (clear anchors
+7/9, 3/3, 5/7 on a pattern start), the other 25 read exactly as before;
+over 27 informative modules the clear anchors' precision is 0.861
+(chance 0.282, every four bars 0.625), recall 0.594.
+
+Audit of 27 October, P1 — time and form, each measured on its own rather
+than read off RMS or a spectrum. `measure_timing` (`timing.py`) plays each
+voice alone from the top and finds its onsets to the millisecond (the
+steepest rise of the envelope). It matches each written note within 60 ms
+and splits the lateness into what the score writes (Cxx, a swing the
+rhythm op wrote) and what the sound adds (the attack). Per voice it gives
+mean, median, spread, notes ahead and behind, and the off-beats' swing.
+The straight masked_lead bass reads −0.8 ms ± 0.4 at swing 0.50; after the
+rhythm op's half swing it reads 0.62, with 27 ms written and −1 ms
+sounding. On the étude the strings' pad sits 37 ms behind its rows, all
+of it in the sound. `measure_form` (`form.py`) letters each played
+section A, A' or B twice: from the score (pitch classes, struck rows,
+density, the lead's register) and from the audio (chroma 55 Hz–2 kHz,
+onsets per beat, brightness, level). It checks the plan's functions
+against those letters and reads each section's cadence from its harmony
+and from the tonic's share of the chroma in its last beat. On the étude
+B, planned as a development, reads as a variation (0.89 score, 0.95
+audio; under 0.7 expected), and C closes V–I. Recordings in AAC (M4A,
+or MP4 named .mp3) are decoded by ffmpeg as audio references. The
+execution levels and what each one proves are in `bridge/LEVELS_RU.md`.
+
+Hearing plugin (Essentia, built from the fork terminaldetector/essentia):
+`agentic/hearing/` runs Essentia in its own interpreter on Chipgen's
+renders — rhythm, tonality, timbre, sections with candidate roles — and
+`hearing_revise` closes the loop: render, hear, find a defect, patch,
+re-render, re-hear, commit only on a met target. See
+`bridge/HEARING_PLUGINS.md`.
+
+## Measured
+
+On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core
+compiled), from `examples/agentic/make_examples.py` and the tests:
+
+| run | candidates | renders | seconds | result |
+|---|---|---|---|---|
+| test A, `masked_lead`, 3 voices, 2 bars | 4 (3 + 1) | 16 | 22 | lead in its band -7.46 -> -1.28 dB: lead +3.75 dB realised (asked +5.5), pad -3.5 dB |
+| test E, `masked_lead_b`, no memory (control) | 4 | 16 | 21 | -7.24 -> -2.45 dB |
+| test E, `masked_lead_b`, with the record from test A | 1 | 6 | 8 | -7.24 -> -1.70 dB: the remembered chain, rendered and guarded again |
+| étude, 4 sections composed, each heard and corrected before the next | 2 corrections, 1 candidate each (remembered) | 7 per hearing, 12 and 19 per correction | 118 in all | section A -3.93 -> -1.82 dB, A2 -4.08 -> -2.40 dB; B and C not buried |
+| hearing a 3-bar window, 5 voices, every voice | — | 11 | about 26 | — |
+| the same with the melodic voices in focus | — | 7 | 8-15 of rendering | — |
+| a facade reply: `hear_range` (3 voices) / `diagnose_range` / `improve` | — | — | — | 1.0 / 6.1 / 1.7 KB, about 256 / 1520 / 430 tokens at 4 bytes each |
+
+No model was in these loops: model tokens 0, audio-model seconds 0. A
+render runs about 2.5-3x faster than real time here; a range render costs
+its window plus 2 s of pre-roll and 0.5 s of tail. `examples/agentic/
+measurements.json` lists every facade call of the examples with its cost.
+The étude's draft (same plan and seed, no ear) is beside it for the A/B.
+
+The reference run (`examples/agentic/references/`, with numpy): B heard
+beside two references and a sketch, 7 renders and 42 s; the guided round
+on B, three gaps and 13 candidates (two kept: the space and the lead's
+instrument), 18 renders and 308 s; D heard with C, the join and its
+sketch, 38 s; from an empty project to the last reel, 462 s. Its README
+has what was observed, tried, kept and rolled back.
+
+## What it does not do
+
+- **It does not listen by itself.** The Tool ear measures. With a
+  verified audio model the ear raises gaps and chooses among candidates
+  ("Hearing that decides"); without one, whether a fix sounds better is a
+  listening question, and the A/B files are there for it, matched in level
+  so the louder one does not win.
+- No Native ear has been run against a real audio model from here; the
+  adapter and its probe are tested with a stand-in.
+- The in-band margin is a heuristic over a wide band, not a masking model
+  with critical bands; it misses timbre clashes that share no band energy
+  and does not know about the ear's frequency sensitivity.
+- No click detection; no measure of harshness, groove or phrasing.
+- The correction loop (`improve`) changes arrangement, level and timbre
+  only. Articulation, density, rhythm, voicing, pan and echo exist as
+  patch ops and are used by the guided rounds toward a reference, with
+  guards that know what each may change; orchestration (which voice plays
+  what) is still the composer's.
+- The built-in composer is plain rules: one motif voice, harmony per chord
+  span, no modulation, rhythm templates for 16-row bars (others scaled).
+  It writes a coherent étude, not good music by itself; an agent's rows
+  go through the same checks.
+- New instruments from nothing are the forge's job (`python/forge.py`,
+  `bridge/SYNTHESIS.md`); `design_instrument` changes what a voice's own
+  patch does in time (programs) toward a measured goal, it does not
+  synthesise a new patch. Only YM2612 forge instruments play on a Mega
+  Drive project; a detune layer needs the next FM channel free of notes,
+  or the placement pass drops it.
+- Recall matches by role, patch and starting margin. A record is one
+  measured case in one arrangement; it is re-rendered and re-guarded
+  before it is kept, and never declared a rule.
+- The loop runs on the Mega Drive, the NES and the OPL2 (P2); on an
+  Impulse Tracker module only its header's levels and pans are changed
+  (P3, `itloop.py`). The rest of a Schism port — samples, envelopes, NNA,
+  effect memory as things to change — is proposed in
+  `bridge/AGENTIC_PORTING.md`, not done.
+- Not realtime: composition is incremental by sections with checkpoints;
+  nothing streams audio and no latency is claimed.
+- A render costs 1-2.5 s for a few seconds of music here, and every stem
+  is a full render; a hearing of many voices over a long window is slow.
+- One process per project: there is no locking.

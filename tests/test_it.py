@@ -120,8 +120,9 @@ def test_the_file_is_a_parseable_it_module():
     assert module["orders"][-1] == 255, "IT order lists end with 0xFF"
     assert module["patterns"], "no patterns written"
     assert module["flags"] & 1, "stereo flag not set"
-    assert not (module["flags"] & 4), \
-        "instrument-mode flag set, but this writes sample mode"
+    # instrument mode: in sample mode a note-off leaves a looped sample
+    # ringing until the next note
+    assert module["flags"] & 4, "instrument mode not set"
 
 
 def test_every_parapointer_lands_on_real_data():
@@ -296,3 +297,100 @@ def test_a_silent_event_list_is_refused_rather_than_written_empty():
         assert "no notes" in str(exc)
     else:
         raise AssertionError("an empty module should not have been written")
+
+
+def test_the_opl_reaches_the_module_too():
+    # The .it is the only export that carries every chip, and the CLI says
+    # so when a score plays the OPL2 and asks for a .vgm. That claim has to
+    # be true: an OPL part silently missing here would make the advice
+    # actively wrong.
+    text = ("ticks 240\nbpm 150\nlpb 4\n"
+            "inst opl0 opl_bass\ninst opl3 opl_bell\ninst fm0 bass\n"
+            "cols opl0 opl3 fm0 dac\n"
+            "A-2  C-5  A-2  kick\n...  ...  ...  ...\n"
+            "C-3  E-5  C-3  snare\n===  ===  ===  ...\n")
+    events, meta = tracker.loads(text)
+    data, report = it_export.build(events, meta=meta)
+    module = _read_it(data)
+
+    names = [name for name, *_ in report["samples"]]
+    assert any(n.startswith("OPL ") for n in names), names
+    assert "bass" in names, names
+
+    notes = {(channel, cell["note"])
+             for pattern in module["patterns"] for row in pattern
+             for channel, cell in row.items()
+             if cell.get("note") is not None and cell["note"] < 120}
+    for opl_channel in (0, 3):
+        assert any(ch == it_export.CHANNEL_MAP[("opl", opl_channel)]
+                   for ch, _ in notes), f"opl{opl_channel} is missing"
+    assert any(ch == it_export.CHANNEL_MAP[("fm", 0)] for ch, _ in notes)
+    # OPLDepth has no IT equivalent and must be reported, not dropped quietly.
+    assert not [k for k in report["skipped"] if k.startswith("OPLNote")], \
+        report["skipped"]
+
+
+def test_opl_channels_do_not_collide_with_the_others():
+    seen = {}
+    for key, channel in it_export.CHANNEL_MAP.items():
+        assert channel not in seen, f"{key} collides with {seen[channel]}"
+        seen[channel] = key
+    assert max(seen) < it_export.IT_CHANNELS_USED
+
+
+def test_a_note_off_releases_the_note_as_the_chip_did():
+    # Each sample's instrument holds until the note-off, then falls to
+    # silence in the time the chip's own release took after a key-off.
+    import math
+    import instruments
+    bass = it_export.render_fm_sample(instruments.get("slap_bass"))
+    pad = it_export.render_fm_sample(instruments.get("strings"))
+    assert 0.05 <= bass["release_s"] <= 0.4, bass["release_s"]
+    assert pad["release_s"] > 3 * bass["release_s"]   # a pad rings longer
+    data = bytes(it_export._instrument(1, "x", 9))
+    env = 0x130
+    assert data[:4] == b"IMPI" and data[env] & 5 == 5    # on, sustain
+    assert [data[env + 6 + 3 * k] for k in range(3)] == [64, 64, 0]
+    assert data[0x41] == 1 and data[0x40 + 2 * 119] == 119
+    try:
+        from agentic import openmpt as O
+    except ImportError:
+        return
+    if not O.available():
+        return
+    score = ("bpm 150\nlpb 4\ninst fm0 slap_bass\ncols fm0\nA-3\n...\n"
+             "===\n" + "...\n" * 13)
+    _events, _meta, module_bytes, _report, _module = _export(score)
+    with O.Module(module_bytes) as m:
+        samples, rows = m.render(44100)
+        notes = m.notes(rows, len(samples) / 2 / 44100)
+    with O.Module(module_bytes, keep=[notes[0]["channel"]]) as m:
+        solo, _rows = m.render(44100)
+    mono = [0.5 * (solo[i] + solo[i + 1]) for i in range(0, len(solo) - 1, 2)]
+
+    def level(a, b):
+        seg = mono[int(a * 44100):int(b * 44100)]
+        mean = sum(seg) / len(seg)
+        return 10 * math.log10(sum((x - mean) ** 2 for x in seg) / len(seg)
+                               + 1e-20)
+    n = notes[0]                          # A-3, its note-off two rows on
+    body = level(n["start"] + 0.02, n["end"] - 0.005)
+    later = level(n["end"] + 0.25, n["end"] + 0.3)
+    assert later < body - 6.0, (body, later)
+
+
+def test_a_sample_carries_no_dc_offset_and_starts_at_zero():
+    # The emulators' output sits on an offset (the strings patch: about a
+    # third of its peak); a sample that keeps it steps at every note-on and
+    # note-off. Taken out, the loop still joins.
+    import struct
+    import instruments
+    for name in ("slap_bass", "strings"):
+        s = it_export.render_fm_sample(instruments.get(name))
+        pcm = struct.unpack(f"<{len(s['data']) // 2}h", s["data"])
+        a, b = s["loop"]
+        peak = max(abs(v) for v in pcm)
+        assert abs(sum(pcm[a:b]) / (b - a)) < 0.01 * peak, name
+        assert abs(pcm[0]) < 0.02 * peak, (name, pcm[0])
+        steps = max(abs(pcm[i] - pcm[i - 1]) for i in range(a + 1, b))
+        assert abs(pcm[b - 1] - pcm[a - 1]) <= steps, name

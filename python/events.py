@@ -171,6 +171,208 @@ class FMPitch(Event):
 # YM2612 DAC — channel 6 in PCM mode
 # --------------------------------------------------------------------------
 @dataclass
+class FMOperator(Event):
+    """Write one field of one operator while the channel is sounding.
+
+    `operator` is 1-4 in the ordinary block-diagram numbering; the
+    register interleave is the chip layer's problem, not the score's.
+    `field` is one of opn2.YM2612.OPERATOR_FIELDS — tl, ar, d1r, d2r, sl,
+    rr, dt, mul, ks, am, ssg.
+
+    This is what a live FM part is made of. A patch selected once and left
+    alone is a preset; measured on Streets of Rage's title theme, the
+    driver changes Total Level 1,657 times against 6,256 key-ons and
+    reshapes the decay rates another 1,300. The value is absolute and it
+    stays: a key-on does not reload the patch (measured: a bass whose
+    modulators were turned down mid-note was still dark on the next note),
+    only an instrument select does. That is the hardware's behaviour and the
+    reason real drivers write a note's starting values at every key-on.
+    """
+    channel: int
+    operator: int
+    field: str
+    value: int
+
+
+@dataclass
+class FMAlgorithm(Event):
+    """Register 0xB0: the operator routing and op1's self-feedback.
+
+    Either may be None to leave it as it is. Worth having and worth not
+    over-rating: the same measurement shows 343 writes to this register
+    across the title theme but only 15 that change its value — the driver
+    is reloading the patch block, not modulating the algorithm.
+    """
+    channel: int
+    algorithm: int = None
+    feedback: int = None
+
+
+@dataclass
+class FMCh3Mode(Event):
+    """Register 0x27: what channel 3 is doing. "normal", "special", "csm".
+
+    In special mode each of channel 3's operators takes its own pitch
+    instead of all four tracking the channel, which is how a chip with no
+    FM noise gets bells, gongs and metallic percussion — one voice
+    holding a fixed inharmonic cluster. Streets of Rage's title theme
+    writes this register 149 times.
+    """
+    mode: str = "normal"
+
+
+@dataclass
+class FMCh3Frequency(Event):
+    """Pitch one of channel 3's operators while it is in special mode.
+
+    `operator` is 1-4 in the ordinary numbering. Operator 4 has no
+    supplementary register and follows the channel's own frequency, so
+    setting it is the same as playing the channel.
+    """
+    operator: int
+    note: str
+    octave: int
+    cents: float = 0.0
+
+
+@dataclass
+class OPLInstrumentSelect(Event):
+    """Assign a patch to one of the OPL2's nine channels (0-8).
+
+    A separate family from FMInstrumentSelect on purpose: the YM3812 is a
+    different chip sitting alongside the YM2612, not a mode of it, and a
+    score can drive both at once.
+    """
+    channel: int
+    instrument: str
+
+
+@dataclass
+class OPLNoteOn(Event):
+    channel: int
+    note: str
+    octave: int
+    velocity: int = 127
+
+
+@dataclass
+class OPLNoteOff(Event):
+    channel: int
+
+
+@dataclass
+class OPLOperator(Event):
+    """One OPL2 operator field, written while the note sounds.
+
+    `operator` is 1 (modulator) or 2 (carrier) — this chip has two, not
+    four. `wave` is the field with no YM2612 equivalent and the most
+    character: sine, half-sine, absolute sine, pulse-sine. As on the
+    YM2612 the value is absolute and the next instrument select reloads
+    the patch over it.
+    """
+    channel: int
+    operator: int
+    field: str
+    value: int = 0
+
+
+@dataclass
+class OPLConnection(Event):
+    """Register 0xC0: FM or additive, plus the modulator's feedback.
+
+    The OPL2's entire algorithm space is one bit, which is most of why a
+    patch here carries so much less than a YM2612 one.
+    """
+    channel: int
+    additive: int = 0
+    feedback: int = None
+
+
+@dataclass
+class OPLVolume(Event):
+    """Channel volume, 0-127, on the same linear-in-amplitude scale as FM."""
+    channel: int
+    volume: int = 127
+
+
+@dataclass
+class OPLDepth(Event):
+    """The chip's two global LFO depths (register 0xBD).
+
+    They are global, not per channel — one tremolo depth and one vibrato
+    depth for all nine voices — and only operators with their AM or VIB
+    bit set are affected at all.
+    """
+    tremolo: int = 0     # 0 = 1.0 dB, 1 = 4.8 dB
+    vibrato: int = 0     # 0 = 7 cents, 1 = 14 cents
+
+
+@dataclass
+class Portamento(Event):
+    """Slide a voice's pitch toward `to_cents` at `cents_per_second`.
+
+    `target` names the voice the way a tracker column does — "fm0",
+    "psg1", "opl3" — because chipgen drives three chips now and an int
+    channel cannot say which one it means.
+
+    The slide stops on arrival and stays there, so `to_cents=0` is how a
+    bend returns to the written pitch. A rate of 0 stops it where it is.
+    """
+    target: str
+    cents_per_second: float = 0.0
+    to_cents: float = 0.0
+
+
+@dataclass
+class Vibrato(Event):
+    """Swing a voice's pitch by +/- depth_cents at speed_hz.
+
+    `delay` holds it off for that many seconds after each note-on, which
+    is what makes a vibrato sound played rather than switched on.
+    Depth or speed of 0 turns it off.
+    """
+    target: str
+    depth_cents: float = 0.0
+    speed_hz: float = 0.0
+    delay: float = 0.0
+
+
+@dataclass
+class VolumeSlide(Event):
+    """Ramp a voice's level by `per_second`, in the same 0-127 units as
+    FMVolume, bounded by floor and ceiling. Negative fades out."""
+    target: str
+    per_second: float = 0.0
+    floor: int = 0
+    ceiling: int = 127
+
+
+@dataclass
+class Tremolo(Event):
+    """Swing a voice's level by +/- depth (0-127 units) at speed_hz."""
+    target: str
+    depth: float = 0.0
+    speed_hz: float = 0.0
+
+
+@dataclass
+class Arpeggio(Event):
+    """Cycle a voice through its note, `x` semitones above it and `y`
+    above it — a tracker's 0xy — one step per effect tick.
+
+    The effect clock runs at 60 Hz because that is the vertical blank
+    Mega Drive and NES sound drivers update on, and a step a frame is
+    what makes an arpeggio read as a chord rather than a trill. Restarts
+    on the root at every note-on, persists until changed, and `x = y = 0`
+    turns it off. Works on every voice with a pitch; `noise`, `dac` and
+    `dmc` have none to cycle.
+    """
+    target: str
+    x: int = 0
+    y: int = 0
+
+
+@dataclass
 class DACEnable(Event):
     """Switch FM channel 6 between normal FM and the 8-bit PCM DAC (register 0x2B)."""
     enable: bool = True
@@ -192,6 +394,26 @@ class DACSample(Event):
 # --------------------------------------------------------------------------
 # SN76489 (PSG) — tone channels 0-2 + shared noise
 # --------------------------------------------------------------------------
+@dataclass
+class DACVolume(Event):
+    """Level for every DAC hit that follows, 0-127.
+
+    Separate from a hit's own `:level` the way `vol fm0` is separate from
+    a note's velocity: one is the channel fader, the other is how hard
+    this particular note was struck, and they multiply.
+
+    This exists because the drums own the master. normalize_peak() works
+    on peak, and a drum is almost all peak — measured against the fully
+    calibrated built-in bank, the DAC channel peaks 7-9 dB above every FM
+    voice in the same score while sitting 2 dB BELOW them in RMS. Its
+    crest factor is 17.4 dB against 5-8 for an FM voice. So a mix
+    normalised to peak hands the whole gain budget to the kick and
+    everything else arrives that much quieter, and no amount of patch
+    calibration fixes it — the fader has to come down.
+    """
+    volume: int = 127
+
+
 @dataclass
 class PSGToneOn(Event):
     channel: int         # 0-2
@@ -238,6 +460,120 @@ class PSGNoiseOff(Event):
     pass
 
 
+# --------------------------------------------------------------------------
+# NES / RP2A03
+# --------------------------------------------------------------------------
+# The APU emulator and the VGM transcriber both predate these events, so
+# for a while a NES track could be READ into a score and never written
+# back out. Two pulse channels, a triangle with no volume control, a noise
+# channel, and $4011 as a bare DAC.
+
+
+@dataclass
+class NESNoteOn(Event):
+    """`voice` is "pulse1", "pulse2" or "triangle".
+
+    Two ranges worth knowing, both measured and both hard floors rather
+    than gentle roll-offs. The pulse channels reach **A-1 (55 Hz)** and
+    the triangle **A-0 (27.5 Hz)**; below that the 11-bit timer clamps and
+    the note sounds an octave or more sharp instead of low. And velocity
+    does nothing at all on the triangle — it has no volume register, so it
+    plays at one level or not at all.
+    """
+    voice: str
+    note: str
+    octave: int
+    velocity: int = 127
+
+
+@dataclass
+class NESNoteOff(Event):
+    voice: str
+
+
+@dataclass
+class NESVolume(Event):
+    """0-127, linear in amplitude — no dB curve to undo, unlike FM.
+
+    A no-op on the triangle, deliberately rather than silently: there is
+    no register to write, so approximating it would mean faking a level
+    the hardware cannot produce.
+    """
+    voice: str
+    velocity: int = 127
+
+
+@dataclass
+class NESDuty(Event):
+    """Pulse waveform: 0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%.
+
+    3 and 1 are the same waveform inverted, so they measure identically
+    and differ only in phase — worth knowing before spending a channel on
+    the distinction.
+    """
+    voice: str
+    duty: int = 2
+
+
+@dataclass
+class NESSweep(Event):
+    """The pulse channels' hardware pitch slide.
+
+    Free — the CPU writes nothing per frame — but coarse, and it silences
+    the channel whenever the target period leaves range, which is the
+    classic "my sweep killed the note". `negate` is also what keeps the
+    low octave audible at all: chipgen sets it by default, and a positive
+    sweep re-arms the mute below about 110 Hz.
+    """
+    voice: str
+    period: int = 0
+    shift: int = 0
+    negate: bool = False
+    enabled: bool = True
+
+
+@dataclass
+class NESNoiseOn(Event):
+    """`period` is 0-15 and runs backwards: 0 is the highest pitch.
+
+    `metallic` is the mode bit. It shortens the shift register from 32767
+    steps to 93, which is short enough to have a pitch — the NES's only
+    route to a tonal metallic timbre.
+    """
+    period: int = 4
+    velocity: int = 127
+    metallic: bool = False
+
+
+@dataclass
+class NESNoiseOff(Event):
+    pass
+
+
+@dataclass
+class NESDMCLevel(Event):
+    """Write the DMC's 7-bit output register directly.
+
+    $4011 is the one register on this chip that is a plain DAC: writing it
+    moves the output immediately. Feeding it in a loop is how NES games
+    play samples without DPCM data, and it is the same trick as the
+    YM2612's register 0x2A.
+    """
+    level: int = 64
+
+
+@dataclass
+class NESSample(Event):
+    """A kit sample, played through $4011 at `rate` bytes per second.
+
+    The same sample kit the Genesis DAC uses, requantised to the DMC's
+    7 bits on the way out.
+    """
+    name: str
+    volume: float = 1.0
+    rate: int = 0
+
+
 @dataclass
 class End(Event):
     pass
@@ -255,8 +591,30 @@ _EVENT_TYPES = {
     "FMLFO": FMLFO,
     "FMVolume": FMVolume,
     "FMPitch": FMPitch,
+    "Portamento": Portamento,
+    "Vibrato": Vibrato,
+    "VolumeSlide": VolumeSlide,
+    "Tremolo": Tremolo,
+    "Arpeggio": Arpeggio,
+    "NESNoteOn": NESNoteOn,
+    "NESNoteOff": NESNoteOff,
+    "NESVolume": NESVolume,
+    "NESDuty": NESDuty,
+    "NESSweep": NESSweep,
+    "NESNoiseOn": NESNoiseOn,
+    "NESNoiseOff": NESNoiseOff,
+    "NESDMCLevel": NESDMCLevel,
+    "NESSample": NESSample,
+    "OPLInstrumentSelect": OPLInstrumentSelect,
+    "OPLNoteOn": OPLNoteOn,
+    "OPLNoteOff": OPLNoteOff,
+    "OPLOperator": OPLOperator,
+    "OPLConnection": OPLConnection,
+    "OPLVolume": OPLVolume,
+    "OPLDepth": OPLDepth,
     "DACEnable": DACEnable,
     "DACSample": DACSample,
+    "DACVolume": DACVolume,
     "PSGToneOn": PSGToneOn,
     "PSGToneOff": PSGToneOff,
     "PSGVolume": PSGVolume,
@@ -279,8 +637,22 @@ SPEC: Dict[str, Dict[str, Any]] = {
     "FMLFO":              {"freq": (0, 7)},
     "FMVolume":           {"channel": (0, 5), "volume": (0, 127)},
     "FMPitch":            {"channel": (0, 5), "cents": (-4800, 4800)},
+    "Portamento":         {"cents_per_second": (-48000, 48000),
+                           "to_cents": (-4800, 4800)},
+    "Vibrato":            {"depth_cents": (0, 2400), "speed_hz": (0, 40),
+                           "delay": (0.0, 10.0)},
+    "VolumeSlide":        {"per_second": (-1000, 1000), "floor": (0, 127),
+                           "ceiling": (0, 127)},
+    "Tremolo":            {"depth": (0, 127), "speed_hz": (0, 40)},
+    "Arpeggio":           {"x": (0, 15), "y": (0, 15)},
+    "OPLInstrumentSelect": {"channel": (0, 8)},
+    "OPLNoteOn":          {"channel": (0, 8), "octave": (0, 9), "velocity": (1, 127)},
+    "OPLNoteOff":         {"channel": (0, 8)},
+    "OPLVolume":          {"channel": (0, 8), "volume": (0, 127)},
+    "OPLDepth":           {"tremolo": (0, 1), "vibrato": (0, 1)},
     "DACEnable":          {},
     "DACSample":          {"rate": (0, 96_000), "volume": (0.0, 1.0)},
+    "DACVolume":          {"volume": (0, 127)},
     "PSGToneOn":          {"channel": (0, 2), "octave": (0, 9), "volume": (0, 15)},
     "PSGToneOff":         {"channel": (0, 2)},
     "PSGVolume":          {"channel": (0, 3), "volume": (0, 15)},
@@ -299,6 +671,11 @@ TYPE_ALIASES = {
     "noiseon": "PSGNoiseOn", "noiseoff": "PSGNoiseOff",
     "pan": "FMPan", "lfo": "FMLFO", "volume": "FMVolume", "pitch": "FMPitch",
     "dac": "DACSample", "sample": "DACSample",
+    "porta": "Portamento", "slide": "Portamento", "bend": "Portamento",
+    "vib": "Vibrato", "volslide": "VolumeSlide", "fade": "VolumeSlide",
+    "trem": "Tremolo", "arpeggio": "Arpeggio", "arp": "Arpeggio",
+    "oplnote": "OPLNoteOn", "oplon": "OPLNoteOn", "oploff": "OPLNoteOff",
+    "oplinstrument": "OPLInstrumentSelect", "adlib": "OPLNoteOn",
     "loop": "LoopPoint", "comment": "Marker", "stop": "End", "finish": "End",
 }
 

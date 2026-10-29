@@ -1,0 +1,26 @@
+{
+ "name": "nes_drums",
+ "backend": "nes",
+ "role": "drums",
+ "note": "noise-channel drums: a kick, a snare and a hat",
+ "seeds": [
+  "noise_kick",
+  "noise_snare",
+  "noise_hat"
+ ],
+ "objective": {
+  "target": {
+   "decay": 0.2,
+   "noise": 0.8
+  }
+ },
+ "register": [
+  "A",
+  3
+ ],
+ "generations": 3,
+ "offspring": 5,
+ "keep": 5,
+ "seed": 9,
+ "format": "chipgen-forge-scenario/1"
+}

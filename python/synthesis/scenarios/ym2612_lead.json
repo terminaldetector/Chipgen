@@ -1,0 +1,28 @@
+{
+ "name": "ym2612_lead",
+ "backend": "ym2612",
+ "role": "lead",
+ "note": "a singing lead with a little ensemble and vibrato",
+ "seeds": [
+  "saw_lead",
+  "brass"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.7,
+   "attack": 0.05,
+   "body": 0.85,
+   "detune": 0.3,
+   "motion": 0.3
+  }
+ },
+ "register": [
+  "A",
+  4
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 4,
+ "seed": 2,
+ "format": "chipgen-forge-scenario/1"
+}

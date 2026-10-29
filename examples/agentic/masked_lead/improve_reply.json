@@ -1,0 +1,99 @@
+{
+ "decision": "d1",
+ "outcome": "committed",
+ "before": -7.46,
+ "after": -1.28,
+ "gain_db": 6.18,
+ "goal_met": true,
+ "chain": [
+  {
+   "op": "level",
+   "voice": "lead",
+   "range": "rows 0-31",
+   "db": 5.5
+  },
+  {
+   "op": "level",
+   "voice": "pad",
+   "range": "rows 0-31",
+   "db": -3.5
+  }
+ ],
+ "rev": 1,
+ "stopped": "goal met",
+ "candidates": [
+  {
+   "round": 1,
+   "patch": {
+    "op": "level",
+    "voice": "lead",
+    "range": "rows 0-31",
+    "db": 5.5
+   },
+   "after": -3.98,
+   "accepted": true,
+   "why": "band_margin_db of lead -7.46 -> -3.98 dB, every guard passed"
+  },
+  {
+   "round": 1,
+   "patch": {
+    "op": "level",
+    "voice": "pad",
+    "range": "rows 0-31",
+    "db": -6.0
+   },
+   "after": -4.2,
+   "accepted": true,
+   "why": "band_margin_db of lead -7.46 -> -4.20 dB, every guard passed"
+  },
+  {
+   "round": 1,
+   "patch": {
+    "op": "level",
+    "voice": "bass",
+    "range": "rows 0-31",
+    "db": -6.0
+   },
+   "after": -5.96,
+   "accepted": true,
+   "why": "band_margin_db of lead -7.46 -> -5.96 dB, every guard passed"
+  },
+  {
+   "round": 2,
+   "patch": {
+    "op": "level",
+    "voice": "pad",
+    "range": "rows 0-31",
+    "db": -3.5
+   },
+   "after": -1.28,
+   "accepted": true,
+   "why": "band_margin_db of lead -7.46 -> -1.28 dB, every guard passed"
+  }
+ ],
+ "ab": {
+  "A": "<work>/masked_lead/out/d1_A.mp3",
+  "B": "<work>/masked_lead/out/d1_B.mp3"
+ },
+ "memory": {
+  "records_seen": 0,
+  "matched": [],
+  "used": [],
+  "weak_before": []
+ },
+ "learning_record": "lr-d32b4a39f0",
+ "statement": "technically analysed the render with the engine's own measurements; nothing was listened to",
+ "cost": {
+  "renders": 16,
+  "render_seconds": 15.37,
+  "runtime_s": 22.0,
+  "operations": 10,
+  "candidates": 4,
+  "retries": 3,
+  "model_tokens": 0,
+  "audio_model_seconds": 0.0,
+  "seconds": 22.01,
+  "reply_bytes": 1726,
+  "approx_tokens": 431
+ }
+}

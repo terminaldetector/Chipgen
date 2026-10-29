@@ -1,0 +1,369 @@
+{
+ "observation": "o1",
+ "kind": "buried",
+ "statement": "lead sits 7.5 dB under the rest of the mix in its own band",
+ "basis": "measured",
+ "located": {
+  "range": {
+   "spec": "rows 0-31",
+   "t0": 0.0,
+   "t1": 3.2,
+   "bars": [
+    1,
+    2
+   ],
+   "sections": [
+    "A"
+   ]
+  },
+  "voice": "lead",
+  "role": "lead",
+  "instrument": {
+   "channel": "fm1",
+   "patch": "square_lead",
+   "overrides": {}
+  },
+  "notes_total": 12,
+  "span": [
+   "G-4",
+   "E-5"
+  ],
+  "worst_notes": [
+   {
+    "note": "G-4",
+    "velocity": 80,
+    "start_s": 2.4,
+    "section": "A",
+    "row_in_section": 24,
+    "bar": 2,
+    "source_line": 35,
+    "source": "G-4  G-4:80  ...",
+    "band_margin_db": -9.29
+   },
+   {
+    "note": "B-4",
+    "velocity": 80,
+    "start_s": 0.8,
+    "section": "A",
+    "row_in_section": 8,
+    "bar": 1,
+    "source_line": 19,
+    "source": "A-4  B-4:80  ...",
+    "band_margin_db": -8.97
+   },
+   {
+    "note": "A-4",
+    "velocity": 80,
+    "start_s": 2.6,
+    "section": "A",
+    "row_in_section": 26,
+    "bar": 2,
+    "source_line": 37,
+    "source": "G-4  A-4:80  ...",
+    "band_margin_db": -8.72
+   }
+  ],
+  "chain_at_worst": {
+   "t_s": 2.4,
+   "notes": [
+    {
+     "voice": "lead",
+     "note": "G-4",
+     "velocity": 80,
+     "source_line": 35,
+     "source": "G-4  G-4:80  ..."
+    }
+   ],
+   "instrument": {
+    "1": {
+     "tl": 24,
+     "ar": 31,
+     "d1r": 0,
+     "d2r": 0,
+     "sl": 0,
+     "rr": 10,
+     "mul": 1,
+     "dt": 0
+    },
+    "2": {
+     "tl": 8,
+     "ar": 31,
+     "d1r": 0,
+     "d2r": 0,
+     "sl": 0,
+     "rr": 10,
+     "mul": 1,
+     "dt": 0
+    },
+    "3": {
+     "tl": 34,
+     "ar": 31,
+     "d1r": 0,
+     "d2r": 0,
+     "sl": 0,
+     "rr": 10,
+     "mul": 3,
+     "dt": 4
+    },
+    "4": {
+     "tl": 18,
+     "ar": 31,
+     "d1r": 0,
+     "d2r": 0,
+     "sl": 0,
+     "rr": 10,
+     "mul": 1,
+     "dt": 0
+    }
+   },
+   "register_writes": [
+    {
+     "channel": "fm1",
+     "what": "key",
+     "value": "off",
+     "slots": 0,
+     "t": 2.4,
+     "chip": "ym2612"
+    },
+    {
+     "channel": "fm1",
+     "what": "op2.tl",
+     "value": 5,
+     "t": 2.4,
+     "chip": "ym2612"
+    },
+    {
+     "channel": "fm1",
+     "what": "op4.tl",
+     "value": 15,
+     "t": 2.4,
+     "chip": "ym2612"
+    },
+    {
+     "channel": "fm1",
+     "what": "block_freq_hi",
+     "value": 35,
+     "t": 2.4,
+     "chip": "ym2612"
+    },
+    {
+     "channel": "fm1",
+     "what": "freq_lo",
+     "value": 197,
+     "t": 2.4,
+     "chip": "ym2612"
+    },
+    {
+     "channel": "fm1",
+     "what": "key",
+     "value": "on",
+     "slots": 15,
+     "t": 2.4,
+     "chip": "ym2612"
+    }
+   ],
+   "register_writes_total": 6
+  }
+ },
+ "measured": {
+  "band_margin_db": -7.46,
+  "goal_db": -3.0,
+  "need_db": 5.46,
+  "band_share": {
+   "pad": 0.664,
+   "bass": 0.336
+  }
+ },
+ "causes": [
+  {
+   "status": "established",
+   "voice": "pad",
+   "statement": "pad gives 66% of the energy in lead's band",
+   "evidence": {
+    "band_share": 0.664,
+    "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+   }
+  },
+  {
+   "status": "plausible",
+   "voice": "pad",
+   "statement": "pad plays A-4-C-5, within an octave of lead's G-4-E-5: its fundamentals and low partials fall in lead's band",
+   "evidence": {
+    "spans": {
+     "pad": [
+      57,
+      60
+     ],
+     "lead": [
+      55,
+      64
+     ]
+    },
+    "method": "note spans from the score"
+   }
+  },
+  {
+   "status": "established",
+   "voice": "bass",
+   "statement": "bass gives 34% of the energy in lead's band",
+   "evidence": {
+    "band_share": 0.336,
+    "method": "each voice alone, energy between 0.8x and 6x each of the target's notes over its body, summed"
+   }
+  },
+  {
+   "status": "plausible",
+   "voice": "bass",
+   "statement": "bass plays F-4-A-4, within an octave of lead's G-4-E-5: its fundamentals and low partials fall in lead's band",
+   "evidence": {
+    "spans": {
+     "bass": [
+      53,
+      57
+     ],
+     "lead": [
+      55,
+      64
+     ]
+    },
+    "method": "note spans from the score"
+   }
+  }
+ ],
+ "hypotheses": [
+  {
+   "patch": {
+    "op": "level",
+    "voice": "lead",
+    "range": "rows 0-31",
+    "db": 5.5
+   },
+   "kind": "balance",
+   "hypothesis": "lead +3.8 dB (asked +5.5; the chip's velocity curve and the 127 ceiling decide what is realised)",
+   "expect_db": 3.75,
+   "basis": "arithmetic: only the target changes, by its realised level",
+   "risks": [
+    "the mix gets louder",
+    "lead may dominate"
+   ],
+   "cells": 12,
+   "id": "h1",
+   "patch_id": "o1.h1"
+  },
+  {
+   "patch": {
+    "op": "level",
+    "voice": "pad",
+    "range": "rows 0-31",
+    "db": -6.0
+   },
+   "kind": "balance",
+   "hypothesis": "pad 6.0 dB quieter in the range leaves lead more of its band",
+   "expect_db": 2.99,
+   "basis": "arithmetic: pad holds 66% of the band; realised -6.00 dB",
+   "risks": [
+    "pad (pad) loses presence"
+   ],
+   "cells": 2,
+   "id": "h2",
+   "patch_id": "o1.h2"
+  },
+  {
+   "patch": {
+    "op": "level",
+    "voice": "bass",
+    "range": "rows 0-31",
+    "db": -6.0
+   },
+   "kind": "balance",
+   "hypothesis": "bass 6.0 dB quieter in the range leaves lead more of its band",
+   "expect_db": 1.26,
+   "basis": "arithmetic: bass holds 34% of the band; realised -6.00 dB",
+   "risks": [
+    "bass (bass) loses presence"
+   ],
+   "cells": 16,
+   "id": "h3",
+   "patch_id": "o1.h3"
+  },
+  {
+   "patch": {
+    "op": "transpose",
+    "voice": "bass",
+    "range": "rows 0-31",
+    "semitones": -12
+   },
+   "kind": "register",
+   "hypothesis": "bass an octave down moves its fundamentals out of lead's band; the pitch classes and the rhythm stay",
+   "expect_db": 0.8,
+   "basis": "assumption: the move takes about 50% of bass's energy out of the band (its upper partials stay)",
+   "risks": [
+    "bass's register and weight change"
+   ],
+   "cells": 16,
+   "id": "h4",
+   "patch_id": "o1.h4"
+  },
+  {
+   "patch": {
+    "op": "param",
+    "voice": "pad",
+    "key": "op1.tl",
+    "delta": 8,
+    "range": "rows 0-31"
+   },
+   "kind": "timbre",
+   "hypothesis": "pad's loudest modulator (op1, TL 30) 6 dB down: fewer upper partials of pad in lead's band",
+   "expect_db": null,
+   "basis": "not estimated: how much of the share is partials rather than fundamentals is not known before the render",
+   "risks": [
+    "pad's character (brightness, bite) changes"
+   ],
+   "cells": 0,
+   "id": "h5",
+   "patch_id": "o1.h5"
+  },
+  {
+   "patch": {
+    "op": "param",
+    "voice": "bass",
+    "key": "op1.tl",
+    "delta": 8,
+    "range": "rows 0-31"
+   },
+   "kind": "timbre",
+   "hypothesis": "bass's loudest modulator (op1, TL 12) 6 dB down: fewer upper partials of bass in lead's band",
+   "expect_db": null,
+   "basis": "not estimated: how much of the share is partials rather than fundamentals is not known before the render",
+   "risks": [
+    "bass's character (brightness, bite) changes"
+   ],
+   "cells": 0,
+   "id": "h6",
+   "patch_id": "o1.h6"
+  }
+ ],
+ "excluded": [
+  {
+   "patch": {
+    "op": "transpose",
+    "voice": "pad",
+    "range": "rows 0-31",
+    "semitones": -12
+   },
+   "why": "pad would leave its declared register C-4-C-6"
+  }
+ ],
+ "not_considered": "changing the melody's pitches, the harmony, the rhythm, or removing notes: the piece's own tensions are not faults",
+ "memory": {
+  "records_seen": 0,
+  "matched": [],
+  "used": [],
+  "weak_before": []
+ },
+ "cost": {
+  "seconds": 1.27,
+  "reply_bytes": 5980,
+  "approx_tokens": 1495
+ }
+}

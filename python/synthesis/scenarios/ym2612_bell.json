@@ -1,0 +1,32 @@
+{
+ "name": "ym2612_bell",
+ "backend": "ym2612",
+ "role": "harmony",
+ "note": "a bright metallic bell that rings for a while",
+ "seeds": [
+  "bell",
+  "epiano"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.8,
+   "body": 0.1,
+   "decay": 0.85
+  },
+  "box": {
+   "metallicity": [
+    0.5,
+    1.0
+   ]
+  }
+ },
+ "register": [
+  "A",
+  4
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 3,
+ "seed": 4,
+ "format": "chipgen-forge-scenario/1"
+}

@@ -265,3 +265,61 @@ def test_refinement_leaves_an_ordinary_score_alone():
     events, meta = tracker.loads(src)
     assert tracker._grid_refinement(events, meta.ticks_per_row()) == 1
     assert "lpb 4" in tracker.dumps(events, meta)
+
+
+def test_a_flat_with_the_ordinary_separator_stays_in_its_octave():
+    # `Bb-3` used to parse as B-flat in octave MINUS three: the `-` fell
+    # into the accidental group and the octave group happily took the sign.
+    # Nothing complained, and the note came out three octaves low.
+    assert tracker.parse_note("Bb-3") == ("A#", 3, None)
+    assert tracker.parse_note("Eb-2") == ("D#", 2, None)
+    assert tracker.parse_note("A#-3") == ("A#", 3, None)
+    # Every other spelling of the same note has to agree with it.
+    assert (tracker.parse_note("Bb3") == tracker.parse_note("Bb-3")
+            == tracker.parse_note("A#3") == tracker.parse_note("A#-3"))
+
+
+def test_notes_that_are_not_notes_still_reject():
+    for bad in ("H-4", "A-", "A-12", "", "A#b3", "-3"):
+        assert tracker.parse_note(bad) is None, bad
+
+
+def test_rows_point_at_their_events_after_the_forge_places_some():
+    # A forge instrument with a program gets events added at parse time
+    # (its vibrato at each key-on), and the placement pass merges the
+    # Waits of empty rows: the row clock must still name each row's first
+    # event, or a range cut by rows starts in the wrong place.
+    from synthesis import program as P
+    from synthesis import registry
+    from synthesis.backends import get_backend
+    from synthesis.backends.base import Compiled
+    import instruments
+    # The probe goes into the global bank and forge registry; it must leave
+    # with the test, or every later score gets the placement pass (and the
+    # bank, the manifest written from it, a stranger).
+    saved = [(table, dict(table)) for table in
+             (instruments.BANK, instruments.CHARACTER, registry.FORGE)]
+    try:
+        patch = instruments.get("square_lead").copy()
+        patch.name = "row_clock_probe"
+        prog = P.Program(engine="ym2612")
+        prog.vibrato = {"depth_cents": 30.0, "speed_hz": 6.0,
+                        "delay_ms": 100.0}
+        compiled = P.attach(Compiled("ym2612", "row_clock_probe", patch),
+                            prog)
+        get_backend("ym2612").install(P.prepare(compiled), "")
+        text = ("bpm 120\nlpb 4\nticks 240\ninst fm1 row_clock_probe\n"
+                "cols fm1 psg0\n" + "C-5  ...\n...  ...\n...  ...\n"
+                "E-5  C-4\n...  ...\n===  ===\n...  ...\nG-5  ...\n")
+        rows = []
+        events, _meta = tracker.loads(text, rows=rows)
+    finally:
+        for table, snapshot in saved:
+            table.clear()
+            table.update(snapshot)
+    assert any(isinstance(e, E.Vibrato) for e in events)
+    for r in rows:
+        tick = sum(e.ticks for e in events[:r["event"]]
+                   if isinstance(e, E.Wait))
+        assert tick == r["tick"], (r, tick)
+

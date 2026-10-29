@@ -1,0 +1,27 @@
+{
+ "name": "opl2_lead",
+ "backend": "opl2",
+ "role": "lead",
+ "note": "an AdLib lead: bright, sustained, a touch of vibrato",
+ "seeds": [
+  "saw_lead",
+  "square_lead"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.7,
+   "attack": 0.05,
+   "body": 0.9,
+   "motion": 0.3
+  }
+ },
+ "register": [
+  "A",
+  4
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 4,
+ "seed": 5,
+ "format": "chipgen-forge-scenario/1"
+}

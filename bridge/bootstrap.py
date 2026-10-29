@@ -108,11 +108,21 @@ def _self_test() -> dict:
 
 
 def write_manifest(path: str = None) -> str:
-    """Dump chipgen.info() to bridge/manifest.json."""
+    """Dump chipgen.info() to bridge/manifest.json.
+
+    Without the `runtime` block. That one describes the machine the
+    archive was BUILT on — numpy present or not, which DSP backend — and a
+    model reading the shipped manifest in its own sandbox took it as a
+    description of that sandbox. bootstrap's report is where the real
+    runtime is; the manifest is the vocabulary, which is the same
+    everywhere.
+    """
     import chipgen
     path = path or os.path.join(HERE, "manifest.json")
+    data = chipgen.info()
+    data.pop("runtime", None)
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(chipgen.info(), fh, indent=2, ensure_ascii=False)
+        json.dump(data, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
     return path
 
@@ -121,7 +131,17 @@ def report(quick: bool = False) -> dict:
     data = {"root": ROOT, "runtime": _probe_runtime(), "cores": _probe_cores()}
     data["self_test"] = None if quick else _self_test()
     data["ready"] = quick or bool(data["self_test"]["ok"])
+    data["engine"] = _probe_integrity()
+    # The one directory a model is meant to write in. Made here as well as
+    # shipped, so a checkout and an archive behave the same.
+    os.makedirs(os.path.join(ROOT, "work"), exist_ok=True)
     return data
+
+
+def _probe_integrity() -> dict:
+    import integrity
+    shipped = os.path.exists(os.path.join(ROOT, integrity.MANIFEST))
+    return {"checksummed": shipped, "edited": integrity.changed(ROOT)}
 
 
 def _print_human(data: dict):
@@ -155,16 +175,28 @@ def _print_human(data: dict):
         for warning in test["warnings"]:
             print(f"  warning     {warning}")
 
+    engine = data.get("engine") or {}
+    if engine.get("edited"):
+        print(f"  ENGINE      EDITED since the archive was built: "
+              f"{', '.join(engine['edited'][:4])}")
+        print("              renders from an edited engine are not chipgen;")
+        print("              restore those files from the archive")
+    elif engine.get("checksummed"):
+        print("  engine      verified against the archive's checksums")
+
     print()
-    print("  Compose:")
-    print("    python3 python/chipgen.py song.trk -o song.wav --vgm song.vgm")
-    print("    python3 -c \"import sys; sys.path.insert(0,'python'); import chipgen;\\")
-    print("               chipgen.compose(open('song.trk').read(), wav='song.wav')\"")
+    print("  Compose (your files go in work/; the rest is the engine):")
+    print("    python3 python/chipgen.py --brief --chip-target YM2612")
+    print("        the whole briefing for one chip — RP2A03 and YM3812 too")
+    print("    python3 python/chipgen.py work/song.trk --check --chip-target YM2612")
+    print("    python3 python/chipgen.py work/song.trk -o work/song.mp3 --vgm work/song.vgz")
+    print("        an MP3 is about a tenth of the WAV and plays anywhere: hand that back")
     print()
     print("  Read next:")
-    print("    START_HERE.md          what to write, in one page")
+    if os.path.exists(os.path.join(ROOT, "AGENTS.md")):
+        print("    AGENTS.md              the rules of engagement, one screen")
+    print("    START_HERE.md          the whole notation, for going deeper")
     print("    bridge/manifest.json   every event, instrument and range, as JSON")
-    print("    python3 python/chipgen.py --info    the same, freshly generated")
     print()
 
 

@@ -1,0 +1,5480 @@
+{
+ "format": "chipgen-forge-bank/1",
+ "name": "starter",
+ "scenario": null,
+ "instruments": [
+  {
+   "name": "nes_bell",
+   "backend": "nes",
+   "role": "lead",
+   "character": "a bell: bright, metallic, rings for seconds",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_bell",
+    "dna": {
+     "brightness": 0.75,
+     "attack": 0.0,
+     "body": 0.15,
+     "decay": 0.8,
+     "metallicity": 0.8,
+     "detune": 0.1,
+     "motion": 0.1,
+     "bass_weight": 0.05,
+     "articulation": 0.8,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": 0.0169,
+     "body": 0.1275,
+     "decay": 0.3737,
+     "bass_weight": -0.0881,
+     "metallicity": 0.2065,
+     "noise": -0.4889
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:bell"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_bell",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       14,
+       12,
+       11,
+       10,
+       9,
+       8,
+       7,
+       7,
+       6,
+       5,
+       5,
+       4,
+       4,
+       4,
+       3,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       4.467,
+       7.228,
+       7.228,
+       4.467,
+       0.0,
+       -4.467,
+       -7.228,
+       -7.228,
+       -4.467,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0,
+       1,
+       6,
+       11,
+       13,
+       0
+      ],
+      "loop": 0,
+      "release": 5
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [
+      {
+       "cents": 4.7,
+       "volume": 0.08,
+       "duty_shift": 0
+      }
+     ],
+     "trim": -10
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.85,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "detune is the other pulse channel 4.7 cents sharp at 8% of the volume",
+     "duty 12.5%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.18,
+    "decay": 0.386,
+    "articulation": null,
+    "brightness": 0.727,
+    "bass_weight": 0.163,
+    "metallicity": 0.559,
+    "noise": 0.556,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_blip",
+   "backend": "nes",
+   "role": "lead",
+   "character": "an arcade blip with a chirp",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_blip",
+    "dna": {
+     "brightness": 0.6,
+     "attack": 0.0,
+     "body": 0.1,
+     "decay": 0.15,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.1,
+     "articulation": 0.05,
+     "noise": 0.0,
+     "punch": 0.8
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:blip"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_blip",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       11,
+       9,
+       7,
+       5,
+       4,
+       3,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       0,
+       0,
+       1
+      ],
+      "loop": 2,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       480.0,
+       240.0,
+       80.0,
+       0.0,
+       0.0
+      ],
+      "loop": 3,
+      "release": 4
+     },
+     "arp": {
+      "values": [
+       19,
+       12,
+       0,
+       0
+      ],
+      "loop": 2,
+      "release": 3
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -13
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.475,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 25%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.245,
+    "articulation": null,
+    "brightness": 0.772,
+    "bass_weight": 0.012,
+    "metallicity": 0.843,
+    "noise": 0.508,
+    "punch": 0.153,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_brass",
+   "backend": "nes",
+   "role": "lead",
+   "character": "a section that leans in after the attack",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_brass",
+    "dna": {
+     "brightness": 0.62,
+     "attack": 0.28,
+     "body": 0.85,
+     "decay": 0.5,
+     "metallicity": 0.1,
+     "detune": 0.15,
+     "motion": 0.25,
+     "bass_weight": 0.3,
+     "articulation": 0.45,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": -0.1946,
+     "attack": 0.238,
+     "body": -0.0033,
+     "decay": -0.03,
+     "bass_weight": -0.0478,
+     "metallicity": 0.0196,
+     "articulation": -0.0025,
+     "detune": -0.0834,
+     "motion": 0.1166
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:brass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_brass",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       5,
+       10,
+       15,
+       15,
+       14,
+       14,
+       14,
+       13,
+       13,
+       13,
+       12,
+       12,
+       12,
+       11,
+       11,
+       11,
+       11,
+       10,
+       10,
+       10,
+       10,
+       9,
+       9,
+       9,
+       9,
+       9,
+       8,
+       8,
+       8,
+       8,
+       8,
+       7,
+       7,
+       7,
+       7,
+       7,
+       6,
+       4,
+       3,
+       2,
+       2,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 36,
+      "release": 37
+     },
+     "duty": {
+      "values": [
+       1
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       10.109,
+       16.356,
+       16.356,
+       10.109,
+       0.0,
+       -10.109,
+       -16.356,
+       -16.356,
+       -10.109,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [
+      {
+       "cents": 9.4,
+       "volume": 0.067,
+       "duty_shift": 0
+      }
+     ],
+     "trim": -2
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.674,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "detune is the other pulse channel 9.4 cents sharp at 7% of the volume",
+     "duty 25% cycling"
+    ]
+   },
+   "measured": {
+    "attack": 0.514,
+    "body": 0.839,
+    "decay": 0.5,
+    "articulation": 0.458,
+    "brightness": 0.841,
+    "bass_weight": 0.355,
+    "metallicity": 0.09,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.111,
+    "motion": 0.153
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_epiano",
+   "backend": "nes",
+   "role": "harmony",
+   "character": "an electric piano that rings and fades",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_epiano",
+    "dna": {
+     "brightness": 0.4,
+     "attack": 0.0,
+     "body": 0.35,
+     "decay": 0.55,
+     "metallicity": 0.3,
+     "detune": 0.2,
+     "motion": 0.15,
+     "bass_weight": 0.3,
+     "articulation": 0.55,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": -0.7,
+     "body": -0.0206,
+     "bass_weight": 0.0,
+     "metallicity": -0.133,
+     "articulation": 0.2285,
+     "noise": -0.3189,
+     "detune": -0.68,
+     "motion": -0.7
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:epiano"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_epiano",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       14,
+       12,
+       11,
+       10,
+       9,
+       8,
+       8,
+       7,
+       6,
+       6,
+       5,
+       5,
+       4,
+       4,
+       4,
+       3,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 25,
+      "release": 26
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0
+      ],
+      "loop": 0,
+      "release": 1
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -4
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.839,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 50%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.449,
+    "decay": 0.386,
+    "articulation": 0.474,
+    "brightness": 0.788,
+    "bass_weight": 0.636,
+    "metallicity": 0.109,
+    "noise": 0.0,
+    "punch": 0.07,
+    "detune": 0.0,
+    "motion": 0.0
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_noise_hat",
+   "backend": "nes",
+   "role": "drums",
+   "character": "a closed hat",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_noise_hat",
+    "dna": {
+     "brightness": 0.95,
+     "attack": 0.0,
+     "body": 0.0,
+     "decay": 0.12,
+     "metallicity": 0.4,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.0,
+     "articulation": 0.05,
+     "noise": 0.95,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "noise"
+    },
+    "bias": {
+     "brightness": 0.1834,
+     "decay": -0.0546,
+     "bass_weight": -0.2903,
+     "metallicity": -0.1613,
+     "noise": 0.1556
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:noise_hat"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_noise_hat",
+     "channel": "noise",
+     "volume": {
+      "values": [
+       15,
+       10,
+       7,
+       4,
+       3,
+       2,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       4,
+       4,
+       4
+      ],
+      "loop": 2,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -10
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.475,
+     "retrigger": true,
+     "channel": "noise",
+     "pitched": false
+    },
+    "notes": [
+     "noise channel",
+     "noise period 4"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.122,
+    "articulation": null,
+    "brightness": 0.846,
+    "bass_weight": 0.09,
+    "metallicity": 0.582,
+    "noise": 0.915,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_noise_kick",
+   "backend": "nes",
+   "role": "drums",
+   "character": "a noise kick: low period, fast fall",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_noise_kick",
+    "dna": {
+     "brightness": 0.2,
+     "attack": 0.0,
+     "body": 0.0,
+     "decay": 0.35,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.9,
+     "articulation": 0.1,
+     "noise": 0.8,
+     "punch": 0.6
+    },
+    "style": {
+     "channel": "noise"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:noise_kick"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_noise_kick",
+     "channel": "noise",
+     "volume": {
+      "values": [
+       15,
+       13,
+       11,
+       10,
+       8,
+       7,
+       6,
+       6,
+       5,
+       4,
+       4,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       13,
+       14,
+       15
+      ],
+      "loop": 2,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -13
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.5,
+     "retrigger": true,
+     "channel": "noise",
+     "pitched": false
+    },
+    "notes": [
+     "noise channel",
+     "noise period 15"
+    ]
+   },
+   "measured": {
+    "attack": 0.63,
+    "body": 0.0,
+    "decay": 0.0,
+    "articulation": null,
+    "brightness": 0.68,
+    "bass_weight": 0.56,
+    "metallicity": 0.565,
+    "noise": 0.218,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_noise_snare",
+   "backend": "nes",
+   "role": "drums",
+   "character": "a snare: noise with a crack",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_noise_snare",
+    "dna": {
+     "brightness": 0.6,
+     "attack": 0.0,
+     "body": 0.0,
+     "decay": 0.3,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.3,
+     "articulation": 0.1,
+     "noise": 0.9,
+     "punch": 0.6
+    },
+    "style": {
+     "channel": "noise"
+    },
+    "bias": {
+     "brightness": -0.2813,
+     "decay": -0.0228,
+     "bass_weight": 0.1075,
+     "metallicity": -0.3469,
+     "noise": 0.2458
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:noise_snare"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_noise_snare",
+     "channel": "noise",
+     "volume": {
+      "values": [
+       15,
+       13,
+       11,
+       9,
+       8,
+       7,
+       6,
+       5,
+       4,
+       4,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       11,
+       12,
+       13
+      ],
+      "loop": 2,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -8
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.5,
+     "retrigger": true,
+     "channel": "noise",
+     "pitched": false
+    },
+    "notes": [
+     "noise channel",
+     "noise period 13"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.319,
+    "articulation": null,
+    "brightness": 0.623,
+    "bass_weight": 0.34,
+    "metallicity": 0.535,
+    "noise": 0.393,
+    "punch": 0.111,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_organ",
+   "backend": "nes",
+   "role": "harmony",
+   "character": "a drawbar organ that holds until the key comes up",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_organ",
+    "dna": {
+     "brightness": 0.45,
+     "attack": 0.02,
+     "body": 1.0,
+     "decay": 1.0,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.3,
+     "bass_weight": 0.4,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": -0.3126,
+     "attack": 0.017,
+     "body": 0.0001,
+     "bass_weight": -0.2007,
+     "metallicity": -0.0239,
+     "articulation": 0.0056,
+     "motion": 0.1416
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:organ"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_organ",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       5,
+       2,
+       1,
+       0
+      ],
+      "loop": 0,
+      "release": 1
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       11.696,
+       18.925,
+       18.925,
+       11.696,
+       0.0,
+       -11.696,
+       -18.925,
+       -18.925,
+       -11.696,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": 0
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.528,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 50% cycling"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 1.0,
+    "decay": 1.0,
+    "articulation": 0.143,
+    "brightness": 0.811,
+    "bass_weight": 0.636,
+    "metallicity": 0.125,
+    "noise": 0.0,
+    "punch": 0.017,
+    "detune": 0.0,
+    "motion": 0.191
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_pad",
+   "backend": "nes",
+   "role": "pad",
+   "character": "a slow swelling ensemble pad",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_pad",
+    "dna": {
+     "brightness": 0.3,
+     "attack": 0.65,
+     "body": 0.85,
+     "decay": 0.8,
+     "metallicity": 0.05,
+     "detune": 0.7,
+     "motion": 0.5,
+     "bass_weight": 0.25,
+     "articulation": 0.9,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pad"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_pad",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       3,
+       6,
+       9,
+       12,
+       15,
+       15,
+       14,
+       14,
+       14,
+       13,
+       13,
+       13,
+       13,
+       12,
+       12,
+       12,
+       12,
+       11,
+       11,
+       11,
+       11,
+       10,
+       10,
+       10,
+       10,
+       10,
+       9,
+       9,
+       9,
+       9,
+       9,
+       8,
+       8,
+       8,
+       8,
+       8,
+       8,
+       7,
+       7,
+       7,
+       7,
+       7,
+       7,
+       7,
+       6,
+       6,
+       5,
+       5,
+       5,
+       5,
+       4,
+       4,
+       4,
+       4,
+       3,
+       3,
+       3,
+       3,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       2,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 44,
+      "release": 45
+     },
+     "duty": {
+      "values": [
+       2,
+       2,
+       1,
+       1,
+       2,
+       2,
+       3,
+       3
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       12.931,
+       20.923,
+       20.923,
+       12.931,
+       0.0,
+       -12.931,
+       -20.923,
+       -20.923,
+       -12.931,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [
+      {
+       "cents": 9.4,
+       "volume": 0.32,
+       "duty_shift": 0
+      }
+     ],
+     "trim": 0
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.9,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "detune is the other pulse channel 9.4 cents sharp at 32% of the volume",
+     "duty 50% cycling"
+    ]
+   },
+   "measured": {
+    "attack": 0.656,
+    "body": 0.854,
+    "decay": 0.438,
+    "articulation": 0.823,
+    "brightness": 0.761,
+    "bass_weight": 0.454,
+    "metallicity": 0.169,
+    "noise": 0.116,
+    "punch": 0.015,
+    "detune": null,
+    "motion": 1.0
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_pluck",
+   "backend": "nes",
+   "role": "harmony",
+   "character": "a plucked string",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_pluck",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.28,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.3,
+     "articulation": 0.2,
+     "noise": 0.0,
+     "punch": 0.3
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pluck"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_pluck",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       13,
+       11,
+       10,
+       8,
+       7,
+       6,
+       5,
+       5,
+       4,
+       3,
+       3,
+       2,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       0,
+       1
+      ],
+      "loop": 1,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       180.0,
+       90.0,
+       30.0,
+       0.0,
+       0.0
+      ],
+      "loop": 3,
+      "release": 4
+     },
+     "arp": {
+      "values": [
+       9,
+       5,
+       0,
+       0
+      ],
+      "loop": 2,
+      "release": 3
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -9
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.55,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 25%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.323,
+    "articulation": null,
+    "brightness": 0.845,
+    "bass_weight": 0.36,
+    "metallicity": 0.177,
+    "noise": 0.0,
+    "punch": 0.033,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_punch_bass",
+   "backend": "nes",
+   "role": "bass",
+   "character": "a punchy bass with a bite at the front",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_punch_bass",
+    "dna": {
+     "brightness": 0.55,
+     "attack": 0.0,
+     "body": 0.6,
+     "decay": 0.45,
+     "metallicity": 0.12,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.8,
+     "articulation": 0.3,
+     "noise": 0.0,
+     "punch": 0.35
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": -0.3093,
+     "body": -0.0026,
+     "decay": 0.0083,
+     "bass_weight": 0.1747,
+     "metallicity": -0.0087,
+     "articulation": 0.1041
+    },
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:punch_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_punch_bass",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       14,
+       13,
+       13,
+       12,
+       11,
+       11,
+       10,
+       9,
+       9,
+       8,
+       8,
+       8,
+       7,
+       7,
+       6,
+       6,
+       6,
+       5,
+       5,
+       5,
+       5,
+       4,
+       4,
+       4,
+       4,
+       3,
+       3,
+       3,
+       3,
+       3,
+       3,
+       2,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 32,
+      "release": 33
+     },
+     "duty": {
+      "values": [
+       0,
+       2
+      ],
+      "loop": 1,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       210.0,
+       105.0,
+       35.0,
+       0.0,
+       0.0
+      ],
+      "loop": 3,
+      "release": 4
+     },
+     "arp": {
+      "values": [
+       10,
+       6,
+       0,
+       0
+      ],
+      "loop": 2,
+      "release": 3
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -3
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.652,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 50%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.603,
+    "decay": 0.44,
+    "articulation": 0.27,
+    "brightness": 0.914,
+    "bass_weight": 0.595,
+    "metallicity": 0.13,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_saw_lead",
+   "backend": "nes",
+   "role": "lead",
+   "character": "a sawtooth lead with a little ensemble and vibrato",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_saw_lead",
+    "dna": {
+     "brightness": 0.72,
+     "attack": 0.03,
+     "body": 0.85,
+     "decay": 0.6,
+     "metallicity": 0.08,
+     "detune": 0.2,
+     "motion": 0.3,
+     "bass_weight": 0.1,
+     "articulation": 0.6,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:saw_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_saw_lead",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       15,
+       14,
+       14,
+       14,
+       13,
+       13,
+       13,
+       13,
+       12,
+       12,
+       12,
+       12,
+       11,
+       11,
+       11,
+       11,
+       10,
+       10,
+       10,
+       10,
+       10,
+       9,
+       9,
+       9,
+       9,
+       9,
+       8,
+       8,
+       8,
+       8,
+       8,
+       8,
+       7,
+       7,
+       7,
+       7,
+       7,
+       7,
+       7,
+       6,
+       5,
+       4,
+       3,
+       3,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 40,
+      "release": 41
+     },
+     "duty": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       8.699,
+       14.076,
+       14.076,
+       8.699,
+       0.0,
+       -8.699,
+       -14.076,
+       -14.076,
+       -8.699,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [
+      {
+       "cents": 4.7,
+       "volume": 0.12,
+       "duty_shift": 0
+      }
+     ],
+     "trim": -5
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.75,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "detune is the other pulse channel 4.7 cents sharp at 12% of the volume",
+     "duty 12.5% cycling"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.86,
+    "decay": 0.531,
+    "articulation": 0.607,
+    "brightness": 0.735,
+    "bass_weight": 0.156,
+    "metallicity": 0.044,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.28,
+    "motion": 0.179
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_slap_bass",
+   "backend": "nes",
+   "role": "bass",
+   "character": "a funk bass: bright attack, clean body",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_slap_bass",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.3,
+     "decay": 0.3,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.6,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.85
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "brightness": -0.6508,
+     "body": -0.0781,
+     "decay": -0.1182,
+     "bass_weight": 0.0783,
+     "metallicity": 0.0909,
+     "articulation": 0.1275,
+     "noise": -0.1872
+    },
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:slap_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_slap_bass",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       12,
+       9,
+       8,
+       6,
+       5,
+       4,
+       3,
+       2,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       0,
+       0,
+       0,
+       2
+      ],
+      "loop": 3,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       510.0,
+       255.0,
+       85.0,
+       0.0,
+       0.0
+      ],
+      "loop": 3,
+      "release": 4
+     },
+     "arp": {
+      "values": [
+       19,
+       12,
+       0,
+       0
+      ],
+      "loop": 2,
+      "release": 3
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -12
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.589,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 50%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.292,
+    "articulation": null,
+    "brightness": 0.513,
+    "bass_weight": 0.852,
+    "metallicity": 0.109,
+    "noise": 0.0,
+    "punch": 1.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_square_lead",
+   "backend": "nes",
+   "role": "lead",
+   "character": "the chiptune square",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_square_lead",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.03,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.05,
+     "detune": 0.0,
+     "motion": 0.2,
+     "bass_weight": 0.15,
+     "articulation": 0.5,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "attack": 0.051,
+     "body": -0.0054,
+     "metallicity": -0.053,
+     "articulation": -0.022,
+     "motion": 0.2328
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:square_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_square_lead",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       15,
+       15,
+       14,
+       14,
+       14,
+       14,
+       14,
+       13,
+       13,
+       13,
+       13,
+       13,
+       12,
+       12,
+       12,
+       12,
+       12,
+       11,
+       11,
+       11,
+       11,
+       11,
+       11,
+       10,
+       10,
+       10,
+       10,
+       10,
+       10,
+       10,
+       9,
+       9,
+       9,
+       9,
+       9,
+       9,
+       9,
+       8,
+       6,
+       4,
+       3,
+       2,
+       2,
+       1,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": 38,
+      "release": 39
+     },
+     "duty": {
+      "values": [
+       1
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       11.509,
+       18.622,
+       18.622,
+       11.509,
+       0.0,
+       -11.509,
+       -18.622,
+       -18.622,
+       -11.509,
+       0.0
+      ],
+      "loop": 6,
+      "release": 16
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -1
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.689,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 25% cycling"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.897,
+    "decay": 0.535,
+    "articulation": 0.515,
+    "brightness": 0.704,
+    "bass_weight": 0.34,
+    "metallicity": 0.06,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.0,
+    "motion": 0.175
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_stab",
+   "backend": "nes",
+   "role": "harmony",
+   "character": "a short metallic hit for the off-beat",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_stab",
+    "dna": {
+     "brightness": 0.7,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.2,
+     "metallicity": 0.5,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.2,
+     "articulation": 0.1,
+     "noise": 0.0,
+     "punch": 0.7
+    },
+    "style": {
+     "channel": "pulse"
+    },
+    "bias": {
+     "body": 0.085,
+     "decay": -0.0875,
+     "bass_weight": 0.0322,
+     "metallicity": -0.4666,
+     "noise": -0.7
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:stab"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_stab",
+     "channel": "pulse",
+     "volume": {
+      "values": [
+       15,
+       11,
+       8,
+       6,
+       4,
+       3,
+       2,
+       2,
+       1,
+       1,
+       1,
+       0
+      ],
+      "loop": null,
+      "release": null
+     },
+     "duty": {
+      "values": [
+       0,
+       0,
+       1
+      ],
+      "loop": 2,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       420.0,
+       210.0,
+       70.0,
+       0.0,
+       0.0
+      ],
+      "loop": 3,
+      "release": 4
+     },
+     "arp": {
+      "values": [
+       19,
+       12,
+       0,
+       0
+      ],
+      "loop": 2,
+      "release": 3
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": -14
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.5,
+     "retrigger": true,
+     "channel": "pulse",
+     "pitched": true
+    },
+    "notes": [
+     "pulse channel",
+     "duty 25%"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.22,
+    "articulation": null,
+    "brightness": 0.88,
+    "bass_weight": 0.325,
+    "metallicity": 0.446,
+    "noise": 0.434,
+    "punch": 0.124,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "nes_sub_bass",
+   "backend": "nes",
+   "role": "bass",
+   "character": "a pure sine under everything",
+   "score": 0.0,
+   "genome": {
+    "backend": "nes",
+    "name": "nes_sub_bass",
+    "dna": {
+     "brightness": 0.04,
+     "attack": 0.05,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.0,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 1.0,
+     "articulation": 0.35,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "channel": "triangle"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:sub_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "nes_sub_bass",
+     "channel": "triangle",
+     "volume": {
+      "values": [
+       15,
+       0
+      ],
+      "loop": 0,
+      "release": 1
+     },
+     "duty": {
+      "values": [
+       2
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "pitch": {
+      "values": [
+       0.0,
+       0.0
+      ],
+      "loop": 0,
+      "release": 1
+     },
+     "arp": {
+      "values": [
+       0
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "period": {
+      "values": [
+       6
+      ],
+      "loop": 0,
+      "release": null
+     },
+     "mode": 0,
+     "layers": [],
+     "trim": 0
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.625,
+     "retrigger": true,
+     "channel": "triangle",
+     "pitched": true
+    },
+    "notes": [
+     "triangle channel",
+     "the triangle has no volume: it is on or off"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.985,
+    "decay": 1.0,
+    "articulation": 0.193,
+    "brightness": 0.583,
+    "bass_weight": 0.919,
+    "metallicity": 0.003,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_bell",
+   "backend": "opl2",
+   "role": "lead",
+   "character": "a bell: bright, metallic, rings for seconds",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_bell",
+    "dna": {
+     "brightness": 0.75,
+     "attack": 0.0,
+     "body": 0.15,
+     "decay": 0.8,
+     "metallicity": 0.8,
+     "detune": 0.1,
+     "motion": 0.1,
+     "bass_weight": 0.05,
+     "articulation": 0.8,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 1
+    },
+    "bias": {
+     "brightness": -0.1093,
+     "body": -0.0752,
+     "punch": -0.0073
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:bell"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_bell",
+     "feedback": 4,
+     "connection": 0,
+     "trim": -7,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 5,
+      "total_level": 22,
+      "key_scale_level": 0,
+      "multiple": 12,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 6,
+      "sustain_level": 13,
+      "release": 5,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.85,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 4.7,
+       "level": -21.9
+      }
+     ]
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "detune is one extra channel 4.7 cents sharp and 22 dB down (this chip has no detune register)",
+     "attack AR 15 (~0 ms), release RR 5 (~424 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.226,
+    "articulation": null,
+    "brightness": 0.864,
+    "bass_weight": 0.346,
+    "metallicity": 0.357,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_blip",
+   "backend": "opl2",
+   "role": "lead",
+   "character": "an arcade blip with a chirp",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_blip",
+    "dna": {
+     "brightness": 0.6,
+     "attack": 0.0,
+     "body": 0.1,
+     "decay": 0.15,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.1,
+     "articulation": 0.05,
+     "noise": 0.0,
+     "punch": 0.8
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 3,
+     "cwave": 0
+    },
+    "bias": {},
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:blip"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_blip",
+     "feedback": 7,
+     "connection": 0,
+     "trim": -7,
+     "modulator": {
+      "attack": 15,
+      "decay": 8,
+      "sustain_level": 8,
+      "release": 9,
+      "total_level": 4,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 3,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 7,
+      "sustain_level": 12,
+      "release": 9,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.475,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "attack AR 15 (~0 ms), release RR 9 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.099,
+    "articulation": null,
+    "brightness": 0.865,
+    "bass_weight": 0.628,
+    "metallicity": 0.127,
+    "noise": 0.356,
+    "punch": 1.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_brass",
+   "backend": "opl2",
+   "role": "lead",
+   "character": "a section that leans in after the attack",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_brass",
+    "dna": {
+     "brightness": 0.62,
+     "attack": 0.28,
+     "body": 0.85,
+     "decay": 0.5,
+     "metallicity": 0.1,
+     "detune": 0.15,
+     "motion": 0.25,
+     "bass_weight": 0.3,
+     "articulation": 0.45,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 0
+    },
+    "bias": {
+     "brightness": 0.0844,
+     "attack": 0.1137,
+     "body": -0.0179,
+     "decay": 0.0215,
+     "bass_weight": 0.2388,
+     "metallicity": 0.0071,
+     "articulation": 0.0509,
+     "detune": 0.0388,
+     "motion": 0.4397
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:brass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_brass",
+     "feedback": 4,
+     "connection": 0,
+     "trim": 5,
+     "modulator": {
+      "attack": 7,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 7,
+      "total_level": 18,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 7,
+      "decay": 3,
+      "sustain_level": 3,
+      "release": 7,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 1,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 1,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.7,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 9.4,
+       "level": -18.7
+      }
+     ]
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "operator vibrato and tremolo",
+     "detune is one extra channel 9.4 cents sharp and 19 dB down (this chip has no detune register)",
+     "attack AR 7 (~20 ms), release RR 7 (~106 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.495,
+    "body": 0.845,
+    "decay": 0.496,
+    "articulation": 0.423,
+    "brightness": 0.542,
+    "bass_weight": 0.201,
+    "metallicity": 0.111,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.14,
+    "motion": 0.256
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_epiano",
+   "backend": "opl2",
+   "role": "harmony",
+   "character": "an electric piano that rings and fades",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_epiano",
+    "dna": {
+     "brightness": 0.4,
+     "attack": 0.0,
+     "body": 0.35,
+     "decay": 0.55,
+     "metallicity": 0.3,
+     "detune": 0.2,
+     "motion": 0.15,
+     "bass_weight": 0.3,
+     "articulation": 0.55,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 0,
+     "cwave": 0
+    },
+    "bias": {
+     "brightness": -0.0236,
+     "body": 0.0337,
+     "decay": 0.1322,
+     "bass_weight": 0.0873,
+     "metallicity": 0.192
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:epiano"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_epiano",
+     "feedback": 2,
+     "connection": 0,
+     "trim": 2,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 6,
+      "total_level": 36,
+      "key_scale_level": 0,
+      "multiple": 5,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 5,
+      "sustain_level": 9,
+      "release": 6,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 0,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.725,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 9.4,
+       "level": -18.4
+      }
+     ]
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "operator vibrato",
+     "detune is one extra channel 9.4 cents sharp and 18 dB down (this chip has no detune register)",
+     "attack AR 15 (~0 ms), release RR 6 (~212 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.31,
+    "decay": 0.392,
+    "articulation": null,
+    "brightness": 0.554,
+    "bass_weight": 0.392,
+    "metallicity": 0.452,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_organ",
+   "backend": "opl2",
+   "role": "harmony",
+   "character": "a drawbar organ that holds until the key comes up",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_organ",
+    "dna": {
+     "brightness": 0.45,
+     "attack": 0.02,
+     "body": 1.0,
+     "decay": 1.0,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.3,
+     "bass_weight": 0.4,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 0
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:organ"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_organ",
+     "feedback": 2,
+     "connection": 0,
+     "trim": 7,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 9,
+      "total_level": 32,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 9,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 0,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.525,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "operator vibrato",
+     "attack AR 15 (~0 ms), release RR 9 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.997,
+    "decay": 1.0,
+    "articulation": 0.081,
+    "brightness": 0.226,
+    "bass_weight": 0.394,
+    "metallicity": 0.008,
+    "noise": 0.0,
+    "punch": 0.001,
+    "detune": 0.0,
+    "motion": 0.0
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_pad",
+   "backend": "opl2",
+   "role": "pad",
+   "character": "a slow swelling ensemble pad",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_pad",
+    "dna": {
+     "brightness": 0.3,
+     "attack": 0.65,
+     "body": 0.85,
+     "decay": 0.8,
+     "metallicity": 0.05,
+     "detune": 0.7,
+     "motion": 0.5,
+     "bass_weight": 0.25,
+     "articulation": 0.9,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "additive",
+     "mwave": 0,
+     "cwave": 0
+    },
+    "bias": {
+     "brightness": 0.479,
+     "attack": -0.0449,
+     "body": -0.043,
+     "metallicity": 0.0746,
+     "motion": 0.1892
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pad"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_pad",
+     "feedback": 4,
+     "connection": 1,
+     "trim": 6,
+     "modulator": {
+      "attack": 6,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 4,
+      "total_level": 26,
+      "key_scale_level": 0,
+      "multiple": 3,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 6,
+      "decay": 3,
+      "sustain_level": 3,
+      "release": 4,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 1,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 1,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.9,
+     "retrigger": false,
+     "layers": [
+      {
+       "cents": 9.4,
+       "level": -9.9
+      }
+     ]
+    },
+    "notes": [
+     "additive connection: both operators reach the output",
+     "operator vibrato and tremolo",
+     "detune is one extra channel 9.4 cents sharp and 10 dB down (this chip has no detune register)",
+     "attack AR 6 (~39 ms), release RR 4 (~849 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.574,
+    "body": 0.87,
+    "decay": 0.473,
+    "articulation": 0.823,
+    "brightness": 0.076,
+    "bass_weight": 1.0,
+    "metallicity": 0.005,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.609,
+    "motion": 0.26
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_pluck",
+   "backend": "opl2",
+   "role": "harmony",
+   "character": "a plucked string",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_pluck",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.28,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.3,
+     "articulation": 0.2,
+     "noise": 0.0,
+     "punch": 0.3
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 0
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pluck"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_pluck",
+     "feedback": 4,
+     "connection": 0,
+     "trim": -2,
+     "modulator": {
+      "attack": 15,
+      "decay": 7,
+      "sustain_level": 3,
+      "release": 8,
+      "total_level": 21,
+      "key_scale_level": 0,
+      "multiple": 2,
+      "waveform": 1,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 6,
+      "sustain_level": 13,
+      "release": 8,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.55,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "attack AR 15 (~0 ms), release RR 8 (~53 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.277,
+    "articulation": null,
+    "brightness": 0.208,
+    "bass_weight": 1.0,
+    "metallicity": 0.031,
+    "noise": 0.0,
+    "punch": 0.463,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_punch_bass",
+   "backend": "opl2",
+   "role": "bass",
+   "character": "a punchy bass with a bite at the front",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_punch_bass",
+    "dna": {
+     "brightness": 0.55,
+     "attack": 0.0,
+     "body": 0.6,
+     "decay": 0.45,
+     "metallicity": 0.12,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.8,
+     "articulation": 0.3,
+     "noise": 0.0,
+     "punch": 0.35
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 0
+    },
+    "bias": {
+     "brightness": 0.2834,
+     "body": -0.0239,
+     "decay": 0.0282,
+     "bass_weight": 0.2986,
+     "metallicity": 0.0922,
+     "articulation": 0.026,
+     "punch": 0.297
+    },
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:punch_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_punch_bass",
+     "feedback": 7,
+     "connection": 0,
+     "trim": 5,
+     "modulator": {
+      "attack": 15,
+      "decay": 8,
+      "sustain_level": 6,
+      "release": 8,
+      "total_level": 4,
+      "key_scale_level": 0,
+      "multiple": 2,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 4,
+      "sustain_level": 6,
+      "release": 8,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.613,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "attack AR 15 (~0 ms), release RR 8 (~53 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.672,
+    "decay": 0.486,
+    "articulation": 0.246,
+    "brightness": 0.636,
+    "bass_weight": 0.963,
+    "metallicity": 0.027,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_saw_lead",
+   "backend": "opl2",
+   "role": "lead",
+   "character": "a sawtooth lead with a little ensemble and vibrato",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_saw_lead",
+    "dna": {
+     "brightness": 0.72,
+     "attack": 0.03,
+     "body": 0.85,
+     "decay": 0.6,
+     "metallicity": 0.08,
+     "detune": 0.2,
+     "motion": 0.3,
+     "bass_weight": 0.1,
+     "articulation": 0.6,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 1
+    },
+    "bias": {
+     "brightness": -0.0168,
+     "attack": 0.0255,
+     "body": -0.0027,
+     "decay": 0.1266,
+     "bass_weight": -0.1114,
+     "metallicity": -0.0271,
+     "articulation": -0.0404,
+     "detune": 0.0396,
+     "motion": 0.255
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:saw_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_saw_lead",
+     "feedback": 4,
+     "connection": 0,
+     "trim": -9,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 6,
+      "total_level": 18,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 3,
+      "sustain_level": 3,
+      "release": 6,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 1,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 0,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.73,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 4.7,
+       "level": -17.3
+      }
+     ]
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "operator vibrato and tremolo",
+     "detune is one extra channel 4.7 cents sharp and 17 dB down (this chip has no detune register)",
+     "attack AR 15 (~0 ms), release RR 6 (~212 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.794,
+    "decay": 0.498,
+    "articulation": 0.645,
+    "brightness": 0.74,
+    "bass_weight": 0.231,
+    "metallicity": 0.112,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.202,
+    "motion": 0.122
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_slap_bass",
+   "backend": "opl2",
+   "role": "bass",
+   "character": "a funk bass: bright attack, clean body",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_slap_bass",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.3,
+     "decay": 0.3,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.6,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.85
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 3,
+     "cwave": 0
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:slap_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_slap_bass",
+     "feedback": 6,
+     "connection": 0,
+     "trim": -2,
+     "modulator": {
+      "attack": 15,
+      "decay": 8,
+      "sustain_level": 8,
+      "release": 9,
+      "total_level": 8,
+      "key_scale_level": 0,
+      "multiple": 2,
+      "waveform": 3,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 6,
+      "sustain_level": 10,
+      "release": 9,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.525,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "attack AR 15 (~0 ms), release RR 9 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.266,
+    "articulation": null,
+    "brightness": 0.274,
+    "bass_weight": 1.0,
+    "metallicity": 0.04,
+    "noise": 0.0,
+    "punch": 0.609,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_square_lead",
+   "backend": "opl2",
+   "role": "lead",
+   "character": "the chiptune square",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_square_lead",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.03,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.05,
+     "detune": 0.0,
+     "motion": 0.2,
+     "bass_weight": 0.15,
+     "articulation": 0.5,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 1,
+     "cwave": 0
+    },
+    "bias": {
+     "brightness": 0.1969,
+     "attack": 0.0255,
+     "body": 0.0006,
+     "decay": 0.1446,
+     "bass_weight": -0.0806,
+     "metallicity": 0.0212,
+     "articulation": 0.0927,
+     "motion": 0.17
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:square_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_square_lead",
+     "feedback": 4,
+     "connection": 0,
+     "trim": 7,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 6,
+      "total_level": 19,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 2,
+      "sustain_level": 2,
+      "release": 6,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 1
+     }
+    },
+    "setup": {
+     "vibrato_depth": 0,
+     "tremolo_depth": 0
+    },
+    "style": {
+     "gate": 0.746,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "operator vibrato",
+     "attack AR 15 (~0 ms), release RR 6 (~212 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.899,
+    "decay": 0.53,
+    "articulation": 0.565,
+    "brightness": 0.506,
+    "bass_weight": 0.082,
+    "metallicity": 0.123,
+    "noise": 0.0,
+    "punch": 0.002,
+    "detune": 0.0,
+    "motion": 0.0
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_stab",
+   "backend": "opl2",
+   "role": "harmony",
+   "character": "a short metallic hit for the off-beat",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_stab",
+    "dna": {
+     "brightness": 0.7,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.2,
+     "metallicity": 0.5,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.2,
+     "articulation": 0.1,
+     "noise": 0.0,
+     "punch": 0.7
+    },
+    "style": {
+     "conn": "fm",
+     "mwave": 3,
+     "cwave": 1
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:stab"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_stab",
+     "feedback": 7,
+     "connection": 0,
+     "trim": -6,
+     "modulator": {
+      "attack": 15,
+      "decay": 8,
+      "sustain_level": 7,
+      "release": 9,
+      "total_level": 4,
+      "key_scale_level": 0,
+      "multiple": 7,
+      "waveform": 3,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 6,
+      "sustain_level": 13,
+      "release": 9,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 1,
+      "waveform": 1,
+      "sustaining": false,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.5,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "FM connection: the modulator bends the carrier",
+     "attack AR 15 (~0 ms), release RR 9 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.0,
+    "decay": 0.266,
+    "articulation": null,
+    "brightness": 0.632,
+    "bass_weight": 0.527,
+    "metallicity": 0.088,
+    "noise": 0.0,
+    "punch": 1.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "opl_sub_bass",
+   "backend": "opl2",
+   "role": "bass",
+   "character": "a pure sine under everything",
+   "score": 0.0,
+   "genome": {
+    "backend": "opl2",
+    "name": "opl_sub_bass",
+    "dna": {
+     "brightness": 0.04,
+     "attack": 0.05,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.0,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 1.0,
+     "articulation": 0.35,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "conn": "additive",
+     "mwave": 0,
+     "cwave": 0
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:sub_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "opl_sub_bass",
+     "feedback": 0,
+     "connection": 1,
+     "trim": 8,
+     "modulator": {
+      "attack": 15,
+      "decay": 0,
+      "sustain_level": 0,
+      "release": 7,
+      "total_level": 63,
+      "key_scale_level": 0,
+      "multiple": 2,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     },
+     "carrier": {
+      "attack": 15,
+      "decay": 2,
+      "sustain_level": 2,
+      "release": 7,
+      "total_level": 0,
+      "key_scale_level": 0,
+      "multiple": 0,
+      "waveform": 0,
+      "sustaining": true,
+      "key_scale_rate": 0,
+      "tremolo": 0,
+      "vibrato": 0
+     }
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.625,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "additive connection: both operators reach the output",
+     "attack AR 15 (~0 ms), release RR 7 (~106 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.915,
+    "decay": 0.528,
+    "articulation": 0.429,
+    "brightness": 0.0,
+    "bass_weight": 1.0,
+    "metallicity": 0.0,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_bell",
+   "backend": "ym2612",
+   "role": "lead",
+   "character": "a bell: bright, metallic, rings for seconds",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_bell",
+    "dna": {
+     "brightness": 0.75,
+     "attack": 0.0,
+     "body": 0.15,
+     "decay": 0.8,
+     "metallicity": 0.8,
+     "detune": 0.1,
+     "motion": 0.1,
+     "bass_weight": 0.05,
+     "articulation": 0.8,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 3,
+     "ratios": "clang"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:bell"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_bell",
+     "algorithm": 3,
+     "feedback": 6,
+     "trim": 1,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 13,
+       "total_level": 19,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 6,
+       "sustain_level": 7,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 15,
+       "total_level": 15,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 6,
+       "sustain_level": 7,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 14,
+       "total_level": 15,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 6,
+       "sustain_level": 7,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 6,
+       "sustain_level": 12,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {
+     "pms": 2,
+     "ams": 0,
+     "lfo": 4
+    },
+    "style": {
+     "gate": 0.85,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 4.7,
+       "level": -21.9
+      }
+     ]
+    },
+    "notes": [
+     "algorithm 3",
+     "LFO 6.9 Hz, vibrato +-6.7 cents, tremolo 0",
+     "detune is one extra channel 4.7 cents sharp and 22 dB down",
+     "attack AR 31 (~0 ms), release RR 6 (~435 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.096,
+    "decay": 0.292,
+    "articulation": null,
+    "brightness": 0.896,
+    "bass_weight": 0.845,
+    "metallicity": 0.4,
+    "noise": 0.0,
+    "punch": 0.18,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_blip",
+   "backend": "ym2612",
+   "role": "lead",
+   "character": "an arcade blip with a chirp",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_blip",
+    "dna": {
+     "brightness": 0.6,
+     "attack": 0.0,
+     "body": 0.1,
+     "decay": 0.15,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.1,
+     "articulation": 0.05,
+     "noise": 0.0,
+     "punch": 0.8
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "brightness": -0.1023,
+     "body": -0.3169,
+     "decay": 0.0429,
+     "bass_weight": 0.0849,
+     "metallicity": -0.077,
+     "articulation": 0.0172,
+     "punch": 0.5342
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:blip"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_blip",
+     "algorithm": 4,
+     "feedback": 7,
+     "trim": -30,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 4,
+       "attack_rate": 31,
+       "decay_rate": 20,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 10,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 4,
+       "attack_rate": 31,
+       "decay_rate": 20,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 10,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 27,
+       "attack_rate": 31,
+       "decay_rate": 16,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 14,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 36,
+       "attack_rate": 31,
+       "decay_rate": 16,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 14,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.484,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "attack AR 31 (~0 ms), release RR 10 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.411,
+    "decay": 0.141,
+    "articulation": 0.0,
+    "brightness": 0.691,
+    "bass_weight": 0.125,
+    "metallicity": 0.209,
+    "noise": 0.0,
+    "punch": 0.193,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_brass",
+   "backend": "ym2612",
+   "role": "lead",
+   "character": "a section that leans in after the attack",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_brass",
+    "dna": {
+     "brightness": 0.62,
+     "attack": 0.28,
+     "body": 0.85,
+     "decay": 0.5,
+     "metallicity": 0.1,
+     "detune": 0.15,
+     "motion": 0.25,
+     "bass_weight": 0.3,
+     "articulation": 0.45,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:brass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_brass",
+     "algorithm": 4,
+     "feedback": 3,
+     "trim": -3,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 21,
+       "attack_rate": 20,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 21,
+       "attack_rate": 20,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 13,
+       "attack_rate": 20,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 33,
+       "attack_rate": 20,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {
+     "pms": 2,
+     "ams": 0,
+     "lfo": 4
+    },
+    "style": {
+     "gate": 0.675,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 9.4,
+       "level": -20.0
+      }
+     ]
+    },
+    "notes": [
+     "algorithm 4",
+     "LFO 6.9 Hz, vibrato +-6.7 cents, tremolo 0",
+     "detune is one extra channel 9.4 cents sharp and 20 dB down",
+     "attack AR 20 (~7 ms), release RR 8 (~109 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.359,
+    "body": 0.864,
+    "decay": 0.473,
+    "articulation": 0.43,
+    "brightness": 0.398,
+    "bass_weight": 0.224,
+    "metallicity": 0.049,
+    "noise": 0.0,
+    "punch": 0.101,
+    "detune": 0.136,
+    "motion": 0.0
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_epiano",
+   "backend": "ym2612",
+   "role": "harmony",
+   "character": "an electric piano that rings and fades",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_epiano",
+    "dna": {
+     "brightness": 0.4,
+     "attack": 0.0,
+     "body": 0.35,
+     "decay": 0.55,
+     "metallicity": 0.3,
+     "detune": 0.2,
+     "motion": 0.15,
+     "bass_weight": 0.3,
+     "articulation": 0.55,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "brightness": -0.0435,
+     "body": -0.0168,
+     "decay": 0.132,
+     "bass_weight": -0.4009,
+     "metallicity": 0.0087,
+     "articulation": -0.179,
+     "punch": -0.3669,
+     "detune": -0.2497,
+     "motion": 0.1275
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:epiano"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_epiano",
+     "algorithm": 4,
+     "feedback": 1,
+     "trim": -26,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 5,
+       "total_level": 34,
+       "attack_rate": 31,
+       "decay_rate": 13,
+       "sustain_rate": 5,
+       "release_rate": 8,
+       "sustain_level": 5,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 5,
+       "total_level": 34,
+       "attack_rate": 31,
+       "decay_rate": 13,
+       "sustain_rate": 5,
+       "release_rate": 8,
+       "sustain_level": 5,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 52,
+       "attack_rate": 31,
+       "decay_rate": 13,
+       "sustain_rate": 5,
+       "release_rate": 8,
+       "sustain_level": 9,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 30,
+       "attack_rate": 31,
+       "decay_rate": 13,
+       "sustain_rate": 5,
+       "release_rate": 8,
+       "sustain_level": 9,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {
+     "pms": 3,
+     "ams": 0,
+     "lfo": 4
+    },
+    "style": {
+     "gate": 0.635,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "LFO 6.9 Hz, vibrato +-10 cents, tremolo 0",
+     "attack AR 31 (~0 ms), release RR 8 (~109 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.488,
+    "decay": 0.383,
+    "articulation": 0.473,
+    "brightness": 0.514,
+    "bass_weight": 0.0,
+    "metallicity": 0.167,
+    "noise": 0.0,
+    "punch": 0.142,
+    "detune": 0.0,
+    "motion": 0.025
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_organ",
+   "backend": "ym2612",
+   "role": "harmony",
+   "character": "a drawbar organ that holds until the key comes up",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_organ",
+    "dna": {
+     "brightness": 0.45,
+     "attack": 0.02,
+     "body": 1.0,
+     "decay": 1.0,
+     "metallicity": 0.1,
+     "detune": 0.0,
+     "motion": 0.3,
+     "bass_weight": 0.4,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "attack": 0.034,
+     "body": 0.0097,
+     "bass_weight": 0.69,
+     "metallicity": 0.01,
+     "articulation": 0.0094,
+     "punch": -0.0038,
+     "motion": 0.4101
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:organ"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_organ",
+     "algorithm": 4,
+     "feedback": 2,
+     "trim": 10,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 46,
+       "attack_rate": 27,
+       "decay_rate": 0,
+       "sustain_rate": 0,
+       "release_rate": 10,
+       "sustain_level": 0,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 30,
+       "attack_rate": 27,
+       "decay_rate": 0,
+       "sustain_rate": 0,
+       "release_rate": 10,
+       "sustain_level": 0,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 27,
+       "decay_rate": 0,
+       "sustain_rate": 0,
+       "release_rate": 10,
+       "sustain_level": 0,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      },
+      {
+       "detune": 0,
+       "multiple": 0,
+       "total_level": 4,
+       "attack_rate": 27,
+       "decay_rate": 0,
+       "sustain_rate": 0,
+       "release_rate": 10,
+       "sustain_level": 0,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      }
+     ]
+    },
+    "setup": {
+     "pms": 5,
+     "ams": 1,
+     "lfo": 5
+    },
+    "style": {
+     "gate": 0.53,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "sub-octave carrier on operator 4",
+     "LFO 9.6 Hz, vibrato +-20 cents, tremolo 1",
+     "attack AR 27 (~1 ms), release RR 10 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.991,
+    "decay": 1.0,
+    "articulation": 0.103,
+    "brightness": 0.183,
+    "bass_weight": 0.651,
+    "metallicity": 0.341,
+    "noise": 0.0,
+    "punch": 0.0,
+    "detune": 0.0,
+    "motion": 0.265
+   },
+   "issues": [
+    "warn: sounds an octave below the note asked for \u2014 lower the sub carrier or raise the fundamental"
+   ]
+  },
+  {
+   "name": "fm_pad",
+   "backend": "ym2612",
+   "role": "pad",
+   "character": "a slow swelling ensemble pad",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_pad",
+    "dna": {
+     "brightness": 0.3,
+     "attack": 0.65,
+     "body": 0.85,
+     "decay": 0.8,
+     "metallicity": 0.05,
+     "detune": 0.7,
+     "motion": 0.5,
+     "bass_weight": 0.25,
+     "articulation": 0.9,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 5,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "brightness": 0.0564,
+     "attack": 0.005,
+     "body": -0.0102,
+     "bass_weight": -0.133,
+     "metallicity": 0.0138,
+     "punch": -0.1441,
+     "detune": 0.0818,
+     "motion": 0.183
+    },
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pad"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_pad",
+     "algorithm": 5,
+     "feedback": 1,
+     "trim": -25,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 38,
+       "attack_rate": 14,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 5,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 40,
+       "attack_rate": 14,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 5,
+       "sustain_level": 3,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 36,
+       "attack_rate": 14,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 5,
+       "sustain_level": 3,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      },
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 40,
+       "attack_rate": 14,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 5,
+       "sustain_level": 3,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      }
+     ]
+    },
+    "setup": {
+     "pms": 5,
+     "ams": 1,
+     "lfo": 5
+    },
+    "style": {
+     "gate": 0.9,
+     "retrigger": false,
+     "layers": [
+      {
+       "cents": 9.4,
+       "level": -9.1
+      }
+     ]
+    },
+    "notes": [
+     "algorithm 5",
+     "LFO 9.6 Hz, vibrato +-20 cents, tremolo 1",
+     "detune is one extra channel 9.4 cents sharp and 9 dB down",
+     "attack AR 14 (~56 ms), release RR 5 (~870 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.672,
+    "body": 0.869,
+    "decay": 0.454,
+    "articulation": 0.823,
+    "brightness": 0.362,
+    "bass_weight": 0.088,
+    "metallicity": 0.029,
+    "noise": 0.0,
+    "punch": 0.129,
+    "detune": 0.824,
+    "motion": 0.291
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_pluck",
+   "backend": "ym2612",
+   "role": "harmony",
+   "character": "a plucked string",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_pluck",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.28,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.3,
+     "articulation": 0.2,
+     "noise": 0.0,
+     "punch": 0.3
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:pluck"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_pluck",
+     "algorithm": 4,
+     "feedback": 4,
+     "trim": -11,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 20,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 20,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 13,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 13,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 38,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 13,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.55,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "attack AR 31 (~0 ms), release RR 9 (~54 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.184,
+    "decay": 0.334,
+    "articulation": null,
+    "brightness": 0.499,
+    "bass_weight": 0.58,
+    "metallicity": 0.264,
+    "noise": 0.0,
+    "punch": 0.713,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_punch_bass",
+   "backend": "ym2612",
+   "role": "bass",
+   "character": "a punchy bass with a bite at the front",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_punch_bass",
+    "dna": {
+     "brightness": 0.55,
+     "attack": 0.0,
+     "body": 0.6,
+     "decay": 0.45,
+     "metallicity": 0.12,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.8,
+     "articulation": 0.3,
+     "noise": 0.0,
+     "punch": 0.35
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:punch_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_punch_bass",
+     "algorithm": 4,
+     "feedback": 4,
+     "trim": 5,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 26,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 4,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 16,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 4,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 31,
+       "decay_rate": 12,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 6,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 0,
+       "total_level": 7,
+       "attack_rate": 31,
+       "decay_rate": 12,
+       "sustain_rate": 5,
+       "release_rate": 9,
+       "sustain_level": 6,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.6,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "sub-octave carrier on operator 4",
+     "attack AR 31 (~0 ms), release RR 9 (~54 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.582,
+    "decay": 0.44,
+    "articulation": 0.192,
+    "brightness": 0.205,
+    "bass_weight": 0.597,
+    "metallicity": 0.425,
+    "noise": 0.0,
+    "punch": 0.299,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_saw_lead",
+   "backend": "ym2612",
+   "role": "lead",
+   "character": "a sawtooth lead with a little ensemble and vibrato",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_saw_lead",
+    "dna": {
+     "brightness": 0.72,
+     "attack": 0.03,
+     "body": 0.85,
+     "decay": 0.6,
+     "metallicity": 0.08,
+     "detune": 0.2,
+     "motion": 0.3,
+     "bass_weight": 0.1,
+     "articulation": 0.6,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 0,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "brightness": -0.1435,
+     "attack": 0.0255,
+     "body": -0.0092,
+     "decay": 0.1152,
+     "bass_weight": -0.4912,
+     "metallicity": -0.1691,
+     "articulation": 0.0155,
+     "punch": -0.0091,
+     "detune": 0.0439,
+     "motion": 0.2354
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:saw_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_saw_lead",
+     "algorithm": 0,
+     "feedback": 3,
+     "trim": 5,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 31,
+       "attack_rate": 27,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 7,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 23,
+       "attack_rate": 27,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 7,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 27,
+       "attack_rate": 27,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 7,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 27,
+       "decay_rate": 9,
+       "sustain_rate": 0,
+       "release_rate": 7,
+       "sustain_level": 3,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 1
+      }
+     ]
+    },
+    "setup": {
+     "pms": 4,
+     "ams": 1,
+     "lfo": 4
+    },
+    "style": {
+     "gate": 0.758,
+     "retrigger": true,
+     "layers": [
+      {
+       "cents": 4.7,
+       "level": -17.2
+      }
+     ]
+    },
+    "notes": [
+     "algorithm 0",
+     "LFO 6.9 Hz, vibrato +-14 cents, tremolo 1",
+     "detune is one extra channel 4.7 cents sharp and 17 dB down",
+     "attack AR 27 (~1 ms), release RR 7 (~218 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.826,
+    "decay": 0.232,
+    "articulation": 0.595,
+    "brightness": 0.689,
+    "bass_weight": 0.32,
+    "metallicity": 0.182,
+    "noise": 0.0,
+    "punch": 0.366,
+    "detune": 0.202,
+    "motion": 0.246
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_slap_bass",
+   "backend": "ym2612",
+   "role": "bass",
+   "character": "a funk bass: bright attack, clean body",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_slap_bass",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.0,
+     "body": 0.3,
+     "decay": 0.3,
+     "metallicity": 0.2,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.6,
+     "articulation": 0.15,
+     "noise": 0.0,
+     "punch": 0.85
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:slap_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_slap_bass",
+     "algorithm": 4,
+     "feedback": 6,
+     "trim": 2,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 12,
+       "attack_rate": 31,
+       "decay_rate": 18,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 7,
+       "attack_rate": 31,
+       "decay_rate": 18,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 10,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 0,
+       "total_level": 10,
+       "attack_rate": 31,
+       "decay_rate": 14,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 10,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.525,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "sub-octave carrier on operator 4",
+     "attack AR 31 (~0 ms), release RR 10 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.278,
+    "decay": 0.314,
+    "articulation": 0.258,
+    "brightness": 0.449,
+    "bass_weight": 0.553,
+    "metallicity": 0.31,
+    "noise": 0.0,
+    "punch": 0.5,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_square_lead",
+   "backend": "ym2612",
+   "role": "lead",
+   "character": "the chiptune square",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_square_lead",
+    "dna": {
+     "brightness": 0.5,
+     "attack": 0.03,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.05,
+     "detune": 0.0,
+     "motion": 0.2,
+     "bass_weight": 0.15,
+     "articulation": 0.5,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 4,
+     "ratios": "harmonic"
+    },
+    "bias": {
+     "brightness": 0.1287,
+     "attack": 0.0255,
+     "body": 0.0458,
+     "decay": 0.1765,
+     "bass_weight": 0.1275,
+     "metallicity": 0.0272,
+     "articulation": -0.0882,
+     "punch": -0.0228,
+     "motion": 0.17
+    },
+    "register": [
+     "A",
+     4
+    ],
+    "lineage": [
+     "archetype:square_lead"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_square_lead",
+     "algorithm": 4,
+     "feedback": 3,
+     "trim": -4,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 21,
+       "attack_rate": 27,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 21,
+       "attack_rate": 27,
+       "decay_rate": 10,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 15,
+       "attack_rate": 27,
+       "decay_rate": 6,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 32,
+       "attack_rate": 27,
+       "decay_rate": 6,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 1,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {
+     "pms": 3,
+     "ams": 0,
+     "lfo": 4
+    },
+    "style": {
+     "gate": 0.656,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 4",
+     "LFO 6.9 Hz, vibrato +-10 cents, tremolo 0",
+     "attack AR 27 (~1 ms), release RR 8 (~109 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.933,
+    "decay": 0.498,
+    "articulation": 0.391,
+    "brightness": 0.402,
+    "bass_weight": 0.221,
+    "metallicity": 0.057,
+    "noise": 0.0,
+    "punch": 0.105,
+    "detune": 0.0,
+    "motion": 0.022
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_stab",
+   "backend": "ym2612",
+   "role": "harmony",
+   "character": "a short metallic hit for the off-beat",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_stab",
+    "dna": {
+     "brightness": 0.7,
+     "attack": 0.0,
+     "body": 0.05,
+     "decay": 0.2,
+     "metallicity": 0.5,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 0.2,
+     "articulation": 0.1,
+     "noise": 0.0,
+     "punch": 0.7
+    },
+    "style": {
+     "alg": 0,
+     "ratios": "bell"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     3
+    ],
+    "lineage": [
+     "archetype:stab"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_stab",
+     "algorithm": 0,
+     "feedback": 7,
+     "trim": -2,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 7,
+       "total_level": 12,
+       "attack_rate": 31,
+       "decay_rate": 17,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 11,
+       "total_level": 4,
+       "attack_rate": 31,
+       "decay_rate": 17,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 9,
+       "total_level": 8,
+       "attack_rate": 31,
+       "decay_rate": 17,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 8,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 31,
+       "decay_rate": 16,
+       "sustain_rate": 5,
+       "release_rate": 10,
+       "sustain_level": 13,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.5,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 0",
+     "attack AR 31 (~0 ms), release RR 10 (~27 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.024,
+    "decay": 0.199,
+    "articulation": null,
+    "brightness": 1.0,
+    "bass_weight": 0.416,
+    "metallicity": 0.608,
+    "noise": 0.994,
+    "punch": 0.355,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  },
+  {
+   "name": "fm_sub_bass",
+   "backend": "ym2612",
+   "role": "bass",
+   "character": "a pure sine under everything",
+   "score": 0.0,
+   "genome": {
+    "backend": "ym2612",
+    "name": "fm_sub_bass",
+    "dna": {
+     "brightness": 0.04,
+     "attack": 0.05,
+     "body": 0.9,
+     "decay": 0.7,
+     "metallicity": 0.0,
+     "detune": 0.0,
+     "motion": 0.0,
+     "bass_weight": 1.0,
+     "articulation": 0.35,
+     "noise": 0.0,
+     "punch": 0.0
+    },
+    "style": {
+     "alg": 7,
+     "ratios": "harmonic"
+    },
+    "bias": {},
+    "register": [
+     "A",
+     2
+    ],
+    "lineage": [
+     "archetype:sub_bass"
+    ]
+   },
+   "compiled": {
+    "patch": {
+     "name": "fm_sub_bass",
+     "algorithm": 7,
+     "feedback": 0,
+     "trim": 10,
+     "operator_order": "register",
+     "operators": [
+      {
+       "detune": 0,
+       "multiple": 1,
+       "total_level": 0,
+       "attack_rate": 27,
+       "decay_rate": 8,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 2,
+       "total_level": 84,
+       "attack_rate": 27,
+       "decay_rate": 8,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 0,
+       "total_level": 4,
+       "attack_rate": 27,
+       "decay_rate": 8,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      },
+      {
+       "detune": 0,
+       "multiple": 3,
+       "total_level": 84,
+       "attack_rate": 27,
+       "decay_rate": 8,
+       "sustain_rate": 0,
+       "release_rate": 8,
+       "sustain_level": 2,
+       "ssg_eg": 0,
+       "rate_scaling": 0,
+       "am_enable": 0
+      }
+     ]
+    },
+    "setup": {},
+    "style": {
+     "gate": 0.625,
+     "retrigger": true,
+     "layers": []
+    },
+    "notes": [
+     "algorithm 7",
+     "sub-octave carrier on operator 2",
+     "attack AR 27 (~1 ms), release RR 8 (~109 ms to -20 dB)"
+    ]
+   },
+   "measured": {
+    "attack": 0.0,
+    "body": 0.916,
+    "decay": 0.512,
+    "articulation": 0.354,
+    "brightness": 0.023,
+    "bass_weight": 1.0,
+    "metallicity": 0.085,
+    "noise": 0.0,
+    "punch": 0.146,
+    "detune": null,
+    "motion": null
+   },
+   "issues": []
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "original_levels": {
+  "A": {
+   "rms_db": -23.98,
+   "peak_db": -10.8
+  },
+  "B": {
+   "rms_db": -24.26,
+   "peak_db": -11.24
+  }
+ },
+ "gain_applied_db": {
+  "A": 0.0,
+  "B": 0.28
+ },
+ "matched": "RMS of the range (A is the reference)"
+}

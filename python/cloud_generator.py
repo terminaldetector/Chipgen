@@ -86,8 +86,9 @@ The hardware, and what it will and will not let you do:
   - 6 FM channels (0-5), ONE NOTE EACH. A triad needs three channels.
   - 3 PSG square channels (0-2) plus one shared noise voice.
   - PSG volume is an ATTENUATOR: 0 is loudest, 15 is silent.
-  - The PSG's tone register is 10 bits, so above about C6 neighbouring
-    semitones collide. Leads belong on FM; give the PSG arpeggios.
+  - The PSG's tone register is 10 bits. Its floor is A-2: anything lower
+    clamps and plays as A-2 (C-2 measured +890 cents sharp). Above G#6
+    it drifts 12-19 cents. Bass belongs on FM; give the PSG arpeggios.
   - Drums are PCM samples through the DAC, which takes over FM channel 5
     while one plays: {", ".join(samples_mod.names())}.
 

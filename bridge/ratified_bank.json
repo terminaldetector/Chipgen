@@ -1,0 +1,4139 @@
+{
+  "format_version": 1,
+  "bpm": 166,
+  "total_ms": 34761,
+  "loop_ms": 34699,
+  "pan": {
+    "1": "C",
+    "2": "L",
+    "3": "C",
+    "4": "R",
+    "5": "L",
+    "6": "C"
+  },
+  "velocity_to_tl": "additive: TL_carrier = preset_TL + ((127 - velocity) >> 1), clamp 0..127",
+  "presets": {
+    "lead_glass": {
+      "algorithm": 4,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 31,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 77,
+          "ar": 20,
+          "dr": 16,
+          "sr": 8,
+          "rr": 18,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 42,
+          "ar": 27,
+          "dr": 12,
+          "sr": 10,
+          "rr": 16,
+          "dt": -1
+        },
+        {
+          "mult": 1,
+          "tl": 25,
+          "ar": 31,
+          "dr": 8,
+          "sr": 8,
+          "rr": 12,
+          "dt": 1
+        }
+      ]
+    },
+    "lead_soft": {
+      "algorithm": 5,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 31,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 81,
+          "ar": 18,
+          "dr": 17,
+          "sr": 7,
+          "rr": 18,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 51,
+          "ar": 25,
+          "dr": 13,
+          "sr": 10,
+          "rr": 15,
+          "dt": -1
+        },
+        {
+          "mult": 1,
+          "tl": 25,
+          "ar": 30,
+          "dr": 9,
+          "sr": 9,
+          "rr": 13,
+          "dt": 1
+        }
+      ]
+    },
+    "bass_round": {
+      "algorithm": 1,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 31,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 76,
+          "ar": 24,
+          "dr": 20,
+          "sr": 7,
+          "rr": 18,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 52,
+          "ar": 28,
+          "dr": 16,
+          "sr": 8,
+          "rr": 16,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 23,
+          "ar": 31,
+          "dr": 12,
+          "sr": 10,
+          "rr": 14,
+          "dt": 0
+        }
+      ]
+    },
+    "pad_air": {
+      "algorithm": 3,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 72,
+          "ar": 12,
+          "dr": 14,
+          "sr": 5,
+          "rr": 14,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 58,
+          "ar": 13,
+          "dr": 12,
+          "sr": 6,
+          "rr": 12,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 34,
+          "ar": 15,
+          "dr": 9,
+          "sr": 7,
+          "rr": 11,
+          "dt": -1
+        },
+        {
+          "mult": 1,
+          "tl": 26,
+          "ar": 16,
+          "dr": 8,
+          "sr": 6,
+          "rr": 10,
+          "dt": 1
+        }
+      ]
+    },
+    "pad_warm": {
+      "algorithm": 2,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 82,
+          "ar": 11,
+          "dr": 14,
+          "sr": 5,
+          "rr": 15,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 62,
+          "ar": 12,
+          "dr": 12,
+          "sr": 6,
+          "rr": 13,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 38,
+          "ar": 14,
+          "dr": 10,
+          "sr": 7,
+          "rr": 12,
+          "dt": 1
+        },
+        {
+          "mult": 1,
+          "tl": 25,
+          "ar": 15,
+          "dr": 9,
+          "sr": 7,
+          "rr": 11,
+          "dt": -1
+        }
+      ]
+    },
+    "drum_kick": {
+      "algorithm": 1,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 31,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 82,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 20,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 55,
+          "ar": 31,
+          "dr": 30,
+          "sr": 31,
+          "rr": 20,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 0,
+          "ar": 31,
+          "dr": 28,
+          "sr": 31,
+          "rr": 18,
+          "dt": 0
+        }
+      ]
+    },
+    "drum_snare": {
+      "algorithm": 4,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 0,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 3,
+          "tl": 56,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 24,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 28,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 22,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 0,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 20,
+          "dt": 0
+        }
+      ]
+    },
+    "hat_noise": {
+      "algorithm": 4,
+      "operators": [
+        {
+          "mult": 1,
+          "tl": 127,
+          "ar": 0,
+          "dr": 0,
+          "sr": 0,
+          "rr": 0,
+          "dt": 0
+        },
+        {
+          "mult": 3,
+          "tl": 56,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 24,
+          "dt": 0
+        },
+        {
+          "mult": 2,
+          "tl": 28,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 22,
+          "dt": 0
+        },
+        {
+          "mult": 1,
+          "tl": 0,
+          "ar": 31,
+          "dr": 31,
+          "sr": 31,
+          "rr": 20,
+          "dt": 0
+        }
+      ],
+      "noise": true
+    }
+  },
+  "events": [
+    {
+      "time_ms": 0,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 0,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 0,
+      "channel": 4,
+      "note": "C4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 0,
+      "channel": 5,
+      "note": "G4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 0,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 90,
+      "channel": 2,
+      "note": "D6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 181,
+      "channel": 1,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 271,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 361,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 361,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 542,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 542,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 596,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 50,
+      "preset": "lead_soft",
+      "duration_ms": 75
+    },
+    {
+      "time_ms": 723,
+      "channel": 1,
+      "note": "D6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 753,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 813,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 904,
+      "channel": 1,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 904,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 904,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 904,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 1084,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 1175,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 1265,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 1265,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 1446,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 1446,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 1446,
+      "channel": 4,
+      "note": "A3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 1446,
+      "channel": 5,
+      "note": "E4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 1446,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 1627,
+      "channel": 2,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 1717,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 1807,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 1988,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 1988,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 2042,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 50,
+      "preset": "lead_soft",
+      "duration_ms": 75
+    },
+    {
+      "time_ms": 2169,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 2259,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 2349,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 2349,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 2349,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 2530,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 2620,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 2711,
+      "channel": 3,
+      "note": "C#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 2711,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 2892,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 2892,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 2892,
+      "channel": 4,
+      "note": "D4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 2892,
+      "channel": 5,
+      "note": "A4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 2892,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 3072,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 3163,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 3253,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 3434,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 3434,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 3488,
+      "channel": 2,
+      "note": "F#5",
+      "velocity": 50,
+      "preset": "lead_soft",
+      "duration_ms": 75
+    },
+    {
+      "time_ms": 3614,
+      "channel": 1,
+      "note": "E6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 3705,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 3795,
+      "channel": 1,
+      "note": "C6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 3795,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 3795,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 3976,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 4066,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 4157,
+      "channel": 3,
+      "note": "C#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 4157,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 4337,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 4337,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 4337,
+      "channel": 4,
+      "note": "G3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 4337,
+      "channel": 5,
+      "note": "D4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 4337,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 4518,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 4608,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 4699,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 4880,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 4880,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 4934,
+      "channel": 1,
+      "note": "B4",
+      "velocity": 50,
+      "preset": "lead_soft",
+      "duration_ms": 75
+    },
+    {
+      "time_ms": 5060,
+      "channel": 2,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 5151,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 5241,
+      "channel": 2,
+      "note": "F5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 5241,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 5241,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 5422,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 5512,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 5602,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 5602,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 5783,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 5783,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 5783,
+      "channel": 4,
+      "note": "E4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 5783,
+      "channel": 5,
+      "note": "B4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 5783,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 5873,
+      "channel": 2,
+      "note": "D6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 5964,
+      "channel": 1,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 6054,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 6145,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 6145,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 6325,
+      "channel": 3,
+      "note": "B2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 6325,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 6416,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 6506,
+      "channel": 1,
+      "note": "D6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 6536,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 6596,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 6687,
+      "channel": 1,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 6687,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 6687,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 6687,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 6867,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 6958,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 7048,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 7048,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 7229,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 7229,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 7229,
+      "channel": 4,
+      "note": "A3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 7229,
+      "channel": 5,
+      "note": "E4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 7229,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 7410,
+      "channel": 2,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 7500,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 7590,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 7771,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 7771,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 7861,
+      "channel": 1,
+      "note": "C#5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 7952,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 8042,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 8133,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 8133,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 8133,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 8313,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 8404,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 8440,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 8494,
+      "channel": 3,
+      "note": "C#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 8494,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 8675,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 8675,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 8675,
+      "channel": 4,
+      "note": "D4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 8675,
+      "channel": 5,
+      "note": "A4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 8675,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 8855,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 8946,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 9036,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 9217,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 9217,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 9307,
+      "channel": 2,
+      "note": "F#5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 9398,
+      "channel": 1,
+      "note": "E6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 9488,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 9578,
+      "channel": 1,
+      "note": "C6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 9578,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 9578,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 9759,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 9849,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 9940,
+      "channel": 3,
+      "note": "F#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 9940,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 10120,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 10120,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 10120,
+      "channel": 4,
+      "note": "G3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 10120,
+      "channel": 5,
+      "note": "D4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 10120,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 10301,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 10392,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 10482,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 10663,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 10663,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 10753,
+      "channel": 1,
+      "note": "B4",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 10843,
+      "channel": 2,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 10934,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 11024,
+      "channel": 2,
+      "note": "F5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 11024,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 11024,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 11205,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 11295,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 11331,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 11386,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 11386,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 11566,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 11566,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 11566,
+      "channel": 4,
+      "note": "C4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 11566,
+      "channel": 5,
+      "note": "G4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 11566,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 11657,
+      "channel": 2,
+      "note": "D6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 11747,
+      "channel": 1,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 11837,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 11928,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 11928,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 12108,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 12108,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 12199,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 12289,
+      "channel": 1,
+      "note": "D6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 12319,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 12380,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 12470,
+      "channel": 1,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 12470,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 12470,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 12470,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 12651,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 12741,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 12831,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 12831,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 13012,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 13012,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 13012,
+      "channel": 4,
+      "note": "F3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 13012,
+      "channel": 5,
+      "note": "C4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 13012,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 13193,
+      "channel": 2,
+      "note": "C5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 13283,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 13373,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 13554,
+      "channel": 3,
+      "note": "C3",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 13554,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 13645,
+      "channel": 1,
+      "note": "A4",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 13735,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 13825,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 13916,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 13916,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 13916,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 14096,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 14187,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 14223,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 14277,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 14277,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 14458,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 14458,
+      "channel": 3,
+      "note": "B1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 14458,
+      "channel": 4,
+      "note": "B3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 14458,
+      "channel": 5,
+      "note": "F#4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 14458,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 14639,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 14729,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 14819,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 15000,
+      "channel": 3,
+      "note": "F#2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 15000,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 15090,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 15181,
+      "channel": 1,
+      "note": "E6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 15271,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 15361,
+      "channel": 1,
+      "note": "C6",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 15361,
+      "channel": 3,
+      "note": "B1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 15361,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 15542,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 15633,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 15723,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 15723,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 15904,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 15904,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 15904,
+      "channel": 4,
+      "note": "E4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 15904,
+      "channel": 5,
+      "note": "B4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 15904,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 16084,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 16175,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 16265,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 16446,
+      "channel": 3,
+      "note": "B2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 16446,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 16536,
+      "channel": 1,
+      "note": "G#5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 16627,
+      "channel": 2,
+      "note": "A5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 16717,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 16807,
+      "channel": 2,
+      "note": "F5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 16807,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 16807,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 16988,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 64,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 17078,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 17114,
+      "channel": 2,
+      "note": "F#5",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 17169,
+      "channel": 3,
+      "note": "G#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 17169,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 17349,
+      "channel": 3,
+      "note": "F3",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 723,
+      "ch3_mode": "special",
+      "operator_notes": [
+        "F3",
+        "A3",
+        "C4"
+      ]
+    },
+    {
+      "time_ms": 17349,
+      "channel": 4,
+      "note": "A3",
+      "velocity": 48,
+      "preset": "pad_warm",
+      "duration_ms": 795
+    },
+    {
+      "time_ms": 17349,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 68,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 17422,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 50,
+      "preset": "lead_glass",
+      "duration_ms": 253
+    },
+    {
+      "time_ms": 17873,
+      "channel": 2,
+      "note": "C#5",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 18188,
+      "channel": 5,
+      "note": "E4",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 434
+    },
+    {
+      "time_ms": 18343,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 46,
+      "preset": "lead_soft",
+      "duration_ms": 173
+    },
+    {
+      "time_ms": 18795,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 68,
+      "preset": "bass_round",
+      "duration_ms": 452
+    },
+    {
+      "time_ms": 18795,
+      "channel": 5,
+      "note": "D4",
+      "velocity": 48,
+      "preset": "pad_warm",
+      "duration_ms": 795
+    },
+    {
+      "time_ms": 19319,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 19518,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 55,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 19634,
+      "channel": 4,
+      "note": "A4",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 434
+    },
+    {
+      "time_ms": 19699,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 235
+    },
+    {
+      "time_ms": 20241,
+      "channel": 3,
+      "note": "B3",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 723,
+      "ch3_mode": "special",
+      "operator_notes": [
+        "B3",
+        "D4",
+        "F#4"
+      ]
+    },
+    {
+      "time_ms": 20241,
+      "channel": 4,
+      "note": "G3",
+      "velocity": 48,
+      "preset": "pad_warm",
+      "duration_ms": 795
+    },
+    {
+      "time_ms": 20241,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 68,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 20313,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 50,
+      "preset": "lead_glass",
+      "duration_ms": 253
+    },
+    {
+      "time_ms": 20765,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 21080,
+      "channel": 5,
+      "note": "D4",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 434
+    },
+    {
+      "time_ms": 21235,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 46,
+      "preset": "lead_soft",
+      "duration_ms": 173
+    },
+    {
+      "time_ms": 21687,
+      "channel": 3,
+      "note": "G#2",
+      "velocity": 68,
+      "preset": "bass_round",
+      "duration_ms": 452
+    },
+    {
+      "time_ms": 21687,
+      "channel": 5,
+      "note": "G#3",
+      "velocity": 48,
+      "preset": "pad_warm",
+      "duration_ms": 795
+    },
+    {
+      "time_ms": 22211,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 22410,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 55,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 22525,
+      "channel": 4,
+      "note": "D#4",
+      "velocity": 44,
+      "preset": "pad_air",
+      "duration_ms": 434
+    },
+    {
+      "time_ms": 22590,
+      "channel": 3,
+      "note": "D#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 235
+    },
+    {
+      "time_ms": 23133,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 23133,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 23133,
+      "channel": 4,
+      "note": "C4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 23133,
+      "channel": 5,
+      "note": "G4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 23133,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 23223,
+      "channel": 2,
+      "note": "D6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 23313,
+      "channel": 1,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 23404,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 23494,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 23494,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 23675,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 23675,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 23765,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 23855,
+      "channel": 1,
+      "note": "D6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 23885,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 23946,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 24036,
+      "channel": 1,
+      "note": "B5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 24036,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 24036,
+      "channel": 3,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 24036,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 24217,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 24307,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 24398,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 24398,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 24578,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 24578,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 24578,
+      "channel": 4,
+      "note": "A3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 24578,
+      "channel": 5,
+      "note": "E4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 24578,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 24759,
+      "channel": 2,
+      "note": "C5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 24849,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 24940,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 25120,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 25120,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 25211,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 25301,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 25392,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 25482,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 25482,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 25482,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 25663,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 25753,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 25789,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 25843,
+      "channel": 3,
+      "note": "C#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 25843,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 26024,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 26024,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 26024,
+      "channel": 4,
+      "note": "F3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 26024,
+      "channel": 5,
+      "note": "C4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 26024,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 26205,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 26295,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 26386,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 26566,
+      "channel": 3,
+      "note": "C3",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 26566,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 26657,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 26747,
+      "channel": 1,
+      "note": "E6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 26837,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 26928,
+      "channel": 1,
+      "note": "C6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 26928,
+      "channel": 3,
+      "note": "F2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 26928,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 27108,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 27199,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 27289,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 27289,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 27470,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 27470,
+      "channel": 3,
+      "note": "B1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 27470,
+      "channel": 4,
+      "note": "B3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 27470,
+      "channel": 5,
+      "note": "F#4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 27470,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 27651,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 27741,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 27831,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 28012,
+      "channel": 3,
+      "note": "F#2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 28012,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 28102,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 28193,
+      "channel": 2,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 28283,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 28373,
+      "channel": 2,
+      "note": "F5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 28373,
+      "channel": 3,
+      "note": "B1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 28373,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 28554,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 28645,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 28681,
+      "channel": 2,
+      "note": "C#5",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 28735,
+      "channel": 3,
+      "note": "D#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 28735,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 28916,
+      "channel": 1,
+      "note": "C5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 28916,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 28916,
+      "channel": 4,
+      "note": "E4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 28916,
+      "channel": 5,
+      "note": "B4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 28916,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 29006,
+      "channel": 2,
+      "note": "D6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 29096,
+      "channel": 1,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 29187,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 29277,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 29277,
+      "channel": 2,
+      "note": "C6",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 29458,
+      "channel": 3,
+      "note": "B2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 29458,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 29548,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 29639,
+      "channel": 1,
+      "note": "D6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 29668,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 29729,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 29819,
+      "channel": 1,
+      "note": "B5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 29819,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 56,
+      "preset": "lead_soft",
+      "duration_ms": 101
+    },
+    {
+      "time_ms": 29819,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 29819,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 30000,
+      "channel": 1,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 30090,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 30181,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 30181,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 30361,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 30361,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 30361,
+      "channel": 4,
+      "note": "A3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 30361,
+      "channel": 5,
+      "note": "E4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 30361,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 30542,
+      "channel": 2,
+      "note": "C5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 30633,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 30723,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 30904,
+      "channel": 3,
+      "note": "E2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 30904,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 30994,
+      "channel": 1,
+      "note": "C#5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 31084,
+      "channel": 2,
+      "note": "B5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 31175,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 31265,
+      "channel": 2,
+      "note": "G5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 31265,
+      "channel": 3,
+      "note": "A1",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 31265,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 31446,
+      "channel": 2,
+      "note": "E5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 31536,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 31572,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 31627,
+      "channel": 3,
+      "note": "C#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 31627,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 31807,
+      "channel": 1,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 31807,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 31807,
+      "channel": 4,
+      "note": "D4",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 31807,
+      "channel": 5,
+      "note": "A4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 31807,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 31988,
+      "channel": 1,
+      "note": "F#5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 32078,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 32169,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 32349,
+      "channel": 3,
+      "note": "A2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 32349,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 32440,
+      "channel": 2,
+      "note": "F#5",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 32530,
+      "channel": 1,
+      "note": "E6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 32620,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 32711,
+      "channel": 1,
+      "note": "C6",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 32711,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 32711,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 32892,
+      "channel": 1,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_glass",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 32982,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 33072,
+      "channel": 3,
+      "note": "F#2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 33072,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 33253,
+      "channel": 2,
+      "note": "G4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 33253,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 82,
+      "preset": "bass_round",
+      "duration_ms": 224
+    },
+    {
+      "time_ms": 33253,
+      "channel": 4,
+      "note": "G3",
+      "velocity": 58,
+      "preset": "pad_warm",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 33253,
+      "channel": 5,
+      "note": "D4",
+      "velocity": 54,
+      "preset": "pad_air",
+      "duration_ms": 1041
+    },
+    {
+      "time_ms": 33253,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 74,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 33434,
+      "channel": 2,
+      "note": "B4",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 33524,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 33614,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 33795,
+      "channel": 3,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "bass_round",
+      "duration_ms": 152
+    },
+    {
+      "time_ms": 33795,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 66,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    },
+    {
+      "time_ms": 33886,
+      "channel": 1,
+      "note": "B4",
+      "velocity": 52,
+      "preset": "lead_soft",
+      "duration_ms": 80
+    },
+    {
+      "time_ms": 33976,
+      "channel": 2,
+      "note": "A5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 34066,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 34,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 34157,
+      "channel": 2,
+      "note": "F5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 34157,
+      "channel": 3,
+      "note": "G2",
+      "velocity": 74,
+      "preset": "bass_round",
+      "duration_ms": 166
+    },
+    {
+      "time_ms": 34157,
+      "channel": 6,
+      "note": "C2",
+      "velocity": 58,
+      "preset": "drum_kick",
+      "duration_ms": 48,
+      "noise": false
+    },
+    {
+      "time_ms": 34337,
+      "channel": 2,
+      "note": "D5",
+      "velocity": 70,
+      "preset": "lead_soft",
+      "duration_ms": 98
+    },
+    {
+      "time_ms": 34428,
+      "channel": 6,
+      "note": "F#2",
+      "velocity": 36,
+      "preset": "hat_noise",
+      "duration_ms": 18,
+      "noise": true
+    },
+    {
+      "time_ms": 34464,
+      "channel": 2,
+      "note": "A4",
+      "velocity": 48,
+      "preset": "lead_glass",
+      "duration_ms": 70
+    },
+    {
+      "time_ms": 34518,
+      "channel": 3,
+      "note": "B2",
+      "velocity": 58,
+      "preset": "bass_round",
+      "duration_ms": 83
+    },
+    {
+      "time_ms": 34518,
+      "channel": 6,
+      "note": "D2",
+      "velocity": 58,
+      "preset": "drum_snare",
+      "duration_ms": 42,
+      "noise": false
+    }
+  ],
+  "dt_map": "-1->7, 0->0, 1->3",
+  "dac_impl": "8-bit PCM white-noise burst 16-22kHz, amp=vel/127",
+  "operator_order_note": "operators listed op1..op4 in block-diagram numbering; the renderer reorders to register order op1,op3,op2,op4"
+}

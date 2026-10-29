@@ -1,0 +1,11 @@
+{
+ "rev": 2,
+ "from": 1,
+ "to": 0,
+ "content_equal_to_target": true,
+ "cost": {
+  "seconds": 0.0,
+  "reply_bytes": 63,
+  "approx_tokens": 15
+ }
+}

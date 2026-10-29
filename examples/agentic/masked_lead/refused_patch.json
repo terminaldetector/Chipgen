@@ -1,0 +1,54 @@
+{
+ "error": "guard_failed",
+ "message": "not committed: melody_kept (a melodic voice's pitch changed)",
+ "guards": [
+  {
+   "name": "no_clipping",
+   "ok": true,
+   "detail": "mix peak -10.80 -> -10.80 dBFS"
+  },
+  {
+   "name": "notes_kept",
+   "ok": true,
+   "detail": "every note keeps its onset row and pitch class; none added or removed"
+  },
+  {
+   "name": "melody_kept",
+   "ok": false,
+   "detail": "a melodic voice's pitch changed"
+  },
+  {
+   "name": "no_new_faults",
+   "ok": true,
+   "detail": "none"
+  },
+  {
+   "name": "voices_present",
+   "ok": true,
+   "detail": "every other voice stays within its band floor (-9 dB)"
+  },
+  {
+   "name": "bass_under",
+   "ok": true,
+   "detail": "rows with the bass above another voice: 0 -> 0"
+  },
+  {
+   "name": "mix_level",
+   "ok": true,
+   "detail": "mix RMS +0.17 dB"
+  }
+ ],
+ "chain": [
+  {
+   "op": "transpose",
+   "voice": "lead",
+   "range": "all",
+   "semitones": 12
+  }
+ ],
+ "cost": {
+  "seconds": 6.49,
+  "reply_bytes": 802,
+  "approx_tokens": 200
+ }
+}

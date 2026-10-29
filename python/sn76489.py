@@ -127,6 +127,19 @@ class SN76489:
         self._note[channel] = (note, octave)
         self.set_volume(channel, volume)
 
+    def set_pitch_offset(self, channel: int, cents: float):
+        """Retune a sounding channel without restarting it.
+
+        Measured against the note that was keyed on, not against wherever
+        the register happens to sit, so repeated calls do not compound —
+        an effect asking for +50 cents twice means +50, not +100.
+        """
+        held = self._note[channel]
+        if held is None:
+            return
+        frequency = note_to_freq(*held) * (2.0 ** (cents / 1200.0))
+        self.set_tone_register(channel, freq_to_tone_n(frequency, self.clock))
+
     def set_volume(self, channel: int, volume: int):
         """volume: 0 = loudest, 15 = silent. Channel 3 is the noise voice."""
         assert 0 <= channel <= 3

@@ -1,0 +1,34 @@
+{
+ "name": "ym2612_pad",
+ "backend": "ym2612",
+ "role": "pad",
+ "note": "a wide, slow pad that stays out of the lead's way",
+ "seeds": [
+  "pad",
+  "organ"
+ ],
+ "objective": {
+  "target": {
+   "brightness": 0.3,
+   "attack": 0.5,
+   "body": 0.85,
+   "detune": 0.6,
+   "motion": 0.35
+  },
+  "box": {
+   "bass_weight": [
+    0.0,
+    0.4
+   ]
+  }
+ },
+ "register": [
+  "A",
+  3
+ ],
+ "generations": 5,
+ "offspring": 6,
+ "keep": 3,
+ "seed": 3,
+ "format": "chipgen-forge-scenario/1"
+}

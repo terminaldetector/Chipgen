@@ -1,0 +1,33 @@
+bpm 140
+lpb 4
+title Everything at once
+author chipgen
+
+inst fm0 deep_bass
+inst fm1 square_lead
+inst opl0 opl_organ
+nes duty nes0 1
+alg opl0 1
+
+pattern a
+mark a
+cols fm0 fm1 psg0 noise dac opl0 nes0 nes2 nes3 nes4
+A-2:110      E-4:90/456   E-5:4   w2:0    kick      A-4:100      A-5:90     A-1    6:90    ...
+...          ...          ...     ...     ...       ...          ...        ...    ...     ...
+op fm0 1 tl 14
+op opl0 1 wave 1
+C-3          G-4:90       G-5:4   ...     hat/A04   C-5:100      C-6        C-2    4m:70   hat
+...          ...          ...     ===     ...       ...          ...        ...    ...     ...
+
+pattern b
+mark b
+cols fm0 fm1 psg0 noise dac opl0 nes0 nes2 nes3 nes4
+ch3 special
+D-2:60/1A0   ===          ===     ...     snare     ===          ===        D-2    ===     ...
+...          ...          ...     ...     ...       ...          ...        ...    ...     ...
+ch3 normal
+...          ...          ...     ...     ...       ...          ...        ...    ...     ...
+...          ...          ...     ...     ...       ...          ...        ...    ...     ...
+
+order a a b a
+end

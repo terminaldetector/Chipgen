@@ -1,0 +1,27 @@
+{
+ "name": "nes_lead",
+ "backend": "nes",
+ "role": "lead",
+ "note": "a pulse lead with vibrato, the way a game driver plays it",
+ "seeds": [
+  "square_lead",
+  "blip"
+ ],
+ "objective": {
+  "target": {
+   "attack": 0.0,
+   "body": 0.9,
+   "motion": 0.3,
+   "detune": 0.0
+  }
+ },
+ "register": [
+  "A",
+  4
+ ],
+ "generations": 4,
+ "offspring": 5,
+ "keep": 4,
+ "seed": 7,
+ "format": "chipgen-forge-scenario/1"
+}

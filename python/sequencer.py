@@ -30,22 +30,52 @@ import mixer
 import samples as samples_mod
 import sn76489
 import instruments as instruments_mod
-from mixer import DEFAULT_PSG_GAIN
+from mixer import DEFAULT_NES_GAIN, DEFAULT_OPL_GAIN, DEFAULT_PSG_GAIN
 
 DEFAULT_TICKS_PER_SECOND = 192.0
+
+#: Which events mean "this score plays the OPL2".
+_OPL_EVENTS = ("OPLNoteOn", "OPLInstrumentSelect", "OPLVolume",
+               "OPLDepth", "OPLOperator", "OPLConnection")
+
+#: And which mean it plays the NES.
+_NES_EVENTS = ("NESNoteOn", "NESNoteOff", "NESVolume", "NESDuty", "NESSweep",
+               "NESNoiseOn", "NESNoiseOff", "NESDMCLevel", "NESSample")
+
+
+def _effects_default_rate() -> float:
+    import effects
+    return effects.DEFAULT_RATE
+
+
+def _uses_opl(event_list) -> bool:
+    return any(type(e).__name__ in _OPL_EVENTS for e in event_list)
+
+
+def _uses_nes(event_list) -> bool:
+    return any(type(e).__name__ in _NES_EVENTS for e in event_list)
 
 
 
 class Sequencer:
     def __init__(self, ticks_per_second: float = DEFAULT_TICKS_PER_SECOND,
                  target_rate: int = 44100, fm_gain: float = 1.0,
-                 psg_gain: float = DEFAULT_PSG_GAIN, pal: bool = False,
+                 psg_gain: float = DEFAULT_PSG_GAIN,
+                 opl_gain: float = DEFAULT_OPL_GAIN,
+                 nes_gain: float = DEFAULT_NES_GAIN, pal: bool = False,
+                 effect_rate: float = None,
                  dc_block: bool = True,
                  chip_type: str = opn2.DEFAULT_CHIP_TYPE):
         self.ticks_per_second = ticks_per_second
         self.target_rate = target_rate
         self.fm_gain = fm_gain
         self.psg_gain = psg_gain
+        self.opl_gain = opl_gain
+        self.nes_gain = nes_gain
+        #: How often effects.py recomputes. Defaults to a real driver's
+        #: vertical blank, because a vibrato stepping at 60 Hz is part of
+        #: what the hardware sounds like.
+        self.effect_rate = effect_rate or _effects_default_rate()
         self.pal = pal
         #: "ym2612" (discrete, Model 1, has the DAC ladder) or "ym3438"
         #: (later ASIC, clean). See opn2.CHIP_TYPES.
@@ -104,16 +134,76 @@ class Sequencer:
         fm_rate = ym.native_rate
         psg_rate = psg.native_rate
 
-        state = _RenderState(ym, psg, fm_rate, writer, want_audio)
+        # The OPL2 is built only if the score plays it. It is a pure-Python
+        # core, so an unused chip that still renders silence would be the
+        # most expensive thing in the run.
+        opl = None
+        if _uses_opl(event_list):
+            import opl2 as opl2_mod
+            opl = opl2_mod.YM3812(
+                logger=writer.opl_logger if writer else None)
+            if writer is not None:
+                writer.opl_clock = int(round(opl.clock))
+
+        # Same rule as the OPL2: a pure-Python core that renders silence
+        # would be the most expensive thing in the run.
+        nes = nes_voices = None
+        if _uses_nes(event_list):
+            import nes_apu as nes_mod
+            nes = nes_mod.NESAPU(
+                pal=self.pal,
+                logger=writer.nes_logger if writer is not None else None)
+            # The header field has to be set BEFORE Voices() runs: its
+            # constructor writes $4015 and the sweep registers, and a
+            # player that saw no NES clock in the header would drop them.
+            if writer is not None:
+                writer.nes_clock = int(round(nes.clock))
+            nes_voices = nes_mod.Voices(nes)
+
+        import effects as effects_mod
+        engine = effects_mod.EffectEngine(rate=self.effect_rate)
+
+        state = _RenderState(ym, psg, fm_rate, writer, want_audio, opl,
+                             nes, nes_voices)
+        state.effects = engine
         rate = float(self.ticks_per_second)
-        fm_pending = psg_pending = 0.0
-        fm_chunks, psg_chunks = [], []
+        fm_pending = psg_pending = opl_pending = 0.0
+        fm_chunks, psg_chunks, opl_chunks = [], [], []
+        opl_rate = opl.native_rate if opl is not None else 0.0
+        nes_pending = 0.0
+        nes_chunks = []
+        nes_rate = nes.native_rate if nes is not None else 0.0
 
         for ev in event_list:
             if isinstance(ev, events_mod.Wait):
                 dt = ev.ticks / rate
+                if engine.any_active():
+                    # Effects only exist in the time BETWEEN events, so
+                    # that time has to actually be walked rather than
+                    # jumped over. Chopped into effect ticks, each one
+                    # rendering its own audio before the next update — a
+                    # vibrato applied once at the end of a two-second wait
+                    # is not a vibrato.
+                    remaining = dt
+                    step = engine.tick_seconds
+                    while remaining > 1e-9:
+                        piece = min(step, remaining)
+                        fm_pending += piece * fm_rate
+                        psg_pending += piece * psg_rate
+                        opl_pending += piece * opl_rate
+                        nes_pending += piece * nes_rate
+                        (fm_pending, psg_pending, opl_pending,
+                         nes_pending) = self._catch_up(
+                            state, fm_chunks, psg_chunks, opl_chunks,
+                            nes_chunks, fm_pending, psg_pending, opl_pending,
+                            nes_pending)
+                        state.apply_effects(engine.advance(piece))
+                        remaining -= piece
+                    continue
                 fm_pending += dt * fm_rate
                 psg_pending += dt * psg_rate
+                opl_pending += dt * opl_rate
+                nes_pending += dt * nes_rate
                 continue
             if isinstance(ev, events_mod.Tempo):
                 rate = max(1.0, float(ev.ticks_per_second))
@@ -121,8 +211,10 @@ class Sequencer:
             if isinstance(ev, events_mod.End):
                 break
 
-            fm_pending, psg_pending = self._catch_up(
-                state, fm_chunks, psg_chunks, fm_pending, psg_pending)
+            (fm_pending, psg_pending, opl_pending,
+             nes_pending) = self._catch_up(
+                state, fm_chunks, psg_chunks, opl_chunks, nes_chunks,
+                fm_pending, psg_pending, opl_pending, nes_pending)
 
             if isinstance(ev, events_mod.LoopPoint):
                 if writer is not None:
@@ -134,23 +226,36 @@ class Sequencer:
 
         # Any DAC sample still playing has to finish, or the tail is cut off
         # mid-drum. Extend the trailing silence to cover it.
-        tail = state.dac_remaining_seconds()
+        tail = max(state.dac_remaining_seconds(),
+                    state.nes_sample_remaining_seconds())
         if tail > 0:
             fm_pending += tail * fm_rate
             psg_pending += tail * psg_rate
+            opl_pending += tail * opl_rate
+            nes_pending += tail * nes_rate
 
-        self._catch_up(state, fm_chunks, psg_chunks, fm_pending, psg_pending,
+        self._catch_up(state, fm_chunks, psg_chunks, opl_chunks, nes_chunks,
+                       fm_pending, psg_pending, opl_pending, nes_pending,
                        final=True)
 
         ym.close()
         psg.close()
+        if opl is not None:
+            opl.close()
+        if nes is not None:
+            nes.close()
 
         if not want_audio:
             return None
         return self._mix(_audio.concat(fm_chunks, 2), _audio.concat(psg_chunks, 1),
-                         fm_rate, psg_rate)
+                         fm_rate, psg_rate,
+                         _audio.concat(opl_chunks, 1) if opl_chunks else None,
+                         opl_rate,
+                         _audio.concat(nes_chunks, 2) if nes_chunks else None,
+                         nes_rate)
 
-    def _catch_up(self, state, fm_chunks, psg_chunks, fm_pending, psg_pending,
+    def _catch_up(self, state, fm_chunks, psg_chunks, opl_chunks, nes_chunks,
+                  fm_pending, psg_pending, opl_pending, nes_pending,
                   final: bool = False):
         """Render the time owed since the last event, then return the
         sub-sample remainders so timing never drifts."""
@@ -166,11 +271,23 @@ class Sequencer:
             if chunk is not None:
                 psg_chunks.append(chunk)
             psg_pending -= n_psg
-        return fm_pending, psg_pending
+        n_opl = int(round(opl_pending)) if final else int(opl_pending)
+        if n_opl > 0:
+            chunk = state.render_opl(n_opl)
+            if chunk is not None:
+                opl_chunks.append(chunk)
+            opl_pending -= n_opl
+        n_nes = int(round(nes_pending)) if final else int(nes_pending)
+        if n_nes > 0:
+            chunk = state.render_nes(n_nes)
+            if chunk is not None:
+                nes_chunks.append(chunk)
+            nes_pending -= n_nes
+        return fm_pending, psg_pending, opl_pending, nes_pending
 
     @staticmethod
     def _apply(ev, state):
-        ym, psg = state.ym, state.psg
+        ym, psg, opl = state.ym, state.psg, state.opl
         E = events_mod
         if isinstance(ev, E.FMInstrumentSelect):
             # instruments.get() rather than BANK[...]: a typo'd or
@@ -179,53 +296,198 @@ class Sequencer:
             ym.set_instrument(ev.channel,
                               instruments_mod.get(ev.instrument))
         elif isinstance(ev, E.FMNoteOn):
+            state.note_velocity[f"fm{ev.channel}"] = ev.velocity
             ym.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
+            state.effects.note_on(f"fm{ev.channel}")
+            state.reapply(f"fm{ev.channel}")
         elif isinstance(ev, E.FMNoteOff):
             ym.note_off(ev.channel)
+            state.effects.note_off(f"fm{ev.channel}")
         elif isinstance(ev, E.FMPan):
             ym.set_pan(ev.channel, ev.left, ev.right, ev.ams, ev.pms)
         elif isinstance(ev, E.FMLFO):
             ym.set_lfo(ev.enable, ev.freq)
         elif isinstance(ev, E.FMVolume):
             ym.set_volume(ev.channel, ev.volume)
+        elif isinstance(ev, E.FMOperator):
+            ym.set_operator(ev.channel, ev.operator, ev.field, ev.value)
+
+        elif isinstance(ev, E.FMAlgorithm):
+            ym.set_algorithm(ev.channel, ev.algorithm, ev.feedback)
+
+        elif isinstance(ev, E.FMCh3Mode):
+            ym.set_ch3_mode(ev.mode)
+
+        elif isinstance(ev, E.FMCh3Frequency):
+            ym.set_ch3_operator_frequency(ev.operator, ev.note, ev.octave,
+                                          ev.cents)
+
         elif isinstance(ev, E.FMPitch):
             ym.set_pitch_offset(ev.channel, ev.cents)
+        elif isinstance(ev, E.OPLInstrumentSelect):
+            if opl is not None:
+                import opl_instruments
+                opl.set_instrument(ev.channel, opl_instruments.get(ev.instrument))
+        elif isinstance(ev, E.OPLNoteOn):
+            if opl is not None:
+                opl.note_on(ev.channel, ev.note, ev.octave, velocity=ev.velocity)
+                state.note_velocity[f"opl{ev.channel}"] = ev.velocity
+                state.effects.note_on(f"opl{ev.channel}")
+                state.reapply(f"opl{ev.channel}")
+        elif isinstance(ev, E.OPLNoteOff):
+            if opl is not None:
+                opl.note_off(ev.channel)
+                state.effects.note_off(f"opl{ev.channel}")
+        elif isinstance(ev, E.OPLVolume):
+            if opl is not None:
+                opl.set_volume(ev.channel, ev.volume)
+        elif isinstance(ev, E.OPLDepth):
+            if opl is not None:
+                opl.tremolo_depth = ev.tremolo
+                opl.vibrato_depth = ev.vibrato
+        elif isinstance(ev, E.Portamento):
+            state.effects.portamento(ev.target, ev.cents_per_second,
+                                     ev.to_cents)
+        elif isinstance(ev, E.Vibrato):
+            state.effects.vibrato(ev.target, ev.depth_cents, ev.speed_hz,
+                                  ev.delay)
+        elif isinstance(ev, E.VolumeSlide):
+            state.effects.volume_slide(ev.target, ev.per_second, ev.floor,
+                                       ev.ceiling)
+        elif isinstance(ev, E.Tremolo):
+            state.effects.tremolo(ev.target, ev.depth, ev.speed_hz)
+        elif isinstance(ev, E.Arpeggio):
+            state.effects.arpeggio(ev.target, ev.x, ev.y)
         elif isinstance(ev, E.DACEnable):
             ym.set_dac_enable(ev.enable)
         elif isinstance(ev, E.DACSample):
             state.start_dac(ev)
         elif isinstance(ev, E.PSGToneOn):
             psg.tone_on(ev.channel, ev.note, ev.octave, ev.volume)
+            state.note_velocity[f"psg{ev.channel}"] = ev.volume
+            state.effects.note_on(f"psg{ev.channel}")
+            state.reapply(f"psg{ev.channel}")
         elif isinstance(ev, E.PSGToneOff):
             psg.tone_off(ev.channel)
+            state.effects.note_off(f"psg{ev.channel}")
         elif isinstance(ev, E.PSGVolume):
             psg.set_volume(ev.channel, ev.volume)
         elif isinstance(ev, E.PSGNoiseOn):
             psg.noise_on(ev.white, ev.rate, ev.volume, restart=ev.restart)
+            state.note_velocity["noise"] = ev.volume
+            state.effects.note_on("noise")
+            state.reapply("noise")
         elif isinstance(ev, E.PSGNoiseOff):
             psg.noise_off()
+        elif isinstance(ev, E.DACVolume):
+            state.set_dac_volume(ev.volume)
+        elif isinstance(ev, E.OPLOperator):
+            if opl is not None:
+                opl.set_operator(ev.channel, ev.operator, ev.field, ev.value)
+        elif isinstance(ev, E.OPLConnection):
+            if opl is not None:
+                opl.set_connection(ev.channel, ev.additive, ev.feedback)
+        elif isinstance(ev, E.NESNoteOn):
+            if state.nes_voices is not None:
+                state.nes_voices.note_on(ev.voice, ev.note, ev.octave,
+                                         velocity=ev.velocity)
+                state.note_velocity[ev.voice] = ev.velocity
+                state.effects.note_on(ev.voice)
+                state.reapply(ev.voice)
+        elif isinstance(ev, E.NESNoteOff):
+            if state.nes_voices is not None:
+                state.nes_voices.note_off(ev.voice)
+                state.effects.note_off(ev.voice)
+        elif isinstance(ev, E.NESVolume):
+            if state.nes_voices is not None:
+                state.nes_voices.set_volume(ev.voice, ev.velocity)
+                state.note_velocity[ev.voice] = ev.velocity
+        elif isinstance(ev, E.NESDuty):
+            if state.nes_voices is not None:
+                state.nes_voices.set_duty(ev.voice, ev.duty)
+        elif isinstance(ev, E.NESSweep):
+            if state.nes_voices is not None:
+                state.nes_voices.set_sweep(ev.voice, ev.period, ev.shift,
+                                           negate=ev.negate,
+                                           enabled=ev.enabled)
+        elif isinstance(ev, E.NESNoiseOn):
+            if state.nes_voices is not None:
+                state.nes_voices.noise_on(ev.period, ev.velocity,
+                                          metallic=ev.metallic)
+                state.note_velocity["noise"] = ev.velocity
+                state.effects.note_on("noise")
+                state.reapply("noise")
+        elif isinstance(ev, E.NESNoiseOff):
+            if state.nes_voices is not None:
+                state.nes_voices.noise_off()
+                state.effects.note_off("noise")
+        elif isinstance(ev, E.NESDMCLevel):
+            if state.nes_voices is not None:
+                state.nes_voices.dmc_level(ev.level)
+        elif isinstance(ev, E.NESSample):
+            if state.nes is not None:
+                state.start_nes_sample(ev)
         else:
             raise ValueError(f"unknown event: {ev!r}")
 
     # ------------------------------------------------------------------ mix
-    def _mix(self, fm_audio, psg_audio, fm_rate: float, psg_rate: float):
+    def _mix(self, fm_audio, psg_audio, fm_rate: float, psg_rate: float,
+             opl_audio=None, opl_rate: float = 0.0,
+             nes_audio=None, nes_rate: float = 0.0):
         return mixer.mix(fm_audio, psg_audio, fm_rate, psg_rate,
                          self.target_rate, fm_gain=self.fm_gain,
-                         psg_gain=self.psg_gain, dc_block=self.dc_block)
+                         psg_gain=self.psg_gain, dc_block=self.dc_block,
+                         opl_audio=opl_audio, opl_rate=opl_rate,
+                         opl_gain=self.opl_gain,
+                         nes_audio=nes_audio, nes_rate=nes_rate,
+                         nes_gain=self.nes_gain)
 
 
 class _RenderState:
     """Everything the render loop mutates: the chips plus the DAC stream."""
 
-    def __init__(self, ym, psg, fm_rate: float, writer, want_audio: bool):
+    def __init__(self, ym, psg, fm_rate: float, writer, want_audio: bool,
+                 opl=None, nes=None, nes_voices=None):
         self.ym = ym
         self.psg = psg
+        self.opl = opl
+        self.nes = nes
+        #: The musical layer over the APU — note_on/note_off/set_volume.
+        #: None when the score does not play the NES.
+        self.nes_voices = nes_voices
+        #: A sample being fed through $4011, the NES's equivalent of the
+        #: Genesis DAC. Same kit, requantised to 7 bits on the way out.
+        self._nes_sample = None
+        self._nes_sample_base = 1.0
         self.fm_rate = fm_rate
         self.writer = writer
         self.want_audio = want_audio
+        self.effects = None
+        #: The velocity each voice was struck at. Effects scale this
+        #: rather than replacing it, so a tremolo on a quiet note stays
+        #: quiet.
+        self.note_velocity = {}
+        #: the pitch offset last pushed to each voice by the effects
+        self._effect_cents = {}
+        #: The level a DAC hit was started at. A volume effect scales
+        #: this rather than the running value, so a tremolo does not
+        #: compound itself byte after byte.
+        self._dac_base = 1.0
+        #: The hit's own `:level`, and the channel fader, separately.
+        self._dac_hit = 1.0
+        self.dac_volume = 1.0
         self._dac = None
 
     # -- DAC ---------------------------------------------------------------
+    def set_dac_volume(self, volume: int):
+        """The DAC channel fader, 0-127, multiplying every later hit."""
+        self.dac_volume = max(0, min(127, int(volume))) / 127.0
+        if self._dac is not None:
+            # A fader move lands immediately, mid-hit, the way `vol fm0`
+            # does — otherwise a long sample ignores it until it ends.
+            self._dac_base = self._dac_hit * self.dac_volume
+            self._dac["volume"] = self._dac_base
+
     def start_dac(self, ev):
         sample = samples_mod.KIT[ev.name]
         rate = ev.rate or sample.rate
@@ -235,14 +497,100 @@ class _RenderState:
             # drum would be one more thing for a model to forget, and there
             # is no case where DACSample means anything else.
             self.ym.set_dac_enable(True)
+        #: The hit's own level, kept apart from the channel fader so the
+        #: two multiply rather than overwrite each other.
+        self._dac_hit = max(0.0, min(1.0, ev.volume))
+        self._dac_base = self._dac_hit * self.dac_volume
         self._dac = {
             "data": sample.data,
             "pos": 0,
             "rate": float(rate),
-            "volume": max(0.0, min(1.0, ev.volume)),
+            "volume": self._dac_base,
             "countdown": 0.0,          # FM samples until the next byte
             "auto_enabled": auto_enabled,
         }
+
+    # -- effects -----------------------------------------------------------
+    def apply_effects(self, changed):
+        """Push this tick's pitch and volume onto whichever chip owns them."""
+        for target, (cents, scale) in changed.items():
+            self._write_effect(target, cents, scale)
+
+    def reapply(self, target: str):
+        """Re-assert a voice's effect state after a note-on reset it.
+
+        Also when the state is now nothing at all but the chip still holds
+        an offset from the last note: a vibrato with a delay restarts at
+        the key-on and adds nothing until the delay ends, so without this
+        write the new note would sound at whatever the previous note's
+        swing left in the register — measured on repeated A-4s with a
+        45-cent vibrato held off 0.3 s: every note after the first sat 9.3
+        cents sharp for the whole delay (1.2, the fnum step, after)."""
+        if self.effects is None:
+            return
+        cents, scale = self.effects.state(target)
+        if cents or scale < 1.0 or self._effect_cents.get(target, 0.0):
+            self._write_effect(target, cents, scale)
+
+    def _write_effect(self, target: str, cents: float, scale: float):
+        self._effect_cents[target] = cents
+        # `noise` and `dac` carry a level but no index and no pitch, so
+        # they are handled before anything tries to slice digits off the
+        # end of the name.
+        if target in ("pulse1", "pulse2", "triangle"):
+            if self.nes_voices is None:
+                return
+            self.nes_voices.set_pitch_offset(target, cents)
+            base = self.note_velocity.get(target)
+            if base is not None and scale < 1.0:
+                self.nes_voices.set_volume(target,
+                                           max(1, int(round(base * scale))))
+            return
+        if target == "noise":
+            # `noise` is shared: the PSG's noise voice on a Genesis score,
+            # the APU's on a NES one. Whichever chip this score built is
+            # the one that gets the write.
+            if self.nes_voices is not None:
+                base = self.note_velocity.get("noise")
+                if base is not None and scale < 1.0:
+                    self.nes_voices.set_volume(
+                        "noise", max(1, int(round(base * scale))))
+                return
+            base = self.note_velocity.get("noise")
+            if base is not None and self.psg is not None:
+                # The PSG attenuator runs backwards, and the noise voice
+                # is channel 3.
+                quiet = 15 - (15 - base) * scale
+                self.psg.set_volume(3, max(0, min(15, int(round(quiet)))))
+            return
+        if target == "dac":
+            if self._dac is not None:
+                self._dac["volume"] = max(0.0, min(1.0,
+                                                   self._dac_base * scale))
+            return
+        if target == "dmc":
+            if self._nes_sample is not None:
+                self._nes_sample["volume"] = max(
+                    0.0, min(1.0, self._nes_sample_base * scale))
+            return
+        index = int(target[3:]) if target.startswith("psg") or \
+            target.startswith("opl") else int(target[2:])
+        base = self.note_velocity.get(target)
+        if target.startswith("fm"):
+            self.ym.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                self.ym.set_volume(index, max(1, int(round(base * scale))))
+        elif target.startswith("psg"):
+            self.psg.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                # The PSG attenuator runs backwards: 0 is loudest, 15 is
+                # silence, so a scale of 0.5 has to move UP the register.
+                quiet = 15 - (15 - base) * scale
+                self.psg.set_volume(index, max(0, min(15, int(round(quiet)))))
+        elif target.startswith("opl") and self.opl is not None:
+            self.opl.set_pitch_offset(index, cents)
+            if base is not None and scale < 1.0:
+                self.opl.set_volume(index, max(1, int(round(base * scale))))
 
     def dac_remaining_seconds(self) -> float:
         if not self._dac:
@@ -305,11 +653,111 @@ class _RenderState:
             return None
         return _audio.concat(chunks, 2)
 
+    def render_opl(self, n_samples: int):
+        if self.opl is None or not self.want_audio:
+            return None
+        return self.opl.render(n_samples)
+
     def render_psg(self, n_samples: int):
         # The PSG has no equivalent of the DAC stream and the VGM clock is
         # already being advanced by the FM path, so this stays simple.
         return self.psg.render(n_samples) if self.want_audio else None
 
+    def render_nes(self, n_samples: int):
+        """Render the APU, feeding $4011 on the way if a sample is playing.
+
+        The DMC's level register is a plain DAC, so a sample is played by
+        writing it byte by byte at the right rate — the same shape as the
+        Genesis DAC path above, and the same reason it lives inside the
+        render loop rather than beside it: the bytes have to land at their
+        own rate, not at the event grid's.
+        """
+        if self.nes is None:
+            return None
+        if self._nes_sample is None:
+            return self.nes.render(n_samples) if self.want_audio else None
+
+        chunks = []
+        remaining = n_samples
+        while remaining > 0 and self._nes_sample is not None:
+            # A float countdown, refilled by native_rate/sample_rate, and
+            # not an integer step: 55,930 APU samples per second over a
+            # 16,000 Hz sample is 3.496, and truncating that to 3 feeds
+            # the bytes at 18,643 Hz — the sample plays 16.5% sharp and
+            # short. Measured by round-tripping through a VGM: with the
+            # truncated step a DMC-only score replayed at 0.03
+            # correlation against its own direct render, where the pulse,
+            # triangle and noise channels all sat at 0.997 or better.
+            take = int(self._nes_sample["countdown"])
+            if take >= remaining:
+                self._nes_sample["countdown"] -= remaining
+                self._advance_writer_seconds(remaining / self.nes.native_rate)
+                if self.want_audio:
+                    chunks.append(self.nes.render(remaining))
+                remaining = 0
+                break
+            if take > 0:
+                self._nes_sample["countdown"] -= take
+                self._advance_writer_seconds(take / self.nes.native_rate)
+                if self.want_audio:
+                    chunks.append(self.nes.render(take))
+                remaining -= take
+            if not self._emit_nes_byte():
+                self._nes_sample = None
+        if remaining > 0:
+            self._advance_writer_seconds(remaining / self.nes.native_rate)
+            if self.want_audio:
+                chunks.append(self.nes.render(remaining))
+        if not self.want_audio:
+            return None
+        return _audio.concat([c for c in chunks if c is not None], 2)
+
+    def start_nes_sample(self, ev):
+        sample = samples_mod.KIT[ev.name]
+        self._nes_sample_base = max(0.0, min(1.0, ev.volume))
+        self._nes_sample = {
+            "data": sample.data,
+            "pos": 0,
+            "rate": float(ev.rate or sample.rate),
+            "volume": self._nes_sample_base,
+            "countdown": 0.0,          # APU samples until the next byte
+        }
+
+    def _emit_nes_byte(self) -> bool:
+        """Push one sample byte to $4011. False when the sample is done."""
+        stream = self._nes_sample
+        raw = stream["data"][stream["pos"]]
+        stream["pos"] += 1
+        if stream["volume"] < 1.0:
+            raw = int(round(128 + (raw - 128) * stream["volume"]))
+        # The kit is 8-bit unsigned centred on 128; $4011 is 7-bit, so the
+        # bottom bit is dropped. That halves the resolution rather than
+        # the level — a sample played here is one bit coarser than the
+        # same sample on the Genesis DAC, which is the hardware.
+        self.nes.write(0x4011, max(0, min(127, raw >> 1)))
+        stream["countdown"] += self.nes.native_rate / stream["rate"]
+        return stream["pos"] < len(stream["data"])
+
+    def nes_sample_remaining_seconds(self) -> float:
+        if not self._nes_sample:
+            return 0.0
+        left = len(self._nes_sample["data"]) - self._nes_sample["pos"]
+        return max(0.0, left / self._nes_sample["rate"])
+
     def _advance_writer(self, fm_samples: int):
+        # The FM path owns the VGM's clock unless a NES sample is in
+        # flight. Only one path may advance it per span of wall-clock
+        # time, or the log runs at double speed — and the path that needs
+        # to place writes WITHIN the span is the one that has to own it.
+        # A DMC sample fed from render_nes writes $4011 a few thousand
+        # times a second, so during one it owns the clock; the rest of
+        # the time nothing changes and the FM path keeps it.
+        if self._nes_sample is not None:
+            return
         if self.writer is not None and fm_samples > 0:
             self.writer.advance(fm_samples / self.fm_rate)
+
+    def _advance_writer_seconds(self, seconds: float):
+        """Advance the VGM clock from a path that is not the FM one."""
+        if self.writer is not None and seconds > 0:
+            self.writer.advance(seconds)

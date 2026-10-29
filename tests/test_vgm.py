@@ -175,8 +175,6 @@ def test_fast_lfo_drifts_between_direct_render_and_vgm_replay():
     # on. This test pins that shape of behaviour so it reads as "known and
     # understood" rather than "regression" if it is ever encountered again
     # — and so a future fix has a concrete case to check itself against.
-    import numpy as np
-
     import audio
     from events import (End, FMInstrumentSelect, FMLFO, FMNoteOff, FMNoteOn,
                         FMPan, Wait)
@@ -193,21 +191,34 @@ def test_fast_lfo_drifts_between_direct_render_and_vgm_replay():
 
     with support.TempDir() as directory:
         path = os.path.join(directory, "lfo.vgm")
-        direct = np.asarray(seq.render(events, vgm_path=path))
-        replayed = np.asarray(vgm_player.render(path))
+        direct = _flat(seq.render(events, vgm_path=path))
+        replayed = _flat(vgm_player.render(path))
 
+    # Plain Python, not numpy: the engine runs without numpy, and a test
+    # that needs it reports a missing module instead of the behaviour.
     n = min(len(direct), len(replayed))
-    diff = np.abs(direct[:n] - replayed[:n])
+    diff = [abs(a - b) for a, b in zip(direct[:n], replayed[:n])]
+
+    def mean(values):
+        return sum(values) / len(values) if values else 0.0
 
     early = diff[:int(n * 0.2)]
     late = diff[int(n * 0.6):int(n * 0.9)]   # before the note-off transient
-    assert late.mean() > early.mean(), \
+    assert mean(late) > mean(early), \
         "drift should grow over the note's duration, not stay flat"
     # A ceiling, not a target: if this ever drops near zero, the timing
     # round-trip got fixed and this test (and its docstring) should be
     # revisited rather than quietly loosened.
-    assert diff.mean() < 0.05, \
-        f"drift grew to {diff.mean():.4f} average — much worse than observed"
+    assert mean(diff) < 0.05, \
+        f"drift grew to {mean(diff):.4f} average — much worse than observed"
+
+
+def _flat(buffer):
+    """Interleaved samples from a numpy array or the no-numpy Buffer."""
+    import audio
+    if audio.is_fallback(buffer):
+        return list(buffer.data)
+    return [float(v) for v in buffer.reshape(-1)]
 
 
 def test_player_rejects_a_non_vgm():

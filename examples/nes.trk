@@ -1,0 +1,26 @@
+bpm 150
+lpb 4
+title NES, all five layers at once
+cols nes0 nes1 nes2 nes3 nes4
+
+nes duty nes0 1
+nes duty nes1 2
+
+pattern verse
+mark verse
+A-4:110/456  E-5:80      A-2      6:90     kick
+...          ...         ...      ...      ...
+C-5          G-5:80      C-3      4m:70    hat
+...          ...         ...      ...      ...
+
+pattern lift
+mark lift
+nes sweep nes0 3 3 up
+E-5:120      B-5:90      E-2      2:100    snare
+...          ...         ...      ...      ...
+nes sweep nes0 off
+A-4:110/1A0  E-5:90/A08  A-2/456  8:80/756 kick/A04
+...          ...         ...      ...      ...
+
+order verse verse lift verse
+end
