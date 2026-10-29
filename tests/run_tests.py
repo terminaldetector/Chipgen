@@ -48,7 +48,7 @@ MODULES = ["test_events", "test_tracker", "test_chips", "test_vgm",
            "test_render", "test_bridge", "test_sanity", "test_profile",
            "test_furnace", "test_it", "test_opl", "test_transcribe", "test_effects",
            "test_analysis", "test_selection", "test_musical", "test_nes",
-           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program", "test_agentic", "test_agentic_refs"]
+           "test_fx", "test_livefm", "test_pcm", "test_patterns_notation", "test_ch3", "test_nes_score", "test_examples", "test_levels", "test_studio", "test_arrange", "test_briefs", "test_reply", "test_local", "test_mp3", "test_synthesis", "test_program", "test_agentic", "test_agentic_refs", "test_hearing"]
 
 
 def _collect(pattern=""):
@@ -81,6 +81,8 @@ def _state_path(pattern, quick):
 #: every chip, in well under a minute — and says it was the quick set.
 #: test_studio checks that every name here is still a real test.
 SLOW = {
+    "test_hearing.test_a_monotonous_bass_heard_in_the_render_is_syncopated_and_heard_again",
+    "test_hearing.test_essentia_hears_a_chipgen_bass_render_as_straight_eighths",
     "test_agentic_refs.test_the_live_check_asks_four_questions_and_scores_them_honestly",
     "test_agentic_refs.test_a_heard_abrupt_transition_is_eased_and_measured_at_the_join",
     "test_agentic_refs.test_a_heard_gap_is_chosen_about_over_its_phrase_only",

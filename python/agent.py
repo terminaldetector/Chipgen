@@ -58,6 +58,24 @@ References, parallel listening, sketches and instruments:
     measure_form           project_id                   A A' B: sections
                                                         alike or not, the
                                                         plan, cadences
+    hearing_status         -                            does the hearing
+                                                        plugin run here
+    inspect_audio          file | project_id, range?,   level, loudness,
+                           voices?, start?, end?        stereo (Essentia)
+    analyze_rhythm         same                         onsets, tempo,
+                                                        intervals, grid
+    analyze_tonality       same                         chroma, key
+                                                        estimates, pitch
+    analyze_timbre         same                         spectrum, MFCC,
+                                                        bands, attacks
+    analyze_sections       same, boundaries?            sections, letters,
+                                                        candidate roles
+    compare_sections       file | project_id, reference contrast against
+                                                        a reference
+    evaluate_revision      before, after | project_id,  every reading's
+                           rev_a, rev_b; target?        change
+    hearing_revise         project_id, defect?,         render, hear,
+                           commit?                      correct, re-hear
     correct_module         path, channel                an IT's buried
                                                         channel, by its
                                                         header
@@ -926,6 +944,114 @@ class Agent:
         from agentic import form as FORM
         p = self._project(project_id)
         return FORM.measure(self._timeline(p), cache=self._cache(p))
+
+    # -- the hearing plugin: Essentia (agentic/hearing) -------------------------------------
+    def _audio(self, file=None, project_id=None, range="all", voices=None,
+               rev=None):
+        """A file to hear: the one given, or the project's range rendered
+        from the top (voices alone if named) into hearing/files."""
+        if file:
+            return file, None
+        if not project_id:
+            raise AgenticError("bad_request", "give file or project_id")
+        from agentic.hearing import revise as RV
+        p = self._project(project_id)
+        tl = self._timeline(p, rev)
+        vs = [voices] if isinstance(voices, str) else voices
+        tag = f"r{p.head if rev is None else rev}_{range}_" \
+              f"{'-'.join(vs) if vs else 'mix'}".replace(" ", "")
+        out = RV.render_wav(tl, p.path("hearing", "files", f"{tag}.wav"),
+                            self._cache(p), voices=vs, spec=range)
+        return out["file"], tl
+
+    def op_hearing_status(self) -> dict:
+        """Whether the hearing plugin (Essentia) runs here, and its
+        version."""
+        from agentic import hearing as H
+        return H.status(refresh=True)
+
+    def op_inspect_audio(self, file: str = None, project_id: str = None,
+                         range: str = "all", voices=None, start=None,
+                         end=None) -> dict:
+        from agentic import hearing as H
+        f, _tl = self._audio(file, project_id, range, voices)
+        return H.inspect_audio(f, start, end)
+
+    def op_analyze_rhythm(self, file: str = None, project_id: str = None,
+                          range: str = "all", voices=None, start=None,
+                          end=None, bpm_hint=None) -> dict:
+        """Essentia: onsets, tempo and beats (with Essentia's confidence
+        scale), intervals, where onsets fall in the beat, bar against
+        bar, density by window. A project's render is counted against
+        the score's own tempo."""
+        from agentic import hearing as H
+        f, tl = self._audio(file, project_id, range, voices)
+        if tl is not None and bpm_hint is None:
+            bpm_hint = float(tl.content["structure"]["bpm"])
+        return H.analyze_rhythm(f, start, end, bpm_hint=bpm_hint)
+
+    def op_analyze_tonality(self, file: str = None, project_id: str = None,
+                            range: str = "all", voices=None, start=None,
+                            end=None) -> dict:
+        from agentic import hearing as H
+        f, _tl = self._audio(file, project_id, range, voices)
+        return H.analyze_tonality(f, start, end)
+
+    def op_analyze_timbre(self, file: str = None, project_id: str = None,
+                          range: str = "all", voices=None, start=None,
+                          end=None) -> dict:
+        from agentic import hearing as H
+        f, _tl = self._audio(file, project_id, range, voices)
+        return H.analyze_timbre(f, start, end)
+
+    def op_analyze_sections(self, file: str = None, project_id: str = None,
+                            boundaries=None, start=None, end=None,
+                            min_section_s: float = 6.0) -> dict:
+        """Essentia: sections cut at `boundaries` — for a project, where
+        its own sections start — or at the novelty peaks, compared,
+        lettered, with candidate roles and their evidence."""
+        from agentic import hearing as H
+        from agentic.hearing import revise as RV
+        f, tl = self._audio(file, project_id)
+        if tl is not None and boundaries is None:
+            boundaries = RV._boundaries(tl) or None
+        return H.analyze_sections(f, start, end, boundaries, min_section_s)
+
+    def op_compare_sections(self, reference: str, file: str = None,
+                            project_id: str = None) -> dict:
+        from agentic import hearing as H
+        from agentic.hearing import revise as RV
+        f, tl = self._audio(file, project_id)
+        return H.compare_sections(f, reference, boundaries=RV._boundaries(
+            tl) or None if tl is not None else None)
+
+    def op_evaluate_revision(self, before: str = None, after: str = None,
+                             project_id: str = None, rev_a: int = None,
+                             rev_b: int = None, range: str = "all",
+                             voices=None, target=None,
+                             analyses=("rhythm", "timbre",
+                                       "tonality")) -> dict:
+        """Two renders — two files, or two revisions of a project — given
+        the same analyses; every reading's change, and the target's."""
+        from agentic import hearing as H
+        bpm = None
+        if project_id:
+            before, tl = self._audio(None, project_id, range, voices, rev_a)
+            after, _ = self._audio(None, project_id, range, voices, rev_b)
+            bpm = float(tl.content["structure"]["bpm"])
+        return H.evaluate_revision(before, after, target, tuple(analyses),
+                                   bpm_hint=bpm)
+
+    def op_hearing_revise(self, project_id: str, defect: str = None,
+                          commit: bool = True) -> dict:
+        """One hearing-driven round: render the mix and the voices alone,
+        analyse them with Essentia, find a defect
+        (monotonous_rhythm, flat_sections, narrow_lead), try its
+        corrections in turn, re-render and re-analyse, and commit the
+        first that meets its measured target and breaks no guard."""
+        from agentic.hearing import revise as RV
+        p = self._project(project_id)
+        return RV.revise(p, self._cache(p), defect=defect, commit=commit)
 
     def op_measure_joins(self, project_id: str) -> dict:
         """Where each section hands over to the next: density, the lead's

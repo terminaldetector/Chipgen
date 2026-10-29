@@ -625,10 +625,14 @@ def rhythm(content: dict, voice: str, rng: dict, mode: str = "anticipate",
            share: float = 0.33,
            scope: str = "occurrence") -> Tuple[dict, dict]:
     """An accompanying voice's on-beat onsets a row early (`anticipate`,
-    where that row is free), or its off-beat onsets delayed by `share`
-    of a row (`swing`, the cell's delay command)."""
-    if mode not in ("anticipate", "swing"):
-        raise AgenticError("bad_patch", "rhythm mode is anticipate or swing")
+    where that row is held), the same where that row is held or a key-off
+    (`syncopate`: a voice that keys off after every note, a bass in
+    straight eighths, gets the push a held one would), or its off-beat
+    onsets delayed by `share` of a row (`swing`, the cell's delay
+    command)."""
+    if mode not in ("anticipate", "syncopate", "swing"):
+        raise AgenticError("bad_patch", "rhythm mode is anticipate, "
+                                        "syncopate or swing")
     _accompaniment(content, voice, "rhythm")
     new = copy.deepcopy(content)
     column, k = _column(new, voice)
@@ -643,9 +647,12 @@ def rhythm(content: dict, voice: str, rng: dict, mode: str = "anticipate",
             cell = rows[r][k]
             if not _onset(column, cell):
                 continue
-            if mode == "anticipate":
-                if r % lpb == 0 and r - 1 >= a and \
-                        _is_hold(rows[r - 1][k]) and r % (2 * lpb) != 0:
+            if mode in ("anticipate", "syncopate"):
+                free = _is_hold(rows[r - 1][k]) if r - 1 >= a else False
+                if mode == "syncopate" and r - 1 >= a:
+                    free = free or _is_off(rows[r - 1][k])
+                if r % lpb == 0 and r - 1 >= a and free and \
+                        r % (2 * lpb) != 0:
                     edits.append({"section": section["id"], "slot": slot,
                                   "row": r, "column": column, "from": cell,
                                   "to": "...", "moved_to": r - 1})

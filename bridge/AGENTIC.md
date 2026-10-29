@@ -490,6 +490,13 @@ audio; under 0.7 expected), and C closes V–I. Recordings in AAC (M4A,
 or MP4 named .mp3) are decoded by ffmpeg as audio references. The
 execution levels and what each one proves are in `bridge/LEVELS_RU.md`.
 
+Hearing plugin (Essentia, built from the fork terminaldetector/essentia):
+`agentic/hearing/` runs Essentia in its own interpreter on Chipgen's
+renders — rhythm, tonality, timbre, sections with candidate roles — and
+`hearing_revise` closes the loop: render, hear, find a defect, patch,
+re-render, re-hear, commit only on a met target. See
+`bridge/HEARING_PLUGINS.md`.
+
 ## Measured
 
 On this sandbox (pure-Python mixer, no numpy, the Nuked-OPN2 core

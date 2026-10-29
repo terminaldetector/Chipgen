@@ -134,7 +134,7 @@ _MD = {
                           "instrument.design: the candidates' readings"),
     "patch.musical": ("Supported", "Native",
                       "articulation (gate, legato), density (thin, "
-                      "double), rhythm (anticipate, swing by the cell's "
+                      "double), rhythm (anticipate, syncopate, swing by the cell's "
                       "delay), voicing (nearest chord tone), pan (FM "
                       "only), echo (a free FM channel); the melody is "
                       "not theirs to move", "none until rendered",
